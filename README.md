@@ -159,7 +159,7 @@ tasks:
 |firstLastPiecePrio  | string | Prioritize download first last piece. Possible values are true, false (default)
  
  
-entry属性列表
+### entry属性列表
 
 在qbittorrent：/api/v2/torrents/info 返回的属性前加了qbittorrent前缀
 
