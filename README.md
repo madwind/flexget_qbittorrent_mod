@@ -78,7 +78,7 @@ task:
     if:
       - qbittorrent_category in ['Rss'] and qbittorrent_last_activity < now - timedelta(days=4): accept
     qbittorrent_mod:
-      host: qbittorrent.vammonitor.tk
+      host: qbittorrent.example.com
       port: 443
       use_ssl: true      
       username: admin
