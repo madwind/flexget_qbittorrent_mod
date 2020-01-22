@@ -16,6 +16,7 @@ class QBittorrentClient:
     API_URL_LOGIN = '/api/v2/auth/login'
     API_URL_UPLOAD = '/api/v2/torrents/add'
     API_URL_DOWNLOAD = '/api/v2/torrents/add'
+    API_URL_RESUME = '/api/v2/torrents/resume'
     API_GET_TORRENT_LIST = '/api/v2/torrents/info'
     API_GET_TORRENT_PIECES_STATES = '/api/v2/torrents/pieceStates'
     API_DELETE_TORRENTS = '/api/v2/torrents/delete'
@@ -133,8 +134,15 @@ class QBittorrentClient:
             verify=self.verify,
         )
 
-    def resume_torrents(self, hashes, config):
-        pass
+    def resume_torrents(self, hashes):
+        data = {'hashes': hashes}
+        self._request(
+            'post',
+            self.url + self.API_URL_RESUME,
+            data=data,
+            msg_on_fail='resume_torrents failed.',
+            verify=self.verify,
+        )
 
 
 class QBittorrentModBase:
@@ -337,16 +345,16 @@ class PluginQBittorrentMod(QBittorrentModBase):
                 logger.debug('Successfully connected to qBittorrent.')
             else:
                 raise plugin.PluginError("Couldn't connect to qBittorrent.")
-        session_torrents = self.client.get_torrents()
 
         if config['action'].get('add'):
             for entry in task.accepted:
                 self.add_entries(task, entry, config)
                 logger.info('qBittorrent: add {}', entry['title'])
         elif config['action'].get('remove'):
+            session_torrents = self.client.get_torrents()
             self.remove_entries(task, session_torrents, config)
         elif config['action'].get('resume'):
-            self.resume_entries(task, session_torrents, config)
+            self.resume_entries(task, config)
         else:
             raise plugin.PluginError('Not connected.')
 
@@ -396,8 +404,14 @@ class PluginQBittorrentMod(QBittorrentModBase):
             hashes.append(entry['torrent_info_hash'])
         self.client.delete_torrents(str.join('|', hashes), delete_files)
 
-    def resume_entries(self, task, session_torrents, config):
+    def resume_entries(self, task, config):
         resume_options = config['action']['resume']
+        only_complete = resume_options.get('only_complete')
+        hashes = []
+        for entry in task.accepted:
+            hashes.append(entry['torrent_info_hash'])
+            logger.info('qBittorrent: resume {}', entry['title'])
+        self.client.resume_torrents(str.join('|', hashes))
 
     def on_task_learn(self, task, config):
         """ Make sure all temp files are cleaned up when entries are learned """
