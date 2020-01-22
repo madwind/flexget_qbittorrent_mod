@@ -112,7 +112,7 @@ tasks:
     #关闭任务记录 
     disable: [seen, seen_info_hash]
     if:
-      #
+      #选择暂停状态已完成的种子
       - qbittorrent_state == 'pausedUP': accept
     #使用输入模板 从qbittorrent获取数据
     #使用输出模板 自动开始
