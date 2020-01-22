@@ -58,8 +58,11 @@ add属性可选参数表
 |firstLastPiecePrio optional | string | Prioritize download first last piece. Possible values are true, false (default) 
  
  以下配置实现删除
+ 
  Rss分类里：      qbittorrent_category in ['Rss'] 
+ 
  并且：           and
+ 
  4天没有流量的种子：qbittorrent_last_activity < now - timedelta(days=4)
 #### 自动删种配置
 ```yaml
