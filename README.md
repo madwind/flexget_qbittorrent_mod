@@ -30,7 +30,7 @@ templates:
   #输出模板 添加种子
   qbittorrent_add_template:
     qbittorrent_mod:
-      host: qbittorrent.examp.com
+      host: qbittorrent.example.com
       port: 443
       use_ssl: true
       username: admin
@@ -46,7 +46,7 @@ templates:
   #输出模板 自动开始：用于校验完数据自动开始
   qbittorrent_resume_template:
     qbittorrent_mod:
-      host: qbittorrent.examp.com
+      host: qbittorrent.example.com
       port: 443
       use_ssl: true
       username: admin
@@ -59,7 +59,7 @@ templates:
   #输出模板 自动删种
   qbittorrent_delete_template:
     qbittorrent_mod:
-      host: qbittorrent.examp.com
+      host: qbittorrent.example.com
       port: 443
       use_ssl: true
       username: admin
@@ -72,7 +72,7 @@ templates:
   #输入模板 从qbittorrent获取数据
   from_qbittorrent_template:
     from_qbittorrent_mod:
-      host: qbittorrent.examp.com
+      host: qbittorrent.example.com
       port: 443
       use_ssl: true
       username: admin
