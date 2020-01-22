@@ -78,11 +78,15 @@ templates:
       username: admin
       password: 123456789
 
-#每分钟执行所有任务一次
 schedules:
-  - tasks: '*'
+  #每分钟执行pt1,pt2
+  - tasks: [pt1, pt2]
     interval:
       minutes: 1
+  #每隔5分钟执行resume,delete
+  - tasks: [resume, delete]
+    interval:
+      minutes: 5
 
 #任务列表
 tasks:
