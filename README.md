@@ -10,7 +10,7 @@
 官方transmission插件源码：<https://github.com/Flexget/Flexget/blob/develop/flexget/plugins/clients/transmission.py>
 
 ## 安装插件
-####此段说明抄抄袭于<https://github.com/Juszoe/flexget-nexusphp/blob/master/README.md>
+###此段说明抄抄袭于<https://github.com/Juszoe/flexget-nexusphp/blob/master/README.md>
 1. 下载插件 [qbittorrent_mod.py](https://github.com/IvonWei/flexget_qbittorrent_mod/archive/0.1.zip)
 2. 在Flexget配置文件夹下新建plugins文件夹，例如：
 ```
