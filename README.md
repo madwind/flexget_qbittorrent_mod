@@ -7,7 +7,7 @@
 
 官方transmission插件源码：<https://github.com/Flexget/Flexget/blob/develop/flexget/plugins/clients/transmission.py>
 
-官方transmission插件源码：<https://github.com/Flexget/Flexget/blob/develop/flexget/plugins/clients/transmission.py>
+官方qbittorrent插件源码：<https://github.com/Flexget/Flexget/blob/develop/flexget/plugins/clients/qbittorrent.py>
 
 ## 安装插件
 ##### 此段说明抄抄袭于<https://github.com/Juszoe/flexget-nexusphp/blob/master/README.md>
