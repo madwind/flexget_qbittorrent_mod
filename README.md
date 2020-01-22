@@ -44,18 +44,18 @@ add属性可选参数表
 
 |Property | Type | Description
 -|-|-
-|savepath optional | string | Download folder
-|cookie optional | string | Cookie sent to download the .torrent file
-|category optional | string | Category for the torrent
-|skip_checking optional | string | Skip hash checking. Possible values are true, false (default)
-|paused optional | string | Add torrents in the paused state. Possible values are true, false (default)
-|root_folder optional | string | Create the root folder. Possible values are true, false, unset (default)
-|rename optional | string | Rename torrent
-|upLimit optional | integer | Set torrent upload speed limit. Unit in bytes/second
-|dlLimit optional | integer | Set torrent download speed limit. Unit in bytes/second
-|autoTMM optional | bool | Whether Automatic Torrent Management should be used
-|sequentialDownload optional | string | Enable sequential download. Possible values are true, false (default)
-|firstLastPiecePrio optional | string | Prioritize download first last piece. Possible values are true, false (default) 
+|savepath  | string | Download folder
+|cookie  | string | Cookie sent to download the .torrent file
+|category  | string | Category for the torrent
+|skip_checking  | string | Skip hash checking. Possible values are true, false (default)
+|paused  | string | Add torrents in the paused state. Possible values are true, false (default)
+|root_folder  | string | Create the root folder. Possible values are true, false, unset (default)
+|rename  | string | Rename torrent
+|upLimit  | integer | Set torrent upload speed limit. Unit in bytes/second
+|dlLimit  | integer | Set torrent download speed limit. Unit in bytes/second
+|autoTMM  | bool | Whether Automatic Torrent Management should be used
+|sequentialDownload  | string | Enable sequential download. Possible values are true, false (default)
+|firstLastPiecePrio  | string | Prioritize download first last piece. Possible values are true, false (default)
  
  以下配置实现删除
  
