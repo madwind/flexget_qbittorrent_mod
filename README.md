@@ -20,27 +20,128 @@ C:\Users\<YOURUSER>\flexget\plugins\  # Windows
 3. 将插件拷贝至plugins
 4. 若启用了Web-UI或守护进程，则重启flexget重新加载配置
 
- #### 下载配置
+ #### 配置模板
 ```yaml
+web_server:
+  bind: 0.0.0.0
+  port: 3539
+
 templates:
-  qb:
+  #输出模板 添加种子
+  qbittorrent_add_template:
     qbittorrent_mod:
       host: qbittorrent.example.com
       port: 443
-      use_ssl: true      
+      use_ssl: true
       username: admin
       password: 123456789
       action:
         add:
+          #参考add可选参数
+          #分类
           category: Rss
+          #自动管理种子
           autoTMM: true
+
+  #输出模板 自动开始：用于校验完数据自动开始
+  qbittorrent_resume_template:
+    qbittorrent_mod:
+      host: qbittorrent.example.com
+      port: 443
+      use_ssl: true
+      username: admin
+      password: 123456789
+      action:
+        resume:
+          #暂时没什么用
+          only_complete: true
+
+  #输出模板 自动删种
+  qbittorrent_delete_template:
+    qbittorrent_mod:
+      host: qbittorrent.example.com
+      port: 443
+      use_ssl: true
+      username: admin
+      password: 123456789
+      action:
+        remove:
+          #删种同时是否删除数据
+          delete_files: true
+
+  #输入模板 从qbittorrent获取数据
+  from_qbittorrent_template:
+    from_qbittorrent_mod:
+      host: qbittorrent.example.com
+      port: 443
+      use_ssl: true
+      username: admin
+      password: 123456789
+
+schedules:
+  #每分钟执行pt1,pt2
+  - tasks: [pt1, pt2]
+    interval:
+      minutes: 1
+  #每隔5分钟执行resume,delete
+  - tasks: [resume, delete]
+    interval:
+      minutes: 5
+
+#任务列表
+tasks:
+  pt1:
+    #rss订阅链接
+    rss: https://pt1.com/rss
+    #过滤器 接受带有 CCTV 字样的种子
+    regexp:
+      accept:
+        - CCTV
+      from: title
+    #输出模板 添加种子
+    template: qbittorrent_add_template
+  
+  pt2:
+    rss: https://pt1.com/rss
+    #过滤器 接受全部
+    accept_all: yes
+    template: qbittorrent_add_template
+
+  #自动开始
+  resume:
+    #关闭任务记录 
+    disable: [seen, seen_info_hash]
+    if:
+      #
+      - qbittorrent_state == 'pausedUP': accept
+    #使用输入模板 从qbittorrent获取数据
+    #使用输出模板 自动开始
+    template:
+      - from_qbittorrent_template
+      - qbittorrent_resume_template
+ 
+  #自动删种
+  delete:
+    disable: [seen, seen_info_hash]
+    if:
+      #参考entry属性列表
+      #种子在 Rss分类 并且 最后活动时间 < 4天 
+      - qbittorrent_category in ['Rss'] and qbittorrent_last_activity < now - timedelta(days=4): accept
+      #种子数据丢失 或者 （种子处于未完成的暂停状态 并且 下载大小为0）：一般是辅助失败的种子 
+      - qbittorrent_state == 'missingFiles' or (qbittorrent_state in ['pausedDL'] and qbittorrent_downloaded == 0): accept
+    #使用输入模板 从qbittorrent获取数据
+    #使用输出模板 自动删种
+    template:
+      - from_qbittorrent_template
+      - qbittorrent_delete_template
+
 ```
 
-add属性可选参数表
+### add可选参数
 
 与qbittorrent： /api/v2/torrents/add 的可选参数一致
 
-当设置了autoTMM自动管理种子的时候 savepath是不起作用的
+当设置了autoTMM自动管理种子时 savepath会被忽略
 
 |Property | Type | Description
 -|-|-
@@ -57,49 +158,19 @@ add属性可选参数表
 |sequentialDownload  | string | Enable sequential download. Possible values are true, false (default)
 |firstLastPiecePrio  | string | Prioritize download first last piece. Possible values are true, false (default)
  
- 以下配置实现删除
  
- Rss分类里：      qbittorrent_category in ['Rss'] 
- 
- 并且：           and
- 
- 4天没有流量的种子：qbittorrent_last_activity < now - timedelta(days=4)
-#### 自动删种配置
-```yaml
-task:
-  clean:
-    from_qbittorrent_mod: 
-      host: qbittorrent.example.com
-      port: 443
-      use_ssl: true
-      username: admin
-      password: 123456789
-    disable: [seen, seen_info_hash]
-    if:
-      - qbittorrent_category in ['Rss'] and qbittorrent_last_activity < now - timedelta(days=4): accept
-    qbittorrent_mod:
-      host: qbittorrent.example.com
-      port: 443
-      use_ssl: true      
-      username: admin
-      password: 123456789
-      action:
-        remove:
-          delete_files: true  
-```
-
-entry属性表
+entry属性列表
 
 在qbittorrent：/api/v2/torrents/info 返回的属性前加了qbittorrent前缀
 
-其中 added_on,completion_on,last_activity,seen_complete 原本是unix时间戳，为了方便在配置里计算时间差都转换成了datetime类型
+其中 added_on,completion_on,last_activity,seen_complete 原本是unix时间戳，为了方便计算时间差都转换成了datetime类型
 
 |Property | Type | Description
 -|-|-
-|qbittorrent_added_on | datetime | Time (Unix Epoch) when the torrent was added to the client
-|qbittorrent_completion_on | datetime | Time (Unix Epoch) when the torrent completed
-|qbittorrent_last_activity | datetime | Last time (Unix Epoch) when a chunk was downloaded/uploaded
-|qbittorrent_seen_complete | datetime | Time (Unix Epoch) when this torrent was last seen complete
+|qbittorrent_added_on | datetime | Time when the torrent was added to the client
+|qbittorrent_completion_on | datetime | Time when the torrent completed
+|qbittorrent_last_activity | datetime | Last time when a chunk was downloaded/uploaded
+|qbittorrent_seen_complete | datetime | Time when this torrent was last seen complete
 |qbittorrent_amount_left | integer | Amount of data left to download (bytes)
 |qbittorrent_auto_tmm | bool | Whether this torrent is managed by Automatic Torrent Management
 |qbittorrent_category | string | Category of the torrent
