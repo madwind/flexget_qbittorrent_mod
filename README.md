@@ -126,7 +126,7 @@ tasks:
         #例 pt123.xyz
         pt123: xxxxxxxxxxxxxxxxxxxx
         # abc456.cn
-        abc456: ad7b824a37e5c2d1f4b3fd0c2467f9b3
+        abc456: xxxxxxxxxxxxxxxxxxxx
       #获取辅种数据的客户端
       qbittorrent_ressed:
         host: qbittorrent.example.com
