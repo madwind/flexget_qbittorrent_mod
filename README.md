@@ -27,14 +27,17 @@ web_server:
   port: 3539
 
 templates:
-  #输出模板 添加种子
-  qbittorrent_add_template:
+  #基础模板
+  qbittorrent_base_template:
     qbittorrent_mod:
       host: qbittorrent.example.com
       port: 443
       use_ssl: true
       username: admin
       password: 123456789
+  #输出模板 添加种子
+  qbittorrent_add_template:
+    qbittorrent_mod:
       action:
         add:
           #参考add可选参数
@@ -46,11 +49,6 @@ templates:
   #输出模板 自动开始：用于校验完数据自动开始
   qbittorrent_resume_template:
     qbittorrent_mod:
-      host: qbittorrent.example.com
-      port: 443
-      use_ssl: true
-      username: admin
-      password: 123456789
       action:
         resume:
           #暂时没什么用
@@ -59,11 +57,6 @@ templates:
   #输出模板 自动删种
   qbittorrent_delete_template:
     qbittorrent_mod:
-      host: qbittorrent.example.com
-      port: 443
-      use_ssl: true
-      username: admin
-      password: 123456789
       action:
         remove:
           #删种同时是否删除数据
@@ -98,21 +91,25 @@ tasks:
       accept:
         - CCTV
       from: title
-    #输出模板 添加种子
-    template: qbittorrent_add_template
+    #基础+输出模板（模板配置会自动合并）
+    template: 
+      - qbittorrent_base_template
+      - qbittorrent_add_template
   
   pt2:
     rss: https://pt1.com/rss
     #过滤器 接受全部
     accept_all: yes
-    template: qbittorrent_add_template
+    template:
+      - qbittorrent_base_template
+      - qbittorrent_add_template    
 
   #自动开始
   resume:
     #关闭任务记录 
     disable: [seen, seen_info_hash]
     if:
-      #
+      #选择暂停状态已完成的种子
       - qbittorrent_state == 'pausedUP': accept
     #使用输入模板 从qbittorrent获取数据
     #使用输出模板 自动开始
@@ -133,6 +130,7 @@ tasks:
     #使用输出模板 自动删种
     template:
       - from_qbittorrent_template
+      - qbittorrent_base_template      
       - qbittorrent_delete_template
 
 ```
@@ -159,7 +157,7 @@ tasks:
 |firstLastPiecePrio  | string | Prioritize download first last piece. Possible values are true, false (default)
  
  
-entry属性列表
+### entry属性列表
 
 在qbittorrent：/api/v2/torrents/info 返回的属性前加了qbittorrent前缀
 
