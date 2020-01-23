@@ -1,23 +1,29 @@
 # flexget_qbittorrent_mod
-因为发现qBittorrent的webapi有last_activity信息，但是flexget官方的qBittorrent插件又没提供删种功能。
+这是一个 Flexget 的 qBittorrent插件
 
-于是拼拼凑凑，东搬西抄，学了两天python，仿照flexget官方的tramissmion插件修改了官方的qbittorrent插件，添加了自动删种功能
+flexget本身可以完成 Rss订阅 过滤
 
-官方transmission插件说明：<https://www.flexget.com/Cookbook/TorrentCleanup>
+配合本插件可以做到：
 
-官方transmission插件源码：<https://github.com/Flexget/Flexget/blob/develop/flexget/plugins/clients/transmission.py>
+1. Rss订阅 过滤 下载
+2. 自动辅种： 调用 IYUUAutoReseed 提供的辅种数据接口 自动辅种，添加的种子会处于暂停状态
+3. 自动删除指定种子：下面配置模板中 每隔1小时 删除 Rss 分类下 4 天没有上传下载流量的种子，或处于暂停状态没有下载过任何数据的种子（这个主要是针对自动辅种校验失败的种子）
+4. 自动开始种子： 自动开始校验完成的种子
 
-官方qbittorrent插件源码：<https://github.com/Flexget/Flexget/blob/develop/flexget/plugins/clients/qbittorrent.py>
+到这个版本发布，大概是学python的第5天吧，基本都是参照Flexget官方的transmission和qBittorrent插件抄抄改改，代码写得很烂，Flexget也是一头雾水，就是能随便用用的程度吧。如果有大佬提出意见或者建议，不甚感激。有问题的也可以在IYUU的群找到我。
+
+就这样，挂机刷数据吧
+
+IYUUAutoReseed：<https://github.com/ledccn/IYUUAutoReseed>
 
 ## 安装插件
-##### 此段说明抄抄袭于<https://github.com/Juszoe/flexget-nexusphp/blob/master/README.md>
-1. 下载插件 [qbittorrent_mod.py](https://github.com/IvonWei/flexget_qbittorrent_mod/archive/0.1.zip)
+1. 下载插件 [releases](https://github.com/IvonWei/flexget_qbittorrent_mod/releases/latest)
 2. 在Flexget配置文件夹下新建plugins文件夹，例如：
 ```
 ~/.flexget/plugins/  # Linux
 C:\Users\<YOURUSER>\flexget\plugins\  # Windows
 ```
-3. 将插件拷贝至plugins
+3. 将插件解压至plugins
 4. 若启用了Web-UI或守护进程，则重启flexget重新加载配置
 
  #### 配置模板
@@ -81,6 +87,11 @@ schedules:
     interval:
       minutes: 5
 
+  #每隔31小时行resume,delete
+  - tasks: [reseed]
+    interval:
+      hours: 1
+
 #任务列表
 tasks:
   pt1:
@@ -104,21 +115,33 @@ tasks:
       - qbittorrent_base_template
       - qbittorrent_add_template    
 
-  #自动开始
-  resume:
-    #关闭任务记录 
-    disable: [seen, seen_info_hash]
-    if:
-      #选择暂停状态已完成的种子
-      - qbittorrent_state == 'pausedUP': accept
-    #使用输入模板 从qbittorrent获取数据
-    #使用输出模板 自动开始
+  #自动辅种 使用 IYUU 提供的接口
+  reseed:
+    iyuu_auto_reseed:
+      #IYUU token 获取方法请查阅顶部介绍的 IYUUAutoReseed 项目
+      iyuu: IYUU419Tada6a99f2a6591cc51e656ca4458317648931830
+      #站点密钥
+      passkeys:
+        #key: 站点域名包含字符串 value:密钥
+        #例 pt123.xyz
+        pt123: xxxxxxxxxxxxxxxxxxxx
+        # abc456.cn
+        abc456: ad7b824a37e5c2d1f4b3fd0c2467f9b3
+      #获取辅种数据的客户端
+      qbittorrent_ressed:
+        host: qbittorrent.example.com
+        port: 443
+        use_ssl: true
+        username: admin
+        password: 123456789
+    accept_all: yes
     template:
-      - from_qbittorrent_template
-      - qbittorrent_resume_template
- 
+      - qbittorrent_base_template
+      - qbittorrent_add_template
+
   #自动删种
   delete:
+    #关闭任务记录 
     disable: [seen, seen_info_hash]
     if:
       #参考entry属性列表
@@ -132,6 +155,19 @@ tasks:
       - from_qbittorrent_template
       - qbittorrent_base_template      
       - qbittorrent_delete_template
+
+  #自动开始
+  resume:
+    disable: [seen, seen_info_hash]
+    if:
+      #选择暂停状态已完成的种子
+      - qbittorrent_state == 'pausedUP': accept
+    #使用输入模板 从qbittorrent获取数据
+    #使用输出模板 自动开始
+    template:
+      - from_qbittorrent_template
+      - qbittorrent_base_template
+      - qbittorrent_resume_template
 
 ```
 
