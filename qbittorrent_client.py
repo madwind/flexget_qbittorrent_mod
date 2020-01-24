@@ -144,8 +144,10 @@ class QBittorrentClient:
         torrents = self.get_torrents()
         reseed_map = {}
         for torrent in torrents:
+            name = torrent['name']
             pieces_hashes = self.get_torrent_pieces_hashes(torrent['hash'])
-            if not reseed_map.get(pieces_hashes):
-                reseed_map[pieces_hashes] = []
-            reseed_map.get(pieces_hashes).append(torrent)
+            name_with_pieces_hashes = f'{name}:{pieces_hashes}'
+            if not reseed_map.get(name_with_pieces_hashes):
+                reseed_map[name_with_pieces_hashes] = []
+            reseed_map.get(name_with_pieces_hashes).append(torrent)
         return reseed_map

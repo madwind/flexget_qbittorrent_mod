@@ -182,7 +182,8 @@ class PluginQBittorrentMod(QBittorrentModBase):
     @plugin.priority(135)
     def on_task_output(self, task, config):
         config = self.prepare_config(config)
-        if len(config['action']) != 1:
+        action_config = config.get('action')
+        if len(action_config) != 1:
             raise plugin.PluginError('There must be and only one action')
         # don't add when learning
         if task.options.learn:
@@ -199,20 +200,19 @@ class PluginQBittorrentMod(QBittorrentModBase):
             else:
                 raise plugin.PluginError("Couldn't connect to qBittorrent.")
 
-        if config['action'].get('add'):
+        if action_config.get('add'):
             for entry in task.accepted:
-                self.add_entries(task, entry, config)
+                self.add_entries(task, entry, action_config)
                 logger.info('qBittorrent: add {}', entry['title'])
-        elif config['action'].get('remove'):
-            session_torrents = self.client.get_torrents()
-            self.remove_entries(task, session_torrents, config)
-        elif config['action'].get('resume'):
-            self.resume_entries(task, config)
+        elif action_config.get('remove'):
+            self.remove_entries(task, action_config)
+        elif action_config.get('resume'):
+            self.resume_entries(task, action_config)
         else:
-            raise plugin.PluginError('Not connected.')
+            raise plugin.PluginError('Unknown action.')
 
     def add_entries(self, task, entry, config):
-        add_options = config['action']['add']
+        add_options = config.get('add')
 
         add_options['autoTMM'] = entry.get('autoTMM', add_options.get('autoTMM'))
         add_options['category'] = entry.get('category', add_options.get('category'))
@@ -257,8 +257,8 @@ class PluginQBittorrentMod(QBittorrentModBase):
         else:
             self.client.add_torrent_url(entry['url'], add_options)
 
-    def remove_entries(self, task, session_torrents, config):
-        remove_options = config['action']['remove']
+    def remove_entries(self, task, config):
+        remove_options = config.get('remove')
         delete_files = remove_options.get('delete_files')
         check_reseed = remove_options.get('check_reseed')
 
@@ -275,8 +275,10 @@ class PluginQBittorrentMod(QBittorrentModBase):
 
         reseed_map = self.client.get_reseed_map()
         for task_torrent_hash in task_torrent_hashes:
+            name = entry_map[task_torrent_hash]['title']
             pieces_hashes = self.client.get_torrent_pieces_hashes(task_torrent_hash)
-            client_torrent_reseed_list = reseed_map.get(pieces_hashes)
+            name_with_pieces_hashes = f'{name}:{pieces_hashes}'
+            client_torrent_reseed_list = reseed_map.get(name_with_pieces_hashes)
             torrent_hashes = set()
             for client_torrent in client_torrent_reseed_list:
                 torrent_hashes.add(client_torrent['hash'])
@@ -295,7 +297,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
         self.client.delete_torrents(str.join('|', delete_hashes), delete_files)
 
     def resume_entries(self, task, config):
-        resume_options = config['action']['resume']
+        resume_options = config.get('resume')
         only_complete = resume_options.get('only_complete')
         hashes = []
         for entry in task.accepted:
