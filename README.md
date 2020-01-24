@@ -119,7 +119,7 @@ tasks:
   reseed:
     iyuu_auto_reseed:
       #IYUU token 获取方法请查阅顶部介绍的 IYUUAutoReseed 项目
-      iyuu: IYUU419Tada6a99f2a6591cc51e656ca4458317648931830
+      iyuu: xxxxxxxxxxxxxxxxxxxx
       #站点密钥
       passkeys:
         #key: 站点域名包含字符串 value:密钥
