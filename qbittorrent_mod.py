@@ -97,23 +97,6 @@ class PluginQBittorrentModInput(QBittorrentModBase):
 
 
 class PluginQBittorrentMod(QBittorrentModBase):
-    """
-    Example:
-
-      qbittorrent__mod:
-        username: <USERNAME> (default: (none))
-        password: <PASSWORD> (default: (none))
-        host: <HOSTNAME> (default: localhost)
-        port: <PORT> (default: 8080)
-        use_ssl: <SSL> (default: False)
-        verify_cert: <VERIFY> (default: True)
-        path: <OUTPUT_DIR> (default: (none))
-        category: <CATEGORY> (default: (none))
-        maxupspeed: <torrent upload speed limit> (default: 0)
-        maxdownspeed: <torrent download speed limit> (default: 0)
-        add_paused: <ADD_PAUSED> (default: False)
-    """
-
     schema = {
         'anyOf': [
             {'type': 'boolean'},
@@ -149,6 +132,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                             'remove': {
                                 'type': 'object',
                                 'properties': {
+                                    'check_reseed': {'type': 'boolean'},
                                     'delete_files': {'type': 'boolean'}
                                 }
                             },
@@ -276,11 +260,39 @@ class PluginQBittorrentMod(QBittorrentModBase):
     def remove_entries(self, task, session_torrents, config):
         remove_options = config['action']['remove']
         delete_files = remove_options.get('delete_files')
-        hashes = []
-        for entry in task.accepted:
-            logger.info('qBittorrent: delete {}', entry['title'])
-            hashes.append(entry['torrent_info_hash'])
-        self.client.delete_torrents(str.join('|', hashes), delete_files)
+        check_reseed = remove_options.get('check_reseed')
+
+        entry_map = {}
+        task_torrent_hashes = set()
+        # 构造需要删除的列表
+        delete_hashes = set()
+
+        # 获取所有entry
+        for entry in task.entries:
+            entry_map[entry['torrent_info_hash']] = entry
+            if entry.accepted:
+                task_torrent_hashes.add(entry['torrent_info_hash'])
+
+        reseed_map = self.client.get_reseed_map()
+        for task_torrent_hash in task_torrent_hashes:
+            pieces_hashes = self.client.get_torrent_pieces_hashes(task_torrent_hash)
+            client_torrent_reseed_list = reseed_map.get(pieces_hashes)
+            torrent_hashes = set()
+            for client_torrent in client_torrent_reseed_list:
+                torrent_hashes.add(client_torrent['hash'])
+            if check_reseed and not task_torrent_hashes >= torrent_hashes:
+                continue
+            else:
+                delete_hashes.update(torrent_hashes)
+
+        for torrent_hash, entry in entry_map.items():
+            if torrent_hash in delete_hashes:
+                entry.accept()
+                logger.info('qBittorrent delete: {}', entry['title'])
+            else:
+                entry.reject()
+
+        self.client.delete_torrents(str.join('|', delete_hashes), delete_files)
 
     def resume_entries(self, task, config):
         resume_options = config['action']['resume']

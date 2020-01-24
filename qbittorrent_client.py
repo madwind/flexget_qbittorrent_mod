@@ -2,6 +2,8 @@ from flexget import plugin
 from loguru import logger
 from requests import RequestException, Session
 
+logger = logger.bind(name='qbittorrent_client')
+
 
 class QBittorrentClient:
     API_URL_LOGIN = '/api/v2/auth/login'
@@ -9,7 +11,7 @@ class QBittorrentClient:
     API_URL_DOWNLOAD = '/api/v2/torrents/add'
     API_URL_RESUME = '/api/v2/torrents/resume'
     API_GET_TORRENT_LIST = '/api/v2/torrents/info'
-    API_GET_TORRENT_PIECES_STATES = '/api/v2/torrents/pieceStates'
+    API_GET_TORRENT_PIECES_STATES = '/api/v2/torrents/pieceHashes'
     API_DELETE_TORRENTS = '/api/v2/torrents/delete'
 
     def __init__(self, config):
@@ -120,13 +122,13 @@ class QBittorrentClient:
 
     def get_torrent_pieces_hashes(self, torrent_hash):
         data = {'hash': torrent_hash}
-        self._request(
+        return self._request(
             'post',
-            self.url + self.API_DELETE_TORRENTS,
+            self.url + self.API_GET_TORRENT_PIECES_STATES,
             data=data,
             msg_on_fail='get_torrent_pieces_hashes failed.',
             verify=self.verify,
-        )
+        ).text
 
     def resume_torrents(self, hashes):
         data = {'hashes': hashes}
@@ -137,3 +139,13 @@ class QBittorrentClient:
             msg_on_fail='resume_torrents failed.',
             verify=self.verify,
         )
+
+    def get_reseed_map(self):
+        torrents = self.get_torrents()
+        reseed_map = {}
+        for torrent in torrents:
+            pieces_hashes = self.get_torrent_pieces_hashes(torrent['hash'])
+            if not reseed_map.get(pieces_hashes):
+                reseed_map[pieces_hashes] = []
+            reseed_map.get(pieces_hashes).append(torrent)
+        return reseed_map

@@ -65,6 +65,10 @@ templates:
     qbittorrent_mod:
       action:
         remove:
+          #检查所有辅种是否都满足删除条件
+          #true: 只要有其中一个不满足条件则放弃删除
+          #false（默认）: 只要有一个满足删除条件 就全部删除 
+          check_reseed: true
           #删种同时是否删除数据
           delete_files: true
 
