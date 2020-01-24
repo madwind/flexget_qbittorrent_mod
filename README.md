@@ -65,7 +65,7 @@ templates:
     qbittorrent_mod:
       action:
         remove:
-          #检查所有辅种是否都满足删除条件
+          #检查所有辅种是否都满足删除条件 v0.1.2新增
           #true: 只要有其中一个不满足条件则放弃删除
           #false（默认）: 只要有一个满足删除条件 就全部删除 
           check_reseed: true
