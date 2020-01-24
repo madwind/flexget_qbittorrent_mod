@@ -17,7 +17,7 @@ flexget本身可以完成 Rss订阅 过滤
 IYUUAutoReseed：<https://github.com/ledccn/IYUUAutoReseed>
 
 ## 安装插件
-1. 下载插件 [releases](https://github.com/IvonWei/flexget_qbittorrent_mod/releases/latest)
+1. 下载插件 [releases](https://github.com/IvonWei/flexget_qbittorrent_mod/releases)
 2. 在Flexget配置文件夹下新建plugins文件夹，例如：
 ```
 ~/.flexget/plugins/  # Linux
