@@ -1,6 +1,8 @@
 # flexget_qbittorrent_mod
 这是一个 Flexget 的 qBittorrent插件
 
+tg: <https://t.me/flexget_qbittorrent_mod>
+
 参考：
 
 IYUUAutoReseed：<https://github.com/ledccn/IYUUAutoReseed>
@@ -31,9 +33,7 @@ C:\Users\<YOURUSER>\flexget\plugins\  # Windows
  每隔10分钟 自动给种子打标签 修改tracker 检查有没有校验完的种子自动开始 检查磁盘空间小于20G则删除Rss分类下2天没流量的种子
  
  每个1小时 执行一次辅种
- 
- <https://t.me/flexget_qbittorrent_mod>
- 
+  
 注：Flexget不允许用中文注释 请用源码里的config.yml对照修改
 ```yaml
 web_server:
