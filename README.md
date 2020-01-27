@@ -165,6 +165,7 @@ tasks:
   modify:
     disable: [seen, seen_info_hash]
     accept_all: yes
+    #使用修改模板
     template:
       - from_qbittorrent_template
       - qbittorrent_base_template
@@ -184,7 +185,7 @@ tasks:
     #官方sort_by插件：按最后活动时间从早到晚排序 优先删除
     sort_by: qbittorrent_last_activity
     #使用输入模板 从qbittorrent获取数据
-    #使用输出模板 自动删种
+    #使用自动删种模板
     template:
       - from_qbittorrent_template
       - qbittorrent_base_template      
@@ -197,7 +198,7 @@ tasks:
       #选择暂停状态已完成的种子
       - qbittorrent_state == 'pausedUP': accept
     #使用输入模板 从qbittorrent获取数据
-    #使用输出模板 自动开始
+    #使用自动开始模板
     template:
       - from_qbittorrent_template
       - qbittorrent_base_template
