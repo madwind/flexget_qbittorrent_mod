@@ -20,7 +20,7 @@ qBittorrent-Web-API<https://github.com/qbittorrent/qBittorrent/wiki/Web-API-Docu
 ~/.flexget/plugins/  # Linux
 C:\Users\<YOURUSER>\flexget\plugins\  # Windows
 ```
-3. 将插件解压至plugins
+3. 将所有的 .py 文件解压至plugins
 4. 若启用了Web-UI或守护进程，则重启flexget重新加载配置
 
  #### 配置模板
@@ -32,7 +32,7 @@ C:\Users\<YOURUSER>\flexget\plugins\  # Windows
  
  每个1小时 执行一次辅种
  
- 如果你也跟我是一样的环境 那除了带有个人信息的配置 基本就可以直接用下面的模板了
+注：Flexget不允许用中文注释 请用源码里的config.yml对照修改
 ```yaml
 web_server:
   bind: 0.0.0.0
@@ -47,7 +47,7 @@ templates:
       port: 443
       use_ssl: true
       username: admin
-      password: 123456789
+      password: 123456789xx
 
   #添加种子
   qbittorrent_add_template:
@@ -105,20 +105,20 @@ templates:
       port: 443
       use_ssl: true
       username: admin
-      password: 123456789
+      password: 123456789xx
 
 schedules:
-  #每分钟执行pt1, pt2
+  #每分钟执行 pt1, pt2
   - tasks: [pt1, pt2]
     interval:
       minutes: 1
 
-  #每隔5分钟执行resume, delete, modify
+  #每隔5分钟执行 resume, delete, modify
   - tasks: [resume, delete, modify]
     interval:
       minutes: 10
 
-  #每隔31小时行resume
+  #每隔1小时执行 reseed
   - tasks: [reseed]
     interval:
       hours: 1
@@ -164,7 +164,7 @@ tasks:
         port: 443
         use_ssl: true
         username: admin
-        password: 123456789
+        password: 123456789xx
     accept_all: yes
     template:
       - qbittorrent_base_template
@@ -212,7 +212,6 @@ tasks:
       - from_qbittorrent_template
       - qbittorrent_base_template
       - qbittorrent_resume_template
-
 ```
 
 ### add可选参数
