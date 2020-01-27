@@ -113,7 +113,7 @@ schedules:
     interval:
       minutes: 1
 
-  #每隔5分钟执行 resume, delete, modify
+  #每隔10分钟执行 resume, delete, modify
   - tasks: [resume, delete, modify]
     interval:
       minutes: 10
