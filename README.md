@@ -32,6 +32,8 @@ C:\Users\<YOURUSER>\flexget\plugins\  # Windows
  
  每个1小时 执行一次辅种
  
+ <https://t.me/flexget_qbittorrent_mod>
+ 
 注：Flexget不允许用中文注释 请用源码里的config.yml对照修改
 ```yaml
 web_server:
