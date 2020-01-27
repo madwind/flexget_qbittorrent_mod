@@ -161,6 +161,15 @@ tasks:
       - qbittorrent_base_template
       - qbittorrent_add_template
 
+  #修改种子信息
+  modify:
+    disable: [seen, seen_info_hash]
+    accept_all: yes
+    template:
+      - from_qbittorrent_template
+      - qbittorrent_base_template
+      - qbittorrent_modify_template  
+
   #自动删种
   delete:
     #官方插件：disable 关闭任务记录 
