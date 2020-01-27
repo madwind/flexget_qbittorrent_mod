@@ -1,0 +1,125 @@
+web_server:
+  bind: 0.0.0.0
+  port: 3539
+
+templates:
+  qbittorrent_base_template:
+    qbittorrent_mod:
+      host: qbittorrent.example.com
+      port: 443
+      use_ssl: true
+      username: admin
+      password: 123456789xx
+
+  qbittorrent_add_template:
+    qbittorrent_mod:
+      action:
+        add:
+          category: Rss
+          autoTMM: true
+
+  qbittorrent_modify_template:
+    qbittorrent_mod:
+      action:
+        modify:
+          tag_by_tracker: true
+          replace_tracker:
+            'http://tracker.pt1.com/announce.php?passkey=xxxxxxxxxxxxxx': 'https://tracker.pt1.com/announce.php?passkey=xxxxxxxxxxxxxx'
+
+  qbittorrent_resume_template:
+    qbittorrent_mod:
+      action:
+        resume:
+          only_complete: true
+
+  qbittorrent_delete_template:
+    qbittorrent_mod:
+      action:
+        remove:
+          check_reseed: true
+          delete_files: true
+          keep_disk_space: 20
+
+  from_qbittorrent_template:
+    from_qbittorrent_mod:
+      host: qbittorrent.example.com
+      port: 443
+      use_ssl: true
+      username: admin
+      password: 123456789xx
+
+schedules:
+  - tasks: [pt1, pt2]
+    interval:
+      minutes: 1
+
+  - tasks: [resume, delete, modify]
+    interval:
+      minutes: 10
+
+  - tasks: [reseed]
+    interval:
+      hours: 1
+
+tasks:
+  pt1:
+    rss: https://pt1.com/rss
+    regexp:
+      accept:
+        - CCTV
+      from: title
+    template:
+      - qbittorrent_base_template
+      - qbittorrent_add_template
+
+  pt2:
+    rss: https://pt1.com/rss
+    accept_all: yes
+    template:
+      - qbittorrent_base_template
+      - qbittorrent_add_template
+
+  reseed:
+    iyuu_auto_reseed:
+      iyuu: xxxxxxxxxxxxxxxxxxxx
+      passkeys:
+        pt123: xxxxxxxxxxxxxxxxxxxx
+        abc456: xxxxxxxxxxxxxxxxxxxx
+      qbittorrent_ressed:
+        host: qbittorrent.example.com
+        port: 443
+        use_ssl: true
+        username: admin
+        password: 123456789xx
+    accept_all: yes
+    template:
+      - qbittorrent_base_template
+      - qbittorrent_add_template
+
+  modify:
+    disable: [seen, seen_info_hash]
+    accept_all: yes
+    template:
+      - from_qbittorrent_template
+      - qbittorrent_base_template
+      - qbittorrent_modify_template
+
+  delete:
+    disable: [seen, seen_info_hash]
+    if:
+      - qbittorrent_category in ['Rss'] and qbittorrent_last_activity < now - timedelta(days=2): accept
+      - qbittorrent_state == 'missingFiles' or (qbittorrent_state in ['pausedDL'] and qbittorrent_downloaded == 0): accept
+    sort_by: qbittorrent_last_activity
+    template:
+      - from_qbittorrent_template
+      - qbittorrent_base_template
+      - qbittorrent_delete_template
+
+  resume:
+    disable: [seen, seen_info_hash]
+    if:
+      - qbittorrent_state == 'pausedUP': accept
+    template:
+      - from_qbittorrent_template
+      - qbittorrent_base_template
+      - qbittorrent_resume_template
