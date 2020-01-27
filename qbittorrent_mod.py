@@ -1,17 +1,19 @@
 import os
+import re
 import sys
 from datetime import datetime
 from os import path
 
-d = path.dirname(__file__)
-sys.path.append(d)
-from flexget.entry import Entry
 from loguru import logger
+from flexget.entry import Entry
+
 from flexget import plugin
 from flexget.event import event
-from qbittorrent_client import QBittorrentClient
 
-logger = logger.bind(name='qbittorrent_mod')
+d = path.dirname(__file__)
+sys.path.append(d)
+
+from qbittorrent_client import QBittorrentClient
 
 
 class QBittorrentModBase:
@@ -59,7 +61,6 @@ class PluginQBittorrentModInput(QBittorrentModBase):
                     'password': {'type': 'string'},
                     'verify_cert': {'type': 'boolean'},
                     'enabled': {'type': 'boolean'},
-                    'only_complete': {'type': 'boolean'},
                 },
                 'additionalProperties': False
             }
@@ -68,7 +69,6 @@ class PluginQBittorrentModInput(QBittorrentModBase):
 
     def prepare_config(self, config):
         config = QBittorrentModBase.prepare_config(self, config)
-        config.setdefault('only_complete', False)
         return config
 
     def on_task_input(self, task, config):
@@ -79,8 +79,7 @@ class PluginQBittorrentModInput(QBittorrentModBase):
         if not self.client:
             self.client = self.create_client(config)
         entries = []
-
-        for torrent in self.client.get_torrents():
+        for torrent in self.client.torrents:
             entry = Entry(
                 title=torrent['name'],
                 url='',
@@ -133,13 +132,25 @@ class PluginQBittorrentMod(QBittorrentModBase):
                                 'type': 'object',
                                 'properties': {
                                     'check_reseed': {'type': 'boolean'},
-                                    'delete_files': {'type': 'boolean'}
+                                    'delete_files': {'type': 'boolean'},
+                                    'keep_disk_space': {'type': 'integer'}
                                 }
                             },
                             'resume': {
                                 'type': 'object',
                                 'properties': {
                                     'only_complete': {'type': 'boolean'}
+                                }
+                            },
+                            'modify': {
+                                'type': 'object',
+                                'properties': {
+                                    'tag_by_tracker': {'type': 'boolean'},
+                                    'replace_trackers': {
+                                        'type': 'object',
+                                        'properties': {
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -152,7 +163,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
     }
 
     def prepare_config(self, config):
-        config = QBittorrentModBase.prepare_config(self, config)
+        config = super().prepare_config(config)
         config.setdefault('fail_html', True)
         config.setdefault('action', {})
         return config
@@ -203,11 +214,12 @@ class PluginQBittorrentMod(QBittorrentModBase):
         if action_config.get('add'):
             for entry in task.accepted:
                 self.add_entries(task, entry, action_config)
-                logger.info('qBittorrent: add {}', entry['title'])
         elif action_config.get('remove'):
             self.remove_entries(task, action_config)
         elif action_config.get('resume'):
             self.resume_entries(task, action_config)
+        elif action_config.get('modify'):
+            self.modify_entries(task, action_config)
         else:
             raise plugin.PluginError('Unknown action.')
 
@@ -261,31 +273,63 @@ class PluginQBittorrentMod(QBittorrentModBase):
         remove_options = config.get('remove')
         delete_files = remove_options.get('delete_files')
         check_reseed = remove_options.get('check_reseed')
+        keep_disk_space = remove_options.get('keep_disk_space')
+        main_data = self.client.main_data
+        free_space_on_disk = 0
+
+        if keep_disk_space:
+            server_state = main_data.get('server_state')
+            if server_state.get('dl_info_speed') == 0:
+                task.abort('keep_disk_space mode Works only when downloading.')
+            else:
+                free_space_on_disk = main_data.get('server_state').get('free_space_on_disk') / (1024 * 1024 * 1024)
+                if keep_disk_space < free_space_on_disk:
+                    task.abort('Enough disk space.keep_dissk_space:{}, free_space_on_disk：{}'.format(keep_disk_space,
+                                                                                                     free_space_on_disk))
 
         entry_map = {}
+        reseed_map = {}
         task_torrent_hashes = set()
-        # 构造需要删除的列表
         delete_hashes = set()
-
-        # 获取所有entry
+        '''
+        1.使用种子hash构造 任务hash字典 并生成 已接受的任务hash列表
+        2.获取name_with_pieces_hash字典 找出已接受的任务hash列表所有辅种
+        3.检测同一name_with_pieces_hash的种子是否都在已接受hash列表内 有一个不在并且设置了check_reseed则放弃这个种子的删除
+        4.如设置了keep_disk_space, 则按顺序一直删除到 预计剩余磁盘空间 > keep_disk_space的值
+        '''
         for entry in task.entries:
-            entry_map[entry['torrent_info_hash']] = entry
             if entry.accepted:
                 task_torrent_hashes.add(entry['torrent_info_hash'])
-
-        reseed_map = self.client.get_reseed_map()
-        for task_torrent_hash in task_torrent_hashes:
-            name = entry_map[task_torrent_hash]['title']
-            pieces_hashes = self.client.get_torrent_pieces_hashes(task_torrent_hash)
+            name = entry.get("title")
+            pieces_hashes = self.client.get_torrent_pieces_hashes(entry.get('torrent_info_hash'))
             name_with_pieces_hashes = f'{name}:{pieces_hashes}'
-            client_torrent_reseed_list = reseed_map.get(name_with_pieces_hashes)
+            entry['qbittorrent_name_with_pieces_hashes'] = name_with_pieces_hashes
+            if not reseed_map.get(name_with_pieces_hashes):
+                reseed_map[name_with_pieces_hashes] = []
+            reseed_map.get(name_with_pieces_hashes).append(entry)
+            entry_map[entry['torrent_info_hash']] = entry
+
+        space_check = False
+        for task_torrent_hash in task_torrent_hashes:
+            name_with_pieces_hashes = entry_map.get(task_torrent_hash).get('qbittorrent_name_with_pieces_hashes')
+            entry_reseed_list = reseed_map.get(name_with_pieces_hashes)
             torrent_hashes = set()
-            for client_torrent in client_torrent_reseed_list:
-                torrent_hashes.add(client_torrent['hash'])
+
+            for entry_reseed in entry_reseed_list:
+                torrent_hashes.add(entry_reseed['torrent_info_hash'])
             if check_reseed and not task_torrent_hashes >= torrent_hashes:
                 continue
             else:
-                delete_hashes.update(torrent_hashes)
+                if keep_disk_space:
+                    if keep_disk_space > free_space_on_disk:
+                        keep_disk_space += entry_reseed_list[0].get('qbittorrent_total_size') / (1024 * 1024 * 1024)
+                        delete_hashes.update(torrent_hashes)
+                    else:
+                        space_check = True
+                else:
+                    delete_hashes.update(torrent_hashes)
+            if space_check:
+                break
 
         for torrent_hash, entry in entry_map.items():
             if torrent_hash in delete_hashes:
@@ -304,6 +348,40 @@ class PluginQBittorrentMod(QBittorrentModBase):
             hashes.append(entry['torrent_info_hash'])
             logger.info('qBittorrent: resume {}', entry['title'])
         self.client.resume_torrents(str.join('|', hashes))
+
+    def modify_entries(self, task, config):
+        modify_options = config.get('modify')
+        tag_by_tracker = modify_options.get('tag_by_tracker')
+        replace_tracker = modify_options.get('replace_tracker')
+        for entry in task.accepted:
+            tags = entry.get('qbittorrent_tags')
+            torrent_trackers = self.client.get_torrent_trackers(entry['torrent_info_hash'])
+            for tracker in torrent_trackers:
+                # Tracker is disabled (used for DHT, PeX, and LSD)
+                if tracker.get('status') == 0:
+                    continue
+                modify = False
+                if tag_by_tracker:
+                    site_name = self._get_site_name(tracker.get('url'))
+                    if site_name and site_name not in tags:
+                        self.client.add_torrent_tags(entry['torrent_info_hash'], site_name)
+                        modify = True
+                        logger.info('qBittorrent: {} add tag {}', entry.get('title'), site_name)
+                if replace_tracker:
+                    for orig_url, new_url in replace_tracker.items():
+                        if tracker.get('url') == orig_url:
+                            self.client.edit_trackers(entry.get('torrent_info_hash'), orig_url, new_url)
+                            modify = True
+                            logger.info('qBittorrent: {} update tracker {}', entry.get('title'), new_url)
+                if not modify:
+                    entry.reject()
+
+    def _get_site_name(self, tracker_url):
+        re_object = re.search('(?<=//).*?(?=/)', tracker_url)
+        if re_object:
+            domain = re_object.group().split('.')
+            if len(domain) > 1:
+                return domain[len(domain) - 2]
 
     def on_task_learn(self, task, config):
         """ Make sure all temp files are cleaned up when entries are learned """

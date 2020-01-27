@@ -1,20 +1,17 @@
 # flexget_qbittorrent_mod
 这是一个 Flexget 的 qBittorrent插件
 
-flexget本身可以完成 Rss订阅 过滤
-
-配合本插件可以做到：
-
-1. Rss订阅 过滤 下载
-2. 自动辅种： 调用 IYUUAutoReseed 提供的辅种数据接口 自动辅种，添加的种子会处于暂停状态
-3. 自动删除指定种子：下面配置模板中 每隔1小时 删除 Rss 分类下 4 天没有上传下载流量的种子，或处于暂停状态没有下载过任何数据的种子（这个主要是针对自动辅种校验失败的种子）
-4. 自动开始种子： 自动开始校验完成的种子
-
-到这个版本发布，大概是学python的第5天吧，基本都是参照Flexget官方的transmission和qBittorrent插件抄抄改改，代码写得很烂，Flexget也是一头雾水，就是能随便用用的程度吧。如果有大佬提出意见或者建议，不甚感激。有问题的也可以在IYUU的群找到我。
-
-就这样，挂机刷数据吧
+参考：
 
 IYUUAutoReseed：<https://github.com/ledccn/IYUUAutoReseed>
+
+qBittorrent-Web-API<https://github.com/qbittorrent/qBittorrent/wiki/Web-API-Documentation#api-v20>
+
+## 实现种子生命周期的自动管理
+1. 下载：Rss获取种子，筛选后推送到qittorrent下载
+2. 修改：根据种子的tracker，修改种子的tag，或替换tracker
+3. 辅种：下载完成后，查询IYUUAutoReseed辅种数据，校验完成后自动开始做种
+4. 删种：符合删除条件后，删除包含辅种在内的所有种子
 
 ## 安装插件
 1. 下载插件 [releases](https://github.com/IvonWei/flexget_qbittorrent_mod/releases)
@@ -30,6 +27,7 @@ C:\Users\<YOURUSER>\flexget\plugins\  # Windows
 ```yaml
 web_server:
   bind: 0.0.0.0
+  #web监听端口
   port: 3539
 
 templates:
@@ -41,7 +39,8 @@ templates:
       use_ssl: true
       username: admin
       password: 123456789
-  #输出模板 添加种子
+
+  #添加种子
   qbittorrent_add_template:
     qbittorrent_mod:
       action:
@@ -51,8 +50,19 @@ templates:
           category: Rss
           #自动管理种子
           autoTMM: true
+  
+  #修改种子信息 
+  qbittorrent_modify_template:
+    qbittorrent_mod:
+      action:
+        modify:
+          #根据tracker的url自动添加种子标签 例如以下的tracker会提出出 pt1 的标签 v0.1.3新增
+          tag_by_tracker: true
+          #批量替换tracker 例如把http替换成https (需要完全匹配) v0.1.3新增
+          replace_tracker:
+            'http://tracker.pt1.com/announce.php?passkey=xxxxxxxxxxxxxx': 'https://tracker.pt1.com/announce.php?passkey=xxxxxxxxxxxxxx'
 
-  #输出模板 自动开始：用于校验完数据自动开始
+  #自动开始：用于校验完数据自动开始
   qbittorrent_resume_template:
     qbittorrent_mod:
       action:
@@ -60,7 +70,7 @@ templates:
           #暂时没什么用
           only_complete: true
 
-  #输出模板 自动删种
+  #自动删种
   qbittorrent_delete_template:
     qbittorrent_mod:
       action:
@@ -71,6 +81,13 @@ templates:
           check_reseed: true
           #删种同时是否删除数据
           delete_files: true
+          #设置磁盘空间阈值 单位GB（需要qBittorrent Web API 版本大于 v2.1.1 具体是从哪个版本开始的不清楚）  v0.1.3新增
+          #设置了该值后 当磁盘剩余空间低于配置的阈值时才会执行删除 并且当预计删除的种子删除后剩余空间大于阈值 则会放弃继续删除 实现尽可能多做种
+          #可配合sort对种子排序 例如 last_activity 实现优先从 最后活动时间（有上传下载流量）最久的种子删起
+          #注意：如果经过过滤器后 找不到任何匹配的种子 即使设置了该值 也不会删除
+          #推荐最低设置为 下载速度*删除任务时间间隔*2 
+          #例如 峰值下载速度：12.5MB/S 删除任务时间间隔：10 min 则最小应该设置为：12.5*60*10/1024=15
+          keep_disk_space: 20
 
   #输入模板 从qbittorrent获取数据
   from_qbittorrent_template:
@@ -82,16 +99,17 @@ templates:
       password: 123456789
 
 schedules:
-  #每分钟执行pt1,pt2
+  #每分钟执行pt1, pt2
   - tasks: [pt1, pt2]
     interval:
       minutes: 1
-  #每隔5分钟执行resume,delete
-  - tasks: [resume, delete]
-    interval:
-      minutes: 5
 
-  #每隔31小时行resume,delete
+  #每隔5分钟执行resume, delete, modify
+  - tasks: [resume, delete, modify]
+    interval:
+      minutes: 10
+
+  #每隔31小时行resume
   - tasks: [reseed]
     interval:
       hours: 1
@@ -99,21 +117,21 @@ schedules:
 #任务列表
 tasks:
   pt1:
-    #rss订阅链接
+    #官方插件：rss 订阅链接
     rss: https://pt1.com/rss
-    #过滤器 接受带有 CCTV 字样的种子
+    #官方插件：regexp 过滤器 接受带有 CCTV 字样的种子
     regexp:
       accept:
         - CCTV
       from: title
-    #基础+输出模板（模板配置会自动合并）
+    #基础+添加种子（模板配置会自动合并）
     template: 
       - qbittorrent_base_template
       - qbittorrent_add_template
   
   pt2:
     rss: https://pt1.com/rss
-    #过滤器 接受全部
+    #官方插件：accept_all 过滤器 接受全部
     accept_all: yes
     template:
       - qbittorrent_base_template
@@ -145,14 +163,17 @@ tasks:
 
   #自动删种
   delete:
-    #关闭任务记录 
+    #官方插件：disable 关闭任务记录 
     disable: [seen, seen_info_hash]
+    #官方插件： if 过滤器
     if:
       #参考entry属性列表
-      #种子在 Rss分类 并且 最后活动时间 < 4天 
-      - qbittorrent_category in ['Rss'] and qbittorrent_last_activity < now - timedelta(days=4): accept
+      #种子在 Rss分类 并且 最后活动时间 < 2天 
+      - qbittorrent_category in ['Rss'] and qbittorrent_last_activity < now - timedelta(days=2): accept
       #种子数据丢失 或者 （种子处于未完成的暂停状态 并且 下载大小为0）：一般是辅助失败的种子 
       - qbittorrent_state == 'missingFiles' or (qbittorrent_state in ['pausedDL'] and qbittorrent_downloaded == 0): accept
+    #官方sort_by插件：按最后活动时间从早到晚排序 优先删除
+    sort_by: qbittorrent_last_activity
     #使用输入模板 从qbittorrent获取数据
     #使用输出模板 自动删种
     template:
@@ -247,3 +268,27 @@ tasks:
 |qbittorrent_uploaded | integer | Amount of data uploaded
 |qbittorrent_uploaded_session | integer | Amount of data uploaded this session
 |qbittorrent_upspeed | integer | Torrent upload speed (bytes/s)
+
+### qbittorrent_state 可能返回的值:
+
+|Value|Description
+-|-
+|error|Some error occurred, applies to paused torrents
+|missingFiles|Torrent data files is missing
+|uploading|Torrent is being seeded and data is being transferred
+|pausedUP|Torrent is paused and has finished downloading
+|queuedUP|Queuing is enabled and torrent is queued for upload
+|stalledUP|Torrent is being seeded, but no connection were made
+|checkingUP|Torrent has finished downloading and is being checked
+|forcedUP|Torrent is forced to uploading and ignore queue limit
+|allocating|Torrent is allocating disk space for download
+|downloading|Torrent is being downloaded and data is being transferred
+|metaDL|Torrent has just started downloading and is fetching metadata
+|pausedDL|Torrent is paused and has NOT finished downloading
+|queuedDL|Queuing is enabled and torrent is queued for download
+|stalledDL|Torrent is being downloaded, but no connection were made
+|checkingDL|Same as checkingUP, but torrent has NOT finished downloading
+|forceDL|Torrent is forced to downloading to ignore queue limit
+|checkingResumeData|Checking resume data on qBt startup
+|moving|Torrent is moving to another location
+|unknown|Unknown status

@@ -7,12 +7,15 @@ logger = logger.bind(name='qbittorrent_client')
 
 class QBittorrentClient:
     API_URL_LOGIN = '/api/v2/auth/login'
-    API_URL_UPLOAD = '/api/v2/torrents/add'
-    API_URL_DOWNLOAD = '/api/v2/torrents/add'
+    API_URL_ADD_NEW_TORRENT = '/api/v2/torrents/add'
     API_URL_RESUME = '/api/v2/torrents/resume'
-    API_GET_TORRENT_LIST = '/api/v2/torrents/info'
-    API_GET_TORRENT_PIECES_STATES = '/api/v2/torrents/pieceHashes'
-    API_DELETE_TORRENTS = '/api/v2/torrents/delete'
+    API_URL_GET_TORRENT_LIST = '/api/v2/torrents/info'
+    API_URL_GET_TORRENT_PIECES_STATES = '/api/v2/torrents/pieceHashes'
+    API_URL_DELETE_TORRENTS = '/api/v2/torrents/delete'
+    API_URL_GET_MAIN_DATA = '/api/v2/sync/maindata'
+    API_URL_EDIT_TRACKERS = '/api/v2/torrents/editTracker'
+    API_URL_ADD_TORRENT_TAGS = '/api/v2/torrents/addTags'
+    API_URL_GET_TORRENT_TRACKERS = '/api/v2/torrents/trackers'
 
     def __init__(self, config):
         self.connect(config)
@@ -56,10 +59,10 @@ class QBittorrentClient:
         'localhost'.
         """
         self.session = Session()
-        if config.get('verify_cert') is None:
+        if not config.get('verify_cert'):
             self.verify = True
         else:
-            self.verify = config['verify_cert']
+            self.verify = config.get('verify_cert')
 
         self.url = '{}://{}:{}'.format('https' if config['use_ssl'] else 'http', config['host'], config['port']
                                        )
@@ -76,13 +79,11 @@ class QBittorrentClient:
         logger.debug('Successfully connected to qbittorrent')
         self.connected = True
 
-    def get_session(self):
-        return self.session
-
-    def get_torrents(self):
+    @property
+    def torrents(self):
         return list(self._request(
             'post',
-            self.url + self.API_GET_TORRENT_LIST,
+            self.url + self.API_URL_GET_TORRENT_LIST,
             msg_on_fail='get_torrents failed.',
             verify=self.verify,
         ).json())
@@ -93,7 +94,7 @@ class QBittorrentClient:
             multipart_data['torrents'] = f
             self._request(
                 'post',
-                self.url + self.API_URL_UPLOAD,
+                self.url + self.API_URL_ADD_NEW_TORRENT,
                 msg_on_fail='add_torrent_file failed.'.format(file_path),
                 files=multipart_data,
                 verify=self.verify,
@@ -104,7 +105,7 @@ class QBittorrentClient:
         multipart_data = {k: (None, v) for k, v in data.items()}
         self._request(
             'post',
-            self.url + self.API_URL_DOWNLOAD,
+            self.url + self.API_URL_ADD_NEW_TORRENT,
             msg_on_fail='add_torrent_url failed.',
             files=multipart_data,
             verify=self.verify,
@@ -114,9 +115,9 @@ class QBittorrentClient:
         data = {'hashes': hashes, 'deleteFiles': delete_files}
         self._request(
             'post',
-            self.url + self.API_DELETE_TORRENTS,
+            self.url + self.API_URL_DELETE_TORRENTS,
             data=data,
-            msg_on_fail='Authentication failed.',
+            msg_on_fail='delete_torrents failed.',
             verify=self.verify,
         )
 
@@ -124,11 +125,21 @@ class QBittorrentClient:
         data = {'hash': torrent_hash}
         return self._request(
             'post',
-            self.url + self.API_GET_TORRENT_PIECES_STATES,
+            self.url + self.API_URL_GET_TORRENT_PIECES_STATES,
             data=data,
             msg_on_fail='get_torrent_pieces_hashes failed.',
             verify=self.verify,
         ).text
+
+    def get_torrent_trackers(self, torrent_hash):
+        data = {'hash': torrent_hash}
+        return self._request(
+            'post',
+            self.url + self.API_URL_GET_TORRENT_TRACKERS,
+            data=data,
+            msg_on_fail='get_torrent_trackers failed.',
+            verify=self.verify,
+        ).json()
 
     def resume_torrents(self, hashes):
         data = {'hashes': hashes}
@@ -140,14 +151,31 @@ class QBittorrentClient:
             verify=self.verify,
         )
 
-    def get_reseed_map(self):
-        torrents = self.get_torrents()
-        reseed_map = {}
-        for torrent in torrents:
-            name = torrent['name']
-            pieces_hashes = self.get_torrent_pieces_hashes(torrent['hash'])
-            name_with_pieces_hashes = f'{name}:{pieces_hashes}'
-            if not reseed_map.get(name_with_pieces_hashes):
-                reseed_map[name_with_pieces_hashes] = []
-            reseed_map.get(name_with_pieces_hashes).append(torrent)
-        return reseed_map
+    def edit_trackers(self, torrent_hash, origurl, newurl):
+        data = {'hash': torrent_hash, 'origUrl': origurl, 'newUrl': newurl}
+        self._request(
+            'post',
+            self.url + self.API_URL_EDIT_TRACKERS,
+            data=data,
+            msg_on_fail='edit_trackers failed.',
+            verify=self.verify,
+        )
+
+    def add_torrent_tags(self, hashes, tags):
+        data = {'hashes': hashes, 'tags': tags}
+        self._request(
+            'post',
+            self.url + self.API_URL_ADD_TORRENT_TAGS,
+            data=data,
+            msg_on_fail='add_torrent_tags failed.',
+            verify=self.verify,
+        )
+
+    @property
+    def main_data(self):
+        return self._request(
+            'post',
+            self.url + self.API_URL_GET_MAIN_DATA,
+            msg_on_fail='get_main_data failed.',
+            verify=self.verify,
+        ).json()

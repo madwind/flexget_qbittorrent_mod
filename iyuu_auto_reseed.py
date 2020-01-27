@@ -4,16 +4,13 @@ import time
 from os import path
 
 import requests
-
-d = path.dirname(__file__)
-sys.path.append(d)
-
 from flexget import plugin
 from flexget.entry import Entry
 from flexget.event import event
 from flexget.utils import json
-from loguru import logger
 
+d = path.dirname(__file__)
+sys.path.append(d)
 from qbittorrent_client import QBittorrentClient
 
 
@@ -94,11 +91,11 @@ class PluginIYUUAutoReseed():
         return entries
 
     def get_torrents_data(self, config):
-        client = QBittorrentClient(config['qbittorrent_ressed'])
+        client = QBittorrentClient(config.get('qbittorrent_ressed'))
         torrent_dict = {}
         torrents_hashes = {}
         hashes = []
-        for torrent in client.get_torrents():
+        for torrent in client.torrents:
             if 'up' in torrent['state'].lower():
                 torrent_dict[torrent['hash']] = torrent
                 hashes.append(torrent['hash'])
