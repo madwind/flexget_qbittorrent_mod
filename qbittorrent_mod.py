@@ -287,9 +287,9 @@ class PluginQBittorrentMod(QBittorrentModBase):
                     task.abort('Enough disk space.keep_dissk_space:{}, free_space_on_disk：{}'.format(keep_disk_space,
                                                                                                      free_space_on_disk))
 
-        entry_map = {}
+        all_entry_map = {}
         reseed_map = {}
-        task_torrent_hashes = set()
+        accepted_entry_hashes = set()
         delete_hashes = set()
         '''
         1.使用种子hash构造 任务hash字典 并生成 已接受的任务hash列表
@@ -299,7 +299,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
         '''
         for entry in task.entries:
             if entry.accepted:
-                task_torrent_hashes.add(entry['torrent_info_hash'])
+                accepted_entry_hashes.add(entry['torrent_info_hash'])
             name = entry.get("title")
             pieces_hashes = self.client.get_torrent_pieces_hashes(entry.get('torrent_info_hash'))
             name_with_pieces_hashes = f'{name}:{pieces_hashes}'
@@ -307,22 +307,25 @@ class PluginQBittorrentMod(QBittorrentModBase):
             if not reseed_map.get(name_with_pieces_hashes):
                 reseed_map[name_with_pieces_hashes] = []
             reseed_map.get(name_with_pieces_hashes).append(entry)
-            entry_map[entry['torrent_info_hash']] = entry
+            all_entry_map[entry['torrent_info_hash']] = entry
 
         space_check = False
-        for task_torrent_hash in task_torrent_hashes:
-            name_with_pieces_hashes = entry_map.get(task_torrent_hash).get('qbittorrent_name_with_pieces_hashes')
+        for entry_hash in accepted_entry_hashes:
+            if entry_hash in delete_hashes:
+                continue
+
+            name_with_pieces_hashes = all_entry_map.get(entry_hash).get('qbittorrent_name_with_pieces_hashes')
             entry_reseed_list = reseed_map.get(name_with_pieces_hashes)
             torrent_hashes = set()
 
             for entry_reseed in entry_reseed_list:
                 torrent_hashes.add(entry_reseed['torrent_info_hash'])
-            if check_reseed and not task_torrent_hashes >= torrent_hashes:
+            if check_reseed and not accepted_entry_hashes >= torrent_hashes:
                 continue
             else:
                 if keep_disk_space:
                     if keep_disk_space > free_space_on_disk:
-                        free_space_on_disk += entry_reseed_list[0].get('qbittorrent_total_size') / (1024 * 1024 * 1024)
+                        free_space_on_disk += entry_reseed_list[0].get('qbittorrent_completed') / (1024 * 1024 * 1024)
                         delete_hashes.update(torrent_hashes)
                     else:
                         space_check = True
@@ -331,7 +334,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
             if space_check:
                 break
 
-        for torrent_hash, entry in entry_map.items():
+        for torrent_hash, entry in all_entry_map.items():
             if torrent_hash in delete_hashes:
                 entry.accept()
                 logger.info('qBittorrent delete: {}', entry['title'])
