@@ -309,7 +309,6 @@ class PluginQBittorrentMod(QBittorrentModBase):
             reseed_map.get(name_with_pieces_hashes).append(entry)
             all_entry_map[entry['torrent_info_hash']] = entry
 
-        space_check = False
         for entry_hash in accepted_entry_hashes:
             if entry_hash in delete_hashes:
                 continue
@@ -327,12 +326,10 @@ class PluginQBittorrentMod(QBittorrentModBase):
                     if keep_disk_space > free_space_on_disk:
                         free_space_on_disk += entry_reseed_list[0].get('qbittorrent_completed') / (1024 * 1024 * 1024)
                         delete_hashes.update(torrent_hashes)
-                    else:
-                        space_check = True
+                        if keep_disk_space < free_space_on_disk:
+                            break
                 else:
                     delete_hashes.update(torrent_hashes)
-            if space_check:
-                break
 
         for torrent_hash, entry in all_entry_map.items():
             if torrent_hash in delete_hashes:
