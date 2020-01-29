@@ -278,28 +278,30 @@ class PluginQBittorrentMod(QBittorrentModBase):
         free_space_on_disk = 0
 
         if keep_disk_space:
+            keep_disk_space = keep_disk_space * 1024 * 1024 * 1024
             server_state = main_data.get('server_state')
             if server_state.get('dl_info_speed') == 0:
                 task.abort('keep_disk_space mode Works only when downloading.')
             else:
-                free_space_on_disk = main_data.get('server_state').get('free_space_on_disk') / (1024 * 1024 * 1024)
+                free_space_on_disk = main_data.get('server_state').get('free_space_on_disk')
                 if keep_disk_space < free_space_on_disk:
                     task.abort('Enough disk space.keep_dissk_space:{}, free_space_on_disk：{}'.format(keep_disk_space,
                                                                                                      free_space_on_disk))
 
         all_entry_map = {}
         reseed_map = {}
-        accepted_entry_hashes = set()
-        delete_hashes = set()
+        accepted_entry_hashes = []
+        delete_hashes = []
         '''
         1.使用种子hash构造 任务hash字典 并生成 已接受的任务hash列表
         2.获取name_with_pieces_hash字典 找出已接受的任务hash列表所有辅种
         3.检测同一name_with_pieces_hash的种子是否都在已接受hash列表内 有一个不在并且设置了check_reseed则放弃这个种子的删除
         4.如设置了keep_disk_space, 则按顺序一直删除到 预计剩余磁盘空间 > keep_disk_space的值
         '''
+        delete_size = 0
         for entry in task.entries:
             if entry.accepted:
-                accepted_entry_hashes.add(entry['torrent_info_hash'])
+                accepted_entry_hashes.append(entry['torrent_info_hash'])
             name = entry.get("title")
             pieces_hashes = self.client.get_torrent_pieces_hashes(entry.get('torrent_info_hash'))
             name_with_pieces_hashes = f'{name}:{pieces_hashes}'
@@ -312,33 +314,43 @@ class PluginQBittorrentMod(QBittorrentModBase):
         for entry_hash in accepted_entry_hashes:
             if entry_hash in delete_hashes:
                 continue
-
             name_with_pieces_hashes = all_entry_map.get(entry_hash).get('qbittorrent_name_with_pieces_hashes')
             entry_reseed_list = reseed_map.get(name_with_pieces_hashes)
-            torrent_hashes = set()
+            torrent_hashes = []
 
             for entry_reseed in entry_reseed_list:
-                torrent_hashes.add(entry_reseed['torrent_info_hash'])
-            if check_reseed and not accepted_entry_hashes >= torrent_hashes:
+                torrent_hashes.append(entry_reseed['torrent_info_hash'])
+            if check_reseed and not set(accepted_entry_hashes) >= set(torrent_hashes):
+                for torrent_hash in torrent_hashes:
+                    all_entry_map.get(torrent_hash).reject(
+                        reason='torrents with the same pieces_hashes are not all tested')
                 continue
             else:
                 if keep_disk_space:
-                    if keep_disk_space > free_space_on_disk:
-                        free_space_on_disk += entry_reseed_list[0].get('qbittorrent_completed') / (1024 * 1024 * 1024)
-                        delete_hashes.update(torrent_hashes)
-                        if keep_disk_space < free_space_on_disk:
+                    if keep_disk_space > free_space_on_disk + delete_size:
+                        delete_size += entry_reseed_list[0].get('qbittorrent_completed')
+                        self._build_delete_hashes(delete_hashes, torrent_hashes, all_entry_map, keep_disk_space,
+                                                  free_space_on_disk, delete_size)
+                        if keep_disk_space < free_space_on_disk + delete_size:
                             break
                 else:
-                    delete_hashes.update(torrent_hashes)
-
-        for torrent_hash, entry in all_entry_map.items():
-            if torrent_hash in delete_hashes:
-                entry.accept()
-                logger.info('qBittorrent delete: {}', entry['title'])
-            else:
-                entry.reject()
+                    self._build_delete_hashes(delete_hashes, torrent_hashes, all_entry_map, keep_disk_space,
+                                              free_space_on_disk, delete_size)
 
         self.client.delete_torrents(str.join('|', delete_hashes), delete_files)
+
+    def _build_delete_hashes(self, delete_hashes, torrent_hashes, all_entry_map, keep_disk_space, free_space_on_disk,
+                             delete_size):
+        delete_hashes.extend(torrent_hashes)
+        logger.info('keep_disk_space: {:.2F} GB, free_space_on_disk: {:.2f} GB, delete_size: {:.2f} GB',
+                    keep_disk_space / (1024 * 1024 * 1024), free_space_on_disk / (1024 * 1024 * 1024),
+                    delete_size / (1024 * 1024 * 1024))
+        for torrent_hash in torrent_hashes:
+            all_entry_map.get(torrent_hash).accept(
+                reason='torrent with the same pieces_hashes are all pass tested')
+            logger.info('{}, site: {}, size: {:.2f} GB', all_entry_map.get(torrent_hash).get('title'),
+                        all_entry_map.get(torrent_hash).get('qbittorrent_tags'),
+                        all_entry_map.get(torrent_hash).get('qbittorrent_completed') / (1024 * 1024 * 1024))
 
     def resume_entries(self, task, config):
         resume_options = config.get('resume')
@@ -346,7 +358,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
         hashes = []
         for entry in task.accepted:
             hashes.append(entry['torrent_info_hash'])
-            logger.info('qBittorrent: resume {}', entry['title'])
+            logger.info('{}', entry['title'])
         self.client.resume_torrents(str.join('|', hashes))
 
     def modify_entries(self, task, config):
@@ -366,13 +378,13 @@ class PluginQBittorrentMod(QBittorrentModBase):
                     if site_name and site_name not in tags:
                         self.client.add_torrent_tags(entry['torrent_info_hash'], site_name)
                         modify = True
-                        logger.info('qBittorrent: {} add tag {}', entry.get('title'), site_name)
+                        logger.info('{} add tag {}', entry.get('title'), site_name)
                 if replace_tracker:
                     for orig_url, new_url in replace_tracker.items():
                         if tracker.get('url') == orig_url:
                             self.client.edit_trackers(entry.get('torrent_info_hash'), orig_url, new_url)
                             modify = True
-                            logger.info('qBittorrent: {} update tracker {}', entry.get('title'), new_url)
+                            logger.info('{} update tracker {}', entry.get('title'), new_url)
                 if not modify:
                     entry.reject()
 
