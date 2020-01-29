@@ -54,7 +54,7 @@ class PluginIYUUAutoReseed():
         passkeys = config.get('passkeys')
 
         torrent_dict, torrents_hashes = self.get_torrents_data(config)
-        response_json = requests.post('http://iyuu.cn:2122/api/reseed', json=torrents_hashes).json()
+        response_json = requests.post('http://pt.iyuu.cn/api/reseed', json=torrents_hashes).json()
         reseed_json = response_json['clients_0']
         sites_json = response_json['sites']
 
