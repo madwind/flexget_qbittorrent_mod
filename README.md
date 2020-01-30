@@ -15,10 +15,10 @@ tg: <https://t.me/flexget_qbittorrent_mod>
 - 辅种：下载完成后，查询IYUUAutoReseed辅种数据，校验完成后自动开始做种
 - 删种：符合删除条件后，删除包含辅种在内的所有种子
 
-## 系统需求
+### 系统需求
 - qBittorrent 4.1.4+
 - Python 3.6+
-## 测试环境
+### 测试环境
 - Flexget 3.1.13
 
 ### 安装插件
