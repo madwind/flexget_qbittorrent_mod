@@ -1,31 +1,37 @@
-# flexget_qbittorrent_mod
+## flexget_qbittorrent_mod
 这是一个 Flexget 的 qBittorrent插件
 
 tg: <https://t.me/flexget_qbittorrent_mod>
 
 参考：
 
-IYUUAutoReseed：<https://github.com/ledccn/IYUUAutoReseed>
+- IYUUAutoReseed：<https://github.com/ledccn/IYUUAutoReseed>
 
-qBittorrent-Web-API<https://github.com/qbittorrent/qBittorrent/wiki/Web-API-Documentation#api-v20>
+- qBittorrent-Web-API<https://github.com/qbittorrent/qBittorrent/wiki/Web-API-Documentation#api-v20>
 
-## 实现种子生命周期的自动管理
-1. 下载：Rss获取种子，筛选后推送到qittorrent下载
-2. 修改：根据种子的tracker，修改种子的tag，或替换tracker
-3. 辅种：下载完成后，查询IYUUAutoReseed辅种数据，校验完成后自动开始做种
-4. 删种：符合删除条件后，删除包含辅种在内的所有种子
+### 实现种子生命周期的自动管理
+- 下载：Rss获取种子，筛选后推送到qittorrent下载
+- 修改：根据种子的tracker，修改种子的tag，或替换tracker
+- 辅种：下载完成后，查询IYUUAutoReseed辅种数据，校验完成后自动开始做种
+- 删种：符合删除条件后，删除包含辅种在内的所有种子
 
-## 安装插件
-1. 下载插件 [releases](https://github.com/IvonWei/flexget_qbittorrent_mod/releases)
-2. 在Flexget配置文件夹下新建plugins文件夹，例如：
+## 系统需求
+- qBittorrent 4.1.4+
+- Python 3.6+
+## 测试环境
+- Flexget 3.1.13
+
+### 安装插件
+- 下载插件 [releases](https://github.com/IvonWei/flexget_qbittorrent_mod/releases)
+- 在Flexget配置文件夹下新建plugins文件夹，例如：
 ```
 ~/.flexget/plugins/  # Linux
 C:\Users\<YOURUSER>\flexget\plugins\  # Windows
 ```
-3. 将所有的 .py 文件解压至plugins
-4. 若启用了Web-UI或守护进程，则重启flexget重新加载配置
+- 将所有的 .py 文件解压至plugins
+- 若启用了Web-UI或守护进程，则重启flexget重新加载配置
 
- #### 配置模板
+### 配置模板
  先介绍一下我的环境
  
  每隔1分钟下载种子下载到 Rss分类
@@ -92,7 +98,7 @@ templates:
           check_reseed: true
           #删种同时是否删除数据
           delete_files: true
-          #设置磁盘空间阈值 单位GB（需要qBittorrent Web API 版本大于 v2.1.1 具体是从哪个版本开始的不清楚）  v0.1.3新增
+          #设置磁盘空间阈值 单位GB（需要qBittorrent 4.14+）  v0.1.3新增
           #设置了该值后 当磁盘剩余空间低于配置的阈值时才会执行删除 并且当预计删除的种子删除后剩余空间大于阈值 则会放弃继续删除 实现尽可能多做种
           #可配合sort对种子排序 例如 last_activity 实现优先从 最后活动时间（有上传下载流量）最久的种子删起
           #注意：如果经过过滤器后 找不到任何匹配的种子 即使设置了该值 也不会删除
