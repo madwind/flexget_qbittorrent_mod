@@ -281,12 +281,15 @@ class PluginQBittorrentMod(QBittorrentModBase):
             keep_disk_space = keep_disk_space * 1024 * 1024 * 1024
             server_state = main_data.get('server_state')
             if server_state.get('dl_info_speed') == 0:
-                task.abort('keep_disk_space mode Works only when downloading.')
+                logger.debug('keep_disk_space mode Works only when downloading.')
+                return
             else:
                 free_space_on_disk = main_data.get('server_state').get('free_space_on_disk')
                 if keep_disk_space < free_space_on_disk:
-                    task.abort('Enough disk space.keep_dissk_space:{}, free_space_on_disk：{}'.format(keep_disk_space,
-                                                                                                     free_space_on_disk))
+                    logger.debug('Enough disk space.keep_disk_space: {:.2f}, free_space_on_disk: {:.2f}',
+                                 keep_disk_space / (1024 * 1024 * 1024),
+                                 free_space_on_disk / (1024 * 1024 * 1024))
+                    return
 
         all_entry_map = {}
         reseed_map = {}
@@ -304,7 +307,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                 accepted_entry_hashes.append(entry['torrent_info_hash'])
             name = entry.get("title")
             pieces_hashes = self.client.get_torrent_pieces_hashes(entry.get('torrent_info_hash'))
-            name_with_pieces_hashes = f'{name}:{pieces_hashes}'
+            name_with_pieces_hashes = '{}:{}'.format(name, pieces_hashes)
             entry['qbittorrent_name_with_pieces_hashes'] = name_with_pieces_hashes
             if not reseed_map.get(name_with_pieces_hashes):
                 reseed_map[name_with_pieces_hashes] = []

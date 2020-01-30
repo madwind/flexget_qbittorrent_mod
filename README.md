@@ -17,9 +17,10 @@ tg: <https://t.me/flexget_qbittorrent_mod>
 
 ### 系统需求
 - qBittorrent 4.1.4+
-- Python 3.6+
+
 ### 测试环境
 - Flexget 3.1.13
+- Python 3.7
 
 ### 安装插件
 - 下载插件 [releases](https://github.com/IvonWei/flexget_qbittorrent_mod/releases)
