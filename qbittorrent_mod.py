@@ -317,11 +317,12 @@ class PluginQBittorrentMod(QBittorrentModBase):
                     keep_disk_space / (1024 * 1024 * 1024), free_space_on_disk / (1024 * 1024 * 1024),
                     delete_size / (1024 * 1024 * 1024))
         for torrent_hash in torrent_hashes:
-            all_entry_map.get(torrent_hash).accept(
-                reason='torrent with the same pieces_hashes are all pass tested')
-            logger.info('{}, site: {}, size: {:.2f} GB', all_entry_map.get(torrent_hash).get('title'),
-                        all_entry_map.get(torrent_hash).get('qbittorrent_tags'),
-                        all_entry_map.get(torrent_hash).get('qbittorrent_completed') / (1024 * 1024 * 1024))
+            entry = all_entry_map.get(torrent_hash)
+            entry.accept(reason='torrent with the same pieces_hashes are all pass tested')
+            logger.info('{}, site: {}, size: {:.2f} GB, last_activity: {}', entry.get('title'),
+                        entry.get('qbittorrent_tags'),
+                        entry.get('qbittorrent_completed') / (1024 * 1024 * 1024),
+                        entry.get('qbittorrent_last_activity'))
 
     def resume_entries(self, task, config):
         resume_options = config.get('resume')
