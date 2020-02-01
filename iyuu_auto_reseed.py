@@ -53,7 +53,7 @@ class PluginIYUUAutoReseed():
         config = self.prepare_config(config)
         passkeys = config.get('passkeys')
 
-        torrent_dict, torrents_hashes = self.get_torrents_data(config)
+        torrent_dict, torrents_hashes = self.get_torrents_data(task, config)
         response_json = requests.post('http://pt.iyuu.cn/api/reseed', json=torrents_hashes).json()
         reseed_json = response_json['clients_0']
         sites_json = response_json['sites']
@@ -94,13 +94,14 @@ class PluginIYUUAutoReseed():
                     entries.append(entry)
         return entries
 
-    def get_torrents_data(self, config):
+    def get_torrents_data(self, task, config):
         client = QBittorrentClientFactory().get_client(config.get('qbittorrent_ressed'))
+        task_data = client.get_task_data(id(task))
         torrent_dict = {}
         torrents_hashes = {}
         hashes = []
 
-        for entry in client.entry_dict.values():
+        for entry in task_data.get('entry_dict').values():
             if 'up' in entry['qbittorrent_state'].lower():
                 torrent_dict[entry['torrent_info_hash']] = entry
                 hashes.append(entry['torrent_info_hash'])

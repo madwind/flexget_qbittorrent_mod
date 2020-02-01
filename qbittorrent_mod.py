@@ -75,7 +75,7 @@ class PluginQBittorrentModInput(QBittorrentModBase):
             return
         if not self.client:
             self.client = self.create_client(config)
-        return list(self.client.entry_dict.values())
+        return list(self.client.get_task_data(id(task)).get('entry_dict').values())
 
 
 class PluginQBittorrentMod(QBittorrentModBase):
@@ -100,7 +100,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                                     'savepath': {'type': 'string'},
                                     'cookie': {'type': 'string'},
                                     'category': {'type': 'string'},
-                                    'skip_checking': {'type': 'string'},
+                                    'skip_checking': {'type': 'boolean'},
                                     'paused': {'type': 'string'},
                                     'root_folder': {'type': 'string'},
                                     'rename': {'type': 'string'},
@@ -206,6 +206,16 @@ class PluginQBittorrentMod(QBittorrentModBase):
         else:
             raise plugin.PluginError('Unknown action.')
 
+    def on_task_exit(self, task, config):
+        config = self.prepare_config(config)
+        if not self.client:
+            self.client = self.create_client(config)
+            if self.client:
+                logger.debug('Successfully connected to qBittorrent.')
+            else:
+                raise plugin.PluginError("Couldn't connect to qBittorrent.")
+        self.client.del_task_data(id(task))
+
     def add_entries(self, task, entry, config):
         add_options = config.get('add')
 
@@ -257,7 +267,8 @@ class PluginQBittorrentMod(QBittorrentModBase):
         delete_files = remove_options.get('delete_files')
         check_reseed = remove_options.get('check_reseed')
         keep_disk_space = remove_options.get('keep_disk_space')
-        server_state = self.client.server_state
+        task_data = self.client.get_task_data(id(task))
+        server_state = task_data.get('server_state')
         free_space_on_disk = 0
 
         if keep_disk_space:
@@ -273,8 +284,8 @@ class PluginQBittorrentMod(QBittorrentModBase):
                                  free_space_on_disk / (1024 * 1024 * 1024))
                     return
 
-        entry_dict = self.client.entry_dict
-        reseed_dict = self.client.reseed_dict
+        entry_dict = task_data.get('entry_dict')
+        reseed_dict = task_data.get('reseed_dict')
         accepted_entry_hashes = []
         delete_hashes = []
 

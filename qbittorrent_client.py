@@ -49,8 +49,8 @@ class QBittorrentClient:
         self._server_state = {}
         self._action_history = {}
         self._rid = 0
-        self._building = False
         self.connect(config)
+        self._task_dict = {}
 
     def _request(self, method, url, msg_on_fail=None, **kwargs):
         if not url.endswith(self.API_URL_LOGIN) and not self.connected:
@@ -209,22 +209,19 @@ class QBittorrentClient:
             verify=self.verify,
         ).json()
 
-    @property
-    def server_state(self):
-        return self._server_state
+    def get_task_data(self, task_id):
+        if not self._task_dict.get(task_id):
+            self._build_entry()
+            self._task_dict[task_id] = {'server_state': copy.deepcopy(self._server_state),
+                                        'entry_dict': copy.deepcopy(self._entry_dict),
+                                        'reseed_dict': copy.deepcopy(self._reseed_dict)}
+        return self._task_dict.get(task_id)
 
-    @property
-    def entry_dict(self):
-        self._build_entry()
-        return copy.deepcopy(self._entry_dict)
-
-    @property
-    def reseed_dict(self):
-        return copy.deepcopy(self._reseed_dict)
+    def del_task_data(self, task_id):
+        if self._task_dict.get(task_id):
+            del self._task_dict[task_id]
 
     def _build_entry(self):
-        if self._building:
-            return
         with self.build_entry_lock:
             self._building = True
             main_data = self.get_main_data()
@@ -246,7 +243,6 @@ class QBittorrentClient:
             if torrent_removed:
                 for torrent_hash in torrent_removed:
                     self._remove_entry(torrent_hash)
-            self._building = False
 
     def _update_entry(self, torrent_hash, torrent):
         entry = self._entry_dict.get(torrent_hash)
@@ -282,7 +278,7 @@ class QBittorrentClient:
             if len(torrent_list_removed) == 0:
                 del self._reseed_dict[name_with_pieces_hashes]
             else:
-                self._reseed_dict[name_with_pieces_hashes] = torrent_list
+                self._reseed_dict[name_with_pieces_hashes] = torrent_list_removed
         else:
             self._rid = 0
             self._action_history.clear()
