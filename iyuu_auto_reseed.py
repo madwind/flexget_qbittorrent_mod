@@ -11,7 +11,7 @@ from flexget.utils import json
 
 d = path.dirname(__file__)
 sys.path.append(d)
-from qbittorrent_client import QBittorrentClient
+from qbittorrent_client import QBittorrentClientFactory
 
 
 class PluginIYUUAutoReseed():
@@ -59,46 +59,51 @@ class PluginIYUUAutoReseed():
         sites_json = response_json['sites']
 
         entries = []
-        for info_hash, seeds_data in reseed_json.items():
-            for torrent in seeds_data['torrent']:
-                site = sites_json[str(torrent['sid'])]
-                client_torrent = torrent_dict[info_hash]
-                base_url = site['base_url']
-                site_name = ''
-                passkey = ''
-                for key, value in passkeys.items():
-                    if key in base_url:
-                        site_name = key
-                        passkey = value
-                        break
-                if not passkey:
-                    continue
-                if site_name == 'totheglory':
-                    download_page = site['download_page'].format(str(torrent['torrent_id']) + '/' + passkey)
-                else:
-                    download_page = site['download_page'].format(str(torrent['torrent_id']) + '&passkey=' + passkey)
+        if response_json:
+            for info_hash, seeds_data in reseed_json.items():
+                for torrent in seeds_data['torrent']:
+                    site = sites_json[str(torrent['sid'])]
+                    client_torrent = torrent_dict[info_hash]
+                    base_url = site['base_url']
+                    protocol = 'https'
+                    site_name = ''
+                    passkey = ''
+                    for key, value in passkeys.items():
+                        if key in base_url:
+                            site_name = key
+                            passkey = value
+                            break
+                    if not passkey:
+                        continue
+                    if site_name == 'totheglory':
+                        download_page = site['download_page'].format(str(torrent['torrent_id']) + '/' + passkey)
+                    else:
+                        download_page = site['download_page'].format(str(torrent['torrent_id']) + '&passkey=' + passkey)
+                    if site_name == 'oshen':
+                        protocol = 'http'
 
-                entry = Entry(
-                    title=client_torrent['name'],
-                    url='https://{}/{}'.format(base_url, download_page),
-                    torrent_info_hash=torrent['info_hash']
-                )
-                entry['autoTMM'] = client_torrent['auto_tmm']
-                entry['category'] = client_torrent['category']
-                entry['savepath'] = client_torrent['save_path']
-                entry['paused'] = 'true'
-                entries.append(entry)
+                    entry = Entry(
+                        title=client_torrent['title'],
+                        url='{}://{}/{}'.format(protocol, base_url, download_page),
+                        torrent_info_hash=torrent['info_hash']
+                    )
+                    entry['autoTMM'] = client_torrent['qbittorrent_auto_tmm']
+                    entry['category'] = client_torrent['qbittorrent_category']
+                    entry['savepath'] = client_torrent['qbittorrent_save_path']
+                    entry['paused'] = 'true'
+                    entries.append(entry)
         return entries
 
     def get_torrents_data(self, config):
-        client = QBittorrentClient(config.get('qbittorrent_ressed'))
+        client = QBittorrentClientFactory().get_client(config.get('qbittorrent_ressed'))
         torrent_dict = {}
         torrents_hashes = {}
         hashes = []
-        for torrent in client.torrents:
-            if 'up' in torrent['state'].lower():
-                torrent_dict[torrent['hash']] = torrent
-                hashes.append(torrent['hash'])
+
+        for entry in client.entry_dict.values():
+            if 'up' in entry['qbittorrent_state'].lower():
+                torrent_dict[entry['torrent_info_hash']] = entry
+                hashes.append(entry['torrent_info_hash'])
 
         list.sort(hashes)
         hashes_json = json.dumps(hashes)

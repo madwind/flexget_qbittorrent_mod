@@ -256,6 +256,8 @@ tasks:
 
 |Property | Type | Description
 -|-|-
+|title | string | Torrent name
+|torrent_info_hash | string | Torrent hash
 |qbittorrent_added_on | datetime | Time when the torrent was added to the client
 |qbittorrent_completion_on | datetime | Time when the torrent completed
 |qbittorrent_last_activity | datetime | Last time when a chunk was downloaded/uploaded
@@ -271,7 +273,6 @@ tasks:
 |qbittorrent_eta | integer | Torrent ETA (seconds)
 |qbittorrent_f_l_piece_prio | bool | True if first last piece are prioritized
 |qbittorrent_force_start | bool | True if force start is enabled for this torrent
-|qbittorrent_hash | string | Torrent hash
 |qbittorrent_magnet_uri | string | Magnet URI corresponding to this torrent
 |qbittorrent_max_ratio | float | Maximum share ratio until torrent is stopped from seeding/uploading
 |qbittorrent_max_seeding_time | integer | Maximum seeding time (seconds) until torrent is stopped from seeding

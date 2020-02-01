@@ -1,8 +1,35 @@
+import _thread
+import copy
+import json
+import threading
+import time
+from datetime import datetime
+
 from flexget import plugin
+from flexget.entry import Entry
+from flexget.utils.tools import singleton
 from loguru import logger
 from requests import RequestException, Session
 
 logger = logger.bind(name='qbittorrent_client')
+
+
+@singleton
+class QBittorrentClientFactory:
+    _client_lock = threading.Lock()
+
+    def __init__(self):
+        self.client_map = {}
+
+    def get_client(self, config):
+        client_key = '{}{}'.format(config.get('host'), config.get('port'))
+        client = self.client_map.get(client_key)
+        if not client:
+            with self._client_lock:
+                if not client:
+                    client = QBittorrentClient(config)
+                    self.client_map[client_key] = client
+        return client
 
 
 class QBittorrentClient:
@@ -17,7 +44,14 @@ class QBittorrentClient:
     API_URL_ADD_TORRENT_TAGS = '/api/v2/torrents/addTags'
     API_URL_GET_TORRENT_TRACKERS = '/api/v2/torrents/trackers'
 
+    build_entry_lock = threading.Lock()
+
     def __init__(self, config):
+        self._reseed_dict = {}
+        self._entry_dict = {}
+        self._server_state = {}
+        self.rid = 0
+        self.building = False
         self.connect(config)
 
     def _request(self, method, url, msg_on_fail=None, **kwargs):
@@ -25,9 +59,9 @@ class QBittorrentClient:
             raise plugin.PluginError('Not connected.')
         try:
             response = self.session.request(method, url, **kwargs)
-            if response.status_code == 403:
+            if response.status_code == 403 or (self.API_URL_LOGIN in url and response.text == 'Fails.'):
                 msg = (
-                    'Failure. URL: {}, data: {}'.format(url, kwargs)
+                    'Failure. URL: {}, data: {}, status_code: {}'.format(url, kwargs)
                     if not msg_on_fail
                     else msg_on_fail
                 )
@@ -69,15 +103,15 @@ class QBittorrentClient:
         self.check_api_version('Check API version failed.')
         if config.get('username') and config.get('password'):
             data = {'username': config['username'], 'password': config['password']}
-            self._request(
+            response = self._request(
                 'post',
                 self.url + self.API_URL_LOGIN,
                 data=data,
                 msg_on_fail='Authentication failed.',
                 verify=self.verify,
             )
-        logger.debug('Successfully connected to qbittorrent')
-        self.connected = True
+            logger.debug('Successfully connected to qbittorrent')
+            self.connected = True
 
     @property
     def torrents(self):
@@ -133,13 +167,14 @@ class QBittorrentClient:
 
     def get_torrent_trackers(self, torrent_hash):
         data = {'hash': torrent_hash}
-        return self._request(
+        response = self._request(
             'post',
             self.url + self.API_URL_GET_TORRENT_TRACKERS,
             data=data,
             msg_on_fail='get_torrent_trackers failed.',
-            verify=self.verify,
-        ).json()
+            verify=self.verify
+        )
+        return response.json()
 
     def resume_torrents(self, hashes):
         data = {'hashes': hashes}
@@ -171,11 +206,90 @@ class QBittorrentClient:
             verify=self.verify,
         )
 
-    @property
-    def main_data(self):
+    def get_main_data(self):
+        data = {'rid': self.rid}
         return self._request(
             'post',
             self.url + self.API_URL_GET_MAIN_DATA,
+            data=data,
             msg_on_fail='get_main_data failed.',
             verify=self.verify,
         ).json()
+
+    @property
+    def server_state(self):
+        return self._server_state
+
+    @property
+    def entry_dict(self):
+        self.build_entry()
+        return copy.deepcopy(self._entry_dict)
+
+    @property
+    def reseed_dict(self):
+        return copy.deepcopy(self._reseed_dict)
+
+    def build_entry(self):
+        if self.building:
+            return
+        with self.build_entry_lock:
+            self.building = True
+            main_data = self.get_main_data()
+            self.rid = main_data.get('rid')
+            if main_data.get('full_update'):
+                self._entry_dict = {}
+                self._reseed_dict = {}
+
+            server_state = main_data.get('server_state')
+            if server_state:
+                for state, value in server_state.items():
+                    self._server_state[state] = value
+
+            torrents = main_data.get('torrents')
+            if torrents:
+                for torrent_hash, torrent in torrents.items():
+                    self.update_entry(torrent_hash, torrent)
+            torrent_removed = main_data.get('torrents_removed')
+            if torrent_removed:
+                for torrent_hash in torrent_removed:
+                    self.remove_entry(torrent_hash)
+            self.building = False
+
+    def update_entry(self, torrent_hash, torrent):
+        entry = self._entry_dict.get(torrent_hash)
+        if not entry:
+            name = torrent.get('name')
+            pieces_hashes = self.get_torrent_pieces_hashes(torrent_hash)
+            name_with_pieces_hashes = '{}:{}'.format(name, pieces_hashes)
+            trackers = list(filter(lambda tracker: tracker.get('status') != 0, self.get_torrent_trackers(torrent_hash)))
+            entry = Entry(
+                title=name,
+                url='',
+                torrent_info_hash=torrent_hash,
+                content_size=torrent['size'] / (1024 * 1024 * 1024),
+                qbittorrent_name_with_pieces_hashes=name_with_pieces_hashes,
+                qbittorrent_trackers=trackers
+            )
+            self._entry_dict[torrent_hash] = entry
+            if not self._reseed_dict.get(name_with_pieces_hashes):
+                self._reseed_dict[name_with_pieces_hashes] = []
+            self._reseed_dict.get(name_with_pieces_hashes).append(entry)
+        for key, value in torrent.items():
+            if key in ['added_on', 'completion_on', 'last_activity', 'seen_complete']:
+                entry['qbittorrent_' + key] = datetime.fromtimestamp(value)
+            else:
+                entry['qbittorrent_' + key] = value
+
+    def remove_entry(self, torrent_hash):
+        name_with_pieces_hashes = self._entry_dict.get(torrent_hash).get('qbittorrent_name_with_pieces_hashes')
+        torrent_list = self._reseed_dict.get(name_with_pieces_hashes)
+        if torrent_list and torrent_hash in self._entry_dict.keys():
+            torrent_list_removed = list(
+                filter(lambda torrent: torrent['torrent_info_hash'] != torrent_hash, torrent_list))
+            if len(torrent_list_removed) == 0:
+                del self._reseed_dict[name_with_pieces_hashes]
+            else:
+                self._reseed_dict[name_with_pieces_hashes] = torrent_list
+        else:
+            self.rid = 0
+            logger.warning('Sync error, rebuild data')

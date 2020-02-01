@@ -1,19 +1,16 @@
 import os
 import re
 import sys
-from datetime import datetime
 from os import path
-
-from loguru import logger
-from flexget.entry import Entry
 
 from flexget import plugin
 from flexget.event import event
+from loguru import logger
 
 d = path.dirname(__file__)
 sys.path.append(d)
 
-from qbittorrent_client import QBittorrentClient
+from qbittorrent_client import QBittorrentClientFactory
 
 
 class QBittorrentModBase:
@@ -31,7 +28,7 @@ class QBittorrentModBase:
         return config
 
     def create_client(self, config):
-        client = QBittorrentClient(config)
+        client = QBittorrentClientFactory().get_client(config)
         return client
 
     def on_task_start(self, task, config):
@@ -78,21 +75,7 @@ class PluginQBittorrentModInput(QBittorrentModBase):
             return
         if not self.client:
             self.client = self.create_client(config)
-        entries = []
-        for torrent in self.client.torrents:
-            entry = Entry(
-                title=torrent['name'],
-                url='',
-                torrent_info_hash=torrent['hash'],
-                content_size=torrent['size'] / (1024 * 1024),
-            )
-            for key, value in torrent.items():
-                if key in ['added_on', 'completion_on', 'last_activity', 'seen_complete']:
-                    entry['qbittorrent_' + key] = datetime.fromtimestamp(value)
-                else:
-                    entry['qbittorrent_' + key] = value
-            entries.append(entry)
-        return entries
+        return list(self.client.entry_dict.values())
 
 
 class PluginQBittorrentMod(QBittorrentModBase):
@@ -204,7 +187,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
             # Do not run if there is nothing to do
         if not task.accepted:
             return
-        if self.client is None:
+        if not self.client:
             self.client = self.create_client(config)
             if self.client:
                 logger.debug('Successfully connected to qBittorrent.')
@@ -234,7 +217,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
         if add_options.get('autoTMM') and not add_options.get('category'):
             del add_options['savepath']
 
-        if add_options.get('paused') is None:
+        if not add_options.get('paused'):
             del add_options['paused']
 
         is_magnet = entry['url'].startswith('magnet:')
@@ -274,70 +257,55 @@ class PluginQBittorrentMod(QBittorrentModBase):
         delete_files = remove_options.get('delete_files')
         check_reseed = remove_options.get('check_reseed')
         keep_disk_space = remove_options.get('keep_disk_space')
-        main_data = self.client.main_data
+        server_state = self.client.server_state
         free_space_on_disk = 0
 
         if keep_disk_space:
             keep_disk_space = keep_disk_space * 1024 * 1024 * 1024
-            server_state = main_data.get('server_state')
-            if server_state.get('dl_info_speed') == 0:
+            free_space_on_disk = server_state.get('free_space_on_disk')
+            if server_state.get('dl_info_speed') == 0 and free_space_on_disk != 0:
                 logger.debug('keep_disk_space mode Works only when downloading.')
                 return
             else:
-                free_space_on_disk = main_data.get('server_state').get('free_space_on_disk')
                 if keep_disk_space < free_space_on_disk:
                     logger.debug('Enough disk space.keep_disk_space: {:.2f}, free_space_on_disk: {:.2f}',
                                  keep_disk_space / (1024 * 1024 * 1024),
                                  free_space_on_disk / (1024 * 1024 * 1024))
                     return
 
-        all_entry_map = {}
-        reseed_map = {}
+        entry_dict = self.client.entry_dict
+        reseed_dict = self.client.reseed_dict
         accepted_entry_hashes = []
         delete_hashes = []
-        '''
-        1.使用种子hash构造 任务hash字典 并生成 已接受的任务hash列表
-        2.获取name_with_pieces_hash字典 找出已接受的任务hash列表所有辅种
-        3.检测同一name_with_pieces_hash的种子是否都在已接受hash列表内 有一个不在并且设置了check_reseed则放弃这个种子的删除
-        4.如设置了keep_disk_space, 则按顺序一直删除到 预计剩余磁盘空间 > keep_disk_space的值
-        '''
+
         delete_size = 0
-        for entry in task.entries:
-            if entry.accepted:
-                accepted_entry_hashes.append(entry['torrent_info_hash'])
-            name = entry.get("title")
-            pieces_hashes = self.client.get_torrent_pieces_hashes(entry.get('torrent_info_hash'))
-            name_with_pieces_hashes = '{}:{}'.format(name, pieces_hashes)
-            entry['qbittorrent_name_with_pieces_hashes'] = name_with_pieces_hashes
-            if not reseed_map.get(name_with_pieces_hashes):
-                reseed_map[name_with_pieces_hashes] = []
-            reseed_map.get(name_with_pieces_hashes).append(entry)
-            all_entry_map[entry['torrent_info_hash']] = entry
+        for entry in task.accepted:
+            accepted_entry_hashes.append(entry['torrent_info_hash'])
 
         for entry_hash in accepted_entry_hashes:
             if entry_hash in delete_hashes:
                 continue
-            name_with_pieces_hashes = all_entry_map.get(entry_hash).get('qbittorrent_name_with_pieces_hashes')
-            entry_reseed_list = reseed_map.get(name_with_pieces_hashes)
+            name_with_pieces_hashes = entry_dict.get(entry_hash).get('qbittorrent_name_with_pieces_hashes')
+            reseed_entry_list = reseed_dict.get(name_with_pieces_hashes)
             torrent_hashes = []
 
-            for entry_reseed in entry_reseed_list:
-                torrent_hashes.append(entry_reseed['torrent_info_hash'])
+            for reseed_entry in reseed_entry_list:
+                torrent_hashes.append(reseed_entry['torrent_info_hash'])
             if check_reseed and not set(accepted_entry_hashes) >= set(torrent_hashes):
                 for torrent_hash in torrent_hashes:
-                    all_entry_map.get(torrent_hash).reject(
+                    entry_dict.get(torrent_hash).reject(
                         reason='torrents with the same pieces_hashes are not all tested')
                 continue
             else:
                 if keep_disk_space:
                     if keep_disk_space > free_space_on_disk + delete_size:
-                        delete_size += entry_reseed_list[0].get('qbittorrent_completed')
-                        self._build_delete_hashes(delete_hashes, torrent_hashes, all_entry_map, keep_disk_space,
+                        delete_size += reseed_entry_list[0].get('qbittorrent_completed')
+                        self._build_delete_hashes(delete_hashes, torrent_hashes, entry_dict, keep_disk_space,
                                                   free_space_on_disk, delete_size)
                         if keep_disk_space < free_space_on_disk + delete_size:
                             break
                 else:
-                    self._build_delete_hashes(delete_hashes, torrent_hashes, all_entry_map, keep_disk_space,
+                    self._build_delete_hashes(delete_hashes, torrent_hashes, entry_dict, keep_disk_space,
                                               free_space_on_disk, delete_size)
 
         self.client.delete_torrents(str.join('|', delete_hashes), delete_files)
@@ -370,11 +338,8 @@ class PluginQBittorrentMod(QBittorrentModBase):
         replace_tracker = modify_options.get('replace_tracker')
         for entry in task.accepted:
             tags = entry.get('qbittorrent_tags')
-            torrent_trackers = self.client.get_torrent_trackers(entry['torrent_info_hash'])
+            torrent_trackers = entry.get('qbittorrent_trackers')
             for tracker in torrent_trackers:
-                # Tracker is disabled (used for DHT, PeX, and LSD)
-                if tracker.get('status') == 0:
-                    continue
                 modify = False
                 if tag_by_tracker:
                     site_name = self._get_site_name(tracker.get('url'))
