@@ -17,6 +17,7 @@ templates:
         add:
           category: Rss
           autoTMM: true
+          skip_checking: true
 
   qbittorrent_modify_template:
     qbittorrent_mod:
@@ -30,7 +31,7 @@ templates:
     qbittorrent_mod:
       action:
         resume:
-          only_complete: true
+          recheck_torrents: true
 
   qbittorrent_delete_template:
     qbittorrent_mod:
@@ -38,7 +39,7 @@ templates:
         remove:
           check_reseed: true
           delete_files: true
-          keep_disk_space: 20
+          keep_disk_space: 10
 
   from_qbittorrent_template:
     from_qbittorrent_mod:
@@ -49,20 +50,16 @@ templates:
       password: 123456789xx
 
 schedules:
-  - tasks: [pt1, pt2]
+  - tasks: [rss1, rss2]
     interval:
       minutes: 1
 
-  - tasks: [resume, delete, modify]
+  - tasks: [reseed, resume, delete, modify]
     interval:
-      minutes: 10
-
-  - tasks: [reseed]
-    interval:
-      hours: 1
+      minutes: 5
 
 tasks:
-  pt1:
+  rss1:
     rss: https://pt1.com/rss
     regexp:
       accept:
@@ -72,14 +69,17 @@ tasks:
       - qbittorrent_base_template
       - qbittorrent_add_template
 
-  pt2:
-    rss: https://pt1.com/rss
+  rss2:
+    inputs:
+      - rss: https://pt1.com/rss
+      - rss: https://pt2.com/rss
     accept_all: yes
     template:
       - qbittorrent_base_template
       - qbittorrent_add_template
 
   reseed:
+    priority: 1
     iyuu_auto_reseed:
       iyuu: xxxxxxxxxxxxxxxxxxxx
       passkeys:
@@ -96,30 +96,33 @@ tasks:
       - qbittorrent_base_template
       - qbittorrent_add_template
 
-  modify:
-    disable: [seen, seen_info_hash]
-    accept_all: yes
+  resume:
+    priority: 2
+    disable: [seen, seen_info_hash, retry_failed]
+    if:
+      - qbittorrent_state == 'pausedUP' and qbittorrent_downloaded == 0: accept
     template:
       - from_qbittorrent_template
       - qbittorrent_base_template
-      - qbittorrent_modify_template
+      - qbittorrent_resume_template
 
   delete:
-    disable: [seen, seen_info_hash]
+    priority: 3
+    disable: [seen, seen_info_hash, retry_failed]
     if:
       - qbittorrent_category in ['Rss'] and qbittorrent_last_activity < now - timedelta(days=2): accept
-      - qbittorrent_state == 'missingFiles' or (qbittorrent_state in ['pausedDL'] and qbittorrent_downloaded == 0): accept
+      - qbittorrent_state == 'missingFiles' or (qbittorrent_state in ['pausedDL'] and qbittorrent_completed == 0): accept
     sort_by: qbittorrent_last_activity
     template:
       - from_qbittorrent_template
       - qbittorrent_base_template
       - qbittorrent_delete_template
 
-  resume:
-    disable: [seen, seen_info_hash]
-    if:
-      - qbittorrent_state == 'pausedUP': accept
+  modify:
+    priority: 4
+    disable: [seen, seen_info_hash, retry_failed]
+    accept_all: yes
     template:
       - from_qbittorrent_template
       - qbittorrent_base_template
-      - qbittorrent_resume_template
+      - qbittorrent_modify_template
