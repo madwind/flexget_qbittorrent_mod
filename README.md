@@ -34,15 +34,19 @@ C:\Users\<YOURUSER>\flexget\plugins\  # Windows
 ```
 - 将所有的 .py 文件解压至plugins
 - 若启用了Web-UI或守护进程，则重启flexget重新加载配置
+- 从v0.2.5开始删除了templates-> qbittorrent_resume_template-> qbittorrent_mod-> action-> resume-> only_completed项，如果使用旧版本配置，启动报错可以编辑Flexget配置文件夹下的 config.yml 文件手动删除
 
 ### 配置模板
- 先介绍一下我的环境
+ 每隔1分钟：
+ - 下载种子下载到 Rss分类
  
- 每隔1分钟下载种子下载到 Rss分类
+ 每隔5分钟按顺序执行：
+ - 自动辅种，并跳过校验
+ - 检查辅种种子，保存路径和名称与现有正常辅种的种子一致，则自动开始，否则重新校验使其变为0进度状态
+ - 检查磁盘空间小于10G则删除Rss分类下2天 没流量、丢失文件 或 0进度 的种子
+ - 给种子打标签 修改tracker
  
- 每隔10分钟 自动给种子打标签 修改tracker 检查有没有校验完的种子自动开始 检查磁盘空间小于20G则删除Rss分类下2天没流量的种子
- 
- 每个1小时 执行一次辅种
+更多配置可以学习Flexget官方文档
   
 注：Flexget不允许用中文注释 请用源码里的config.yml对照修改
 ```yaml
@@ -71,6 +75,8 @@ templates:
           category: Rss
           #自动管理种子
           autoTMM: true
+          #跳过校验
+          skip_checking: true
   
   #修改种子信息 
   qbittorrent_modify_template:
@@ -88,8 +94,9 @@ templates:
     qbittorrent_mod:
       action:
         resume:
-          #暂时没什么用
-          only_complete: true
+          #v0.2.5新增（删除only_complete）
+          #如果保存路径上没有种子在正常做种，则重新校验种子，配合跳检，将种子还原成0进度状态
+          recheck_torrents: true
 
   #自动删种
   qbittorrent_delete_template:
@@ -108,7 +115,7 @@ templates:
           #注意：如果经过过滤器后 找不到任何匹配的种子 即使设置了该值 也不会删除
           #推荐最低设置为 下载速度*删除任务时间间隔*2 
           #例如 峰值下载速度：12.5MB/S 删除任务时间间隔：10 min 则最小应该设置为：12.5*60*10/1024=15
-          keep_disk_space: 20
+          keep_disk_space: 10
 
   #输入模板 从qbittorrent获取数据
   from_qbittorrent_template:
@@ -120,24 +127,19 @@ templates:
       password: 123456789xx
 
 schedules:
-  #每分钟执行 pt1, pt2
-  - tasks: [pt1, pt2]
+  #每分钟执行 rss1, rss2
+  - tasks: [rss1, rss2]
     interval:
       minutes: 1
 
-  #每隔10分钟执行 resume, delete, modify
-  - tasks: [resume, delete, modify]
+  #每隔5分钟执行 reseed, resume, delete, modify
+  - tasks: [reseed, resume, delete, modify]
     interval:
-      minutes: 10
-
-  #每隔1小时执行 reseed
-  - tasks: [reseed]
-    interval:
-      hours: 1
+      minutes: 5
 
 #任务列表
 tasks:
-  pt1:
+  rss1:
     #官方插件：rss 订阅链接
     rss: https://pt1.com/rss
     #官方插件：regexp 过滤器 接受带有 CCTV 字样的种子
@@ -150,8 +152,11 @@ tasks:
       - qbittorrent_base_template
       - qbittorrent_add_template
   
-  pt2:
-    rss: https://pt1.com/rss
+  rss2:
+    # 相同过滤条件的rss可以放到一个inputs下
+    inputs:
+      - rss: https://pt1.com/rss
+      - rss: https://pt2.com/rss
     #官方插件：accept_all 过滤器 接受全部
     accept_all: yes
     template:
@@ -160,6 +165,8 @@ tasks:
 
   #自动辅种 使用 IYUU 提供的接口
   reseed:
+    #优先级 1
+    priority: 1
     iyuu_auto_reseed:
       #IYUU token 获取方法请查阅顶部介绍的 IYUUAutoReseed 项目
       iyuu: xxxxxxxxxxxxxxxxxxxx
@@ -182,27 +189,32 @@ tasks:
       - qbittorrent_base_template
       - qbittorrent_add_template
 
-  #修改种子信息
-  modify:
-    disable: [seen, seen_info_hash]
-    accept_all: yes
-    #使用修改模板
+  #自动开始
+  resume:
+    priority: 2
+    disable: [seen, seen_info_hash, retry_failed]
+    if:
+      #选择跳检完成的种子
+      - qbittorrent_state == 'pausedUP' and qbittorrent_downloaded == 0: accept
+    #使用输入模板 从qbittorrent获取数据
+    #使用自动开始模板
     template:
       - from_qbittorrent_template
       - qbittorrent_base_template
-      - qbittorrent_modify_template  
+      - qbittorrent_resume_template
 
   #自动删种
   delete:
-    #官方插件：disable 关闭任务记录 
-    disable: [seen, seen_info_hash]
+    priority: 3
+    #官方插件：disable 关闭任务记录 失败重试
+    disable: [seen, seen_info_hash, retry_failed]
     #官方插件： if 过滤器
     if:
       #参考entry属性列表
       #种子在 Rss分类 并且 最后活动时间 < 2天 
       - qbittorrent_category in ['Rss'] and qbittorrent_last_activity < now - timedelta(days=2): accept
-      #种子数据丢失 或者 （种子处于未完成的暂停状态 并且 下载大小为0）：一般是辅助失败的种子 
-      - qbittorrent_state == 'missingFiles' or (qbittorrent_state in ['pausedDL'] and qbittorrent_downloaded == 0): accept
+      #种子数据丢失 或者 （种子处于未完成的暂停状态 并且 完成大小为0）：一般是辅助失败的种子
+      - qbittorrent_state == 'missingFiles' or (qbittorrent_state in ['pausedDL'] and qbittorrent_completed == 0): accept
     #官方sort_by插件：按最后活动时间从早到晚排序 优先删除
     sort_by: qbittorrent_last_activity
     #使用输入模板 从qbittorrent获取数据
@@ -212,18 +224,16 @@ tasks:
       - qbittorrent_base_template      
       - qbittorrent_delete_template
 
-  #自动开始
-  resume:
-    disable: [seen, seen_info_hash]
-    if:
-      #选择暂停状态已完成的种子
-      - qbittorrent_state == 'pausedUP': accept
-    #使用输入模板 从qbittorrent获取数据
-    #使用自动开始模板
+  #修改种子信息
+  modify:
+    priority: 4
+    disable: [seen, seen_info_hash, retry_failed]
+    accept_all: yes
+    #使用修改模板
     template:
       - from_qbittorrent_template
       - qbittorrent_base_template
-      - qbittorrent_resume_template
+      - qbittorrent_modify_template  
 ```
 
 ### add可选参数
