@@ -143,7 +143,7 @@ class QBittorrentClient:
             msg_on_fail='delete_torrents failed.',
             verify=self.verify,
         )
-        self._record_action('delete_torrents', hashes)
+        self._check_action('delete_torrents', hashes)
 
     def get_torrent_pieces_hashes(self, torrent_hash):
         data = {'hash': torrent_hash}
@@ -168,36 +168,38 @@ class QBittorrentClient:
 
     def resume_torrents(self, hashes):
         data = {'hashes': hashes}
-        self._request(
-            'post',
-            self.url + self.API_URL_RESUME,
-            data=data,
-            msg_on_fail='resume_torrents failed.',
-            verify=self.verify,
-        )
-        self._record_action('resume_torrents', hashes)
+        if self._check_action('resume_torrents', hashes):
+            self._request(
+                'post',
+                self.url + self.API_URL_RESUME,
+                data=data,
+                msg_on_fail='resume_torrents failed.',
+                verify=self.verify,
+            )
 
     def edit_trackers(self, torrent_hash, origurl, newurl):
         data = {'hash': torrent_hash, 'origUrl': origurl, 'newUrl': newurl}
-        self._request(
-            'post',
-            self.url + self.API_URL_EDIT_TRACKERS,
-            data=data,
-            msg_on_fail='edit_trackers failed.',
-            verify=self.verify,
-        )
-        self._record_action('edit_trackers', torrent_hash)
+        if self._check_action('edit_trackers', torrent_hash):
+            response = self._request(
+                'post',
+                self.url + self.API_URL_EDIT_TRACKERS,
+                data=data,
+                msg_on_fail='edit_trackers failed.',
+                verify=self.verify,
+            )
+            if response.status_code == 200:
+                self._update_entry_trackers(torrent_hash)
 
     def add_torrent_tags(self, hashes, tags):
         data = {'hashes': hashes, 'tags': tags}
-        self._request(
-            'post',
-            self.url + self.API_URL_ADD_TORRENT_TAGS,
-            data=data,
-            msg_on_fail='add_torrent_tags failed.',
-            verify=self.verify,
-        )
-        self._record_action('add_torrent_tags', hashes)
+        if self._check_action('add_torrent_tags', hashes):
+            self._request(
+                'post',
+                self.url + self.API_URL_ADD_TORRENT_TAGS,
+                data=data,
+                msg_on_fail='add_torrent_tags failed.',
+                verify=self.verify,
+            )
 
     def get_main_data(self):
         data = {'rid': self._rid}
@@ -250,16 +252,15 @@ class QBittorrentClient:
             name = torrent.get('name')
             pieces_hashes = self.get_torrent_pieces_hashes(torrent_hash)
             name_with_pieces_hashes = '{}:{}'.format(name, pieces_hashes)
-            trackers = list(filter(lambda tracker: tracker.get('status') != 0, self.get_torrent_trackers(torrent_hash)))
             entry = Entry(
                 title=name,
                 url='',
                 torrent_info_hash=torrent_hash,
                 content_size=torrent['size'] / (1024 * 1024 * 1024),
                 qbittorrent_name_with_pieces_hashes=name_with_pieces_hashes,
-                qbittorrent_trackers=trackers
             )
             self._entry_dict[torrent_hash] = entry
+            self._update_entry_trackers(torrent_hash)
             if not self._reseed_dict.get(name_with_pieces_hashes):
                 self._reseed_dict[name_with_pieces_hashes] = []
             self._reseed_dict[name_with_pieces_hashes].append(entry)
@@ -268,6 +269,10 @@ class QBittorrentClient:
                 entry['qbittorrent_' + key] = datetime.fromtimestamp(value)
             else:
                 entry['qbittorrent_' + key] = value
+
+    def _update_entry_trackers(self, torrent_hash):
+        trackers = list(filter(lambda tracker: tracker.get('status') != 0, self.get_torrent_trackers(torrent_hash)))
+        self._entry_dict[torrent_hash]['qbittorrent_trackers'] = trackers
 
     def _remove_entry(self, torrent_hash):
         name_with_pieces_hashes = self._entry_dict.get(torrent_hash).get('qbittorrent_name_with_pieces_hashes')
@@ -285,7 +290,7 @@ class QBittorrentClient:
             self._action_history.clear()
             logger.warning('Sync error, rebuild data')
 
-    def _record_action(self, action_name, hashes):
+    def _check_action(self, action_name, hashes):
         hashes_list = hashes.split('|')
         if not self._action_history.get(action_name):
             self._action_history[action_name] = []
@@ -293,5 +298,7 @@ class QBittorrentClient:
             self._rid = 0
             self._action_history.clear()
             logger.warning('Two identical operations were performed on the same seed, rebuild data.')
+            return False
         else:
             self._action_history.get(action_name).extend(hashes_list)
+        return True
