@@ -122,7 +122,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                             'resume': {
                                 'type': 'object',
                                 'properties': {
-                                    'only_complete': {'type': 'boolean'}
+                                    'recheck_torrents': {'type': 'boolean'},
                                 }
                             },
                             'modify': {
@@ -296,8 +296,8 @@ class PluginQBittorrentMod(QBittorrentModBase):
         for entry_hash in accepted_entry_hashes:
             if entry_hash in delete_hashes:
                 continue
-            name_with_pieces_hashes = entry_dict.get(entry_hash).get('qbittorrent_name_with_pieces_hashes')
-            reseed_entry_list = reseed_dict.get(name_with_pieces_hashes)
+            save_path_with_name = entry_dict.get(entry_hash).get('qbittorrent_save_path_with_name')
+            reseed_entry_list = reseed_dict.get(save_path_with_name)
             torrent_hashes = []
 
             for reseed_entry in reseed_entry_list:
@@ -305,7 +305,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
             if check_reseed and not set(accepted_entry_hashes) >= set(torrent_hashes):
                 for torrent_hash in torrent_hashes:
                     entry_dict.get(torrent_hash).reject(
-                        reason='torrents with the same pieces_hashes are not all tested')
+                        reason='torrents with the same save path are not all tested')
                 continue
             else:
                 if keep_disk_space:
@@ -329,7 +329,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                     delete_size / (1024 * 1024 * 1024))
         for torrent_hash in torrent_hashes:
             entry = all_entry_map.get(torrent_hash)
-            entry.accept(reason='torrent with the same pieces_hashes are all pass tested')
+            entry.accept(reason='torrent with the same save path are all pass tested')
             logger.info('{}, site: {}, size: {:.2f} GB, last_activity: {}', entry.get('title'),
                         entry.get('qbittorrent_tags'),
                         entry.get('qbittorrent_completed') / (1024 * 1024 * 1024),
@@ -337,11 +337,29 @@ class PluginQBittorrentMod(QBittorrentModBase):
 
     def resume_entries(self, task, config):
         resume_options = config.get('resume')
-        only_complete = resume_options.get('only_complete')
+        recheck_torrents = resume_options.get('recheck_torrents')
+        task_data = self.client.get_task_data(id(task))
+        reseed_dict = task_data.get('reseed_dict')
         hashes = []
+        recheck_hashes = []
         for entry in task.accepted:
-            hashes.append(entry['torrent_info_hash'])
-            logger.info('{}', entry['title'])
+            save_path_with_name = entry['qbittorrent_save_path_with_name']
+            reseed_entry_list = reseed_dict.get(save_path_with_name)
+            resume = False
+            for reseed_entry in reseed_entry_list:
+                seeding = 'up' in reseed_entry['qbittorrent_state'].lower() and reseed_entry[
+                    'qbittorrent_state'] != 'pausedUP'
+                if seeding:
+                    hashes.append(entry['torrent_info_hash'])
+                    logger.info('{}', entry['title'])
+                    resume = True
+                    break
+            if not resume:
+                entry.reject('can not find seeding torrent in same save path')
+                recheck_hashes.append(entry['torrent_info_hash'])
+        if recheck_torrents and len(recheck_hashes) > 0:
+            logger.info('recheck {}', recheck_hashes)
+            self.client.recheck_torrents(str.join('|', recheck_hashes))
         self.client.resume_torrents(str.join('|', hashes))
 
     def modify_entries(self, task, config):

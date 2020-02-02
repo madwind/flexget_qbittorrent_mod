@@ -32,13 +32,16 @@ class QBittorrentClientFactory:
 class QBittorrentClient:
     API_URL_LOGIN = '/api/v2/auth/login'
     API_URL_ADD_NEW_TORRENT = '/api/v2/torrents/add'
+    API_URL_ADD_TORRENT_TAGS = '/api/v2/torrents/addTags'
+
     API_URL_RESUME = '/api/v2/torrents/resume'
+    API_URL_RECHECK_TORRENTS = '/api/v2/torrents/recheck'
+    API_URL_EDIT_TRACKERS = '/api/v2/torrents/editTracker'
+    API_URL_DELETE_TORRENTS = '/api/v2/torrents/delete'
+
+    API_URL_GET_MAIN_DATA = '/api/v2/sync/maindata'
     API_URL_GET_TORRENT_LIST = '/api/v2/torrents/info'
     API_URL_GET_TORRENT_PIECES_STATES = '/api/v2/torrents/pieceHashes'
-    API_URL_DELETE_TORRENTS = '/api/v2/torrents/delete'
-    API_URL_GET_MAIN_DATA = '/api/v2/sync/maindata'
-    API_URL_EDIT_TRACKERS = '/api/v2/torrents/editTracker'
-    API_URL_ADD_TORRENT_TAGS = '/api/v2/torrents/addTags'
     API_URL_GET_TORRENT_TRACKERS = '/api/v2/torrents/trackers'
 
     build_entry_lock = threading.Lock()
@@ -136,14 +139,25 @@ class QBittorrentClient:
 
     def delete_torrents(self, hashes, delete_files):
         data = {'hashes': hashes, 'deleteFiles': delete_files}
-        self._request(
-            'post',
-            self.url + self.API_URL_DELETE_TORRENTS,
-            data=data,
-            msg_on_fail='delete_torrents failed.',
-            verify=self.verify,
-        )
-        self._check_action('delete_torrents', hashes)
+        if self._check_action('delete_torrents', hashes):
+            self._request(
+                'post',
+                self.url + self.API_URL_DELETE_TORRENTS,
+                data=data,
+                msg_on_fail='delete_torrents failed.',
+                verify=self.verify,
+            )
+
+    def recheck_torrents(self, hashes):
+        data = {'hashes': hashes}
+        if self._check_action('recheck_torrents', hashes):
+            self._request(
+                'post',
+                self.url + self.API_URL_RECHECK_TORRENTS,
+                data=data,
+                msg_on_fail='recheck_torrents failed.',
+                verify=self.verify,
+            )
 
     def get_torrent_pieces_hashes(self, torrent_hash):
         data = {'hash': torrent_hash}
@@ -213,57 +227,57 @@ class QBittorrentClient:
 
     def get_task_data(self, task_id):
         if not self._task_dict.get(task_id):
-            self._build_entry()
-            self._task_dict[task_id] = {'server_state': copy.deepcopy(self._server_state),
-                                        'entry_dict': copy.deepcopy(self._entry_dict),
-                                        'reseed_dict': copy.deepcopy(self._reseed_dict)}
+            with self.build_entry_lock:
+                if not self._task_dict.get(task_id):
+                    self._build_entry()
+                    self._task_dict[task_id] = {'server_state': copy.deepcopy(self._server_state),
+                                                'entry_dict': copy.deepcopy(self._entry_dict),
+                                                'reseed_dict': copy.deepcopy(self._reseed_dict)}
         return self._task_dict.get(task_id)
-
     def del_task_data(self, task_id):
         if self._task_dict.get(task_id):
             del self._task_dict[task_id]
 
     def _build_entry(self):
-        with self.build_entry_lock:
-            self._building = True
-            main_data = self.get_main_data()
-            self._rid = main_data.get('rid')
-            if main_data.get('full_update'):
-                self._entry_dict = {}
-                self._reseed_dict = {}
+        self._building = True
+        main_data = self.get_main_data()
+        self._rid = main_data.get('rid')
+        if main_data.get('full_update'):
+            self._entry_dict = {}
+            self._reseed_dict = {}
 
-            server_state = main_data.get('server_state')
-            if server_state:
-                for state, value in server_state.items():
-                    self._server_state[state] = value
+        server_state = main_data.get('server_state')
+        if server_state:
+            for state, value in server_state.items():
+                self._server_state[state] = value
 
-            torrents = main_data.get('torrents')
-            if torrents:
-                for torrent_hash, torrent in torrents.items():
-                    self._update_entry(torrent_hash, torrent)
-            torrent_removed = main_data.get('torrents_removed')
-            if torrent_removed:
-                for torrent_hash in torrent_removed:
-                    self._remove_entry(torrent_hash)
+        torrents = main_data.get('torrents')
+        if torrents:
+            for torrent_hash, torrent in torrents.items():
+                self._update_entry(torrent_hash, torrent)
+        torrent_removed = main_data.get('torrents_removed')
+        if torrent_removed:
+            for torrent_hash in torrent_removed:
+                self._remove_entry(torrent_hash)
 
     def _update_entry(self, torrent_hash, torrent):
         entry = self._entry_dict.get(torrent_hash)
         if not entry:
+            save_path = torrent.get('save_path')
             name = torrent.get('name')
-            pieces_hashes = self.get_torrent_pieces_hashes(torrent_hash)
-            name_with_pieces_hashes = '{}:{}'.format(name, pieces_hashes)
+            save_path_with_name = '{}{}'.format(save_path, name)
             entry = Entry(
                 title=name,
                 url='',
                 torrent_info_hash=torrent_hash,
                 content_size=torrent['size'] / (1024 * 1024 * 1024),
-                qbittorrent_name_with_pieces_hashes=name_with_pieces_hashes,
+                qbittorrent_save_path_with_name=save_path_with_name,
             )
             self._entry_dict[torrent_hash] = entry
             self._update_entry_trackers(torrent_hash)
-            if not self._reseed_dict.get(name_with_pieces_hashes):
-                self._reseed_dict[name_with_pieces_hashes] = []
-            self._reseed_dict[name_with_pieces_hashes].append(entry)
+            if not self._reseed_dict.get(save_path_with_name):
+                self._reseed_dict[save_path_with_name] = []
+            self._reseed_dict[save_path_with_name].append(entry)
         for key, value in torrent.items():
             if key in ['added_on', 'completion_on', 'last_activity', 'seen_complete']:
                 entry['qbittorrent_' + key] = datetime.fromtimestamp(value)
@@ -275,15 +289,15 @@ class QBittorrentClient:
         self._entry_dict[torrent_hash]['qbittorrent_trackers'] = trackers
 
     def _remove_entry(self, torrent_hash):
-        name_with_pieces_hashes = self._entry_dict.get(torrent_hash).get('qbittorrent_name_with_pieces_hashes')
-        torrent_list = self._reseed_dict.get(name_with_pieces_hashes)
+        save_path_with_name = self._entry_dict.get(torrent_hash).get('qbittorrent_save_path_with_name')
+        torrent_list = self._reseed_dict.get(save_path_with_name)
         if torrent_list and (torrent_hash in self._entry_dict.keys()):
             torrent_list_removed = list(
                 filter(lambda torrent: torrent['torrent_info_hash'] != torrent_hash, torrent_list))
             if len(torrent_list_removed) == 0:
-                del self._reseed_dict[name_with_pieces_hashes]
+                del self._reseed_dict[save_path_with_name]
             else:
-                self._reseed_dict[name_with_pieces_hashes] = torrent_list_removed
+                self._reseed_dict[save_path_with_name] = torrent_list_removed
             del self._entry_dict[torrent_hash]
         else:
             self._rid = 0
