@@ -262,7 +262,7 @@ class QBittorrentClient:
             self._entry_dict[torrent_hash] = entry
             if not self._reseed_dict.get(name_with_pieces_hashes):
                 self._reseed_dict[name_with_pieces_hashes] = []
-            self._reseed_dict.get(name_with_pieces_hashes).append(entry)
+            self._reseed_dict[name_with_pieces_hashes].append(entry)
         for key, value in torrent.items():
             if key in ['added_on', 'completion_on', 'last_activity', 'seen_complete']:
                 entry['qbittorrent_' + key] = datetime.fromtimestamp(value)
@@ -272,13 +272,14 @@ class QBittorrentClient:
     def _remove_entry(self, torrent_hash):
         name_with_pieces_hashes = self._entry_dict.get(torrent_hash).get('qbittorrent_name_with_pieces_hashes')
         torrent_list = self._reseed_dict.get(name_with_pieces_hashes)
-        if torrent_list and torrent_hash in self._entry_dict.keys():
+        if torrent_list and (torrent_hash in self._entry_dict.keys()):
             torrent_list_removed = list(
                 filter(lambda torrent: torrent['torrent_info_hash'] != torrent_hash, torrent_list))
             if len(torrent_list_removed) == 0:
                 del self._reseed_dict[name_with_pieces_hashes]
             else:
                 self._reseed_dict[name_with_pieces_hashes] = torrent_list_removed
+            del self._entry_dict[torrent_hash]
         else:
             self._rid = 0
             self._action_history.clear()
