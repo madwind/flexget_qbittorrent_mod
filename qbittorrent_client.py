@@ -52,8 +52,9 @@ class QBittorrentClient:
         self._server_state = {}
         self._action_history = {}
         self._rid = 0
-        self.connect(config)
         self._task_dict = {}
+        self._config = config
+        self.connect()
 
     def _request(self, method, url, msg_on_fail=None, **kwargs):
         if not url.endswith(self.API_URL_LOGIN) and not self.connected:
@@ -66,6 +67,8 @@ class QBittorrentClient:
                     if not msg_on_fail
                     else msg_on_fail
                 )
+                self.connected = False
+                self.connect()
             else:
                 return response
         except RequestException as e:
@@ -87,31 +90,32 @@ class QBittorrentClient:
             'Error when trying to send request to qbittorrent: {}'.format(msg)
         )
 
-    def connect(self, config):
+    def connect(self):
         """
         Connect to qBittorrent Web UI. Username and password not necessary
         if 'Bypass authentication for localhost' is checked and host is
         'localhost'.
         """
         self.session = Session()
-        if not config.get('verify_cert'):
-            self.verify = True
+        if not self._config.get('verify_cert'):
+            self._verify = True
         else:
-            self.verify = config.get('verify_cert')
+            self._verify = self._config.get('verify_cert')
 
-        self.url = '{}://{}:{}'.format('https' if config['use_ssl'] else 'http', config['host'], config['port']
+        self.url = '{}://{}:{}'.format('https' if self._config['use_ssl'] else 'http', self._config['host'],
+                                       self._config['port']
                                        )
         self.check_api_version('Check API version failed.')
-        if config.get('username') and config.get('password'):
-            data = {'username': config['username'], 'password': config['password']}
+        if self._config.get('username') and self._config.get('password'):
+            data = {'username': self._config['username'], 'password': self._config['password']}
             response = self._request(
                 'post',
                 self.url + self.API_URL_LOGIN,
                 data=data,
                 msg_on_fail='Authentication failed.',
-                verify=self.verify,
+                verify=self._verify,
             )
-            logger.debug('Successfully connected to qbittorrent')
+            logger.info('Successfully connected to qbittorrent')
             self.connected = True
 
     def add_torrent_file(self, file_path, data):
@@ -123,7 +127,7 @@ class QBittorrentClient:
                 self.url + self.API_URL_ADD_NEW_TORRENT,
                 msg_on_fail='add_torrent_file failed.'.format(file_path),
                 files=multipart_data,
-                verify=self.verify,
+                verify=self._verify,
             )
 
     def add_torrent_url(self, url, data):
@@ -134,7 +138,7 @@ class QBittorrentClient:
             self.url + self.API_URL_ADD_NEW_TORRENT,
             msg_on_fail='add_torrent_url failed.',
             files=multipart_data,
-            verify=self.verify,
+            verify=self._verify,
         )
 
     def delete_torrents(self, hashes, delete_files):
@@ -145,7 +149,7 @@ class QBittorrentClient:
                 self.url + self.API_URL_DELETE_TORRENTS,
                 data=data,
                 msg_on_fail='delete_torrents failed.',
-                verify=self.verify,
+                verify=self._verify,
             )
 
     def recheck_torrents(self, hashes):
@@ -156,7 +160,7 @@ class QBittorrentClient:
                 self.url + self.API_URL_RECHECK_TORRENTS,
                 data=data,
                 msg_on_fail='recheck_torrents failed.',
-                verify=self.verify,
+                verify=self._verify,
             )
 
     def get_torrent_pieces_hashes(self, torrent_hash):
@@ -166,7 +170,7 @@ class QBittorrentClient:
             self.url + self.API_URL_GET_TORRENT_PIECES_STATES,
             data=data,
             msg_on_fail='get_torrent_pieces_hashes failed.',
-            verify=self.verify,
+            verify=self._verify,
         ).text
 
     def get_torrent_trackers(self, torrent_hash):
@@ -176,7 +180,7 @@ class QBittorrentClient:
             self.url + self.API_URL_GET_TORRENT_TRACKERS,
             data=data,
             msg_on_fail='get_torrent_trackers failed.',
-            verify=self.verify
+            verify=self._verify
         )
         return response.json()
 
@@ -188,7 +192,7 @@ class QBittorrentClient:
                 self.url + self.API_URL_RESUME,
                 data=data,
                 msg_on_fail='resume_torrents failed.',
-                verify=self.verify,
+                verify=self._verify,
             )
 
     def edit_trackers(self, torrent_hash, origurl, newurl):
@@ -199,7 +203,7 @@ class QBittorrentClient:
                 self.url + self.API_URL_EDIT_TRACKERS,
                 data=data,
                 msg_on_fail='edit_trackers failed.',
-                verify=self.verify,
+                verify=self._verify,
             )
             if response.status_code == 200:
                 self._update_entry_trackers(torrent_hash)
@@ -212,7 +216,7 @@ class QBittorrentClient:
                 self.url + self.API_URL_ADD_TORRENT_TAGS,
                 data=data,
                 msg_on_fail='add_torrent_tags failed.',
-                verify=self.verify,
+                verify=self._verify,
             )
 
     def get_main_data(self):
@@ -222,7 +226,7 @@ class QBittorrentClient:
             self.url + self.API_URL_GET_MAIN_DATA,
             data=data,
             msg_on_fail='get_main_data failed.',
-            verify=self.verify,
+            verify=self._verify,
         ).json()
 
     def get_task_data(self, task_id):
@@ -234,6 +238,7 @@ class QBittorrentClient:
                                                 'entry_dict': copy.deepcopy(self._entry_dict),
                                                 'reseed_dict': copy.deepcopy(self._reseed_dict)}
         return self._task_dict.get(task_id)
+
     def del_task_data(self, task_id):
         if self._task_dict.get(task_id):
             del self._task_dict[task_id]
