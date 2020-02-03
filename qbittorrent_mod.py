@@ -230,6 +230,9 @@ class PluginQBittorrentMod(QBittorrentModBase):
         if not add_options.get('paused'):
             del add_options['paused']
 
+        if entry['url']:
+            add_options['skip_checking'] = False
+
         is_magnet = entry['url'].startswith('magnet:')
 
         if task.manager.options.test:
