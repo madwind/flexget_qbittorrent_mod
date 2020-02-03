@@ -299,8 +299,11 @@ class PluginQBittorrentMod(QBittorrentModBase):
             save_path_with_name = entry_dict.get(entry_hash).get('qbittorrent_save_path_with_name')
             reseed_entry_list = reseed_dict.get(save_path_with_name)
             torrent_hashes = []
+            torrent_size = 0
 
             for reseed_entry in reseed_entry_list:
+                if reseed_entry['qbittorrent_completed'] != 0:
+                    torrent_size = reseed_entry['qbittorrent_completed']
                 torrent_hashes.append(reseed_entry['torrent_info_hash'])
             if check_reseed and not set(accepted_entry_hashes) >= set(torrent_hashes):
                 for torrent_hash in torrent_hashes:
