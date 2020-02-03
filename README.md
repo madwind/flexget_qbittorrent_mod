@@ -75,8 +75,6 @@ templates:
           category: Rss
           #自动管理种子
           autoTMM: true
-          #跳过校验
-          skip_checking: true
   
   #修改种子信息 
   qbittorrent_modify_template:
@@ -188,6 +186,7 @@ tasks:
     qbittorrent_mod:
       action:
         add:
+          #跳过校验
           skip_checking: true
     template:
       - qbittorrent_base_template
