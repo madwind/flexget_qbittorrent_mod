@@ -185,6 +185,10 @@ tasks:
         username: admin
         password: 123456789xx
     accept_all: yes
+    qbittorrent_mod:
+      action:
+        add:
+          skip_checking: true
     template:
       - qbittorrent_base_template
       - qbittorrent_add_template
