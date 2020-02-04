@@ -313,7 +313,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
             else:
                 if keep_disk_space:
                     if keep_disk_space > free_space_on_disk + delete_size:
-                        delete_size += reseed_entry_list[0].get('qbittorrent_completed')
+                        delete_size += torrent_size
                         self._build_delete_hashes(delete_hashes, torrent_hashes, entry_dict, keep_disk_space,
                                                   free_space_on_disk, delete_size)
                         if keep_disk_space < free_space_on_disk + delete_size:
