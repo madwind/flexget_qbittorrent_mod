@@ -1,3 +1,4 @@
+import math
 import os
 import re
 import sys
@@ -116,7 +117,8 @@ class PluginQBittorrentMod(QBittorrentModBase):
                                 'properties': {
                                     'check_reseed': {'type': 'boolean'},
                                     'delete_files': {'type': 'boolean'},
-                                    'keep_disk_space': {'type': 'integer'}
+                                    'keep_disk_space': {'type': 'integer'},
+                                    'dl_limit_on_succeeded': {'type': 'integer'}
                                 }
                             },
                             'resume': {
@@ -185,7 +187,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
         if not config['enabled']:
             return
             # Do not run if there is nothing to do
-        if not task.accepted:
+        if not task.accepted or not action_config.get('remove'):
             return
         if not self.client:
             self.client = self.create_client(config)
@@ -267,6 +269,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
         delete_files = remove_options.get('delete_files')
         check_reseed = remove_options.get('check_reseed')
         keep_disk_space = remove_options.get('keep_disk_space')
+        dl_limit_on_succeeded = remove_options.get('dl_limit_on_succeeded')
         task_data = self.client.get_task_data(id(task))
         server_state = task_data.get('server_state')
         free_space_on_disk = 0
@@ -274,15 +277,22 @@ class PluginQBittorrentMod(QBittorrentModBase):
         if keep_disk_space:
             keep_disk_space = keep_disk_space * 1024 * 1024 * 1024
             free_space_on_disk = server_state.get('free_space_on_disk')
-            if server_state.get('dl_info_speed') == 0 and free_space_on_disk != 0:
-                logger.debug('keep_disk_space mode Works only when downloading.')
+            if keep_disk_space < free_space_on_disk:
+                if dl_limit_on_succeeded is not None:
+                    self.client.set_application_preferences('{{"dl_limit": {}}}'.format(dl_limit_on_succeeded))
+                    logger.debug("set dl_limit to {} KiB/s", dl_limit_on_succeeded / 1024)
                 return
             else:
-                if keep_disk_space < free_space_on_disk:
-                    logger.debug('Enough disk space.keep_disk_space: {:.2f}, free_space_on_disk: {:.2f}',
-                                 keep_disk_space / (1024 * 1024 * 1024),
-                                 free_space_on_disk / (1024 * 1024 * 1024))
+                if not task.accepted:
+                    dl_limit = math.ceil(free_space_on_disk / (24 * 60 * 60))
+                    self.client.set_application_preferences('{{"dl_limit": {}}}'.format(dl_limit))
+                    logger.warning(
+                        "not enough disk space, but There are no eligible torrents, set dl_limit to {} KiB/s",
+                        math.ceil(dl_limit / 1024))
                     return
+
+        if not task.accepted:
+            return
 
         entry_dict = task_data.get('entry_dict')
         reseed_dict = task_data.get('reseed_dict')
@@ -321,6 +331,11 @@ class PluginQBittorrentMod(QBittorrentModBase):
                 else:
                     self._build_delete_hashes(delete_hashes, torrent_hashes, entry_dict, keep_disk_space,
                                               free_space_on_disk, delete_size)
+        if dl_limit_on_succeeded is not None:
+            if keep_disk_space > free_space_on_disk + delete_size:
+                dl_limit = math.ceil((free_space_on_disk - delete_size) / (24 * 60 * 60))
+                self.client.set_application_preferences('{{"dl_limit": {}}}'.format(dl_limit))
+                logger.warning("not enough disk space, set dl_limit to {} KiB/s", math.ceil(dl_limit / 1024))
 
         self.client.delete_torrents(str.join('|', delete_hashes), delete_files)
 

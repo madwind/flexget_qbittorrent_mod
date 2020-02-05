@@ -114,6 +114,9 @@ templates:
           #推荐最低设置为 下载速度*删除任务时间间隔*2 
           #例如 峰值下载速度：12.5MB/S 删除任务时间间隔：10 min 则最小应该设置为：12.5*60*10/1024=15
           keep_disk_space: 10
+          #如果删除种子后空间大于keep_disk_space(在第二次运行时检测，防止做了硬链接时只删除一个并没有实际释放空间)，则恢复限速，0为不限速 v0.2.7新增
+          #如执行任务后空间小于keep_disk_space，则自动限速为 剩余空间/ (24*60*60) KiB/s 防止qbittorrent磁盘空间为0后，任务只能下载到99%，需要强制校验
+          dl_limit_on_succeeded: 0
 
   #输入模板 从qbittorrent获取数据
   from_qbittorrent_template:

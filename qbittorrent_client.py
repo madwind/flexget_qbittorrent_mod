@@ -34,12 +34,14 @@ class QBittorrentClient:
     API_URL_ADD_NEW_TORRENT = '/api/v2/torrents/add'
     API_URL_ADD_TORRENT_TAGS = '/api/v2/torrents/addTags'
 
+    API_URL_SET_APPLICATION_PREFERENCES = '/api/v2/app/setPreferences'
     API_URL_RESUME = '/api/v2/torrents/resume'
     API_URL_RECHECK_TORRENTS = '/api/v2/torrents/recheck'
     API_URL_EDIT_TRACKERS = '/api/v2/torrents/editTracker'
     API_URL_DELETE_TORRENTS = '/api/v2/torrents/delete'
 
     API_URL_GET_MAIN_DATA = '/api/v2/sync/maindata'
+    API_URL_GET_APPLICATION_PREFERENCES = '/api/v2/app/preferences'
     API_URL_GET_TORRENT_LIST = '/api/v2/torrents/info'
     API_URL_GET_TORRENT_PIECES_STATES = '/api/v2/torrents/pieceHashes'
     API_URL_GET_TORRENT_TRACKERS = '/api/v2/torrents/trackers'
@@ -229,6 +231,25 @@ class QBittorrentClient:
             verify=self._verify,
         ).json()
 
+    def get_application_preferences(self):
+        return self._request(
+            'post',
+            self.url + self.API_URL_GET_APPLICATION_PREFERENCES,
+            data=data,
+            msg_on_fail='get_application_preferences failed.',
+            verify=self._verify,
+        ).json()
+
+    def set_application_preferences(self, data):
+        data = {'json': data}
+        self._request(
+            'get',
+            self.url + self.API_URL_SET_APPLICATION_PREFERENCES,
+            params=data,
+            msg_on_fail='get_application_preferences failed.',
+            verify=self._verify,
+        )
+
     def get_task_data(self, task_id):
         if not self._task_dict.get(task_id):
             with self.build_entry_lock:
@@ -316,7 +337,7 @@ class QBittorrentClient:
         if len(set(self._action_history[action_name]) & set(hashes_list)) > 0:
             self._rid = 0
             self._action_history.clear()
-            logger.warning('Two identical operations were performed on the same seed, rebuild data.')
+            logger.warning('Duplicate operation detected, rebuild data.')
             return False
         else:
             self._action_history.get(action_name).extend(hashes_list)

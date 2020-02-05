@@ -40,6 +40,7 @@ templates:
           check_reseed: true
           delete_files: true
           keep_disk_space: 10
+          dl_limit_on_succeeded: 0
 
   from_qbittorrent_template:
     from_qbittorrent_mod:
