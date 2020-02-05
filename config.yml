@@ -17,7 +17,6 @@ templates:
         add:
           category: Rss
           autoTMM: true
-          skip_checking: true
 
   qbittorrent_modify_template:
     qbittorrent_mod:
