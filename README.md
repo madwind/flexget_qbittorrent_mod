@@ -221,6 +221,8 @@ tasks:
       - qbittorrent_category in ['Rss'] and qbittorrent_last_activity < now - timedelta(days=2): accept
       #种子数据丢失 或者 （种子处于未完成的暂停状态 并且 完成大小为0）：一般是辅助失败的种子
       - qbittorrent_state == 'missingFiles' or (qbittorrent_state in ['pausedDL'] and qbittorrent_completed == 0): accept
+      #如种子的tag带有 pt1 并且做种时间小于48小时则拒绝 v0.2.9新增:seeding_time share_ratio属性
+      - "'pt1' in qbittorrent_tags and qbittorrent_seeding_time<48*60*60": reject
     #官方sort_by插件：按最后活动时间从早到晚排序 优先删除
     sort_by: qbittorrent_last_activity
     #使用输入模板 从qbittorrent获取数据
@@ -315,6 +317,8 @@ tasks:
 |qbittorrent_uploaded | integer | Amount of data uploaded
 |qbittorrent_uploaded_session | integer | Amount of data uploaded this session
 |qbittorrent_upspeed | integer | Torrent upload speed (bytes/s)
+|qbittorrent_seeding_time | integer | Torrent elapsed time while complete (seconds)
+|qbittorrent_share_ratio | float | Torrent share ratio
 
 ### qbittorrent_state 可能返回的值:
 

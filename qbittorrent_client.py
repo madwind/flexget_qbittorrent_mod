@@ -43,6 +43,7 @@ class QBittorrentClient:
     API_URL_GET_MAIN_DATA = '/api/v2/sync/maindata'
     API_URL_GET_APPLICATION_PREFERENCES = '/api/v2/app/preferences'
     API_URL_GET_TORRENT_LIST = '/api/v2/torrents/info'
+    API_URL_GET_TORRENT_GENERIC_PROPERTIES = '/api/v2/torrents/properties'
     API_URL_GET_TORRENT_PIECES_STATES = '/api/v2/torrents/pieceHashes'
     API_URL_GET_TORRENT_TRACKERS = '/api/v2/torrents/trackers'
 
@@ -165,6 +166,16 @@ class QBittorrentClient:
                 verify=self._verify,
             )
 
+    def get_torrent_generic_properties(self, torrent_hash):
+        data = {'hash': torrent_hash}
+        return self._request(
+            'post',
+            self.url + self.API_URL_GET_TORRENT_GENERIC_PROPERTIES,
+            data=data,
+            msg_on_fail='get_torrent_generic_properties failed.',
+            verify=self._verify,
+        ).json()
+
     def get_torrent_pieces_hashes(self, torrent_hash):
         data = {'hash': torrent_hash}
         return self._request(
@@ -222,6 +233,8 @@ class QBittorrentClient:
             )
 
     def get_main_data(self):
+        if self._rid == 500:
+            self._rid = 0
         data = {'rid': self._rid}
         return self._request(
             'post',
@@ -292,12 +305,15 @@ class QBittorrentClient:
             save_path = torrent.get('save_path')
             name = torrent.get('name')
             save_path_with_name = '{}{}'.format(save_path, name)
+            torrent['save_path_with_name'] = save_path_with_name
+            torrent_properties = self.get_torrent_generic_properties(torrent_hash)
+            torrent['seeding_time'] = torrent_properties['seeding_time']
+            torrent['share_ratio'] = torrent_properties['share_ratio']
             entry = Entry(
                 title=name,
                 url='',
                 torrent_info_hash=torrent_hash,
                 content_size=torrent['size'] / (1024 * 1024 * 1024),
-                qbittorrent_save_path_with_name=save_path_with_name,
             )
             self._entry_dict[torrent_hash] = entry
             self._update_entry_trackers(torrent_hash)

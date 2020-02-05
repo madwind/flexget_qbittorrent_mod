@@ -117,6 +117,7 @@ tasks:
     if:
       - qbittorrent_category in ['Rss'] and qbittorrent_last_activity < now - timedelta(days=2): accept
       - qbittorrent_state == 'missingFiles' or (qbittorrent_state in ['pausedDL'] and qbittorrent_completed == 0): accept
+      - "'pt1' in qbittorrent_tags and qbittorrent_seeding_time<48*60*60": reject
     sort_by: qbittorrent_last_activity
     template:
       - from_qbittorrent_template

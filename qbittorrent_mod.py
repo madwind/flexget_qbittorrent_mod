@@ -187,7 +187,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
         if not config['enabled']:
             return
             # Do not run if there is nothing to do
-        if not task.accepted or not action_config.get('remove'):
+        if not task.accepted and not action_config.get('remove'):
             return
         if not self.client:
             self.client = self.create_client(config)
