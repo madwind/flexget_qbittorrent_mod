@@ -350,7 +350,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
         for torrent_hash in torrent_hashes:
             entry = all_entry_map.get(torrent_hash)
             entry.accept(reason='torrent with the same save path are all pass tested')
-            logger.info('{}, site: {}, size: {:.2f} GB, last_activity: {}, seeding_time: {:.2f} h, share_ratio: {:.2f}',
+            logger.info('{}, site: {}, size: {:.2f} GB, last_activity: {}, seeding_time: {:.2f} h, share_ratio: {:.2%}',
                         entry['title'],
                         entry['qbittorrent_tags'],
                         entry['qbittorrent_completed'] / (1024 * 1024 * 1024),
