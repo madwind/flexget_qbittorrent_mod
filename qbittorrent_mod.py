@@ -350,10 +350,13 @@ class PluginQBittorrentMod(QBittorrentModBase):
         for torrent_hash in torrent_hashes:
             entry = all_entry_map.get(torrent_hash)
             entry.accept(reason='torrent with the same save path are all pass tested')
-            logger.info('{}, site: {}, size: {:.2f} GB, last_activity: {}', entry.get('title'),
+            logger.info('{}, site: {}, size: {:.2f} GB, last_activity: {}, seeding_time: {}, share_ratio: {}',
+                        entry.get('title'),
                         entry.get('qbittorrent_tags'),
                         entry.get('qbittorrent_completed') / (1024 * 1024 * 1024),
-                        entry.get('qbittorrent_last_activity'))
+                        entry.get('qbittorrent_last_activity'),
+                        entry.get('qbittorrent_seeding_time'),
+                        entry.get('qbittorrent_share_ratio'))
 
     def resume_entries(self, task, config):
         resume_options = config.get('resume')
