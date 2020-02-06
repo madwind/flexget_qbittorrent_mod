@@ -1,6 +1,7 @@
 import hashlib
 import sys
 import time
+from json import JSONDecodeError
 from os import path
 
 import requests
@@ -54,7 +55,12 @@ class PluginIYUUAutoReseed():
         passkeys = config.get('passkeys')
 
         torrent_dict, torrents_hashes = self.get_torrents_data(task, config)
-        response_json = requests.post('http://pt.iyuu.cn/api/reseed', json=torrents_hashes).json()
+        try:
+            response_json = requests.post('http://pt.iyuu.cn/api/reseed', json=torrents_hashes).json()
+        except JSONDecodeError as e:
+            raise plugin.PluginError(
+                'Error when trying to send request to http://pt.iyuu.cn/api/reseed: {}'.format(e)
+            )
         reseed_json = response_json['clients_0']
         sites_json = response_json['sites']
 
