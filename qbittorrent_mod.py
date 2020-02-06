@@ -118,7 +118,8 @@ class PluginQBittorrentMod(QBittorrentModBase):
                                     'check_reseed': {'type': 'boolean'},
                                     'delete_files': {'type': 'boolean'},
                                     'keep_disk_space': {'type': 'integer'},
-                                    'dl_limit_on_succeeded': {'type': 'integer'}
+                                    'dl_limit_on_succeeded': {'type': 'integer'},
+                                    'dl_limit_interval': {'type': 'integer'}
                                 }
                             },
                             'resume': {
@@ -270,6 +271,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
         check_reseed = remove_options.get('check_reseed')
         keep_disk_space = remove_options.get('keep_disk_space')
         dl_limit_on_succeeded = remove_options.get('dl_limit_on_succeeded')
+        dl_limit_interval = remove_options.get('dl_limit_interval', 24 * 60 * 60)
         task_data = self.client.get_task_data(id(task))
         server_state = task_data.get('server_state')
         free_space_on_disk = 0
@@ -284,7 +286,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                 return
             else:
                 if not task.accepted:
-                    dl_limit = math.ceil(free_space_on_disk / (24 * 60 * 60))
+                    dl_limit = math.ceil(free_space_on_disk / dl_limit_interval)
                     self.client.set_application_preferences('{{"dl_limit": {}}}'.format(dl_limit))
                     logger.warning(
                         "not enough disk space, but There are no eligible torrents, set dl_limit to {} KiB/s",
@@ -333,7 +335,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                                               free_space_on_disk, delete_size)
         if dl_limit_on_succeeded is not None:
             if keep_disk_space > free_space_on_disk + delete_size:
-                dl_limit = math.ceil((free_space_on_disk - delete_size) / (24 * 60 * 60))
+                dl_limit = math.ceil((free_space_on_disk - delete_size) / dl_limit_interval)
                 self.client.set_application_preferences('{{"dl_limit": {}}}'.format(dl_limit))
                 logger.warning("not enough disk space, set dl_limit to {} KiB/s", math.ceil(dl_limit / 1024))
 
