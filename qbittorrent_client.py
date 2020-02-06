@@ -248,7 +248,6 @@ class QBittorrentClient:
         return self._request(
             'post',
             self.url + self.API_URL_GET_APPLICATION_PREFERENCES,
-            data=data,
             msg_on_fail='get_application_preferences failed.',
             verify=self._verify,
         ).json()
