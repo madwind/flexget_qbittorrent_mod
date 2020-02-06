@@ -26,7 +26,7 @@ tg: <https://t.me/flexget_qbittorrent_mod>
 - Python 3.7
 
 ### 安装插件
-- 下载插件 [releases](https://github.com/IvonWei/flexget_qbittorrent_mod/releases)
+- 下载插件 [releases](https://github.com/IvonWei/flexget_qbittorrent_mod/releases/latest/download/dist.zip)
 - 在Flexget配置文件夹下新建plugins文件夹，例如：
 ```
 ~/.flexget/plugins/  # Linux
