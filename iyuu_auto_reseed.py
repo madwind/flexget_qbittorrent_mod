@@ -45,7 +45,7 @@ class PluginIYUUAutoReseed():
 
     def prepare_config(self, config):
         config.setdefault('iyuu', '')
-        config.setdefault('version', '0.2.0')
+        config.setdefault('version', '0.3.0')
         config.setdefault('passkeys', {})
         config.setdefault('qbittorrent_ressed', {})
         return config
@@ -56,10 +56,10 @@ class PluginIYUUAutoReseed():
 
         torrent_dict, torrents_hashes = self.get_torrents_data(task, config)
         try:
-            response_json = requests.post('http://pt.iyuu.cn/api/reseed', json=torrents_hashes).json()
+            response_json = requests.post('http://api.iyuu.cn/?service=App.Api.Reseed', json=torrents_hashes).json()
         except JSONDecodeError as e:
             raise plugin.PluginError(
-                'Error when trying to send request to http://pt.iyuu.cn/api/reseed: {}'.format(e)
+                'Error when trying to send request to http://api.iyuu.cn/?service=App.Api.Reseed: {}'.format(e)
             )
         reseed_json = response_json['clients_0']
         sites_json = response_json['sites']
