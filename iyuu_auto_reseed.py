@@ -61,8 +61,12 @@ class PluginIYUUAutoReseed():
             raise plugin.PluginError(
                 'Error when trying to send request to http://api.iyuu.cn/?service=App.Api.Reseed: {}'.format(e)
             )
-        reseed_json = response_json['clients_0']
-        sites_json = response_json['sites']
+        if response_json['ret'] != 200:
+            raise plugin.PluginError(
+                'http://api.iyuu.cn/?service=App.Api.Reseed Error: {}'.format(response_json)
+            )
+        reseed_json = response_json['data']['clients_0']
+        sites_json = response_json['data']['sites']
 
         entries = []
         if response_json:
