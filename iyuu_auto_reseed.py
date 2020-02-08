@@ -85,7 +85,9 @@ class PluginIYUUAutoReseed():
                         download_page = site['download_page'].format(str(torrent['torrent_id']) + '/' + passkey)
                     else:
                         download_page = site['download_page'].format(str(torrent['torrent_id']) + '&passkey=' + passkey)
-                    if site_name == 'oshen':
+                    if site_name == 'm-team':
+                        download_page = download_page + '&https=1'
+                    elif site_name == 'oshen':
                         protocol = 'http'
 
                     entry = Entry(
