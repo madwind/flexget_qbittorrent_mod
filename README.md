@@ -142,6 +142,11 @@ schedules:
   - tasks: [reseed, resume, delete, modify]
     interval:
       minutes: 5
+  
+  - tasks: [pt3]
+    interval:
+      minutes: 15 
+
 
 #任务列表
 tasks:
@@ -178,7 +183,7 @@ tasks:
         user-agent: 'xxxxxxxxxx'
       passkey: xxxxxxxxxxxxx
       #组件选择器
-      element_selector: '#form_torrent table tr .topdown_bg'
+      element_selector: '#form_torrent > table > tbody > tr.topdown_bg'
       #以下配置基于上面 组件选择器 匹配到的组件做二次匹配
       fields:
         #标题（必选）
@@ -197,7 +202,7 @@ tasks:
         #示例 增加促销信息
         #为 entry 增加 promotion 属性 值为 匹配到的组件下的 alt 属性
         promotion:
-          element_selector: 'a[src*=pic/trans\.gif]'
+          element_selector: 'img[onmouseover^=domTT_activate]'
           attribute: alt
     no_entries_ok: yes
     #如果promotion带有 Free则接受
