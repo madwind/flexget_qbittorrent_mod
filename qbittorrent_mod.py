@@ -287,6 +287,8 @@ class PluginQBittorrentMod(QBittorrentModBase):
             else:
                 if not task.accepted:
                     dl_limit = math.ceil(free_space_on_disk / dl_limit_interval)
+                    if dl_limit_on_succeeded and dl_limit > dl_limit_on_succeeded:
+                        dl_limit = dl_limit_on_succeeded
                     self.client.set_application_preferences('{{"dl_limit": {}}}'.format(dl_limit))
                     logger.warning(
                         "not enough disk space, but There are no eligible torrents, set dl_limit to {} KiB/s",
