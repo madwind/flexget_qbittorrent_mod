@@ -226,8 +226,9 @@ class PluginQBittorrentMod(QBittorrentModBase):
         reject_on_dl_limit = config.get('reject_on_dl_limit')
         if reject_on_dl_limit:
             dl_limit = self.client.get_application_preferences().get('dl_limit')
-            if dl_limit and reject_on_dl_limit > dl_limit:
+            if dl_limit and dl_limit < reject_on_dl_limit:
                 entry.reject("reject on dl_limit")
+                logger.info('reject {}, because: dl_limit < reject_on_dl_limit', entry['title'])
                 return
             else:
                 del add_options['reject_on_dl_limit']
