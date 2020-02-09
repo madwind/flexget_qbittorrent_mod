@@ -4,11 +4,11 @@ import time
 from json import JSONDecodeError
 from os import path
 
-import requests
 from flexget import plugin
 from flexget.entry import Entry
 from flexget.event import event
 from flexget.utils import json
+from requests import RequestException
 
 d = path.dirname(__file__)
 sys.path.append(d)
@@ -56,8 +56,9 @@ class PluginIYUUAutoReseed():
 
         torrent_dict, torrents_hashes = self.get_torrents_data(task, config)
         try:
-            response_json = requests.post('http://api.iyuu.cn/?service=App.Api.Reseed', json=torrents_hashes).json()
-        except JSONDecodeError as e:
+            response_json = task.requests.post('http://api.iyuu.cn/?service=App.Api.Reseed',
+                                               json=torrents_hashes).json()
+        except (RequestException, JSONDecodeError) as e:
             raise plugin.PluginError(
                 'Error when trying to send request to http://api.iyuu.cn/?service=App.Api.Reseed: {}'.format(e)
             )
