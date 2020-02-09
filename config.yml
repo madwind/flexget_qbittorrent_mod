@@ -15,6 +15,7 @@ templates:
     qbittorrent_mod:
       action:
         add:
+          reject_on_dl_limit: 4*1024*1024
           category: Rss
           autoTMM: true
 

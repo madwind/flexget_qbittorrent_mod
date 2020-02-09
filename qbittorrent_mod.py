@@ -109,7 +109,8 @@ class PluginQBittorrentMod(QBittorrentModBase):
                                     'dlLimit': {'type': 'integer'},
                                     'autoTMM': {'type': 'boolean'},
                                     'sequentialDownload': {'type': 'string'},
-                                    'firstLastPiecePrio': {'type': 'string'}
+                                    'firstLastPiecePrio': {'type': 'string'},
+                                    'reject_on_dl_limit': {'type': 'integer'}
                                 }
                             },
                             'remove': {
@@ -221,6 +222,15 @@ class PluginQBittorrentMod(QBittorrentModBase):
 
     def add_entries(self, task, entry, config):
         add_options = config.get('add')
+
+        reject_on_dl_limit = config.get('reject_on_dl_limit')
+        if reject_on_dl_limit:
+            dl_limit = self.client.get_application_preferences().get('dl_limit')
+            if dl_limit and reject_on_dl_limit > dl_limit:
+                entry.reject("reject on dl_limit")
+                return
+            else:
+                del add_options['reject_on_dl_limit']
 
         add_options['autoTMM'] = entry.get('autoTMM', add_options.get('autoTMM'))
         add_options['category'] = entry.get('category', add_options.get('category'))
