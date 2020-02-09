@@ -193,10 +193,9 @@ tasks:
         url:
           element_selector: 'a[href*=download\.php]'
           attribute: href
-        #除title url属性为必选，其它可自由自由添加用于过滤
+        #除title url属性为必选，其它可自由添加用于过滤
         #示例 增加促销信息
         #为 entry 增加 promotion 属性 值为 匹配到的组件下的 alt 属性
-        #除title url属性为必选，其它可自由自由添加用于过滤
         promotion:
           element_selector: 'a[src*=pic/trans\.gif]'
           attribute: alt
