@@ -72,7 +72,7 @@ templates:
         add:
           #当当限速低于设定值时 停止添加新任务（限速与当前下载速度无关） v0.2.15新增
           #单位byte（以下示例为 4MiB）
-          reject_on_dl_limit: 4*1024*1024 
+          reject_on_dl_limit: 4194304 
           #参考add可选参数
           #分类
           category: Rss
