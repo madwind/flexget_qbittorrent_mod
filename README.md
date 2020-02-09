@@ -112,13 +112,13 @@ templates:
           #可配合sort对种子排序 例如 last_activity 实现优先从 最后活动时间（有上传下载流量）最久的种子删起
           #注意：如果经过过滤器后 找不到任何匹配的种子 即使设置了该值 也不会删除
           #推荐最低设置为 下载速度*删除任务时间间隔*2 
-          #例如 峰值下载速度：12.5MB/S 删除任务时间间隔：10 min 则最小应该设置为：12.5*60*10/1024=15
+          #例如 峰值下载速度：12.5MB/S 删除任务时间间隔：10 min 则最小应该设置为：12.5*60*10/1024*2=15
           #单位：GiB 
           keep_disk_space: 10
           #如果删除种子后空间大于keep_disk_space(在第二次运行时检测，防止做了硬链接时只删除一个并没有实际释放空间)，则恢复限速，0为不限速 v0.2.8新增
           #单位：byte
           dl_limit_on_succeeded: 0
-          #如执行任务后空间小于keep_disk_space，则自动限速为 (剩余空间 / dl_limit_interval) KiB/s 防止qbittorrent磁盘空间为0后，任务只能下载到99%，需要强制校验
+          #如执行任务后空间小于keep_disk_space，则自动限速为 (剩余空间 / dl_limit_interval) KiB/s, 不超过dl_limit_on_succeeded, 防止qbittorrent磁盘空间为0后，任务只能下载到99%，需要强制校验
           #默认值为 24*60*60 秒
           #单位：秒
           dl_limit_interval: 1800
@@ -168,6 +168,45 @@ tasks:
     template:
       - qbittorrent_base_template
       - qbittorrent_add_template    
+
+  pt3:
+    #网页获取下载数据 需要有css选择器知识 以下是打开碟片的置顶种子设置 v0.2.13新增
+    html_rss:
+      url: https://pt3.com/torrents.php
+      headers:
+        cookie: 'xxxxxxxxxxxxxxxxxx'
+        user-agent: 'xxxxxxxxxx'
+      passkey: xxxxxxxxxxxxx
+      #组件选择器
+      element_selector: '#form_torrent table tr .topdown_bg'
+      #以下配置基于上面 组件选择器 匹配到的组件做二次匹配
+      fields:
+        #标题（必选）
+        #为 entry 增加 title 属性 值为 匹配到的组件下的 title 属性
+        title:
+          #二次选择器
+          element_selector: 'a[href*=plugin_details\.php]'
+          #提取属性
+          attribute: title
+        #链接（必选）
+        #为 entry 增加 url 属性 值为 匹配到的组件下的 href 属性
+        url:
+          element_selector: 'a[href*=download\.php]'
+          attribute: href
+        #除title url属性为必选，其它可自由自由添加用于过滤
+        #示例 增加促销信息
+        #为 entry 增加 promotion 属性 值为 匹配到的组件下的 alt 属性
+        #除title url属性为必选，其它可自由自由添加用于过滤
+        promotion:
+          element_selector: 'a[src*=pic/trans\.gif]'
+          attribute: alt
+    no_entries_ok: yes
+    #如果promotion带有 Free则接受
+    if:
+      - "'Free' in promotion": accept
+    template: 
+      - qbittorrent_base_template
+      - qbittorrent_add_template
 
   #自动辅种 使用 IYUU 提供的接口
   reseed:

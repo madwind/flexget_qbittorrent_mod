@@ -79,6 +79,31 @@ tasks:
       - qbittorrent_base_template
       - qbittorrent_add_template
 
+  pt3:
+    html_rss:
+      url: https://pt3.com/torrents.php
+      headers:
+        cookie: 'xxxxxxxxxxxxxxxxxx'
+        user-agent: 'xxxxxxxxxx'
+      passkey: xxxxxxxxxxxxx
+      element_selector: '#form_torrent table tr .topdown_bg'
+      fields:
+        title:
+          element_selector: 'a[href*=plugin_details\.php]'
+          attribute: title
+        url:
+          element_selector: 'a[href*=download\.php]'
+          attribute: href
+        promotion:
+          element_selector: 'a[src*=pic/trans\.gif]'
+          attribute: alt
+    no_entries_ok: yes
+    if:
+      - "'Free' in promotion": accept
+    template:
+      - qbittorrent_base_template
+      - qbittorrent_add_template
+
   reseed:
     priority: 1
     iyuu_auto_reseed:
