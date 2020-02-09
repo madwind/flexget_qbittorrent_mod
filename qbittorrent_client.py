@@ -321,7 +321,7 @@ class QBittorrentClient:
             self._reseed_dict[save_path_with_name].append(entry)
         for key, value in torrent.items():
             if key in ['added_on', 'completion_on', 'last_activity', 'seen_complete']:
-                entry['qbittorrent_' + key] = datetime.fromtimestamp(value)
+                entry['qbittorrent_' + key] = datetime.fromtimestamp(value if value > 0 else 0)
             else:
                 entry['qbittorrent_' + key] = value
 
