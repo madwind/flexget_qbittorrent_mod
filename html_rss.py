@@ -5,6 +5,7 @@ from flexget import plugin
 from flexget.entry import Entry
 from flexget.event import event
 from flexget.utils.soup import get_soup
+from loguru import logger
 from requests import RequestException
 
 
@@ -63,6 +64,8 @@ class PluginHtmlRss():
         config = self.prepare_config(config)
         url = config.get('url')
         element_selector = config.get('element_selector')
+        fields = config.get('fields')
+        passkey = config.get('passkey')
 
         queue = []
         if url and element_selector:
@@ -71,19 +74,24 @@ class PluginHtmlRss():
                 content = response.content
             except RequestException as e:
                 raise plugin.PluginError(
-                    'Unable to download the Html for task {} ({}): {}'.format(task.name, config['page'], e)
+                    'Unable to download the Html for task {} ({}): {}'.format(task.name, url, e)
                 )
             elements = get_soup(content).select(element_selector)
             if len(elements) == 0:
                 return queue
-        fields = config.get('keys')
 
         for element in elements:
+            logger.debug('element in element_selector: {}', element)
             entry = Entry()
             for key, value in fields.items():
-                entry[key] = element.select(value['element_selector'])[0].attrs[value['attribute']]
-            entry['url'] = urljoin(url, '{}&passkey={}'.format(entry['url'], config.get('passkey')))
-            queue.append(entry)
+                entry[key] = ''
+                sub_element = element.select(value['element_selector'])
+                if len(sub_element) != 0:
+                    entry[key] = sub_element.get(value['attribute'], '')
+            if entry['title'] and entry['utl']:
+                entry['url'] = urljoin(url, '{}&passkey={}'.format(entry['url'], passkey))
+                queue.append(entry)
+            logger.debug('key: {}, value: {}', key, entry[key])
         return queue
 
 
