@@ -146,7 +146,7 @@ schedules:
     interval:
       minutes: 5
 
-  #每隔3天 每个小时的35分 执行 pt3  
+  #每3小时的35分 执行 pt3  
   - tasks: [pt3]
     schedule:
       minute: 35
