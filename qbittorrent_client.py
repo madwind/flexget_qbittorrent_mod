@@ -352,7 +352,7 @@ class QBittorrentClient:
         if len(set(self._action_history[action_name]) & set(hashes_list)) > 0:
             self._rid = 0
             self._action_history.clear()
-            logger.warning('Duplicate operation detected, rebuild data.')
+            logger.warning('Duplicate operation detected: {} {}, rebuild data.', action_name, hashes)
             return False
         else:
             self._action_history.get(action_name).extend(hashes_list)
