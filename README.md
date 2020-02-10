@@ -145,10 +145,12 @@ schedules:
   - tasks: [reseed, resume, delete, modify]
     interval:
       minutes: 5
-  
+
+  #每隔3天 每个小时的35分 执行 pt3  
   - tasks: [pt3]
-    interval:
-      minutes: 15 
+    schedule:
+      minute: 35
+      hour: "*/3"
 
 
 #任务列表
