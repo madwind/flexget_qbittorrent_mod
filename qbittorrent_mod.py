@@ -223,8 +223,8 @@ class PluginQBittorrentMod(QBittorrentModBase):
     def add_entries(self, task, entry, config):
         add_options = config.get('add')
 
-        reject_on_dl_limit = config.get('reject_on_dl_limit')
-        if reject_on_dl_limit:
+        reject_on_dl_limit = add_options.get('reject_on_dl_limit')
+        if reject_on_dl_limit is not None:
             dl_limit = self.client.get_application_preferences().get('dl_limit')
             if dl_limit and dl_limit < reject_on_dl_limit:
                 entry.reject("reject on dl_limit")
@@ -353,8 +353,8 @@ class PluginQBittorrentMod(QBittorrentModBase):
                     dl_limit = dl_limit_on_succeeded
                 self.client.set_application_preferences('{{"dl_limit": {}}}'.format(dl_limit))
                 logger.warning("not enough disk space, set dl_limit to {} KiB/s", math.ceil(dl_limit / 1024))
-
-        self.client.delete_torrents(str.join('|', delete_hashes), delete_files)
+        if len(delete_hashes) > 0:
+            self.client.delete_torrents(str.join('|', delete_hashes), delete_files)
 
     def _build_delete_hashes(self, delete_hashes, torrent_hashes, all_entry_map, keep_disk_space, free_space_on_disk,
                              delete_size):
