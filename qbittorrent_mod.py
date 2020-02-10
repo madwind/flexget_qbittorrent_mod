@@ -407,22 +407,23 @@ class PluginQBittorrentMod(QBittorrentModBase):
         for entry in task.accepted:
             tags = entry.get('qbittorrent_tags')
             torrent_trackers = entry.get('qbittorrent_trackers')
+            add_tag = False
+            modify_tracker = False
             for tracker in torrent_trackers:
-                modify = False
                 if tag_by_tracker:
                     site_name = self._get_site_name(tracker.get('url'))
-                    if site_name and site_name not in tags:
+                    if not add_tag and site_name and site_name not in tags:
                         self.client.add_torrent_tags(entry['torrent_info_hash'], site_name)
-                        modify = True
+                        add_tag = True
                         logger.info('{} add tag {}', entry.get('title'), site_name)
                 if replace_tracker:
                     for orig_url, new_url in replace_tracker.items():
                         if tracker.get('url') == orig_url:
                             self.client.edit_trackers(entry.get('torrent_info_hash'), orig_url, new_url)
-                            modify = True
+                            modify_tracker = True
                             logger.info('{} update tracker {}', entry.get('title'), new_url)
-                if not modify:
-                    entry.reject()
+            if not add_tag and not modify_tracker:
+                entry.reject()
 
     def _get_site_name(self, tracker_url):
         re_object = re.search('(?<=//).*?(?=/)', tracker_url)
