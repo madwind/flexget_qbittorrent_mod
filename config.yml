@@ -126,6 +126,7 @@ tasks:
     qbittorrent_mod:
       action:
         add:
+          reject_on_dl_limit: 0
           skip_checking: true
     template:
       - qbittorrent_base_template

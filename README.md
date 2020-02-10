@@ -240,6 +240,8 @@ tasks:
     qbittorrent_mod:
       action:
         add:
+          #忽略reject_on_dl_limit 始终添加
+          reject_on_dl_limit: 0
           #跳过校验
           skip_checking: true
     template:
