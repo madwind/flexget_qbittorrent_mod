@@ -88,7 +88,7 @@ class PluginHtmlRss():
                 sub_element = element.select(value['element_selector'])
                 if len(sub_element) > 0:
                     entry[key] = sub_element[0].get(value['attribute'], '')
-            if entry['title'] and entry['utl']:
+            if entry['title'] and entry['url']:
                 entry['url'] = urljoin(url, '{}&passkey={}'.format(entry['url'], passkey))
                 queue.append(entry)
             logger.debug('key: {}, value: {}', key, entry[key])
