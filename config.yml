@@ -97,7 +97,7 @@ tasks:
           element_selector: 'a[href*="details.php"]'
           attribute: title
         url:
-          element_selector: 'a[href*="download.php“]'
+          element_selector: 'a[href*="download.php"]'
           attribute: href
         promotion:
           element_selector: 'div[style="padding-bottom: 5px"] > img'

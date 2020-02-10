@@ -199,7 +199,7 @@ tasks:
         #链接（必选）
         #为 entry 增加 url 属性 值为 匹配到的组件下的 href 属性
         url:
-          element_selector: 'a[href*="download.php“]'
+          element_selector: 'a[href*="download.php"]'
           attribute: href
         #除title url属性为必选，其它可自由添加用于过滤
         #示例 增加促销信息
