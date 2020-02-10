@@ -193,24 +193,24 @@ tasks:
         #为 entry 增加 title 属性 值为 匹配到的组件下的 title 属性
         title:
           #二次选择器
-          element_selector: 'a[href*=plugin_details\.php]'
+          element_selector: 'a[href*="details.php"]'
           #提取属性
           attribute: title
         #链接（必选）
         #为 entry 增加 url 属性 值为 匹配到的组件下的 href 属性
         url:
-          element_selector: 'a[href*=download\.php]'
+          element_selector: 'a[href*="download.php“]'
           attribute: href
         #除title url属性为必选，其它可自由添加用于过滤
         #示例 增加促销信息
         #为 entry 增加 promotion 属性 值为 匹配到的组件下的 alt 属性
         promotion:
-          element_selector: 'img[onmouseover^=domTT_activate]'
+          element_selector: 'div[style="padding-bottom: 5px"] > img'
           attribute: alt
     no_entries_ok: yes
     #如果promotion带有 Free则接受
     if:
-      - "'Free' in promotion": accept
+      - promotion in ['Free']: accept
     template: 
       - qbittorrent_base_template
       - qbittorrent_add_template

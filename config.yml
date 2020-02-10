@@ -94,17 +94,17 @@ tasks:
       element_selector: '#form_torrent > table > tbody > tr.topdown_bg'
       fields:
         title:
-          element_selector: 'a[href*=plugin_details\.php]'
+          element_selector: 'a[href*="details.php"]'
           attribute: title
         url:
-          element_selector: 'a[href*=download\.php]'
+          element_selector: 'a[href*="download.php“]'
           attribute: href
         promotion:
-          element_selector: 'img[onmouseover^=domTT_activate]'
+          element_selector: 'div[style="padding-bottom: 5px"] > img'
           attribute: alt
     no_entries_ok: yes
     if:
-      - "'Free' in promotion": accept
+      - promotion in ['Free']: accept
     template:
       - qbittorrent_base_template
       - qbittorrent_add_template
