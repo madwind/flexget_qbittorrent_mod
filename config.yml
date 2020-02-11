@@ -92,7 +92,7 @@ tasks:
         cookie: 'xxxxxxxxxxxxxxxxxx'
         user-agent: 'xxxxxxxxxx'
       passkey: xxxxxxxxxxxxx
-      element_selector: '#form_torrent > table > tbody > tr.topdown_bg'
+      root_element_selector: '#form_torrent > table > tbody > tr.topdown_bg'
       fields:
         title:
           element_selector: 'a[href*="details.php"]'

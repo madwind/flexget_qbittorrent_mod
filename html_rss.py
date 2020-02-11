@@ -1,6 +1,5 @@
 from urllib.parse import urljoin
 
-from bs4 import BeautifulSoup
 from flexget import plugin
 from flexget.entry import Entry
 from flexget.event import event
@@ -25,7 +24,7 @@ class PluginHtmlRss():
                         }
                     },
                     'passkey': {'type': 'string'},
-                    "element_selector": {'type': 'string'},
+                    "root_element_selector": {'type': 'string'},
                     'fields': {
                         'type': 'object',
                         'properties': {
@@ -56,19 +55,20 @@ class PluginHtmlRss():
         config.setdefault('url', '')
         config.setdefault('headers', {})
         config.setdefault('passkey', '')
-        config.setdefault('element_selector', '')
+        config.setdefault('root_element_selector', '')
         config.setdefault('fields', {})
         return config
 
     def on_task_input(self, task, config):
         config = self.prepare_config(config)
         url = config.get('url')
-        element_selector = config.get('element_selector')
+        root_element_selector = config.get('root_element_selector')
         fields = config.get('fields')
         passkey = config.get('passkey')
 
         queue = []
-        if url and element_selector:
+        elements = []
+        if url and root_element_selector:
             try:
                 response = task.requests.get(url, headers=config.get('headers'))
                 content = response.content
@@ -76,7 +76,7 @@ class PluginHtmlRss():
                 raise plugin.PluginError(
                     'Unable to download the Html for task {} ({}): {}'.format(task.name, url, e)
                 )
-            elements = get_soup(content).select(element_selector)
+            elements = get_soup(content).select(root_element_selector)
             if len(elements) == 0:
                 return queue
 
@@ -88,10 +88,10 @@ class PluginHtmlRss():
                 sub_element = element.select(value['element_selector'])
                 if len(sub_element) > 0:
                     entry[key] = sub_element[0].get(value['attribute'], '')
+                logger.debug('key: {}, value: {}', key, entry[key])
             if entry['title'] and entry['url']:
                 entry['url'] = urljoin(url, '{}&passkey={}'.format(entry['url'], passkey))
                 queue.append(entry)
-            logger.debug('key: {}, value: {}', key, entry[key])
         return queue
 
 

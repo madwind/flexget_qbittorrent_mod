@@ -188,7 +188,7 @@ tasks:
         user-agent: 'xxxxxxxxxx'
       passkey: xxxxxxxxxxxxx
       #组件选择器
-      element_selector: '#form_torrent > table > tbody > tr.topdown_bg'
+      root_element_selector: '#form_torrent > table > tbody > tr.topdown_bg'
       #以下配置基于上面 组件选择器 匹配到的组件做二次匹配
       fields:
         #标题（必选）
