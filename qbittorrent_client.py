@@ -292,7 +292,7 @@ class QBittorrentClient:
 
         torrents = main_data.get('torrents')
         if torrents:
-            values = torrents.values()
+            values = list(torrents.values())
             if self._rid == 1 and len(values) > 0:
                 self._torrent_attr_len = len(values[0])
             for torrent_hash, torrent in torrents.items():
