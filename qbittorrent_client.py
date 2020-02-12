@@ -55,6 +55,7 @@ class QBittorrentClient:
         self._server_state = {}
         self._action_history = {}
         self._rid = 0
+        self._torrent_attr_len = 0
         self._task_dict = {}
         self._config = config
         self.connect()
@@ -291,6 +292,9 @@ class QBittorrentClient:
 
         torrents = main_data.get('torrents')
         if torrents:
+            values = torrents.values()
+            if self._rid == 1 and len(values) > 0:
+                self._torrent_attr_len = len(values[0])
             for torrent_hash, torrent in torrents.items():
                 self._update_entry(torrent_hash, torrent)
         torrent_removed = main_data.get('torrents_removed')
@@ -301,6 +305,10 @@ class QBittorrentClient:
     def _update_entry(self, torrent_hash, torrent):
         entry = self._entry_dict.get(torrent_hash)
         if not entry:
+            if len(torrent) != self._torrent_attr_len:
+                self._rid = 0
+                self._action_history.clear()
+                logger.warning('Sync error: torrent lose attr, rebuild data.')
             save_path = torrent.get('save_path')
             name = torrent.get('name')
             save_path_with_name = '{}{}'.format(save_path, name)
