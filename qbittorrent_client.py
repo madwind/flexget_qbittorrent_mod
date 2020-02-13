@@ -4,11 +4,21 @@ from datetime import datetime
 
 from flexget import plugin
 from flexget.entry import Entry
-from flexget.utils.tools import singleton
 from loguru import logger
 from requests import RequestException, Session
 
 logger = logger.bind(name='qbittorrent_client')
+
+
+def singleton(cls):
+    instances = {}
+
+    def getinstance(*args, **kwargs):
+        if cls not in instances:
+            instances[cls] = cls(*args, **kwargs)
+        return instances[cls]
+
+    return getinstance
 
 
 @singleton
@@ -293,8 +303,10 @@ class QBittorrentClient:
         torrents = main_data.get('torrents')
         if torrents:
             values = list(torrents.values())
-            if self._rid == 1 and len(values) > 0:
+            values_len = len(values)
+            if self._rid == 1 and values_len > 0:
                 self._torrent_attr_len = len(values[0])
+                logger.info('building {} entries', values_len)
             for torrent_hash, torrent in torrents.items():
                 self._update_entry(torrent_hash, torrent)
         torrent_removed = main_data.get('torrents_removed')
