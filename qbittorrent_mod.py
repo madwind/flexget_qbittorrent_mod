@@ -198,86 +198,70 @@ class PluginQBittorrentMod(QBittorrentModBase):
             else:
                 raise plugin.PluginError("Couldn't connect to qBittorrent.")
 
-        if action_config.get('add'):
-            for entry in task.accepted:
-                self.add_entries(task, entry, action_config)
-        elif action_config.get('remove'):
-            self.remove_entries(task, action_config)
-        elif action_config.get('resume'):
-            self.resume_entries(task, action_config)
-        elif action_config.get('modify'):
-            self.modify_entries(task, action_config)
+        (action_name, option), = action_config.items()
+        action = getattr(self, action_name + '_entries', None)
+        if action:
+            action(task, option)
         else:
             raise plugin.PluginError('Unknown action.')
 
-    def on_task_exit(self, task, config):
-        config = self.prepare_config(config)
-        if not self.client:
-            self.client = self.create_client(config)
-            if self.client:
-                logger.debug('Successfully connected to qBittorrent.')
-            else:
-                raise plugin.PluginError("Couldn't connect to qBittorrent.")
-        self.client.del_task_data(id(task))
-
-    def add_entries(self, task, entry, config):
-        add_options = config.get('add')
-
+    def add_entries(self, task, add_options):
         reject_on_dl_limit = add_options.get('reject_on_dl_limit')
+        dl_limit = None
         if reject_on_dl_limit is not None:
             dl_limit = self.client.get_application_preferences().get('dl_limit')
+
+        for entry in task.accepted:
             if dl_limit and dl_limit < reject_on_dl_limit:
                 entry.reject("reject on dl_limit")
                 logger.info('reject {}, because: dl_limit < reject_on_dl_limit', entry['title'])
                 return
             else:
                 del add_options['reject_on_dl_limit']
+            add_options['autoTMM'] = entry.get('autoTMM', add_options.get('autoTMM'))
+            add_options['category'] = entry.get('category', add_options.get('category'))
+            add_options['savepath'] = entry.get('savepath', add_options.get('savepath'))
+            add_options['paused'] = entry.get('paused', add_options.get('paused'))
 
-        add_options['autoTMM'] = entry.get('autoTMM', add_options.get('autoTMM'))
-        add_options['category'] = entry.get('category', add_options.get('category'))
-        add_options['savepath'] = entry.get('savepath', add_options.get('savepath'))
-        add_options['paused'] = entry.get('paused', add_options.get('paused'))
+            if add_options.get('autoTMM') and not add_options.get('category'):
+                del add_options['savepath']
 
-        if add_options.get('autoTMM') and not add_options.get('category'):
-            del add_options['savepath']
+            if not add_options.get('paused'):
+                del add_options['paused']
 
-        if not add_options.get('paused'):
-            del add_options['paused']
+            is_magnet = entry['url'].startswith('magnet:')
 
-        is_magnet = entry['url'].startswith('magnet:')
+            if task.manager.options.test:
+                logger.info('Test mode.')
+                logger.info('Would add torrent to qBittorrent with:')
+                if not is_magnet:
+                    logger.info('File: {}', entry.get('file'))
+                else:
+                    logger.info('Url: {}', entry.get('url'))
+                logger.info('Save path: {}', add_options.get('savepath'))
+                logger.info('Category: {}', add_options.get('category'))
+                logger.info('Paused: {}', add_options.get('paused', 'false'))
+                if add_options.get('upLimit'):
+                    logger.info('Upload Speed Limit: {}', add_options.get('upLimit'))
+                if add_options.get('dlLimit'):
+                    logger.info('Download Speed Limit: {}', add_options.get('dlLimit'))
+                return
 
-        if task.manager.options.test:
-            logger.info('Test mode.')
-            logger.info('Would add torrent to qBittorrent with:')
             if not is_magnet:
-                logger.info('File: {}', entry.get('file'))
+                if 'file' not in entry:
+                    entry.fail('File missing?')
+                    return
+                if not os.path.exists(entry['file']):
+                    tmp_path = os.path.join(task.manager.config_base, 'temp')
+                    logger.debug('entry: {}', entry)
+                    logger.debug('temp: {}', ', '.join(os.listdir(tmp_path)))
+                    entry.fail("Downloaded temp file '%s' doesn't exist!?" % entry['file'])
+                    return
+                self.client.add_torrent_file(entry['file'], add_options)
             else:
-                logger.info('Url: {}', entry.get('url'))
-            logger.info('Save path: {}', add_options.get('savepath'))
-            logger.info('Category: {}', add_options.get('category'))
-            logger.info('Paused: {}', add_options.get('paused', 'false'))
-            if add_options.get('upLimit'):
-                logger.info('Upload Speed Limit: {}', add_options.get('upLimit'))
-            if add_options.get('dlLimit'):
-                logger.info('Download Speed Limit: {}', add_options.get('dlLimit'))
-            return
+                self.client.add_torrent_url(entry['url'], add_options)
 
-        if not is_magnet:
-            if 'file' not in entry:
-                entry.fail('File missing?')
-                return
-            if not os.path.exists(entry['file']):
-                tmp_path = os.path.join(task.manager.config_base, 'temp')
-                logger.debug('entry: {}', entry)
-                logger.debug('temp: {}', ', '.join(os.listdir(tmp_path)))
-                entry.fail("Downloaded temp file '%s' doesn't exist!?" % entry['file'])
-                return
-            self.client.add_torrent_file(entry['file'], add_options)
-        else:
-            self.client.add_torrent_url(entry['url'], add_options)
-
-    def remove_entries(self, task, config):
-        remove_options = config.get('remove')
+    def remove_entries(self, task, remove_options):
         delete_files = remove_options.get('delete_files')
         check_reseed = remove_options.get('check_reseed')
         keep_disk_space = remove_options.get('keep_disk_space')
@@ -373,8 +357,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                         entry['qbittorrent_seeding_time'] / (60 * 60),
                         entry['qbittorrent_share_ratio'])
 
-    def resume_entries(self, task, config):
-        resume_options = config.get('resume')
+    def resume_entries(self, task, resume_options):
         recheck_torrents = resume_options.get('recheck_torrents')
         task_data = self.client.get_task_data(id(task))
         reseed_dict = task_data.get('reseed_dict')
@@ -400,8 +383,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
             self.client.recheck_torrents(str.join('|', recheck_hashes))
         self.client.resume_torrents(str.join('|', hashes))
 
-    def modify_entries(self, task, config):
-        modify_options = config.get('modify')
+    def modify_entries(self, task, modify_options):
         tag_by_tracker = modify_options.get('tag_by_tracker')
         replace_tracker = modify_options.get('replace_tracker')
         for entry in task.accepted:

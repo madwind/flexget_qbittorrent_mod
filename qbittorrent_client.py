@@ -278,14 +278,11 @@ class QBittorrentClient:
             with self.build_entry_lock:
                 if not self._task_dict.get(task_id):
                     self._build_entry()
+                    self._entry_dict.clear()
                     self._task_dict[task_id] = {'server_state': copy.deepcopy(self._server_state),
                                                 'entry_dict': copy.deepcopy(self._entry_dict),
                                                 'reseed_dict': copy.deepcopy(self._reseed_dict)}
         return self._task_dict.get(task_id)
-
-    def del_task_data(self, task_id):
-        if self._task_dict.get(task_id):
-            del self._task_dict[task_id]
 
     def _build_entry(self):
         self._building = True
