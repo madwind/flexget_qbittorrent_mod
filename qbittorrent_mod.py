@@ -207,17 +207,20 @@ class PluginQBittorrentMod(QBittorrentModBase):
 
     def add_entries(self, task, add_options):
         reject_on_dl_limit = add_options.get('reject_on_dl_limit')
-        dl_limit = None
+        reject_entry = False
         if reject_on_dl_limit is not None:
             dl_limit = self.client.get_application_preferences().get('dl_limit')
-
-        for entry in task.accepted:
             if dl_limit and dl_limit < reject_on_dl_limit:
-                entry.reject("reject on dl_limit")
-                logger.info('reject {}, because: dl_limit < reject_on_dl_limit', entry['title'])
-                return
+                reject_entry = True
             else:
                 del add_options['reject_on_dl_limit']
+
+        for entry in task.accepted:
+            if reject_entry:
+                entry.reject("reject on dl_limit")
+                logger.info('reject {}, because: dl_limit < reject_on_dl_limit', entry['title'])
+                continue
+
             add_options['autoTMM'] = entry.get('autoTMM', add_options.get('autoTMM'))
             add_options['category'] = entry.get('category', add_options.get('category'))
             add_options['savepath'] = entry.get('savepath', add_options.get('savepath'))
