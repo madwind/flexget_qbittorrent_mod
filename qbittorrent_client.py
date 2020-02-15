@@ -345,7 +345,7 @@ class QBittorrentClient:
                 entry['qbittorrent_' + key] = datetime.fromtimestamp(timestamp)
             else:
                 entry['qbittorrent_' + key] = value
-        is_reseed_entry = entry['qbittorrent_state'] == 'pausedDL' and torrent['qbittorrent_scompleted'] == 0
+        is_reseed_entry = entry['qbittorrent_state'] == 'pausedDL' and entry['qbittorrent_completed'] == 0
         empty_time = datetime.fromtimestamp(0)
         if entry['qbittorrent_last_activity'] == empty_time and not is_reseed_entry:
             if entry['qbittorrent_completion_on'] > empty_time:
