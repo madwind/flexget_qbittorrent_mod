@@ -311,7 +311,7 @@ class QBittorrentClient:
         torrent_removed = main_data.get('torrents_removed')
         if torrent_removed:
             for torrent_hash in torrent_removed:
-                self._remove_entry(torrent_hash)
+                self._remove_torrent(torrent_hash)
 
     def _update_entry(self, torrent_hash, torrent):
         entry = self._entry_dict.get(torrent_hash)
@@ -345,19 +345,23 @@ class QBittorrentClient:
                 entry['qbittorrent_' + key] = datetime.fromtimestamp(timestamp)
             else:
                 entry['qbittorrent_' + key] = value
-        is_reseed_entry = entry['qbittorrent_state'] == 'pausedDL' and entry['qbittorrent_completed'] == 0
-        empty_time = datetime.fromtimestamp(0)
-        if entry['qbittorrent_last_activity'] == empty_time and not is_reseed_entry:
-            if entry['qbittorrent_completion_on'] > empty_time:
-                entry['qbittorrent_last_activity'] = entry['qbittorrent_completion_on']
-            else:
-                entry['qbittorrent_last_activity'] = entry['qbittorrent_added_on']
+        self._update_entry_last_activity(entry)
 
     def _update_entry_trackers(self, torrent_hash):
         trackers = list(filter(lambda tracker: tracker.get('status') != 0, self.get_torrent_trackers(torrent_hash)))
         self._entry_dict[torrent_hash]['qbittorrent_trackers'] = trackers
 
-    def _remove_entry(self, torrent_hash):
+    def _update_entry_last_activity(self, entry):
+        is_reseed_failed = entry['qbittorrent_state'] == 'pausedDL' and entry['qbittorrent_completed'] == 0
+        is_never_activated = entry['qbittorrent_uploaded'] == 0 and entry['qbittorrent_downloaded'] == 0
+        empty_time = datetime.fromtimestamp(0)
+        if (entry['qbittorrent_last_activity'] == empty_time or is_never_activated) and not is_reseed_failed:
+            if entry['qbittorrent_completion_on'] > empty_time:
+                entry['qbittorrent_last_activity'] = entry['qbittorrent_completion_on']
+            else:
+                entry['qbittorrent_last_activity'] = entry['qbittorrent_added_on']
+
+    def _remove_torrent(self, torrent_hash):
         save_path_with_name = self._entry_dict.get(torrent_hash).get('qbittorrent_save_path_with_name')
         torrent_list = self._reseed_dict.get(save_path_with_name)
         if torrent_list and (torrent_hash in self._entry_dict.keys()):
