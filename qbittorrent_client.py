@@ -348,11 +348,12 @@ class QBittorrentClient:
                 entry['qbittorrent_' + key] = value
         self._update_entry_last_activity(entry)
 
-        for reseed_entry in self._reseed_dict[entry['qbittorrent_save_path_with_name']]:
-            if reseed_entry['qbittorrent_last_activity'] <= entry['qbittorrent_last_activity']:
-                reseed_entry['qbittorrent_reseed_last_activity'] = entry['qbittorrent_last_activity']
-            else:
-                entry['qbittorrent_reseed_last_activity'] = reseed_entry['qbittorrent_reseed_last_activity']
+        reseed_entry_list = self._reseed_dict[entry['qbittorrent_save_path_with_name']]
+        reseed_last_activity = max(reseed_entry_list,
+                                   key=lambda reseed_entry: reseed_entry['qbittorrent_last_activity'])
+        for reseed_entry in reseed_entry_list:
+            if reseed_entry['qbittorrent_last_activity'] <= reseed_last_activity['qbittorrent_last_activity']:
+                reseed_entry['qbittorrent_reseed_last_activity'] = reseed_last_activity['qbittorrent_last_activity']
 
     def _update_entry_trackers(self, torrent_hash):
         trackers = list(filter(lambda tracker: tracker.get('status') != 0, self.get_torrent_trackers(torrent_hash)))
