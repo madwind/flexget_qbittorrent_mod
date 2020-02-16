@@ -85,9 +85,13 @@ class PluginHtmlRss():
             entry = Entry()
             for key, value in fields.items():
                 entry[key] = ''
-                sub_element = element.select(value['element_selector'])
-                if len(sub_element) > 0:
-                    entry[key] = sub_element[0].get(value['attribute'], '')
+                sub_element = element.select_one(value['element_selector'])
+                if sub_element:
+                    if value['attribute'] == 'textContent':
+                        sub_element_content = sub_element.get_text()
+                    else:
+                        sub_element_content = sub_element.get(value['attribute'], '')
+                    entry[key] = sub_element_content
                 logger.debug('key: {}, value: {}', key, entry[key])
             if entry['title'] and entry['url']:
                 entry['url'] = urljoin(url, '{}&passkey={}'.format(entry['url'], passkey))
