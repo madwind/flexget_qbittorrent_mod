@@ -72,7 +72,9 @@ class QBittorrentClient:
 
     def _request(self, method, url, msg_on_fail=None, **kwargs):
         if not url.endswith(self.API_URL_LOGIN) and not self.connected:
-            raise plugin.PluginError('Not connected.')
+            self.connected = False
+            self._rid = 0
+            self.connect()
         try:
             response = self.session.request(method, url, **kwargs)
             if response.status_code == 403 or (self.API_URL_LOGIN in url and response.text == 'Fails.'):
@@ -82,10 +84,11 @@ class QBittorrentClient:
                     else msg_on_fail
                 )
                 self.connected = False
-                self.connect()
+                self._rid = 0
             else:
                 return response
         except RequestException as e:
+            self._rid = 0
             msg = str(e)
         raise plugin.PluginError(
             'Error when trying to send request to qbittorrent: {}'.format(msg)
@@ -244,8 +247,6 @@ class QBittorrentClient:
             )
 
     def get_main_data(self):
-        if self._rid == 500:
-            self._rid = 0
         data = {'rid': self._rid}
         return self._request(
             'post',
@@ -346,6 +347,12 @@ class QBittorrentClient:
             else:
                 entry['qbittorrent_' + key] = value
         self._update_entry_last_activity(entry)
+
+        for reseed_entry in self._reseed_dict[entry['qbittorrent_save_path_with_name']]:
+            if reseed_entry['qbittorrent_last_activity'] <= entry['qbittorrent_last_activity']:
+                reseed_entry['qbittorrent_reseed_last_activity'] = entry['qbittorrent_last_activity']
+            else:
+                entry['qbittorrent_reseed_last_activity'] = reseed_entry['qbittorrent_reseed_last_activity']
 
     def _update_entry_trackers(self, torrent_hash):
         trackers = list(filter(lambda tracker: tracker.get('status') != 0, self.get_torrent_trackers(torrent_hash)))
