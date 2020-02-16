@@ -217,7 +217,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
 
         for entry in task.accepted:
             if reject_entry:
-                entry.reject("reject on dl_limit")
+                entry.reject(reason="reject on dl_limit")
                 logger.info('reject {}, because: dl_limit < reject_on_dl_limit', entry['title'])
                 continue
 
@@ -352,13 +352,14 @@ class PluginQBittorrentMod(QBittorrentModBase):
         for torrent_hash in torrent_hashes:
             entry = all_entry_map.get(torrent_hash)
             entry.accept(reason='torrent with the same save path are all pass tested')
-            logger.info('{}, site: {}, size: {:.2f} GB, last_activity: {}, seeding_time: {:.2f} h, share_ratio: {:.2%}',
-                        entry['title'],
-                        entry['qbittorrent_tags'],
-                        entry['qbittorrent_completed'] / (1024 * 1024 * 1024),
-                        entry['qbittorrent_last_activity'],
-                        entry['qbittorrent_seeding_time'] / (60 * 60),
-                        entry['qbittorrent_share_ratio'])
+            logger.info(
+                '{}, site: {}, size: {:.2f} GB, seeding_time: {:.2f} h, share_ratio: {:.2f},last_activity: {}, reseed_last_activity: {}',
+                entry['title'],
+                entry['qbittorrent_tags'],
+                entry['qbittorrent_completed'] / (1024 * 1024 * 1024),
+                entry['qbittorrent_seeding_time'] / (60 * 60),
+                entry['qbittorrent_share_ratio'], entry['qbittorrent_last_activity'],
+                entry['qbittorrent_reseed_last_activity'], )
 
     def resume_entries(self, task, resume_options):
         recheck_torrents = resume_options.get('recheck_torrents')
@@ -379,7 +380,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                     resume = True
                     break
             if not resume:
-                entry.reject('can not find seeding torrent in same save path')
+                entry.reject(reason='can not find seeding torrent in same save path')
                 recheck_hashes.append(entry['torrent_info_hash'])
         if recheck_torrents and len(recheck_hashes) > 0:
             logger.info('recheck {}', recheck_hashes)
