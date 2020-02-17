@@ -1,6 +1,6 @@
 import copy
 import threading
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from flexget import plugin
 from flexget.entry import Entry
@@ -65,6 +65,7 @@ class QBittorrentClient:
         self._server_state = {}
         self._action_history = {}
         self._rid = 0
+        self._main_data_time = datetime.now()
         self._torrent_attr_len = 0
         self._task_dict = {}
         self._config = config
@@ -73,7 +74,7 @@ class QBittorrentClient:
     def _request(self, method, url, msg_on_fail=None, **kwargs):
         if not url.endswith(self.API_URL_LOGIN) and not self.connected:
             self.connected = False
-            self._rid = 0
+            self._get_new_maindata()
             self.connect()
         try:
             response = self.session.request(method, url, **kwargs)
@@ -84,11 +85,11 @@ class QBittorrentClient:
                     else msg_on_fail
                 )
                 self.connected = False
-                self._rid = 0
+                self._get_new_maindata()
             else:
                 return response
         except RequestException as e:
-            self._rid = 0
+            self._get_new_maindata()
             msg = str(e)
         raise plugin.PluginError(
             'Error when trying to send request to qbittorrent: {}'.format(msg)
@@ -248,6 +249,11 @@ class QBittorrentClient:
 
     def get_main_data(self):
         data = {'rid': self._rid}
+        if self._rid == 0:
+            self._main_data_time = datetime.now()
+        elif self._main_data_time < datetime.now() - timedelta(hours=1):
+            self._get_new_maindata()
+
         return self._request(
             'post',
             self.url + self.API_URL_GET_MAIN_DATA,
@@ -285,6 +291,9 @@ class QBittorrentClient:
                                                 'reseed_dict': copy.deepcopy(self._reseed_dict)}
         return self._task_dict.get(task_id)
 
+    def _get_new_maindata(self):
+        self._rid = 0
+
     def _build_entry(self):
         self._building = True
         main_data = self.get_main_data()
@@ -292,6 +301,7 @@ class QBittorrentClient:
         if main_data.get('full_update'):
             self._entry_dict = {}
             self._reseed_dict = {}
+            self._action_history = {}
 
         server_state = main_data.get('server_state')
         if server_state:
@@ -318,8 +328,7 @@ class QBittorrentClient:
         entry = self._entry_dict.get(torrent_hash)
         if not entry:
             if len(torrent) != self._torrent_attr_len:
-                self._rid = 0
-                self._action_history.clear()
+                self._get_new_maindata()
                 logger.warning('Sync error: torrent lose attr, rebuild data.')
                 return
             save_path = torrent.get('save_path')
@@ -381,8 +390,7 @@ class QBittorrentClient:
                 self._reseed_dict[save_path_with_name] = torrent_list_removed
             del self._entry_dict[torrent_hash]
         else:
-            self._rid = 0
-            self._action_history.clear()
+            self._get_new_maindata()
             logger.warning('Sync error, rebuild data')
 
     def _check_action(self, action_name, hashes):
@@ -390,8 +398,7 @@ class QBittorrentClient:
         if not self._action_history.get(action_name):
             self._action_history[action_name] = []
         if len(set(self._action_history[action_name]) & set(hashes_list)) > 0:
-            self._rid = 0
-            self._action_history.clear()
+            self._get_new_maindata()
             logger.warning('Duplicate operation detected: {} {}, rebuild data.', action_name, hashes)
             return False
         else:
