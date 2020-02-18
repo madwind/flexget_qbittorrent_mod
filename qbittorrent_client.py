@@ -65,7 +65,6 @@ class QBittorrentClient:
         self._server_state = {}
         self._action_history = {}
         self._rid = 0
-        self._main_data_time = datetime.now()
         self._torrent_attr_len = 0
         self._task_dict = {}
         self._config = config
@@ -74,7 +73,7 @@ class QBittorrentClient:
     def _request(self, method, url, msg_on_fail=None, **kwargs):
         if not url.endswith(self.API_URL_LOGIN) and not self.connected:
             self.connected = False
-            self._get_new_maindata()
+            self._reset_rid()
             self.connect()
         try:
             response = self.session.request(method, url, **kwargs)
@@ -85,11 +84,11 @@ class QBittorrentClient:
                     else msg_on_fail
                 )
                 self.connected = False
-                self._get_new_maindata()
+                self._reset_rid()
             else:
                 return response
         except RequestException as e:
-            self._get_new_maindata()
+            self._reset_rid()
             msg = str(e)
         raise plugin.PluginError(
             'Error when trying to send request to qbittorrent: {}'.format(msg)
@@ -249,11 +248,6 @@ class QBittorrentClient:
 
     def get_main_data(self):
         data = {'rid': self._rid}
-        if self._rid == 0:
-            self._main_data_time = datetime.now()
-        elif self._main_data_time < datetime.now() - timedelta(hours=1):
-            self._get_new_maindata()
-
         return self._request(
             'post',
             self.url + self.API_URL_GET_MAIN_DATA,
@@ -291,14 +285,15 @@ class QBittorrentClient:
                                                 'reseed_dict': copy.deepcopy(self._reseed_dict)}
         return self._task_dict.get(task_id)
 
-    def _get_new_maindata(self):
+    def _reset_rid(self):
         self._rid = 0
 
     def _build_entry(self):
         self._building = True
         main_data = self.get_main_data()
         self._rid = main_data.get('rid')
-        if main_data.get('full_update'):
+        is_new_data = main_data.get('full_update')
+        if is_new_data:
             self._entry_dict = {}
             self._reseed_dict = {}
             self._action_history = {}
@@ -312,32 +307,42 @@ class QBittorrentClient:
         if torrents:
             values = list(torrents.values())
             values_len = len(values)
-            if self._rid == 1 and values_len > 0:
+            if is_new_data and values_len > 0:
                 self._torrent_attr_len = len(values[0])
                 logger.info('build_entry: building {} entries', values_len)
             for torrent_hash, torrent in torrents.items():
                 self._update_entry(torrent_hash, torrent)
-            if self._rid == 1:
-                logger.info('build_entry: build completion')
         torrent_removed = main_data.get('torrents_removed')
         if torrent_removed:
             for torrent_hash in torrent_removed:
                 self._remove_torrent(torrent_hash)
 
+        for save_path_with_name, reseed_entry_list in self._reseed_dict.items():
+            self._update_reseed_addition(reseed_entry_list)
+
+        update_addition_flag = is_new_data or not self._last_update_time or self._last_update_time < datetime.now() - timedelta(
+            hours=1)
+        if update_addition_flag:
+            self._last_update_time = datetime.now()
+            for torrent_hash, entry in self._entry_dict.items():
+                self._update_addition(entry)
+
+        if is_new_data:
+            logger.info('build_entry: build completion')
+
     def _update_entry(self, torrent_hash, torrent):
         entry = self._entry_dict.get(torrent_hash)
+        is_new_entry = False
         if not entry:
+            is_new_entry = True
             if len(torrent) != self._torrent_attr_len:
-                self._get_new_maindata()
+                self._reset_rid()
                 logger.warning('Sync error: torrent lose attr, rebuild data.')
                 return
-            save_path = torrent.get('save_path')
-            name = torrent.get('name')
+            save_path = torrent['save_path']
+            name = torrent['name']
             save_path_with_name = '{}{}'.format(save_path, name)
             torrent['save_path_with_name'] = save_path_with_name
-            torrent_properties = self.get_torrent_generic_properties(torrent_hash)
-            torrent['seeding_time'] = torrent_properties['seeding_time']
-            torrent['share_ratio'] = torrent_properties['share_ratio']
             entry = Entry(
                 title=name,
                 url='',
@@ -345,28 +350,35 @@ class QBittorrentClient:
                 content_size=torrent['size'] / (1024 * 1024 * 1024),
             )
             self._entry_dict[torrent_hash] = entry
-            self._update_entry_trackers(torrent_hash)
             if not self._reseed_dict.get(save_path_with_name):
                 self._reseed_dict[save_path_with_name] = []
             self._reseed_dict[save_path_with_name].append(entry)
         for key, value in torrent.items():
+            if not is_new_entry and key in ['save_path', 'name']:
+                self._reset_rid()
             if key in ['added_on', 'completion_on', 'last_activity', 'seen_complete']:
                 timestamp = value if value > 0 else 0
                 entry['qbittorrent_' + key] = datetime.fromtimestamp(timestamp)
             else:
                 entry['qbittorrent_' + key] = value
+                if key in ['tracker']:
+                    trackers = list(
+                        filter(lambda tracker: tracker.get('status') != 0, self.get_torrent_trackers(torrent_hash)))
+                    entry['qbittorrent_trackers'] = trackers
         self._update_entry_last_activity(entry)
 
-        reseed_entry_list = self._reseed_dict[entry['qbittorrent_save_path_with_name']]
+    def _update_addition(self, entry):
+        torrent_hash = entry['torrent_info_hash']
+        torrent_properties = self.get_torrent_generic_properties(torrent_hash)
+        entry['qbittorrent_seeding_time'] = torrent_properties['seeding_time']
+        entry['qbittorrent_share_ratio'] = torrent_properties['share_ratio']
+
+    def _update_reseed_addition(self, reseed_entry_list):
         reseed_last_activity = max(reseed_entry_list,
                                    key=lambda reseed_entry: reseed_entry['qbittorrent_last_activity'])
         for reseed_entry in reseed_entry_list:
             if reseed_entry['qbittorrent_last_activity'] <= reseed_last_activity['qbittorrent_last_activity']:
                 reseed_entry['qbittorrent_reseed_last_activity'] = reseed_last_activity['qbittorrent_last_activity']
-
-    def _update_entry_trackers(self, torrent_hash):
-        trackers = list(filter(lambda tracker: tracker.get('status') != 0, self.get_torrent_trackers(torrent_hash)))
-        self._entry_dict[torrent_hash]['qbittorrent_trackers'] = trackers
 
     def _update_entry_last_activity(self, entry):
         is_reseed_failed = entry['qbittorrent_state'] == 'pausedDL' and entry['qbittorrent_completed'] == 0
@@ -390,7 +402,7 @@ class QBittorrentClient:
                 self._reseed_dict[save_path_with_name] = torrent_list_removed
             del self._entry_dict[torrent_hash]
         else:
-            self._get_new_maindata()
+            self._reset_rid()
             logger.warning('Sync error, rebuild data')
 
     def _check_action(self, action_name, hashes):
@@ -398,7 +410,7 @@ class QBittorrentClient:
         if not self._action_history.get(action_name):
             self._action_history[action_name] = []
         if len(set(self._action_history[action_name]) & set(hashes_list)) > 0:
-            self._get_new_maindata()
+            self._reset_rid()
             logger.warning('Duplicate operation detected: {} {}, rebuild data.', action_name, hashes)
             return False
         else:
