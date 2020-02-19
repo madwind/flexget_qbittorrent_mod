@@ -107,7 +107,10 @@ templates:
           #检查所有辅种是否都满足删除条件 v0.1.2新增
           #true: 只要有其中一个不满足条件则放弃删除
           #false（默认）: 只要有一个满足删除条件 就全部删除 
-          check_reseed: true
+          #array: 只检查匹配tag的种子，满足就全部删除 v0.3 修改
+          check_reseed:
+            - pt2
+            - pt3
           #删种同时是否删除数据
           delete_files: true
           #设置磁盘空间阈值 单位GB（需要qBittorrent 4.14+）  v0.1.3新增

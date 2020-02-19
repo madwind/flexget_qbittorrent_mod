@@ -37,7 +37,9 @@ templates:
     qbittorrent_mod:
       action:
         remove:
-          check_reseed: true
+          check_reseed:
+            - pt2
+            - pt3
           delete_files: true
           keep_disk_space: 10
           dl_limit_on_succeeded: 0
