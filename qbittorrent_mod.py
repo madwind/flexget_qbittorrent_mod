@@ -116,7 +116,8 @@ class PluginQBittorrentMod(QBittorrentModBase):
                             'remove': {
                                 'type': 'object',
                                 'properties': {
-                                    'check_reseed': {'type': 'boolean'},
+                                    'check_reseed': {
+                                        'oneOf': [{'type': 'boolean'}, {'type': 'array', 'items': {'type': 'string'}}]},
                                     'delete_files': {'type': 'boolean'},
                                     'keep_disk_space': {'type': 'integer'},
                                     'dl_limit_on_succeeded': {'type': 'integer'},
@@ -310,14 +311,20 @@ class PluginQBittorrentMod(QBittorrentModBase):
                 continue
             save_path_with_name = entry_dict.get(entry_hash).get('qbittorrent_save_path_with_name')
             reseed_entry_list = reseed_dict.get(save_path_with_name)
+            check_hashes = []
             torrent_hashes = []
             torrent_size = 0
 
             for reseed_entry in reseed_entry_list:
                 if reseed_entry['qbittorrent_completed'] != 0:
                     torrent_size = reseed_entry['qbittorrent_completed']
+                if isinstance(check_reseed, list):
+                    if len(set(check_reseed) & set(reseed_entry['qbittorrent_tags'].split(','))) > 0:
+                        check_hashes.append(reseed_entry['torrent_info_hash'])
+                else:
+                    check_hashes.append(reseed_entry['torrent_info_hash'])
                 torrent_hashes.append(reseed_entry['torrent_info_hash'])
-            if check_reseed and not set(accepted_entry_hashes) >= set(torrent_hashes):
+            if check_reseed and not set(accepted_entry_hashes) >= set(check_hashes):
                 for torrent_hash in torrent_hashes:
                     entry_dict.get(torrent_hash).reject(
                         reason='torrents with the same save path are not all tested')
@@ -358,8 +365,9 @@ class PluginQBittorrentMod(QBittorrentModBase):
                 entry['qbittorrent_tags'],
                 entry['qbittorrent_completed'] / (1024 * 1024 * 1024),
                 entry['qbittorrent_seeding_time'] / (60 * 60),
-                entry['qbittorrent_share_ratio'], entry['qbittorrent_last_activity'],
-                entry['qbittorrent_reseed_last_activity'], )
+                entry['qbittorrent_share_ratio'],
+                entry['qbittorrent_last_activity'],
+                entry['qbittorrent_reseed_last_activity'])
 
     def resume_entries(self, task, resume_options):
         recheck_torrents = resume_options.get('recheck_torrents')
