@@ -23,7 +23,7 @@ class PluginHtmlRss():
                             'agent': {'type': 'string'},
                         }
                     },
-                    'passkey': {'type': 'string'},
+                    'params': {'type': 'string'},
                     "root_element_selector": {'type': 'string'},
                     'fields': {
                         'type': 'object',
@@ -54,7 +54,7 @@ class PluginHtmlRss():
     def prepare_config(self, config):
         config.setdefault('url', '')
         config.setdefault('headers', {})
-        config.setdefault('passkey', '')
+        config.setdefault('params', '')
         config.setdefault('root_element_selector', '')
         config.setdefault('fields', {})
         return config
@@ -64,7 +64,7 @@ class PluginHtmlRss():
         url = config.get('url')
         root_element_selector = config.get('root_element_selector')
         fields = config.get('fields')
-        passkey = config.get('passkey')
+        params = config.get('params')
 
         queue = []
         elements = []
@@ -94,7 +94,7 @@ class PluginHtmlRss():
                     entry[key] = sub_element_content
                 logger.debug('key: {}, value: {}', key, entry[key])
             if entry['title'] and entry['url']:
-                entry['url'] = urljoin(url, '{}{}'.format(entry['url'], passkey))
+                entry['url'] = urljoin(url, '{}{}'.format(entry['url'], params))
                 queue.append(entry)
         return queue
 
