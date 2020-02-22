@@ -86,14 +86,18 @@ class PluginIYUUAutoReseed():
                             break
                     if not passkey:
                         continue
+
                     if site_name == 'totheglory':
                         download_page = site['download_page'].format(str(torrent['torrent_id']) + '/' + passkey)
+                    elif site_name == 'dicmusic':
+                        download_page = site['download_page'].format(str(torrent['torrent_id']),
+                                                                     authkey=passkey['authkey'],
+                                                                     torrent_pass=passkey['torrent_pass'])
                     else:
                         download_page = site['download_page'].format(str(torrent['torrent_id']) + '&passkey=' + passkey)
+
                     if site_name == 'm-team':
                         download_page = download_page + '&https=1'
-                    elif site_name == 'oshen':
-                        protocol = 'http'
 
                     entry = Entry(
                         title=client_torrent['title'],
@@ -132,7 +136,6 @@ class PluginIYUUAutoReseed():
         torrents_hashes['timestamp'] = int(time.time())
 
         return torrent_dict, torrents_hashes
-
 
 @event('plugin.register')
 def register_plugin():
