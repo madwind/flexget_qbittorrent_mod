@@ -121,7 +121,8 @@ class PluginQBittorrentMod(QBittorrentModBase):
                                     'delete_files': {'type': 'boolean'},
                                     'keep_disk_space': {'type': 'integer'},
                                     'dl_limit_on_succeeded': {'type': 'integer'},
-                                    'dl_limit_interval': {'type': 'integer'}
+                                    'dl_limit_interval': {'type': 'integer'},
+                                    'show_entry': {'type': 'string'}
                                 }
                             },
                             'resume': {
@@ -271,6 +272,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
         keep_disk_space = remove_options.get('keep_disk_space')
         dl_limit_on_succeeded = remove_options.get('dl_limit_on_succeeded')
         dl_limit_interval = remove_options.get('dl_limit_interval', 24 * 60 * 60)
+        show_entry = remove_options.get('show_entry')
         task_data = self.client.get_task_data(id(task))
         server_state = task_data.get('server_state')
         free_space_on_disk = 0
@@ -304,6 +306,8 @@ class PluginQBittorrentMod(QBittorrentModBase):
 
         delete_size = 0
         for entry in task.accepted:
+            if show_entry and entry['torrent_info_hash'] == show_entry:
+                logger.info('show_entry: {}', entry)
             accepted_entry_hashes.append(entry['torrent_info_hash'])
 
         for entry_hash in accepted_entry_hashes:

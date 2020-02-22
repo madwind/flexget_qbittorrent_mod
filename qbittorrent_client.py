@@ -381,10 +381,11 @@ class QBittorrentClient:
                 reseed_entry['qbittorrent_reseed_last_activity'] = reseed_last_activity['qbittorrent_last_activity']
 
     def _update_entry_last_activity(self, entry):
-        is_reseed_failed = entry['qbittorrent_state'] == 'pausedDL' and entry['qbittorrent_completed'] == 0
-        is_never_activated = entry['qbittorrent_uploaded'] == 0 and entry['qbittorrent_downloaded'] == 0
         empty_time = datetime.fromtimestamp(0)
-        if (entry['qbittorrent_last_activity'] == empty_time or is_never_activated) and not is_reseed_failed:
+        is_reseed_failed = entry['qbittorrent_state'] == 'pausedDL' and entry['qbittorrent_completed'] == 0
+        is_never_activated = entry['qbittorrent_last_activity'] == empty_time or (
+                    entry['qbittorrent_uploaded'] == 0 and entry['qbittorrent_downloaded'] == 0)
+        if is_never_activated and not is_reseed_failed:
             if entry['qbittorrent_completion_on'] > empty_time:
                 entry['qbittorrent_last_activity'] = entry['qbittorrent_completion_on']
             else:
