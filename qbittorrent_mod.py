@@ -305,9 +305,13 @@ class PluginQBittorrentMod(QBittorrentModBase):
         delete_hashes = []
 
         delete_size = 0
+        entry_index = 0
         for entry in task.accepted:
+            entry_index = entry_index + 1
             if show_entry and entry['torrent_info_hash'] == show_entry:
-                logger.info('show_entry: {}', entry)
+                logger.info('hash: {} ,index : {}', entry['torrent_info_hash'], entry_index)
+                for key, value in entry.items():
+                    logger.info('key: {}, value: {}', key, value)
             accepted_entry_hashes.append(entry['torrent_info_hash'])
 
         for entry_hash in accepted_entry_hashes:
