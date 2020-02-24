@@ -8,6 +8,7 @@ from loguru import logger
 from requests import RequestException, Session
 
 logger = logger.bind(name='qbittorrent_client')
+__version__ = 'v0.3.2'
 
 
 def singleton(cls):
@@ -27,6 +28,7 @@ class QBittorrentClientFactory:
 
     def __init__(self):
         self.client_map = {}
+        logger.info('flexget_qbittorrent_mod {}', __version__)
 
     def get_client(self, config):
         client_key = '{}{}'.format(config.get('host'), config.get('port'))
@@ -347,7 +349,7 @@ class QBittorrentClient:
                 title=name,
                 url='',
                 torrent_info_hash=torrent_hash,
-                content_size=torrent['size'] / (1024 * 1024 * 1024),
+                content_size=torrent['size'],
             )
             self._entry_dict[torrent_hash] = entry
             if not self._reseed_dict.get(save_path_with_name):
@@ -384,8 +386,10 @@ class QBittorrentClient:
         empty_time = datetime.fromtimestamp(0)
         is_reseed_failed = entry['qbittorrent_state'] == 'pausedDL' and entry['qbittorrent_completed'] == 0
         is_never_activated = entry['qbittorrent_last_activity'] == empty_time or (
-                    entry['qbittorrent_uploaded'] == 0 and entry['qbittorrent_downloaded'] == 0)
-        if is_never_activated and not is_reseed_failed:
+                entry['qbittorrent_uploaded'] == 0 and entry['qbittorrent_downloaded'] == 0)
+        if is_reseed_failed:
+            entry['qbittorrent_last_activity'] = empty_time
+        elif is_never_activated:
             if entry['qbittorrent_completion_on'] > empty_time:
                 entry['qbittorrent_last_activity'] = entry['qbittorrent_completion_on']
             else:
