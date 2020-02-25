@@ -299,6 +299,7 @@ class QBittorrentClient:
             self._entry_dict = {}
             self._reseed_dict = {}
             self._action_history = {}
+            self._last_update_time = datetime.now()
 
         server_state = main_data.get('server_state')
         if server_state:
@@ -322,8 +323,7 @@ class QBittorrentClient:
         for save_path_with_name, reseed_entry_list in self._reseed_dict.items():
             self._update_reseed_addition(reseed_entry_list)
 
-        update_addition_flag = is_new_data or not self._last_update_time or self._last_update_time < datetime.now() - timedelta(
-            hours=1)
+        update_addition_flag = self._last_update_time < datetime.now() - timedelta(hours=1)
         if update_addition_flag:
             self._last_update_time = datetime.now()
             for torrent_hash, entry in self._entry_dict.items():
@@ -351,6 +351,7 @@ class QBittorrentClient:
                 torrent_info_hash=torrent_hash,
                 content_size=torrent['size'],
             )
+            self._update_addition(entry)
             self._entry_dict[torrent_hash] = entry
             if not self._reseed_dict.get(save_path_with_name):
                 self._reseed_dict[save_path_with_name] = []
