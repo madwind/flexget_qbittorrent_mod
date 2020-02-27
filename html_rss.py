@@ -94,7 +94,11 @@ class PluginHtmlRss():
                     entry[key] = sub_element_content
                 logger.debug('key: {}, value: {}', key, entry[key])
             if entry['title'] and entry['url']:
-                entry['url'] = urljoin(url, '{}{}'.format(entry['url'], params))
+                base_url = urljoin(url, entry['url'])
+                if params.startswith("&"):
+                    entry['url'] = base_url + params
+                else:
+                    entry['url'] = urljoin(base_url, params)
                 queue.append(entry)
         return queue
 
