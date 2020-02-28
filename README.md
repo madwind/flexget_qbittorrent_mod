@@ -189,7 +189,8 @@ tasks:
       headers:
         cookie: 'xxxxxxxxxxxxxxxxxx'
         user-agent: 'xxxxxxxxxx'
-      #用于下载种子时的附件信息 v0.3.1 修改
+      #用于下载种子时的附件信息 v0.3.2 修改
+      #以 "&" 开头时附加在下载链接之后，否则使用 urljoin 方式拼接
       params: '&passkey=xxxxxxxxxxxxx'
       #组件选择器
       root_element_selector: '#form_torrent > table > tbody > tr.topdown_bg'
