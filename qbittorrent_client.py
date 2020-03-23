@@ -374,10 +374,12 @@ class QBittorrentClient:
             else:
                 entry['qbittorrent_' + key] = value
                 if key in ['tracker']:
-                    trackers = list(
-                        filter(lambda tracker: tracker.get('status') != 0, self.get_torrent_trackers(torrent_hash)))
-                    entry['qbittorrent_trackers'] = trackers
+                    self._update_entry_trackers(torrent_hash)
         self._update_entry_last_activity(entry)
+
+    def _update_entry_trackers(self, torrent_hash):
+        trackers = list(filter(lambda tracker: tracker.get('status') != 0, self.get_torrent_trackers(torrent_hash)))
+        self._entry_dict[torrent_hash]['qbittorrent_trackers'] = trackers
 
     def _update_addition(self, entry):
         torrent_hash = entry['torrent_info_hash']
@@ -431,3 +433,6 @@ class QBittorrentClient:
         else:
             self._action_history.get(action_name).extend(hashes_list)
         return True
+
+    def _update_entry_trackers(self, torrent_hash):
+        pass
