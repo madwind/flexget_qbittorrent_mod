@@ -82,10 +82,11 @@ class PluginAutoSignIn():
     def get_sign_in(self, task, entry):
         try:
             response = task.requests.get(entry['url'], headers=entry['headers'])
+            logger.debug('response: {}', response.content.decode())
             self.check_state(entry, response, entry['url'])
         except RequestException as e:
             entry.fail()
-            entry['message'] = 'Network error'
+            entry['message'] = 'Network error. {}'.format(entry['url'])
             logger.error('Unable to sign in for task {} ({}): {}'.format(task.name, entry['url'], e))
 
     def post_data_sign_in(self, task, entry):
@@ -150,11 +151,11 @@ class PluginAutoSignIn():
     def post_sign_in(self, task, entry, data):
         try:
             response = task.requests.post(entry['url'], headers=entry['headers'], data=data)
-            logger.info('response: {}, data: {}', data, response.content.decode())
+            logger.debug('response: {}, data: {}', response.content.decode(), data)
             return self.check_state(entry, response, entry['url'])
         except RequestException as e:
             entry.fail()
-            entry['message'] = 'Network error'
+            entry['message'] = 'Network error. {}'.format(entry['url'])
             logger.error('Unable to sign in for task {} ({}): {}'.format(task.name, entry['url'], e))
         return None
 
@@ -173,7 +174,7 @@ class PluginAutoSignIn():
 
         succeed_msg = re.search(succeed_regex, response.content.decode())
         if succeed_msg:
-            entry['message'] = succeed_msg.group()
+            entry['message'] = re.sub('<.*?>', '', succeed_msg.group())
             return SignState.SUCCEED
 
         wrong_regex = entry['site_config'].get('wrong_regex')
