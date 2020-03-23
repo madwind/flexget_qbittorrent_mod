@@ -1,0 +1,77 @@
+sign_in:
+  auto_sign_in:
+    user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36
+    sites:
+      ttg:
+        base_url: https://totheglory.im/
+        url: https://totheglory.im/signed.php
+        cookie: 'xxxxxxxxxxxxxxxxxx'
+        method: post
+        data:
+          signed_timestamp: '(?<=signed_timestamp: ")\d{10}'
+          signed_token: '(?<=signed_token: ").*(?=")'
+        succeed_regex: '(<b style="color:green;">已签到</b>)|(您已连续签到.*天，奖励.*积分，明天继续签到将获得.*积分奖励。)'
+      moecat:
+        url: https://moecat.best/bakatest.php
+        cookie: 'xxxxxxxxxxxxxxxxxxxxxxxx'
+        method: question
+        succeed_regex: '(获得.*点魔力值)|(今天已经签过到了\(已连续.*天签到\))'
+        wrong_regex: '回答错误,失去 1 魔力值,这道题还会再考一次'
+      wenyuan:
+        url: https://www.xn--7p0ar28b.xyz/bakatest.php
+        cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+        method: question
+        succeed_regex: '(获得.*点魔力值)|(今天已经签过到了\(已连续.*天签到\))'
+        wrong_regex: '回答错误,失去 1 魔力值,这道题还会再考一次'
+      pter:
+        url: https://pterclub.com/attendance-ajax.php
+        cookie: 'xxxxxxxxxxxxxxxxxxxx'
+        succeed_regex: '(签到已得\d.*)|(您今天已经签到过了，请勿重复刷新。)'
+      pthome:
+        url: https://www.pthome.net/attendance.php
+        cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxx'
+        succeed_regex: '(这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。)|(您今天已经签到过了，请勿重复刷新。)'
+      hdhome:
+        url: https://hdhome.org/attendance.php
+        cookie: 'xxxxxxxxxxxxxxxxxxxxxxxx'
+        succeed_regex: '(这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。)|(您今天已经签到过了，请勿重复刷新。)'
+      1ptba:
+        url: https://1ptba.com/attendance.php
+        cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxx'
+        succeed_regex: '(这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。)|(您今天已经签到过了，请勿重复刷新。)'
+      btschool:
+        url: https://pt.btschool.club/index.php?action=addbonus
+        cookie: 'xxxxxxxxxxxxxxxxxxx'
+        succeed_regex: '(这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。)|(您今天已经签到过了，请勿重复刷新。)'
+      hddolby:
+        url: https://www.hddolby.com/attendance.php
+        cookie: 'xxxxxxxxxxxxxxxxxxxxxxxx'
+        succeed_regex: '(这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。)|(您今天已经签到过了，请勿重复刷新。)'
+      hddisk:
+        url: https://hddisk.life/attendance.php
+        cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxx'
+        succeed_regex: '(这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。)|(您今天已经签到过了，请勿重复刷新。)'
+      hdzone:
+        url: http://hdzone.me/attendance.php
+        cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+        succeed_regex: '(这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。)|(您今天已经签到过了，请勿重复刷新。)'
+      hdzone:
+        url: http://hdzone.me/attendance.php
+        cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxx'
+        succeed_regex: '(这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。)|(您今天已经签到过了，请勿重复刷新。)'
+      leaguehd:
+        url: https://leaguehd.com/attendance.php
+        cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+        succeed_regex: '(这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。)|(您今天已经签到过了，请勿重复刷新。)'
+  accept_all: yes
+  notify:
+    entries:
+      message: "{{title}} {{message}}"
+      what:
+        - accepted
+        - failed
+      via:
+        - telegram:
+            bot_token: xxxxxxxxxxxxxxxxxxxxxxx
+            recipients:
+              - username: 'xxxxxxxxxxxxxxxx'
