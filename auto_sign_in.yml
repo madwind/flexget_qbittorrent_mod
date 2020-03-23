@@ -15,13 +15,13 @@ sign_in:
         url: https://moecat.best/bakatest.php
         cookie: 'xxxxxxxxxxxxxxxxxxxxxxxx'
         method: question
-        succeed_regex: '(获得.*点魔力值)|(今天已经签过到了\(已连续.*天签到\))'
+        succeed_regex: '(连续.*天签到,获得.*点魔力值)|(今天已经签过到了\(已连续.*天签到\))'
         wrong_regex: '回答错误,失去 1 魔力值,这道题还会再考一次'
       wenyuan:
         url: https://www.xn--7p0ar28b.xyz/bakatest.php
         cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxx'
         method: question
-        succeed_regex: '(获得.*点魔力值)|(今天已经签过到了\(已连续.*天签到\))'
+        succeed_regex: '(连续.*天签到,获得.*点魔力值)|(今天已经签过到了\(已连续.*天签到\))'
         wrong_regex: '回答错误,失去 1 魔力值,这道题还会再考一次'
       pter:
         url: https://pterclub.com/attendance-ajax.php
@@ -64,6 +64,9 @@ sign_in:
         cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
         succeed_regex: '(这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。)|(您今天已经签到过了，请勿重复刷新。)'
   accept_all: yes
+  seen:
+    fields:
+      - title
   notify:
     entries:
       message: "{{title}} {{message}}"
