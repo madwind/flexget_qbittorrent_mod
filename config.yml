@@ -63,9 +63,8 @@ schedules:
       minutes: 5
 
   - tasks: [pt3]
-    schedule:
-      minute: 35
-      hour: "*/3"
+    interval:
+      minutes: 10
 
 tasks:
   rss1:
