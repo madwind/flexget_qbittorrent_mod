@@ -306,13 +306,19 @@ class PluginQBittorrentMod(QBittorrentModBase):
 
         delete_size = 0
         entry_index = 0
+        entry_show_index = -1
         for entry in task.accepted:
             entry_index = entry_index + 1
             if show_entry and entry['torrent_info_hash'] == show_entry:
-                logger.info('hash: {} ,index : {}', entry['torrent_info_hash'], entry_index)
-                for key, value in entry.items():
-                    logger.info('key: {}, value: {}', key, value)
+                entry_show_index = entry_index
             accepted_entry_hashes.append(entry['torrent_info_hash'])
+
+        if show_entry:
+            entry_found = entry_dict.get(show_entry)
+            if entry_found:
+                logger.info('hash: {} ,index : {}', entry_found['torrent_info_hash'], entry_show_index)
+                for key, value in entry_found.items():
+                    logger.info('key: {}, value: {}', key, value)
 
         for entry_hash in accepted_entry_hashes:
             if entry_hash in delete_hashes:
@@ -368,14 +374,14 @@ class PluginQBittorrentMod(QBittorrentModBase):
             entry = all_entry_map.get(torrent_hash)
             entry.accept(reason='torrent with the same save path are all pass tested')
             logger.info(
-                '{}, site: {}, size: {:.2f} GB, seeding_time: {:.2f} h, share_ratio: {:.2f},last_activity: {}, reseed_last_activity: {}',
+                '{}, size: {:.2f} GB, seeding_time: {:.2f} h, share_ratio: {:.2f}, last_activity: {}, reseed_last_activity: {}, site: {}',
                 entry['title'],
-                entry['qbittorrent_tags'],
                 entry['qbittorrent_completed'] / (1024 * 1024 * 1024),
                 entry['qbittorrent_seeding_time'] / (60 * 60),
                 entry['qbittorrent_share_ratio'],
                 entry['qbittorrent_last_activity'],
-                entry['qbittorrent_reseed_last_activity'])
+                entry['qbittorrent_reseed_last_activity'],
+                entry['qbittorrent_tags'])
 
     def resume_entries(self, task, resume_options):
         recheck_torrents = resume_options.get('recheck_torrents')
