@@ -19,8 +19,8 @@ class PluginHtmlRss():
                     'headers': {
                         'type': 'object',
                         'properties': {
-                            'cookies': {'type': 'string'},
-                            'agent': {'type': 'string'},
+                            'cookie': {'type': 'string'},
+                            'user-agent': {'type': 'string'},
                         }
                     },
                     'params': {'type': 'string'},
@@ -66,7 +66,7 @@ class PluginHtmlRss():
         fields = config.get('fields')
         params = config.get('params')
 
-        queue = []
+        entries = []
         elements = []
         if url and root_element_selector:
             try:
@@ -78,7 +78,7 @@ class PluginHtmlRss():
                 )
             elements = get_soup(content).select(root_element_selector)
             if len(elements) == 0:
-                return queue
+                return entries
 
         for element in elements:
             logger.debug('element in element_selector: {}', element)
@@ -99,8 +99,8 @@ class PluginHtmlRss():
                     entry['url'] = base_url + params
                 else:
                     entry['url'] = urljoin(base_url, params)
-                queue.append(entry)
-        return queue
+                entries.append(entry)
+        return entries
 
 
 @event('plugin.register')
