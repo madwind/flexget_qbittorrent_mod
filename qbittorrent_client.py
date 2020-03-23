@@ -1,6 +1,7 @@
 import copy
 import threading
 from datetime import datetime, timedelta
+from json import JSONDecodeError
 
 from flexget import plugin
 from flexget.entry import Entry
@@ -8,7 +9,7 @@ from loguru import logger
 from requests import RequestException, Session
 
 logger = logger.bind(name='qbittorrent_client')
-__version__ = 'v0.3.2'
+__version__ = 'v0.3.3'
 
 
 def singleton(cls):
@@ -250,13 +251,21 @@ class QBittorrentClient:
 
     def get_main_data(self):
         data = {'rid': self._rid}
-        return self._request(
-            'post',
-            self.url + self.API_URL_GET_MAIN_DATA,
-            data=data,
-            msg_on_fail='get_main_data failed.',
-            verify=self._verify,
-        ).json()
+        try:
+            main_data = self._request(
+                'post',
+                self.url + self.API_URL_GET_MAIN_DATA,
+                data=data,
+                msg_on_fail='get_main_data failed.',
+                verify=self._verify,
+            ).json()
+            return main_data
+        except JSONDecodeError as e:
+            msg = str(e)
+            self._reset_rid()
+        raise plugin.PluginError(
+            'get_main_data failed.{}'.format(msg)
+        )
 
     def get_application_preferences(self):
         return self._request(
