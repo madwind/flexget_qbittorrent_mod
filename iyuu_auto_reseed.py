@@ -62,7 +62,7 @@ class PluginIYUUAutoReseed():
             raise plugin.PluginError(
                 'Error when trying to send request to http://api.iyuu.cn/?service=App.Api.Reseed: {}'.format(e)
             )
-        if response_json['ret'] != 200:
+        if response_json.get('ret') != 200:
             raise plugin.PluginError(
                 'http://api.iyuu.cn/?service=App.Api.Reseed Error: {}'.format(response_json)
             )
@@ -87,14 +87,19 @@ class PluginIYUUAutoReseed():
                     if not passkey:
                         continue
 
+                    site['download_page'] = site['download_page'].replace('{}', '{torrent_id}')
+                    torrent_id = str(torrent['torrent_id'])
+
                     if site_name == 'totheglory':
-                        download_page = site['download_page'].format(str(torrent['torrent_id']) + '/' + passkey)
+                        download_page = site['download_page'].format(torrent_id=torrent_id + '/' + passkey)
                     elif site_name == 'dicmusic':
-                        download_page = site['download_page'].format(str(torrent['torrent_id']),
+                        download_page = site['download_page'].format(torrent_id=torrent_id,
                                                                      authkey=passkey['authkey'],
                                                                      torrent_pass=passkey['torrent_pass'])
+                    elif site_name == 'ccfbits':
+                        download_page = site['download_page'].format(torrent_id=torrent_id, passkey=passkey)
                     else:
-                        download_page = site['download_page'].format(str(torrent['torrent_id']) + '&passkey=' + passkey)
+                        download_page = site['download_page'].format(torrent_id=torrent_id + '&passkey=' + passkey)
 
                     if site_name == 'm-team':
                         download_page = download_page + '&https=1'
@@ -136,6 +141,7 @@ class PluginIYUUAutoReseed():
         torrents_hashes['timestamp'] = int(time.time())
 
         return torrent_dict, torrents_hashes
+
 
 @event('plugin.register')
 def register_plugin():
