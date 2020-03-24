@@ -1,6 +1,10 @@
+import itertools
+import json
 import re
 from datetime import datetime
 from enum import Enum
+from os import path
+from pathlib import Path
 
 from flexget import plugin
 from flexget.entry import Entry
@@ -68,7 +72,7 @@ class PluginAutoSignIn():
 
     def on_task_output(self, task, config):
         for entry in task.accepted:
-            logger.info('sign_in for {}', entry['url'])
+            logger.info('url: {}', entry['url'])
             site_config = entry.get('site_config')
             method = site_config.get('method')
 
@@ -107,36 +111,54 @@ class PluginAutoSignIn():
         question_element = get_soup(content).select_one('input[name="questionid"]')
         if question_element:
             question_id = question_element.get('value')
-            choice_elements = get_soup(content).select('input[name="choice[]"]')
-            choice_all = []
-            for choice_element in choice_elements:
-                choice_all.append(choice_element.get('value', ''))
-            if choice_elements[0].get('type') == 'radio':
-                choice_all = sorted(choice_all)
-                for choice_index in choice_all:
-                    data = {'questionid': question_id, 'choice[]': [choice_index],
-                            'usercomment': '此刻心情:无', 'submit': '提交'}
-                    logger.info('trying sign_in url{}, data: {}', entry['url'], data)
-                    state = self.post_sign_in(task, entry, data)
-                    if not state:
-                        return
-                    if state == SignState.SUCCEED:
-                        logger.info('succeed: sign_in url{}, data: {}', entry['url'], data)
-                        return
-                entry['message'] = 'no answer'
-                entry.fail()
+
+            local_answer = None
+
+            question_file_path = path.dirname(__file__) + '/question.json'
+            if Path(question_file_path).is_file():
+                with open(question_file_path) as question_file:
+                    question_json = json.loads(question_file.read())
             else:
-                data = {'questionid': question_id, 'choice[]': choice_all, 'usercomment': '此刻心情:无',
-                        'wantskip': '不会'}
-                logger.info('trying sign_in url{}, data: {}', entry['url'], data)
+                question_json = {}
+
+            site_question = question_json.get(entry['url'])
+            if site_question:
+                local_answer = site_question.get(question_id)
+            else:
+                question_json[entry['url']] = {}
+
+            choice_elements = get_soup(content).select('input[name="choice[]"]')
+            choices = []
+            for choice_element in choice_elements:
+                choices.append(choice_element.get('value', ''))
+
+            if choice_elements[0].get('type') == 'radio':
+                choice_range = 1
+            else:
+                choice_range = len(choices)
+
+            answer_list = []
+            if local_answer and local_answer in choices and len(local_answer) <= choice_range:
+                answer_list.append(local_answer)
+
+            for i in range(choice_range):
+                for arr in itertools.combinations(choices, i + 1):
+                    if list(arr) not in answer_list:
+                        answer_list.append(list(arr))
+            for answer in answer_list:
+                data = {'questionid': question_id, 'choice[]': answer, 'usercomment': '此刻心情:无', 'submit': '提交'}
+                logger.info('url: {}, trying answer: {}', entry['url'], data)
                 state = self.post_sign_in(task, entry, data)
                 if not state:
                     return
                 if state == SignState.SUCCEED:
-                    logger.info('succeed: sign_in url{}, data: {}', entry['url'], data)
-                else:
-                    entry['message'] = 'no answer'
-                    entry.fail()
+                    question_json[entry['url']][question_id] = answer
+                    with open(question_file_path, mode='w') as question_file:
+                        json.dump(question_json, question_file)
+                    logger.info('url: {}, correct answer: {}', entry['url'], data)
+                    return
+            entry['message'] = 'no answer'
+            entry.fail()
 
     def get_sign_in_page(self, task, entry):
         url = entry['base_url'] if entry['base_url'] else entry['url']
