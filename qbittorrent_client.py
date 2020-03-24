@@ -377,7 +377,7 @@ class QBittorrentClient:
                     self._update_entry_trackers(torrent_hash)
         self._update_entry_last_activity(entry)
 
-    def update_entry_trackers(self, torrent_hash):
+    def _update_entry_trackers(self, torrent_hash):
         trackers = list(filter(lambda tracker: tracker.get('status') != 0, self.get_torrent_trackers(torrent_hash)))
         self._entry_dict[torrent_hash]['qbittorrent_trackers'] = trackers
 
