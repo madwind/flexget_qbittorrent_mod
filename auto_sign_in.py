@@ -104,7 +104,7 @@ class PluginAutoSignIn():
         content = response.content
         data = {}
         for key, regex in entry.get('data', {}).items():
-            data[key] = re.search(regex, content.decode(entry['encode'])).group()
+            data[key] = re.search(regex, content.decode(entry['encoding'])).group()
         self.post_sign_in(task, entry, data)
 
     def sign_in_by_question(self, task, entry):
@@ -167,7 +167,7 @@ class PluginAutoSignIn():
     def get_sign_in_page(self, task, entry):
         url = entry['base_url'] if entry['base_url'] else entry['url']
         response = task.requests.get(url, headers=entry['headers'])
-        logger.debug('url: {}, response: {}', entry['url'], response.content.decode(entry['encode']))
+        logger.debug('url: {}, response: {}', entry['url'], response.content.decode(entry['encoding']))
         state = self.check_state(entry, response, url)
         if state == SignState.UNKNOWN:
             return None
@@ -178,7 +178,7 @@ class PluginAutoSignIn():
     def post_sign_in(self, task, entry, data):
         try:
             response = task.requests.post(entry['url'], headers=entry['headers'], data=data)
-            logger.debug('url: {}, response: {}, data: {}', response.content.decode(entry['encode']), data)
+            logger.debug('url: {}, response: {}, data: {}', response.content.decode(entry['encoding']), data)
             return self.check_state(entry, response, entry['url'])
         except RequestException as e:
             entry.fail()
@@ -187,14 +187,14 @@ class PluginAutoSignIn():
         return None
 
     def check_state(self, entry, response, original_url):
-        encode = entry['encode']
+        encoding = entry['encoding']
         if original_url != response.url:
             logger.info('{} failed: {}', entry['title'], original_url)
             entry['message'] = 'failed. {}'.format(original_url)
             entry.fail()
             return SignState.UNKNOWN
 
-        content = response.content.decode(encode)
+        content = response.content.decode(encoding)
 
         succeed_regex = entry['site_config'].get('succeed_regex')
         if not succeed_regex:
