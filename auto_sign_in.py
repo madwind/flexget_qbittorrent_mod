@@ -65,7 +65,7 @@ class PluginAutoSignIn():
                        'referer': entry['base_url'] if entry['base_url'] else entry['url']}
             entry['headers'] = headers
             entry['data'] = site_config.get('data')
-            entry['encode'] = site_config.get('encode') if site_config.get('encode') else 'utf-8'
+            entry['encoding'] = site_config.get('encoding') if site_config.get('encoding') else 'utf-8'
             entry['message'] = ''
             entries.append(entry)
 
