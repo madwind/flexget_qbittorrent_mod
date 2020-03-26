@@ -401,7 +401,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                     logger.info('{}', entry['title'])
                     resume = True
                     break
-            if not resume:
+            if not resume and entry['qbittorrent_state'] != 'checkingUP':
                 entry.reject(reason='can not find seeding torrent in same save path')
                 recheck_hashes.append(entry['torrent_info_hash'])
         if recheck_torrents and len(recheck_hashes) > 0:
