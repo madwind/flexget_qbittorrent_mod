@@ -1,7 +1,14 @@
 ## flexget_qbittorrent_mod
-这是一个 Flexget 的 qBittorrent插件
+这原本是一个 Flexget 的 qBittorrent插件，因为懒得开新项目，已经变成大杂烩了
 
 tg: <https://t.me/flexget_qbittorrent_mod>
+
+目前实现的功能有：
+- 下载：Rss、爬网页获取种子列表，筛选（爬网页方式可获取Free等信息）后推送到qittorrent下载
+- 修改：根据种子的tracker，修改种子的tag，或替换tracker
+- 辅种：查询IYUUAutoReseed辅种数据，校验完成后自动开始做种（需在<http://api.iyuu.cn/docs.php?service=App.User.Login&detail=1&type=fold>绑定登陆）
+- 删种：符合删除条件后（可根据剩余空间决定删除或放弃，若空间不足，可设置限速），删除包含辅种在内的所有种子
+- 自动签到：自动签到，支持答题
 
 参考：
 
@@ -9,21 +16,15 @@ tg: <https://t.me/flexget_qbittorrent_mod>
 
 - qBittorrent-Web-API<https://github.com/qbittorrent/qBittorrent/wiki/Web-API-Documentation#api-v20>
 
-### 实现种子生命周期的自动管理
-- 下载：Rss获取种子，筛选后推送到qittorrent下载
-- 修改：根据种子的tracker，修改种子的tag，或替换tracker
-- 辅种：下载完成后，查询IYUUAutoReseed辅种数据，校验完成后自动开始做种
-- 删种：符合删除条件后，删除包含辅种在内的所有种子
-
 ### 系统需求
 - qBittorrent 4.1.4+
 - Flexget 3.0.19+
 - Python 3
 
 ### 测试环境
-- qBittorrent 4.2.1
-- Flexget 3.1.13
-- Python 3.7
+- qBittorrent 4.2.2
+- Flexget 3.1.46
+- Python 3.8
 
 ### 安装插件
 - 下载插件 [releases](https://github.com/IvonWei/flexget_qbittorrent_mod/releases/latest/download/dist.zip)
@@ -37,17 +38,10 @@ C:\Users\<YOURUSER>\flexget\plugins\  # Windows
 - 从v0.2.5开始删除了templates-> qbittorrent_resume_template-> qbittorrent_mod-> action-> resume-> only_completed项，如果使用旧版本配置，启动报错可以编辑Flexget配置文件夹下的 config.yml 文件手动删除
 
 ### 配置模板
- 每隔1分钟：
- - 下载种子下载到 Rss分类
- 
- 每隔5分钟按顺序执行：
- - 自动辅种，并跳过校验
- - 检查辅种种子，保存路径和名称与现有正常辅种的种子一致，则自动开始，否则重新校验使其变为0进度状态
- - 检查磁盘空间小于10G则删除Rss分类下2天 没流量、丢失文件 或 0进度 的种子
- - 给种子打标签 修改tracker
- 
 更多配置可以学习Flexget官方文档
-  
+
+config_example.yml是我当前正在使用的配置，其中自动签到配置在tasks的最后一段
+
 注：Flexget不允许用中文注释 请用源码里的config.yml对照修改
 ```yaml
 web_server:
@@ -56,16 +50,26 @@ web_server:
   port: 3539
 
 templates:
-  #基础模板
-  qbittorrent_base_template:
-    qbittorrent_mod:
+  #从qBittorrent获取数据
+  from_qbittorrent_template:
+    from_qbittorrent_mod:
       host: qbittorrent.example.com
       port: 443
       use_ssl: true
       username: admin
       password: 123456789xx
 
-  #添加种子
+  #基础
+  qbittorrent_base_template:
+    qbittorrent_mod:
+      host: qbittorrent.example.com
+      port: 443
+      #非https请设置为 no
+      use_ssl: yes
+      username: admin
+      password: 123456789xx
+
+  #添加
   qbittorrent_add_template:
     qbittorrent_mod:
       action:
@@ -79,38 +83,40 @@ templates:
           #自动管理种子
           autoTMM: true
   
-  #修改种子信息 
+  #修改
   qbittorrent_modify_template:
     qbittorrent_mod:
       action:
         modify:
-          #根据tracker的url自动添加种子标签 例如以下的tracker会提出出 pt1 的标签 v0.1.3新增
+          #根据tracker添加种子标签 例如以下的tracker会为种子添加 "pt1" 标签 v0.1.3新增
           tag_by_tracker: true
           #批量替换tracker 例如把http替换成https (需要完全匹配) v0.1.3新增
           replace_tracker:
             'http://tracker.pt1.com/announce.php?passkey=xxxxxxxxxxxxxx': 'https://tracker.pt1.com/announce.php?passkey=xxxxxxxxxxxxxx'
 
-  #自动开始：用于校验完数据自动开始
+  #恢复
   qbittorrent_resume_template:
     qbittorrent_mod:
       action:
         resume:
-          #v0.2.5新增（删除only_complete）
           #如果保存路径上没有种子在正常做种，则重新校验种子，配合跳检，将种子还原成0进度状态
           recheck_torrents: true
 
-  #自动删种
+  #删除
   qbittorrent_delete_template:
     qbittorrent_mod:
       action:
         remove:
-          #检查所有辅种是否都满足删除条件 v0.1.2新增
-          #true: 只要有其中一个不满足条件则放弃删除
-          #false（默认）: 只要有一个满足删除条件 就全部删除 
-          #array: 只检查匹配tag的种子，满足就全部删除 v0.3 修改
+          #检查所有辅种是否都满足删除条件
+          #yes: 只要有其中一个不满足条件则放弃删除
+          #no（默认）: 只要有一个满足删除条件 就全部删除 
+          #array: 只检查匹配tag的种子，满足就全部删除
           check_reseed:
-            - pt2
-            - pt3
+            - totheglory
+            - m-team
+            - hdhome
+            - open
+            - pterclub
           #删种同时是否删除数据
           delete_files: true
           #设置磁盘空间阈值 单位GB（需要qBittorrent 4.14+）  v0.1.3新增
@@ -128,39 +134,37 @@ templates:
           #默认值为 24*60*60 秒
           #单位：秒
           dl_limit_interval: 1800
-
-  #输入模板 从qbittorrent获取数据
-  from_qbittorrent_template:
-    from_qbittorrent_mod:
-      host: qbittorrent.example.com
-      port: 443
-      use_ssl: true
-      username: admin
-      password: 123456789xx
+          #show_entry: 633645aa28a4aa48e8b7d2ac618fe691e81df30f
 
 schedules:
-  #每分钟执行 rss1, rss2
-  - tasks: [rss1, rss2]
+  - tasks: [xxxx, xxxx, rss_download]
     interval:
+      #1分钟
       minutes: 1
 
-  #每隔5分钟执行 reseed, resume, delete, modify
   - tasks: [reseed, resume, delete, modify]
     interval:
       minutes: 5
 
-  #每3小时的35分 执行 pt3  
-  - tasks: [pt3]
-    schedule:
-      minute: 35
-      hour: "*/3"
+  - tasks: [xxxxx]
+    interval:
+      minutes: 10
+
+  - tasks: [sign_in]
+    interval:
+      #1小时
+      hours: 1
 
 
 #任务列表
 tasks:
   rss1:
     #官方插件：rss 订阅链接
-    rss: https://pt1.com/rss
+    rss:
+      url: https://pt1.com/rss
+      #官方说这样会提高速度
+      all_entries: no
+    no_entries_ok: yes
     #官方插件：regexp 过滤器 接受带有 CCTV 字样的种子
     regexp:
       accept:
@@ -183,7 +187,7 @@ tasks:
       - qbittorrent_add_template    
 
   pt3:
-    #网页获取下载数据 需要有css选择器知识 以下是打开碟片的置顶种子设置 v0.2.13新增
+    #网页获取下载数据 需要有css选择器知识 以下是打开碟片的置顶种子设置
     html_rss:
       url: https://pt3.com/torrents.php
       headers:
@@ -244,6 +248,10 @@ tasks:
         username: admin
         password: 123456789xx
     accept_all: yes
+    #只拒绝相同url的种子
+    seen:
+      fields:
+        - url
     qbittorrent_mod:
       action:
         add:
@@ -262,8 +270,6 @@ tasks:
     if:
       #选择跳检完成的种子
       - qbittorrent_state == 'pausedUP' and qbittorrent_downloaded == 0: accept
-    #使用输入模板 从qbittorrent获取数据
-    #使用自动开始模板
     template:
       - from_qbittorrent_template
       - qbittorrent_base_template
@@ -285,9 +291,7 @@ tasks:
       - "'pt1' in qbittorrent_tags and qbittorrent_seeding_time<48*60*60": reject
     #官方sort_by插件：按最后活动时间从早到晚排序 优先删除
     sort_by: qbittorrent_last_activity
-    #使用输入模板 从qbittorrent获取数据
-    #使用自动删种模板
-    template:
+   template:
       - from_qbittorrent_template
       - qbittorrent_base_template      
       - qbittorrent_delete_template
@@ -297,7 +301,6 @@ tasks:
     priority: 4
     disable: [seen, seen_info_hash, retry_failed]
     accept_all: yes
-    #使用修改模板
     template:
       - from_qbittorrent_template
       - qbittorrent_base_template
