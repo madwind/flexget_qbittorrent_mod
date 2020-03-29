@@ -1,0 +1,438 @@
+web_server:
+  bind: 0.0.0.0
+  port: 3539
+
+templates:
+  from_qbittorrent_template:
+    from_qbittorrent_mod:
+      host: qbittorrent.example.com
+      port: 443
+      use_ssl: yes
+      username: xxxxxxxx
+      password: xxxxxxxx
+
+  qbittorrent_base_template:
+    qbittorrent_mod:
+      host: qbittorrent.example.com
+      port: 443
+      use_ssl: yes
+      username: xxxxxxxx
+      password: xxxxxxxx
+
+  qbittorrent_add_template:
+    qbittorrent_mod:
+      action:
+        add:
+          reject_on_dl_limit: 4191304
+          category: Rss
+          autoTMM: yes
+
+  qbittorrent_resume_template:
+    qbittorrent_mod:
+      action:
+        resume:
+          recheck_torrents: yes
+
+  qbittorrent_delete_template:
+    qbittorrent_mod:
+      action:
+        remove:
+          check_reseed:
+            - totheglory
+            - m-team
+            - hdhome
+            - open
+            - pterclub
+          delete_files: yes
+          keep_disk_space: 10
+          dl_limit_on_succeeded: 0
+          dl_limit_interval: 1800
+          #show_entry: 633645aa28a4aa48e8b7d2ac618fe691e81df30f
+
+  qbittorrent_modify_template:
+    qbittorrent_mod:
+      action:
+        modify:
+          tag_by_tracker: yes
+          replace_tracker:
+            'http://tracker.pt1.com/announce.php?passkey=xxxxxxxx': 'https://tracker.pt1.com/announce.php?passkey=xxxxxxxx'
+
+schedules:
+  - tasks: [pterclub, hdhome, rss_download]
+    interval:
+      minutes: 1
+
+  - tasks: [reseed, resume, delete, modify]
+    interval:
+      minutes: 5
+
+  - tasks: [opencd]
+    interval:
+      minutes: 10
+
+  - tasks: [sign_in]
+    interval:
+      hours: 1
+
+tasks:
+  totheglory:
+    rss:
+      url: https://xxxxxxxx.xxxxxxxx/putrss.php?par=xxxxxxxx
+      all_entries: no
+    no_entries_ok: yes
+    regexp:
+      accept:
+        - xxxxxxxx
+        - xxxxxxxx
+        - xxxxxxxx
+      from: title
+    template:
+      - qbittorrent_base_template
+      - qbittorrent_add_template
+
+  pterclub:
+    rss:
+      url: https://xxxxxxxx.com/torrentrss.php?rows=10&cat413=1&tag_internal=yes&isize=1&linktype=dl&passkey=xxxxxxxx
+      all_entries: no
+      other_fields:
+        - link
+    no_entries_ok: yes
+    if:
+      - size > 1024 * 1024 and size < 30 * 1024 *1024: accept
+    notify:
+      entries:
+        message: "Title: {{title}}\nLink: {{link}}"
+        via:
+          - telegram:
+              bot_token: xxxxxxxx
+              recipients:
+                - username: 'xxxxxxxx'
+    qbittorrent_mod:
+      action:
+        add:
+          category: PTer
+    template:
+      - qbittorrent_base_template
+      - qbittorrent_add_template
+
+  hdhome:
+    html_rss:
+      url: https://xxxxxxxx.xxxxxxxx/torrents.php?incldead=1&spstate=4&inclbookmarked=0&search=&search_area=0&search_mode=0
+      headers:
+        cookie: 'xxxxxxxx'
+        user-agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.122 Safari/537.36'
+      params: '&passkey=xxxxxxxx'
+      root_element_selector: '#torrenttable > tbody > tr:not(:first-child)'
+      fields:
+        title:
+          element_selector: 'a[href*="details.php"]'
+          attribute: title
+        url:
+          element_selector: 'a[href*="download.php"]'
+          attribute: href
+        leecher:
+          element_selector: 'td:nth-child(7)'
+          attribute: textContent
+        hr:
+          element_selector: 'img.hitandrun'
+          attribute: alt
+    no_entries_ok: yes
+    if:
+      - leecher|int > 1: accept
+      - hr: reject
+    template:
+      - qbittorrent_base_template
+      - qbittorrent_add_template
+
+
+  opencd:
+    html_rss:
+      url: https://xxxxxxxx.xxxxxxxx/torrents.php?spstate=2&seeders=3&sort=7&type=asc
+      headers:
+        cookie: 'xxxxxxxx'
+        user-agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.122 Safari/537.36'
+      params: '&passkey=xxxxxxxx'
+      root_element_selector: '#form_torrent > table > tbody > tr:not(:first-child)'
+      fields:
+        title:
+          element_selector: 'a[href*="details.php"]'
+          attribute: title
+        url:
+          element_selector: 'a[href*="download.php"]'
+          attribute: href
+        promotion:
+          element_selector: 'div[style="padding-bottom: 5px"] > img'
+          attribute: alt
+        progress:
+          element_selector: '.progress_completed'
+          attribute: class
+    no_entries_ok: yes
+    if:
+      - promotion in ['Free', '2X Free']: accept
+      - "progress and 'progress_completed' not in progress": reject
+    template:
+      - qbittorrent_base_template
+      - qbittorrent_add_template
+
+  rss_download:
+    inputs:
+      - rss:
+          url: https://xxxxxxxx.xxxxxxxx/torrentrss.php?rows=10&tea1=1&tea12=1&isize=1&linktype=dl&passkey=xxxxxxxx
+          all_entries: no
+      - rss:
+          url: https://xxxxxxxx.xxxxxxxx.xxxxxxxx/torrentrss.php?rows=10&isize=1&search=TJUPT&search_mode=1&passkey=xxxxxxxx&linktype=dl
+          all_entries: no
+      - rss:
+          url: https://xxxxxxxx.xxxxxxxx.xxxxxxxx/torrentrss.php?https=1&rows=10&cat406=1&cat408=1&cat434=1&isize=1&linktype=dl&passkey=xxxxxxxx
+          all_entries: no
+    no_entries_ok: yes
+    accept_all: yes
+    template:
+      - qbittorrent_base_template
+      - qbittorrent_add_template
+
+  reseed:
+    priority: 1
+    iyuu_auto_reseed:
+      iyuu: xxxxxxxx
+      passkeys:
+        m-team: xxxxxxxx
+        tjupt: xxxxxxxx
+        pterclub: xxxxxxxx
+        hdhome: xxxxxxxx
+        btschool: xxxxxxxx
+        pthome: xxxxxxxx
+        hddolby: xxxxxxxx
+        et8: xxxxxxxx
+        msg: xxxxxxxx
+        moecat: xxxxxxxx
+        totheglory: xxxxxxxx
+        nanyangpt: xxxxxxxx
+        yingk: xxxxxxxx
+        52pt: xxxxxxxx
+        brobits: xxxxxxxx
+        beitai: xxxxxxxx
+        eastgame: xxxxxxxx
+        soulvoice: xxxxxxxx
+        leaguehd: xxxxxxxx
+        ptsbao: xxxxxxxx
+        hdarea: xxxxxxxx
+        hdtime: xxxxxxxx
+        1ptba: xxxxxxxx
+        open: xxxxxxxx
+        hddisk: xxxxxxxx
+        hdstreet: xxxxxxxx
+        joyhd: xxxxxxxx
+        oshen: xxxxxxxx
+        discfan: xxxxxxxx
+        hdzone: xxxxxxxx
+        hdbd: xxxxxxxx
+        skyeysnow: xxxxxxxx
+      qbittorrent_ressed:
+        host: qbittorrent.example.com
+        port: 443
+        use_ssl: yes
+        username: xxxxxxxx
+        password: xxxxxxxx
+    accept_all: yes
+    seen:
+      fields:
+        - url
+    qbittorrent_mod:
+      action:
+        add:
+          reject_on_dl_limit: 0
+          skip_checking: yes
+    template:
+      - qbittorrent_base_template
+      - qbittorrent_add_template
+
+  resume:
+    priority: 2
+    disable: [seen, seen_info_hash, retry_failed]
+    if:
+      - qbittorrent_state == 'pausedUP' and qbittorrent_downloaded == 0: accept
+    template:
+      - from_qbittorrent_template
+      - qbittorrent_base_template
+      - qbittorrent_resume_template
+
+  delete:
+    priority: 3
+    disable: [seen, seen_info_hash, retry_failed]
+    if:
+      - qbittorrent_category in ['Rss'] and qbittorrent_last_activity < now - timedelta(hours=2): accept
+      - qbittorrent_state == 'missingFiles' or (qbittorrent_state in ['pausedDL'] and qbittorrent_completed == 0): accept
+      - "'open' in qbittorrent_tags and (qbittorrent_seeding_time < 48*60*60 or qbittorrent_num_complete < 5) and not qbittorrent_state in ['pausedDL']": reject
+    sort_by: qbittorrent_reseed_last_activity
+    template:
+      - from_qbittorrent_template
+      - qbittorrent_base_template
+      - qbittorrent_delete_template
+
+  modify:
+    priority: 4
+    disable: [seen, seen_info_hash, retry_failed]
+    accept_all: yes
+    template:
+      - from_qbittorrent_template
+      - qbittorrent_base_template
+      - qbittorrent_modify_template
+
+  sign_in:
+    auto_sign_in:
+      user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36
+      sites:
+        52pt:
+          url: https://52pt.site/bakatest.php
+          cookie: 'xxxxxxxx'
+          method: question
+          succeed_regex: '(连续.*天签到,获得.*点魔力值)|(今天已经签过到了\(已连续.*天签到\))'
+          wrong_regex: '回答错误,失去 1 魔力值,这道题还会再考一次'
+        avgv:
+          url: http://avgv.cc/
+          cookie: 'xxxxxxxx'
+        brobits:
+          url: https://brobits.cc/
+          cookie: 'xxxxxxxx'
+        btschool:
+          url: https://pt.btschool.club/index.php?action=addbonus
+          cookie: 'xxxxxxxx'
+        dicmusic:
+          url: https://dicmusic.club/
+          cookie: 'xxxxxxxx'
+        discfan:
+          url: https://discfan.net/
+          cookie: 'xxxxxxxx'
+        hdarea:
+          url: https://www.hdarea.co/
+        hddolby:
+          url: https://www.hddolby.com/attendance.php
+          cookie: 'xxxxxxxx'
+          succeed_regex: '(这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。)|(您今天已经签到过了，请勿重复刷新。)'
+        hddisk:
+          url: https://hddisk.life/attendance.php
+          cookie: 'xxxxxxxx'
+          succeed_regex: '(这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。)|(您今天已经签到过了，请勿重复刷新。)'
+        hdhome:
+          url: https://hdhome.org/attendance.php
+          cookie: 'xxxxxxxx'
+          succeed_regex: '(这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。)|(您今天已经签到过了，请勿重复刷新。)'
+        hdstreet:
+          url: https://hdstreet.club/bakatest.php
+          cookie: 'xxxxxxxx'
+          method: question
+          succeed_regex: '(连续.*天签到,获得.*点魔力值)|(今天已经签过到了\(已连续.*天签到\))'
+          wrong_regex: '回答错误,失去 1 魔力值,这道题还会再考一次'
+        hdtime:
+          url: https://hdtime.org/
+          cookie: 'xxxxxxxx'
+        hdzone:
+          url: http://hdzone.me/attendance.php
+          cookie: 'xxxxxxxx'
+          succeed_regex: '(这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。)|(您今天已经签到过了，请勿重复刷新。)'
+        joyhd:
+          url: https://www.joyhd.net/
+          cookie: 'xxxxxxxx'
+        leaguehd:
+          url: https://leaguehd.com/attendance.php
+          cookie: 'xxxxxxxx'
+          succeed_regex: '(这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。)|(您今天已经签到过了，请勿重复刷新。)'
+        m-team:
+          url: https://pt.m-team.cc/
+          cookie: 'xxxxxxxx'
+        moecat:
+          url: https://moecat.best/bakatest.php
+          cookie: 'xxxxxxxx'
+          method: question
+          succeed_regex: '(连续.*天签到,获得.*点魔力值)|(今天已经签过到了\(已连续.*天签到\))'
+          wrong_regex: '回答错误,失去 1 魔力值,这道题还会再考一次'
+        opencd:
+          url: https://open.cd/
+          cookie: 'xxxxxxxx'
+          succeed_regex: '查看簽到記錄'
+        oshen:
+          url: http://www.oshen.win/
+          cookie: 'xxxxxxxx'
+        j99:
+          url: https://pt.j99.info/
+          cookie: 'xxxxxxxx'
+        pterclub:
+          url: https://pterclub.com/attendance-ajax.php
+          cookie: 'xxxxxxxx'
+          succeed_regex: '(这是您的第 .* 次签到，已连续签到 .* 天。</p><p>本次签到获得 .* 克猫粮。)|(您今天已经签到过了，请勿重复刷新。)'
+          encoding: unicode_escape
+        pthome:
+          url: https://www.pthome.net/attendance.php
+          cookie: 'xxxxxxxx'
+          succeed_regex: '(这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。)|(您今天已经签到过了，请勿重复刷新。)'
+        msg:
+          url: https://pt.msg.vg/
+          cookie: 'xxxxxxxx'
+        skyey2:
+          url: https://www.skyey2.com/
+          cookie: 'xxxxxxxx'
+        eastgame:
+          url: https://pt.eastgame.org/
+          cookie: 'xxxxxxxx'
+        et8:
+          url: https://et8.org/index.php
+          cookie: 'xxxxxxxx'
+        ttg:
+          base_url: https://totheglory.im/
+          url: https://totheglory.im/signed.php
+          cookie: 'xxxxxxxx'
+          method: post
+          data:
+            signed_timestamp: '(?<=signed_timestamp: ")\d{10}'
+            signed_token: '(?<=signed_token: ").*(?=")'
+          succeed_regex: '(<b style="color:green;">已签到</b>)|(您已连续签到.*天，奖励.*积分，明天继续签到将获得.*积分奖励。)'
+        hdbd:
+          url: https://pt.hdbd.us/
+          cookie: 'xxxxxxxx'
+        tjupt:
+          url: https://tjupt.org/
+          cookie: 'xxxxxxxx'
+        nanyangpt:
+          url: https://nanyangpt.com/
+          cookie: 'xxxxxxxx'
+        beitai:
+          url: https://www.beitai.pt/
+          cookie: 'xxxxxxxx'
+        yingk:
+          url: https://yingk.com/bakatest.php
+          cookie: 'xxxxxxxx'
+          method: question
+          succeed_regex: '(连续.*天签到,获得.*点魔力值)|(今天已经签过到了\(已连续.*天签到\))'
+          wrong_regex: '回答错误,失去 1 魔力值,这道题还会再考一次'
+        ptsbao:
+          url: https://ptsbao.club/
+          cookie: 'xxxxxxxx'
+        1ptba:
+          url: https://1ptba.com/attendance.php
+          cookie: 'xxxxxxxx'
+          succeed_regex: '(这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。)|(您今天已经签到过了，请勿重复刷新。)'
+        wenyuan:
+          url: https://www.xn--7p0ar28b.xyz/bakatest.php
+          cookie: 'xxxxxxxx'
+          method: question
+          succeed_regex: '(连续.*天签到,获得.*点魔力值)|(今天已经签过到了\(已连续.*天签到\))'
+          wrong_regex: '回答错误,失去 1 魔力值,这道题还会再考一次'
+        crypt:
+          url: http://www.crypt.pub/
+          cookie: 'xxxxxxxx'
+    accept_all: yes
+    seen:
+      fields:
+        - title
+    notify:
+      entries:
+        message: "{{title}} {{message}}"
+        what:
+          - accepted
+          - failed
+        via:
+          - telegram:
+              bot_token: xxxxxxxx
+              recipients:
+                - username: 'xxxxxxxx'
