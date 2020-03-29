@@ -67,6 +67,7 @@ class PluginAutoSignIn():
             entry['data'] = site_config.get('data')
             entry['encoding'] = site_config.get('encoding') if site_config.get('encoding') else 'utf-8'
             entry['message'] = ''
+            entry['cookie'] = cookie
             entries.append(entry)
 
         return entries
@@ -76,6 +77,10 @@ class PluginAutoSignIn():
             logger.info('url: {}', entry['url'])
             site_config = entry.get('site_config')
             method = site_config.get('method')
+
+            if not entry['cookie']:
+                entry['message'] = 'manual url: {}'.format(entry['url'])
+                continue
 
             if method == 'post':
                 self.sign_in_by_post_data(task, entry)
@@ -101,10 +106,16 @@ class PluginAutoSignIn():
         response = self.get_sign_in_page(task, entry)
         if not response:
             return
-        content = response.content
+        content = response.content.decode(entry['encoding'])
         data = {}
         for key, regex in entry.get('data', {}).items():
-            data[key] = re.search(regex, content.decode(entry['encoding'])).group()
+            value_search = re.search(regex, content)
+            if value_search:
+                data[key] = value_search.group()
+            else:
+                entry.fail()
+                entry['message'] = 'Sign in failed. {}'.format(entry['url'])
+                logger.debug('url: {}, content: {}', entry['url'], content)
         self.post_sign_in(task, entry, data)
 
     def sign_in_by_question(self, task, entry):
@@ -178,7 +189,8 @@ class PluginAutoSignIn():
     def post_sign_in(self, task, entry, data):
         try:
             response = task.requests.post(entry['url'], headers=entry['headers'], data=data)
-            logger.debug('url: {}, response: {}, data: {}', response.content.decode(entry['encoding']), data)
+            logger.debug('url: {}, response: {}, data: {}', entry['url'], response.content.decode(entry['encoding']),
+                         data)
             return self.check_state(entry, response, entry['url'])
         except RequestException as e:
             entry.fail()
@@ -187,14 +199,13 @@ class PluginAutoSignIn():
         return None
 
     def check_state(self, entry, response, original_url):
-        encoding = entry['encoding']
         if original_url != response.url:
             logger.info('{} failed: {}', entry['title'], original_url)
             entry['message'] = 'failed. {}'.format(original_url)
             entry.fail()
             return SignState.UNKNOWN
 
-        content = response.content.decode(encoding)
+        content = response.content.decode(entry['encoding'])
 
         succeed_regex = entry['site_config'].get('succeed_regex')
         if not succeed_regex:
@@ -212,6 +223,7 @@ class PluginAutoSignIn():
 
         entry.fail()
         entry['message'] = 'Sign in failed. {}'.format(entry['url'])
+        logger.debug('url: {}, content: {}', entry['url'], content)
         return SignState.NO_SIGN_IN
 
 
