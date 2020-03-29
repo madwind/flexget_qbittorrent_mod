@@ -9,7 +9,7 @@ from loguru import logger
 from requests import RequestException, Session
 
 logger = logger.bind(name='qbittorrent_client')
-__version__ = 'v0.3.8'
+__version__ = 'v0.3.9'
 
 
 def singleton(cls):
@@ -142,13 +142,14 @@ class QBittorrentClient:
         multipart_data = {k: (None, v) for k, v in data.items()}
         with open(file_path, 'rb') as f:
             multipart_data['torrents'] = f
-            self._request(
+            response = self._request(
                 'post',
                 self.url + self.API_URL_ADD_NEW_TORRENT,
                 msg_on_fail='add_torrent_file failed.'.format(file_path),
                 files=multipart_data,
                 verify=self._verify,
             )
+        logger.debug('add_torrent_file response: {}', response.content)
 
     def add_torrent_url(self, url, data):
         data['urls'] = url
