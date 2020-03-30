@@ -1,3 +1,4 @@
+import gzip
 import itertools
 import json
 import re
@@ -178,7 +179,7 @@ class PluginAutoSignIn():
     def get_sign_in_page(self, task, entry):
         url = entry['base_url'] if entry['base_url'] else entry['url']
         response = task.requests.get(url, headers=entry['headers'])
-        logger.debug('url: {}, response: {}', entry['url'], response.content.decode(entry['encoding']))
+        logger.debug('url: {}, response: {}', entry['url'], self.decode(response.content, (entry['encoding'])))
         state = self.check_state(entry, response, url)
         if state == SignState.UNKNOWN:
             return None
@@ -189,7 +190,8 @@ class PluginAutoSignIn():
     def post_sign_in(self, task, entry, data):
         try:
             response = task.requests.post(entry['url'], headers=entry['headers'], data=data)
-            logger.debug('url: {}, response: {}, data: {}', entry['url'], response.content.decode(entry['encoding']),
+            logger.debug('url: {}, response: {}, data: {}', entry['url'],
+                         self.decode(response.content, (entry['encoding'])),
                          data)
             return self.check_state(entry, response, entry['url'])
         except RequestException as e:
@@ -205,7 +207,7 @@ class PluginAutoSignIn():
             entry.fail()
             return SignState.UNKNOWN
 
-        content = response.content.decode(entry['encoding'])
+        content = self.decode(response.content, (entry['encoding']))
 
         succeed_regex = entry['site_config'].get('succeed_regex')
         if not succeed_regex:
@@ -225,6 +227,13 @@ class PluginAutoSignIn():
         entry['message'] = 'Sign in failed. {}'.format(entry['url'])
         logger.debug('url: {}, content: {}', entry['url'], content)
         return SignState.NO_SIGN_IN
+
+    def decode(self, content, encoding):
+        try:
+            html = content.decode(encoding)
+        except UnicodeDecodeError:
+            html = gzip.decompress(content).decode(encoding)
+        return html
 
 
 @event('plugin.register')
