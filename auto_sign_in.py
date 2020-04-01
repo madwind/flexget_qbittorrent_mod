@@ -19,6 +19,7 @@ class SignState(Enum):
     NO_SIGN_IN = 'no_sign_in'
     SUCCEED = 'succeed'
     WRONG_ANSWER = 'wrong_answer'
+    URL_REDIRECT = 'url_redirect'
     UNKNOWN = 'unknown'
 
 
@@ -99,24 +100,25 @@ class PluginAutoSignIn():
 
             self.check_state(entry, response, entry['url'])
         except RequestException as e:
-            entry.fail()
             entry['message'] = 'Network error. {}'.format(entry['url'])
+            entry.fail(entry['message'])
             logger.error('Unable to sign in for task {} ({}): {}'.format(task.name, entry['url'], e))
 
     def sign_in_by_post_data(self, task, entry):
         response = self.get_sign_in_page(task, entry)
         if not response:
             return
-        content = response.content.decode(entry['encoding'])
+        content = self.decode(response.content, entry['encoding'])
         data = {}
         for key, regex in entry.get('data', {}).items():
             value_search = re.search(regex, content)
             if value_search:
                 data[key] = value_search.group()
             else:
-                entry.fail()
                 entry['message'] = 'Sign in failed. {}'.format(entry['url'])
+                entry.fail(entry['message'])
                 logger.debug('url: {}, content: {}', entry['url'], content)
+                return
         self.post_sign_in(task, entry, data)
 
     def sign_in_by_question(self, task, entry):
@@ -163,7 +165,7 @@ class PluginAutoSignIn():
                         answer_list.append(list(arr))
             for answer in answer_list:
                 data = {'questionid': question_id, 'choice[]': answer, 'usercomment': '此刻心情:无', 'submit': '提交'}
-                logger.info('url: {}, trying answer: {}', entry['url'], data)
+                logger.debug('url: {}, trying answer: {}', entry['url'], data)
                 state = self.post_sign_in(task, entry, data)
                 if not state:
                     return
@@ -174,7 +176,7 @@ class PluginAutoSignIn():
                     logger.info('url: {}, correct answer: {}', entry['url'], data)
                     return
             entry['message'] = 'no answer'
-            entry.fail()
+            entry.fail(entry['message'])
 
     def get_sign_in_page(self, task, entry):
         url = entry['base_url'] if entry['base_url'] else entry['url']
@@ -195,17 +197,17 @@ class PluginAutoSignIn():
                          data)
             return self.check_state(entry, response, entry['url'])
         except RequestException as e:
-            entry.fail()
             entry['message'] = 'Network error. {}'.format(entry['url'])
+            entry.fail(entry['message'])
             logger.error('Unable to sign in for task {} ({}): {}'.format(task.name, entry['url'], e))
         return None
 
     def check_state(self, entry, response, original_url):
         if original_url != response.url:
-            logger.info('{} failed: {}', entry['title'], original_url)
-            entry['message'] = 'failed. {}'.format(original_url)
-            entry.fail()
-            return SignState.UNKNOWN
+            entry['message'] = '{} failed. url: {}'.format(entry['title'], original_url)
+            logger.info(entry['message'])
+            entry.fail(entry['message'])
+            return SignState.URL_REDIRECT
 
         content = self.decode(response.content, (entry['encoding']))
 
@@ -223,9 +225,10 @@ class PluginAutoSignIn():
         if wrong_regex and re.search(wrong_regex, content):
             return SignState.WRONG_ANSWER
 
-        entry.fail()
-        entry['message'] = 'Sign in failed. {}'.format(entry['url'])
-        logger.debug('url: {}, content: {}', entry['url'], content)
+        if not entry['method'] or entry['method'] == 'get':
+            entry['message'] = 'Sign in failed. {}'.format(entry['url'])
+            entry.fail(entry['message'])
+            logger.debug('url: {}, content: {}', entry['url'], content)
         return SignState.NO_SIGN_IN
 
     def decode(self, content, encoding):
