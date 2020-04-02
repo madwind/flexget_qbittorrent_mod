@@ -70,7 +70,7 @@ class PluginIYUUAutoReseed():
         sites_json = response_json['data']['sites']
 
         entries = []
-        if response_json:
+        if response_json and not isinstance(reseed_json, list):
             for info_hash, seeds_data in reseed_json.items():
                 for torrent in seeds_data['torrent']:
                     site = sites_json[str(torrent['sid'])]
