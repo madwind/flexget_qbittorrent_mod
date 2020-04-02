@@ -21,6 +21,7 @@ class SignState(Enum):
     WRONG_ANSWER = 'wrong_answer'
     URL_REDIRECT = 'url_redirect'
     UNKNOWN = 'unknown'
+    NETWORK_ERROR = 'network_error'
 
 
 class PluginAutoSignIn():
@@ -64,21 +65,21 @@ class PluginAutoSignIn():
             entry['site_config'] = site_config
             entry['base_url'] = site_config.get('base_url')
             headers = {'cookie': cookie, 'user-agent': user_agent,
-                       'referer': entry['base_url'] if entry['base_url'] else entry['url']}
+                       'referer': site_config.get('base_url', entry['url'])}
             entry['headers'] = headers
             entry['data'] = site_config.get('data')
-            entry['encoding'] = site_config.get('encoding') if site_config.get('encoding') else 'utf-8'
+            entry['encoding'] = site_config.get('encoding', 'utf-8')
             entry['message'] = ''
             entry['cookie'] = cookie
+            entry['method'] = site_config.get('method', 'get')
             entries.append(entry)
 
         return entries
 
     def on_task_output(self, task, config):
         for entry in task.accepted:
-            logger.info('url: {}', entry['url'])
-            site_config = entry.get('site_config')
-            method = site_config.get('method')
+            logger.info(entry['title'])
+            method = entry['method']
 
             if not entry['cookie']:
                 entry['message'] = 'manual url: {}'.format(entry['url'])
@@ -91,22 +92,22 @@ class PluginAutoSignIn():
             else:
                 self.sign_in_by_get(task, entry)
 
-    def sign_in_by_get(self, task, entry):
+    def _request(self, task, entry, method, url, **kwargs):
         try:
-            response = self.get_sign_in_page(task, entry)
-            if not response:
-                return
-            response = task.requests.get(entry['url'], headers=entry['headers'])
-
-            self.check_state(entry, response, entry['url'])
-        except RequestException as e:
-            entry['message'] = 'Network error. {}'.format(entry['url'])
+            response = task.requests.request(method, url, **kwargs)
+            return response
+        except RequestException as error:
+            entry['message'] = 'code:{}, url: {}'.format(error.response.status_code, url)
             entry.fail(entry['message'])
-            logger.error('Unable to sign in for task {} ({}): {}'.format(task.name, entry['url'], e))
+
+    def sign_in_by_get(self, task, entry):
+        response = self._request(task, entry, 'get', entry['url'], headers=entry['headers'])
+        self.check_state(entry, response, entry['url'])
 
     def sign_in_by_post_data(self, task, entry):
-        response = self.get_sign_in_page(task, entry)
-        if not response:
+        response = self._request(task, entry, 'get', entry['base_url'], headers=entry['headers'])
+        state = self.check_state(entry, response, entry['base_url'])
+        if state != SignState.NO_SIGN_IN:
             return
         content = self.decode(response.content, entry['encoding'])
         data = {}
@@ -115,17 +116,19 @@ class PluginAutoSignIn():
             if value_search:
                 data[key] = value_search.group()
             else:
-                entry['message'] = 'Sign in failed. {}'.format(entry['url'])
+                entry['message'] = 'Cannot find key: {}, url: {}'.format(key, entry['url'])
                 entry.fail(entry['message'])
-                logger.debug('url: {}, content: {}', entry['url'], content)
                 return
-        self.post_sign_in(task, entry, data)
+        response = self._request(task, entry, 'post', entry['url'], headers=entry['headers'], data=data)
+        self.check_state(entry, response, entry['url'])
 
     def sign_in_by_question(self, task, entry):
-        response = self.get_sign_in_page(task, entry)
-        if not response:
+        response = self._request(task, entry, 'get', entry['url'], headers=entry['headers'])
+        state = self.check_state(entry, response, entry['url'])
+        if state != SignState.NO_SIGN_IN:
             return
-        content = response.content
+
+        content = self.decode(response.content, entry['encoding'])
         question_element = get_soup(content).select_one('input[name="questionid"]')
         if question_element:
             question_id = question_element.get('value')
@@ -156,56 +159,36 @@ class PluginAutoSignIn():
                 choice_range = len(choices)
 
             answer_list = []
-            if local_answer and local_answer in choices and len(local_answer) <= choice_range:
-                answer_list.append(local_answer)
 
             for i in range(choice_range):
                 for arr in itertools.combinations(choices, i + 1):
                     if list(arr) not in answer_list:
                         answer_list.append(list(arr))
+            answer_list.reverse()
+            if local_answer and local_answer in choices and len(local_answer) <= choice_range:
+                answer_list.insert(0, local_answer)
+
             for answer in answer_list:
                 data = {'questionid': question_id, 'choice[]': answer, 'usercomment': '此刻心情:无', 'submit': '提交'}
-                logger.debug('url: {}, trying answer: {}', entry['url'], data)
-                state = self.post_sign_in(task, entry, data)
-                if not state:
-                    return
+                response = self._request(task, entry, 'post', entry['url'], headers=entry['headers'], data=data)
+                state = self.check_state(entry, response, entry['url'])
                 if state == SignState.SUCCEED:
                     question_json[entry['url']][question_id] = answer
                     with open(question_file_path, mode='w') as question_file:
                         json.dump(question_json, question_file)
-                    logger.info('url: {}, correct answer: {}', entry['url'], data)
+                    logger.info('{}, correct answer: {}', entry['title'], data)
                     return
-            entry['message'] = 'no answer'
-            entry.fail(entry['message'])
-
-    def get_sign_in_page(self, task, entry):
-        url = entry['base_url'] if entry['base_url'] else entry['url']
-        response = task.requests.get(url, headers=entry['headers'])
-        logger.debug('url: {}, response: {}', entry['url'], self.decode(response.content, (entry['encoding'])))
-        state = self.check_state(entry, response, url)
-        if state == SignState.UNKNOWN:
-            return None
-        elif state == SignState.SUCCEED:
-            return None
-        return response
-
-    def post_sign_in(self, task, entry, data):
-        try:
-            response = task.requests.post(entry['url'], headers=entry['headers'], data=data)
-            logger.debug('url: {}, response: {}, data: {}', entry['url'],
-                         self.decode(response.content, (entry['encoding'])),
-                         data)
-            return self.check_state(entry, response, entry['url'])
-        except RequestException as e:
-            entry['message'] = 'Network error. {}'.format(entry['url'])
-            entry.fail(entry['message'])
-            logger.error('Unable to sign in for task {} ({}): {}'.format(task.name, entry['url'], e))
-        return None
+        entry['message'] = 'no answer'
+        entry.fail(entry['message'])
 
     def check_state(self, entry, response, original_url):
+        if not response:
+            entry['message'] = SignState.NETWORK_ERROR
+            entry.fail(entry['message'])
+            return SignState.NETWORK_ERROR
+
         if original_url != response.url:
-            entry['message'] = '{} failed. url: {}'.format(entry['title'], original_url)
-            logger.info(entry['message'])
+            entry['message'] = 'url: {} redirect to {}'.format(original_url, response.url)
             entry.fail(entry['message'])
             return SignState.URL_REDIRECT
 
@@ -225,10 +208,9 @@ class PluginAutoSignIn():
         if wrong_regex and re.search(wrong_regex, content):
             return SignState.WRONG_ANSWER
 
-        if not entry['method'] or entry['method'] == 'get':
+        if entry['method'] == 'get':
             entry['message'] = 'Sign in failed. {}'.format(entry['url'])
             entry.fail(entry['message'])
-            logger.debug('url: {}, content: {}', entry['url'], content)
         return SignState.NO_SIGN_IN
 
     def decode(self, content, encoding):
