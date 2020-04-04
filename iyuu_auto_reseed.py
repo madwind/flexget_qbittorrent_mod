@@ -73,7 +73,9 @@ class PluginIYUUAutoReseed():
         if response_json and not isinstance(reseed_json, list):
             for info_hash, seeds_data in reseed_json.items():
                 for torrent in seeds_data['torrent']:
-                    site = sites_json[str(torrent['sid'])]
+                    site = sites_json.get(str(torrent['sid']))
+                    if not site:
+                        continue
                     client_torrent = torrent_dict[info_hash]
                     base_url = site['base_url']
                     protocol = 'https'
