@@ -96,8 +96,8 @@ class PluginAutoSignIn():
         try:
             response = task.requests.request(method, url, **kwargs)
             return response
-        except RequestException as error:
-            entry['message'] = 'code:{}, url: {}'.format(error.response.status_code, url)
+        except RequestException as e:
+            entry['message'] = 'error: {}, url: {}'.format(str(e), url)
             entry.fail(entry['message'])
 
     def sign_in_by_get(self, task, entry):
