@@ -97,7 +97,7 @@ class PluginAutoSignIn():
         try:
             response = task.requests.request(method, url, **kwargs)
             return response
-        except RequestException as e:
+        except Exception as e:
             entry['message'] = SignState.NETWORK_ERROR.value.format(str(e), url)
 
     def sign_in_by_get(self, task, entry):
