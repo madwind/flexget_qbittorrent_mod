@@ -16,12 +16,13 @@ from requests import RequestException
 
 
 class SignState(Enum):
-    NO_SIGN_IN = 'no_sign_in'
-    SUCCEED = 'succeed'
-    WRONG_ANSWER = 'wrong_answer'
-    URL_REDIRECT = 'url_redirect'
-    UNKNOWN = 'unknown'
-    NETWORK_ERROR = 'network_error'
+    NO_SIGN_IN = 'No sign in'
+    SUCCEED = 'Succeed'
+    WRONG_ANSWER = 'Wrong answer'
+    URL_REDIRECT = 'Url: {} redirect to {}'
+    UNKNOWN = 'Unknown, url: {}'
+    NETWORK_ERROR = 'Network error, msg: {}, url: {}'
+    SIGN_IN_FAILED = 'Sign in failed, url: {}'
 
 
 class PluginAutoSignIn():
@@ -82,7 +83,7 @@ class PluginAutoSignIn():
             method = entry['method']
 
             if not entry['cookie']:
-                entry['message'] = 'manual url: {}'.format(entry['url'])
+                entry['message'] = 'Manual url: {}'.format(entry['url'])
                 continue
 
             if method == 'post':
@@ -97,8 +98,7 @@ class PluginAutoSignIn():
             response = task.requests.request(method, url, **kwargs)
             return response
         except RequestException as e:
-            entry['message'] = 'error: {}, url: {}'.format(str(e), url)
-            entry.fail(entry['message'])
+            entry['message'] = SignState.NETWORK_ERROR.value.format(str(e), url)
 
     def sign_in_by_get(self, task, entry):
         response = self._request(task, entry, 'get', entry['url'], headers=entry['headers'])
@@ -183,12 +183,13 @@ class PluginAutoSignIn():
 
     def check_state(self, entry, response, original_url):
         if not response:
-            entry['message'] = SignState.NETWORK_ERROR
+            if not entry['message']:
+                entry['message'] = SignState.NETWORK_ERROR.value.format(response, original_url)
             entry.fail(entry['message'])
             return SignState.NETWORK_ERROR
 
         if original_url != response.url:
-            entry['message'] = 'url: {} redirect to {}'.format(original_url, response.url)
+            entry['message'] = SignState.URL_REDIRECT.value.format(original_url, response.url)
             entry.fail(entry['message'])
             return SignState.URL_REDIRECT
 
@@ -209,8 +210,9 @@ class PluginAutoSignIn():
             return SignState.WRONG_ANSWER
 
         if entry['method'] == 'get':
-            entry['message'] = 'Sign in failed. {}'.format(entry['url'])
+            entry['message'] = SignState.SIGN_IN_FAILED.value.format(original_url)
             entry.fail(entry['message'])
+            return SignState.SIGN_IN_FAILED
         return SignState.NO_SIGN_IN
 
     def decode(self, content, encoding):
