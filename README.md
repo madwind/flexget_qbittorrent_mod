@@ -268,8 +268,8 @@ tasks:
     priority: 2
     disable: [seen, seen_info_hash, retry_failed]
     if:
-      #选择跳检完成的种子
-      - qbittorrent_state == 'pausedUP' and qbittorrent_downloaded == 0: accept
+      #选择进度100%、暂停状态、并且从未下载过数据，1小时内（防止停止任务后又重新开始）添加的的种子
+      - qbittorrent_state == 'pausedUP' and qbittorrent_downloaded == 0 and qbittorrent_added_on < now - timedelta(hours=1): accept
     template:
       - from_qbittorrent_template
       - qbittorrent_base_template

@@ -251,7 +251,7 @@ tasks:
     priority: 2
     disable: [seen, seen_info_hash, retry_failed]
     if:
-      - qbittorrent_state == 'pausedUP' and qbittorrent_downloaded == 0: accept
+      - qbittorrent_state == 'pausedUP' and qbittorrent_downloaded == 0 and qbittorrent_added_on < now - timedelta(hours=1): accept
     template:
       - from_qbittorrent_template
       - qbittorrent_base_template
