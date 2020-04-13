@@ -333,10 +333,10 @@ class PluginQBittorrentMod(QBittorrentModBase):
                 if reseed_entry['qbittorrent_completed'] != 0:
                     torrent_size = reseed_entry['qbittorrent_completed']
                 if isinstance(check_reseed, list):
-                    trackers = reseed_entry['trackers']
+                    trackers = reseed_entry['qbittorrent_trackers']
                     site_names = []
                     for tracker in trackers:
-                        site_names.append(self._get_site_name(tracker))
+                        site_names.append(self._get_site_name(tracker.get('url')))
 
                     if len(set(check_reseed) & set(site_names)) > 0:
                         check_hashes.append(reseed_entry['torrent_info_hash'])
