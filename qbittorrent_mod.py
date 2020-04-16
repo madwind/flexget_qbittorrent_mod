@@ -275,13 +275,14 @@ class PluginQBittorrentMod(QBittorrentModBase):
         show_entry = remove_options.get('show_entry')
         task_data = self.client.get_task_data(id(task))
         server_state = task_data.get('server_state')
-        free_space_on_disk = 0
+        dl_rate_limit = server_state.get('dl_rate_limit')
+        free_space_on_disk = server_state.get('free_space_on_disk')
 
         if keep_disk_space:
             keep_disk_space = keep_disk_space * 1024 * 1024 * 1024
-            free_space_on_disk = server_state.get('free_space_on_disk')
+
             if keep_disk_space < free_space_on_disk:
-                if dl_limit_on_succeeded is not None:
+                if dl_limit_on_succeeded is not None and dl_limit_on_succeeded != dl_rate_limit:
                     self.client.set_application_preferences('{{"dl_limit": {}}}'.format(dl_limit_on_succeeded))
                     logger.debug("set dl_limit to {} KiB/s", dl_limit_on_succeeded / 1024)
                 return
@@ -290,10 +291,11 @@ class PluginQBittorrentMod(QBittorrentModBase):
                     dl_limit = math.ceil(free_space_on_disk / dl_limit_interval)
                     if dl_limit_on_succeeded and dl_limit > dl_limit_on_succeeded:
                         dl_limit = dl_limit_on_succeeded
-                    self.client.set_application_preferences('{{"dl_limit": {}}}'.format(dl_limit))
-                    logger.warning(
-                        "not enough disk space, but There are no eligible torrents, set dl_limit to {} KiB/s",
-                        math.ceil(dl_limit / 1024))
+                    if dl_limit != dl_rate_limit:
+                        self.client.set_application_preferences('{{"dl_limit": {}}}'.format(dl_limit))
+                        logger.warning(
+                            "not enough disk space, but There are no eligible torrents, set dl_limit to {} KiB/s",
+                            math.ceil(dl_limit / 1024))
                     return
 
         if not task.accepted:
@@ -364,8 +366,9 @@ class PluginQBittorrentMod(QBittorrentModBase):
                 dl_limit = math.ceil((free_space_on_disk + delete_size) / dl_limit_interval)
                 if dl_limit_on_succeeded and dl_limit > dl_limit_on_succeeded:
                     dl_limit = dl_limit_on_succeeded
-                self.client.set_application_preferences('{{"dl_limit": {}}}'.format(dl_limit))
-                logger.warning("not enough disk space, set dl_limit to {} KiB/s", math.ceil(dl_limit / 1024))
+                if dl_limit != dl_rate_limit:
+                    self.client.set_application_preferences('{{"dl_limit": {}}}'.format(dl_limit))
+                    logger.warning("not enough disk space, set dl_limit to {} KiB/s", math.ceil(dl_limit / 1024))
         if len(delete_hashes) > 0:
             self.client.delete_torrents(str.join('|', delete_hashes), delete_files)
 
