@@ -1,0 +1,233 @@
+from datetime import timedelta, datetime
+
+import requests
+from flexget import db_schema, plugin
+from flexget.event import event
+from flexget.manager import Session
+from flexget.plugin import PluginError
+from loguru import logger
+from sqlalchemy import Column, Integer, String, and_, DateTime
+
+_PLUGIN_NAME = 'work_weixin'
+
+_PARSERS = ['markdown', 'html']
+
+_CORP_ID = 'corp_id'
+_CORP_SECRET = 'corp_secret'
+_AGENT_ID = 'agent_id'
+_TO_USER = 'to_user'
+_GET_ACCESS_TOKEN_URL = 'https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid={corp_id}&corpsecret={corp_secret}'
+_POST_MESSAGE_URL = 'https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token={access_token}'
+
+AccessTokenBase = db_schema.versioned_base('work_weixin_access_token', 0)
+
+logger = logger.bind(name=_PLUGIN_NAME)
+
+
+class AccessTokenEntry(AccessTokenBase):
+    __tablename__ = 'work_weixin_access_token'
+
+    id = Column(String, primary_key=True)
+    corp_id = Column(String, index=True, nullable=True)
+    corp_secret = Column(String, index=True, nullable=True)
+    access_token = Column(String, primary_key=True)
+    expires_in = Column(Integer, index=True, nullable=True)
+    gmt_modify = Column(DateTime, index=True, nullable=True)
+
+    def __str__(self):
+        x = ['id={0}'.format(self.id)]
+        if self.corp_id:
+            x.append('corp_id={0}'.format(self.corp_id))
+        if self.corp_secret:
+            x.append('corp_secret={0}'.format(self.corp_secret))
+        if self.access_token:
+            x.append('access_token={0}'.format(self.access_token))
+        if self.expires_in:
+            x.append('expires_in={0}'.format(self.expires_in))
+        if self.gmt_modify:
+            x.append('gmt_modify={0}'.format(self.gmt_modify))
+        return ' '.join(x)
+
+
+class WorkWeixinNotifier:
+    _corp_id = None
+    _corp_secret = None
+    _agent_id = None
+    _to_user = None
+
+    schema = {
+        'type': 'object',
+        'properties': {
+            _CORP_ID: {'type': 'string'},
+            _CORP_SECRET: {'type': 'string'},
+            _AGENT_ID: {'type': 'string'},
+            _TO_USER: {'type': 'string'},
+        },
+        'additionalProperties': False,
+    }
+
+    def notify(self, title, message, config):
+        """
+        Send a Work_Weixin notification
+        """
+        access_token = self._real_init(Session(), config)
+
+        if not access_token:
+            return
+        self._send_msgs(message, access_token)
+
+    def _parse_config(self, config):
+        """
+        :type config: dict
+
+        """
+        self._corp_id = config.get(_CORP_ID)
+        self._corp_secret = config.get(_CORP_SECRET)
+        self._agent_id = config.get(_AGENT_ID)
+        self._to_user = config.get(_TO_USER)
+
+    def _real_init(self, session, config):
+        self._parse_config(config)
+        access_token = self._get_access_token_n_update_db(session)
+        return access_token
+
+    def _request(self, method, url, **kwargs):
+        try:
+            return requests.request(method, url, **kwargs)
+        except Exception as e:
+            raise PluginError(str(e))
+        return None
+
+    def _send_msgs(self, msg, access_token):
+        data = {
+            'touser': self._to_user,
+            'msgtype': 'text',
+            'agentid': self._agent_id,
+            'text': {'content': msg},
+            'safe': 0,
+            'enable_id_trans': 0,
+            'enable_duplicate_check': 0,
+            'duplicate_check_interval': 1800
+        }
+        response_json = self._request('post', _POST_MESSAGE_URL.format(access_token=access_token.access_token),
+                                      json=data).json()
+        if response_json.get('errcode') != 0:
+            logger.error(response_json)
+
+    def _get_access_token_n_update_db(self, session):
+        """
+        :type session: sqlalchemy.orm.Session
+        :rtype: list[ChatIdEntry]
+
+        """
+        corp_id = self._corp_id
+        corp_secret = self._corp_secret
+
+        access_token, has_new_access_token = self._get_access_token(session, corp_id, corp_secret)
+        logger.debug('access_token={}', access_token)
+
+        if not access_token:
+            raise PluginError(
+                'no access token found'
+            )
+        else:
+            if not access_token.access_token:
+                logger.warning('no access_token found for corp_id: {} and corp_secret: {}', corp_id, corp_secret)
+            if has_new_access_token:
+                self._update_db(session, access_token)
+
+        return access_token
+
+    def _get_access_token(self, session, corp_id, corp_secret):
+        """get chat ids for `usernames`, `fullnames` & `groups`.
+        entries with a matching chat ids will be removed from the input lists.
+
+        :type session: sqlalchemy.orm.Session
+        :type usernames: list[str]
+        :type fullnames: list[tuple[str, str]]
+        :type groups: list[str]
+        :returns: chat ids, new chat ids found?
+        :rtype: list[ChatIdEntry], bool
+
+        """
+        logger.debug('loading cached access token')
+        access_token = self._get_cached_access_token(session, corp_id, corp_secret)
+        logger.debug('found cached access token: {0}'.format(access_token))
+
+        if access_token:
+            if access_token.gmt_modify > datetime.now() - timedelta(seconds=access_token.expires_in):
+                logger.debug('all access token found in cache')
+                return access_token, False
+            else:
+                self._delete_db(session, access_token)
+
+        logger.debug('loading new access token')
+        new_access_token = self._get_new_access_token(corp_id, corp_secret)
+        logger.debug('found new access token: {0}'.format(access_token))
+
+        return new_access_token, bool(new_access_token)
+
+    @staticmethod
+    def _get_cached_access_token(session, corp_id, corp_secret):
+        """get chat ids from the cache (DB). remove found entries from `usernames`, `fullnames` & `groups`
+
+        :type session: sqlalchemy.orm.Session
+        :type usernames: list[str]
+        :type fullnames: list[tuple[str, str]]
+        :type groups: list[str]
+        :rtype: list[ChatIdEntry]
+
+        """
+        access_token = session.query(AccessTokenEntry).filter(
+            AccessTokenEntry.id == '{}{}'.format(corp_id, corp_secret)).one_or_none()
+
+        return access_token
+
+    def _get_new_access_token(self, corp_id, corp_secret):
+        """get chat ids by querying the telegram `bot`
+
+        :type usernames: list[str]
+        :type fullnames: list[tuple[str, str]]
+        :type groups: list[str]
+        :rtype: __generator[ChatIdEntry]
+
+        """
+        response_json = self._request('get',
+                                      _GET_ACCESS_TOKEN_URL.format(corp_id=corp_id, corp_secret=corp_secret)).json()
+
+        entry = AccessTokenEntry(
+            id='{}{}'.format(corp_id, corp_secret),
+            corp_id=corp_id,
+            corp_secret=corp_secret,
+            access_token=response_json.get('access_token'),
+            expires_in=response_json.get('expires_in'),
+            gmt_modify=datetime.now()
+        )
+        return entry
+
+    def _update_db(self, session, access_token):
+        """Update the DB with found `chat_ids`
+        :type session: sqlalchemy.orm.Session
+        :type chat_ids: list[ChatIdEntry]
+
+        """
+        logger.info('saving updated access_token to db')
+
+        session.add(access_token)
+        session.commit()
+
+    def _delete_db(self, session, access_token):
+        """Update the DB with found `chat_ids`
+        :type session: sqlalchemy.orm.Session
+        :type chat_ids: list[ChatIdEntry]
+
+        """
+        logger.info('delete access_token from db')
+
+        session.delete(access_token)
+        session.commit()
+
+
+@event('plugin.register')
+def register_plugin():
+    plugin.register(WorkWeixinNotifier, _PLUGIN_NAME, api_ver=2, interfaces=['notifiers'])
