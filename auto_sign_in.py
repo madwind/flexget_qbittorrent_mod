@@ -6,6 +6,7 @@ from datetime import datetime
 from enum import Enum
 from os import path
 from pathlib import Path
+from urllib.parse import urljoin
 
 from flexget import plugin
 from flexget.entry import Entry
@@ -70,22 +71,22 @@ class PluginAutoSignIn():
             entry['headers'] = headers
             entry['data'] = site_config.get('data')
             entry['encoding'] = site_config.get('encoding', 'utf-8')
-            entry['message'] = ''
+            entry['result'] = ''
+            entry['get_message'] = site_config.get('get_message', '/messages.php')
+            entry['messages'] = ''
             entry['cookie'] = cookie
             entry['method'] = site_config.get('method', 'get')
             entries.append(entry)
-
         return entries
 
     def on_task_output(self, task, config):
         for entry in task.accepted:
-            logger.info(entry['title'])
-            method = entry['method']
 
             if not entry['cookie']:
-                entry['message'] = 'Manual url: {}'.format(entry['url'])
+                entry['result'] = 'Manual url: {}'.format(entry['url'])
                 continue
 
+            method = entry['method']
             if method == 'post':
                 self.sign_in_by_post_data(task, entry)
             elif method == 'question':
@@ -93,12 +94,38 @@ class PluginAutoSignIn():
             else:
                 self.sign_in_by_get(task, entry)
 
+            if entry['get_message']:
+                message_url = urljoin(entry['url'], entry['get_message'])
+                message_box_response = self._request(task, entry, 'get', message_url, headers=entry['headers'])
+                if message_box_response:
+                    unread_elements = get_soup(self._decode(message_box_response, entry['encoding'])).select(
+                        'td > img[alt*="Unread"]')
+                    for unread_element in unread_elements:
+                        td = unread_element.parent.nextSibling.nextSibling
+                        href = td.a.get('href')
+                        title = td.text
+                        message_url = urljoin(message_url, href)
+                        message_response = self._request(task, entry, 'get', message_url, headers=entry['headers'])
+
+                        message_body = 'Can not read message body!'
+                        if message_response:
+                            body_element = get_soup(
+                                self._decode(message_response, entry['encoding'])).select_one('td[colspan*="2"]')
+                            if body_element:
+                                message_body = body_element.text
+
+                        entry['messages'] = entry['messages'] + (
+                            '\ntitle: {}\nurl: {}\n{}'.format(title, message_url, message_body))
+                else:
+                    entry['messages'] = 'Can not read message box!'
+            logger.info('{} {} {}'.format(entry['title'], entry['result'], entry['messages']))
+
     def _request(self, task, entry, method, url, **kwargs):
         try:
-            response = task.requests.request(method, url, **kwargs)
-            return response
+            return task.requests.request(method, url, **kwargs)
         except Exception as e:
-            entry['message'] = SignState.NETWORK_ERROR.value.format(str(e), url)
+            entry['result'] = SignState.NETWORK_ERROR.value.format(str(e), url)
+        return None
 
     def sign_in_by_get(self, task, entry):
         response = self._request(task, entry, 'get', entry['url'], headers=entry['headers'])
@@ -109,15 +136,15 @@ class PluginAutoSignIn():
         state = self.check_state(entry, response, entry['base_url'])
         if state != SignState.NO_SIGN_IN:
             return
-        content = self.decode(response.content, entry['encoding'])
+        content = self._decode(response, entry['encoding'])
         data = {}
         for key, regex in entry.get('data', {}).items():
             value_search = re.search(regex, content)
             if value_search:
                 data[key] = value_search.group()
             else:
-                entry['message'] = 'Cannot find key: {}, url: {}'.format(key, entry['url'])
-                entry.fail(entry['message'])
+                entry['result'] = 'Cannot find key: {}, url: {}'.format(key, entry['url'])
+                entry.fail(entry['result'])
                 return
         response = self._request(task, entry, 'post', entry['url'], headers=entry['headers'], data=data)
         self.check_state(entry, response, entry['url'])
@@ -128,7 +155,7 @@ class PluginAutoSignIn():
         if state != SignState.NO_SIGN_IN:
             return
 
-        content = self.decode(response.content, entry['encoding'])
+        content = self._decode(response, entry['encoding'])
         question_element = get_soup(content).select_one('input[name="questionid"]')
         if question_element:
             question_id = question_element.get('value')
@@ -178,31 +205,31 @@ class PluginAutoSignIn():
                         json.dump(question_json, question_file)
                     logger.info('{}, correct answer: {}', entry['title'], data)
                     return
-        entry['message'] = 'no answer'
-        entry.fail(entry['message'])
+        entry['result'] = 'no answer'
+        entry.fail(entry['result'])
 
     def check_state(self, entry, response, original_url):
         if not response:
-            if not entry['message']:
-                entry['message'] = SignState.NETWORK_ERROR.value.format(response, original_url)
-            entry.fail(entry['message'])
+            if not entry['result']:
+                entry['result'] = SignState.NETWORK_ERROR.value.format(response, original_url)
+            entry.fail(entry['result'])
             return SignState.NETWORK_ERROR
 
         if original_url != response.url:
-            entry['message'] = SignState.URL_REDIRECT.value.format(original_url, response.url)
-            entry.fail(entry['message'])
+            entry['result'] = SignState.URL_REDIRECT.value.format(original_url, response.url)
+            entry.fail(entry['result'])
             return SignState.URL_REDIRECT
 
-        content = self.decode(response.content, (entry['encoding']))
+        content = self._decode(response, (entry['encoding']))
 
         succeed_regex = entry['site_config'].get('succeed_regex')
         if not succeed_regex:
-            entry['message'] = SignState.SUCCEED
+            entry['result'] = SignState.SUCCEED
             return SignState.SUCCEED
 
         succeed_msg = re.search(succeed_regex, content)
         if succeed_msg:
-            entry['message'] = re.sub('<.*?>', '', succeed_msg.group())
+            entry['result'] = re.sub('<.*?>', '', succeed_msg.group())
             return SignState.SUCCEED
 
         wrong_regex = entry['site_config'].get('wrong_regex')
@@ -210,17 +237,17 @@ class PluginAutoSignIn():
             return SignState.WRONG_ANSWER
 
         if entry['method'] == 'get':
-            entry['message'] = SignState.SIGN_IN_FAILED.value.format(original_url)
-            entry.fail(entry['message'])
+            entry['result'] = SignState.SIGN_IN_FAILED.value.format(original_url)
+            entry.fail(entry['result'])
             return SignState.SIGN_IN_FAILED
         return SignState.NO_SIGN_IN
 
-    def decode(self, content, encoding):
+    def _decode(self, response, encoding):
         try:
-            html = content.decode(encoding)
-        except UnicodeDecodeError:
-            html = gzip.decompress(content).decode(encoding)
-        return html
+            content = gzip.decompress(response.content)
+        except gzip.BadGzipFile:
+            content = response.content
+        return content.decode(encoding, 'ignore')
 
 
 @event('plugin.register')
