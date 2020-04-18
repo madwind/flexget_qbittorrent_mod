@@ -72,7 +72,7 @@ class PluginAutoSignIn():
             entry['data'] = site_config.get('data')
             entry['encoding'] = site_config.get('encoding', 'utf-8')
             entry['result'] = ''
-            entry['get_message'] = site_config.get('get_message', '/messages.php')
+            entry['get_message'] = site_config.get('get_message', 'NexusPHP')
             entry['messages'] = ''
             entry['cookie'] = cookie
             entry['method'] = site_config.get('method', 'get')
@@ -94,37 +94,21 @@ class PluginAutoSignIn():
             else:
                 self.sign_in_by_get(task, entry)
 
-            if entry['get_message']:
-                message_url = urljoin(entry['url'], entry['get_message'])
-                message_box_response = self._request(task, entry, 'get', message_url, headers=entry['headers'])
-                if message_box_response:
-                    unread_elements = get_soup(self._decode(message_box_response, entry['encoding'])).select(
-                        'td > img[alt*="Unread"]')
-                    for unread_element in unread_elements:
-                        td = unread_element.parent.nextSibling.nextSibling
-                        href = td.a.get('href')
-                        title = td.text
-                        message_url = urljoin(message_url, href)
-                        message_response = self._request(task, entry, 'get', message_url, headers=entry['headers'])
+            if str(entry['get_message']).lower() == 'nexusphp':
+                self.get_nexusphp_message(task, entry)
+            elif str(entry['get_message']).lower() == 'gazelle':
+                self.get_gazelle_message(task, entry)
 
-                        message_body = 'Can not read message body!'
-                        if message_response:
-                            body_element = get_soup(
-                                self._decode(message_response, entry['encoding'])).select_one('td[colspan*="2"]')
-                            if body_element:
-                                message_body = body_element.text
-
-                        entry['messages'] = entry['messages'] + (
-                            '\ntitle: {}\nurl: {}\n{}'.format(title, message_url, message_body))
-                else:
-                    entry['messages'] = 'Can not read message box!'
-            logger.info('{} {} {}'.format(entry['title'], entry['result'], entry['messages']))
+            logger.info('{} {}\n{}'.format(entry['title'], entry['result'], entry['messages']).strip())
 
     def _request(self, task, entry, method, url, **kwargs):
         try:
             return task.requests.request(method, url, **kwargs)
         except Exception as e:
-            entry['result'] = SignState.NETWORK_ERROR.value.format(str(e), url)
+            if url in [entry['url'], entry['base_url']]:
+                entry['result'] = SignState.NETWORK_ERROR.value.format(str(e), url)
+            else:
+                entry['messages'] = SignState.NETWORK_ERROR.value.format(str(e), url)
         return None
 
     def sign_in_by_get(self, task, entry):
@@ -207,6 +191,55 @@ class PluginAutoSignIn():
                     return
         entry['result'] = 'no answer'
         entry.fail(entry['result'])
+
+    def get_nexusphp_message(self, task, entry):
+        message_url = urljoin(entry['url'], '/messages.php')
+        message_box_response = self._request(task, entry, 'get', message_url, headers=entry['headers'])
+        if message_box_response:
+            unread_elements = get_soup(self._decode(message_box_response, entry['encoding'])).select(
+                'td > img[alt*="Unread"]')
+            for unread_element in unread_elements:
+                td = unread_element.parent.nextSibling.nextSibling
+                title = td.text
+                href = td.a.get('href')
+                message_url = urljoin(message_url, href)
+                message_response = self._request(task, entry, 'get', message_url, headers=entry['headers'])
+
+                message_body = 'Can not read message body!'
+                if message_response:
+                    body_element = get_soup(
+                        self._decode(message_response, entry['encoding'])).select_one('td[colspan*="2"]')
+                    if body_element:
+                        message_body = body_element.text.strip()
+
+                entry['messages'] = entry['messages'] + (
+                    '\nTitle: {}\nLink: {}\n{}'.format(title, message_url, message_body))
+        else:
+            entry['messages'] = 'Can not read message box!'
+
+    def get_gazelle_message(self, task, entry):
+        message_url = urljoin(entry['url'], '/inbox.php')
+        message_box_response = self._request(task, entry, 'get', message_url, headers=entry['headers'])
+        if message_box_response:
+            unread_elements = get_soup(self._decode(message_box_response, entry['encoding'])).select(
+                "tr.unreadpm > td > strong > a")
+            for unread_element in unread_elements:
+                title = unread_element.text
+                href = unread_element.get('href')
+                message_url = urljoin(message_url, href)
+                message_response = self._request(task, entry, 'get', message_url, headers=entry['headers'])
+
+                message_body = 'Can not read message body!'
+                if message_response:
+                    body_element = get_soup(
+                        self._decode(message_response, entry['encoding'])).select_one('div[id*="message"]')
+                    if body_element:
+                        message_body = body_element.text.strip()
+
+                entry['messages'] = entry['messages'] + (
+                    '\nTitle: {}\nLink: {}\n{}'.format(title, message_url, message_body))
+        else:
+            entry['messages'] = 'Can not read message box!'
 
     def check_state(self, entry, response, original_url):
         if not response:
