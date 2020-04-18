@@ -297,7 +297,7 @@ tasks:
         dicmusic:
           url: https://dicmusic.club/
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-          get_message: /inbox.php
+          get_message: Gazelle
         discfan:
           url: https://discfan.net/
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
