@@ -8,22 +8,25 @@ tg: <https://t.me/flexget_qbittorrent_mod>
 - 修改：根据种子的tracker，修改种子的tag，或替换tracker
 - 辅种：查询IYUUAutoReseed辅种数据，校验完成后自动开始做种（需在<http://api.iyuu.cn/docs.php?service=App.User.Login&detail=1&type=fold>绑定登陆）
 - 删种：符合删除条件后（可根据剩余空间决定删除或放弃，若空间不足，可设置限速），删除包含辅种在内的所有种子
-- 自动签到：自动签到，支持答题
+- 自动签到：自动签到，支持答题，默认获取读取未读信件，可推送到notify插件
+- 企业微信消息推送
 
 参考：
 
 - IYUUAutoReseed：<https://github.com/ledccn/IYUUAutoReseed>
 
-- qBittorrent-Web-API<https://github.com/qbittorrent/qBittorrent/wiki/Web-API-Documentation#api-v20>
+- qBittorrent-Web-API：<https://github.com/qbittorrent/qBittorrent/wiki/Web-API-Documentation#api-v20>
+
+- 企业微信获取参数：<https://work.weixin.qq.com/api/doc/90000/90135/90665>
 
 ### 系统需求
 - qBittorrent 4.1.4+
 - Flexget 3.0.19+
 - Python 3
 
-### 测试环境
-- qBittorrent 4.2.2
-- Flexget 3.1.46
+### 测试环境（全docker环境）
+- qBittorrent 4.2.3
+- Flexget 3.1.50
 - Python 3.8
 
 ### 安装插件
@@ -35,14 +38,12 @@ C:\Users\<YOURUSER>\flexget\plugins\  # Windows
 ```
 - 将所有的 .py 文件解压至plugins
 - 若启用了Web-UI或守护进程，则重启flexget重新加载配置
-- 从v0.2.5开始删除了templates-> qbittorrent_resume_template-> qbittorrent_mod-> action-> resume-> only_completed项，如果使用旧版本配置，启动报错可以编辑Flexget配置文件夹下的 config.yml 文件手动删除
 
 ### 配置模板
 更多配置可以学习Flexget官方文档
 
 config_example.yml是我当前正在使用的配置，其中自动签到配置在tasks的最后一段
 
-注：Flexget不允许用中文注释 请用源码里的config.yml对照修改
 ```yaml
 web_server:
   bind: 0.0.0.0
@@ -74,9 +75,12 @@ templates:
     qbittorrent_mod:
       action:
         add:
-          #当当限速低于设定值时 停止添加新任务（限速与当前下载速度无关） v0.2.15新增
+          #当限速低于设定值时 拒绝新种子（限速与当前下载速度无关） v0.2.15新增
           #单位byte（以下示例为 4MiB）
           reject_on_dl_limit: 4194304 
+          #当下载速度大于设定值时 拒绝新种子 v0.4新增
+          #单位byte（以下示例为 6MiB）
+          reject_on_dl_speed: 6291456
           #参考add可选参数
           #分类
           category: Rss
@@ -112,11 +116,8 @@ templates:
           #no（默认）: 只要有一个满足删除条件 就全部删除 
           #array: 只检查匹配tag的种子，满足就全部删除
           check_reseed:
-            - totheglory
-            - m-team
-            - hdhome
-            - open
-            - pterclub
+            - pt1
+            - pt2
           #删种同时是否删除数据
           delete_files: true
           #设置磁盘空间阈值 单位GB（需要qBittorrent 4.14+）  v0.1.3新增
@@ -134,7 +135,6 @@ templates:
           #默认值为 24*60*60 秒
           #单位：秒
           dl_limit_interval: 1800
-          #show_entry: 633645aa28a4aa48e8b7d2ac618fe691e81df30f
 
 schedules:
   - tasks: [xxxx, xxxx, rss_download]
@@ -151,9 +151,9 @@ schedules:
       minutes: 10
 
   - tasks: [sign_in]
-    interval:
-      #1小时
-      hours: 1
+    schedule:
+      #8点到23点 每小时执行一次
+      hour: 8-23/1
 
 
 #任务列表
@@ -257,6 +257,8 @@ tasks:
         add:
           #忽略reject_on_dl_limit 始终添加
           reject_on_dl_limit: 0
+          #忽略reject_on_dl_speed 始终添加
+          reject_on_dl_speed: 0
           #跳过校验
           skip_checking: true
     template:
