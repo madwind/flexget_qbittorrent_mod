@@ -8,7 +8,7 @@ from flexget.plugin import PluginError
 from loguru import logger
 from sqlalchemy import Column, Integer, String, and_, DateTime
 
-_PLUGIN_NAME = 'work_weixin'
+_PLUGIN_NAME = 'wechat_work'
 
 _PARSERS = ['markdown', 'html']
 
@@ -19,13 +19,13 @@ _TO_USER = 'to_user'
 _GET_ACCESS_TOKEN_URL = 'https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid={corp_id}&corpsecret={corp_secret}'
 _POST_MESSAGE_URL = 'https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token={access_token}'
 
-AccessTokenBase = db_schema.versioned_base('work_weixin_access_token', 0)
+AccessTokenBase = db_schema.versioned_base('wechat_work_access_token', 0)
 
 logger = logger.bind(name=_PLUGIN_NAME)
 
 
 class AccessTokenEntry(AccessTokenBase):
-    __tablename__ = 'work_weixin_access_token'
+    __tablename__ = 'wechat_work_access_token'
 
     id = Column(String, primary_key=True)
     corp_id = Column(String, index=True, nullable=True)
@@ -49,7 +49,7 @@ class AccessTokenEntry(AccessTokenBase):
         return ' '.join(x)
 
 
-class WorkWeixinNotifier:
+class WeChatWorkNotifier:
     _corp_id = None
     _corp_secret = None
     _agent_id = None
@@ -68,7 +68,7 @@ class WorkWeixinNotifier:
 
     def notify(self, title, message, config):
         """
-        Send a Work_Weixin notification
+        Send a wechat_work notification
         """
         access_token = self._real_init(Session(), config)
 
@@ -230,4 +230,4 @@ class WorkWeixinNotifier:
 
 @event('plugin.register')
 def register_plugin():
-    plugin.register(WorkWeixinNotifier, _PLUGIN_NAME, api_ver=2, interfaces=['notifiers'])
+    plugin.register(WeChatWorkNotifier, _PLUGIN_NAME, api_ver=2, interfaces=['notifiers'])
