@@ -6,11 +6,9 @@ from flexget.event import event
 from flexget.manager import Session
 from flexget.plugin import PluginError
 from loguru import logger
-from sqlalchemy import Column, Integer, String, and_, DateTime
+from sqlalchemy import Column, Integer, String, DateTime
 
 _PLUGIN_NAME = 'wechat_work'
-
-_PARSERS = ['markdown', 'html']
 
 _CORP_ID = 'corp_id'
 _CORP_SECRET = 'corp_secret'
@@ -67,9 +65,6 @@ class WeChatWorkNotifier:
     }
 
     def notify(self, title, message, config):
-        """
-        Send a wechat_work notification
-        """
         access_token = self._real_init(Session(), config)
 
         if not access_token:
@@ -77,10 +72,6 @@ class WeChatWorkNotifier:
         self._send_msgs(message, access_token)
 
     def _parse_config(self, config):
-        """
-        :type config: dict
-
-        """
         self._corp_id = config.get(_CORP_ID)
         self._corp_secret = config.get(_CORP_SECRET)
         self._agent_id = config.get(_AGENT_ID)
@@ -115,11 +106,6 @@ class WeChatWorkNotifier:
             logger.error(response_json)
 
     def _get_access_token_n_update_db(self, session):
-        """
-        :type session: sqlalchemy.orm.Session
-        :rtype: list[ChatIdEntry]
-
-        """
         corp_id = self._corp_id
         corp_secret = self._corp_secret
 
@@ -139,17 +125,6 @@ class WeChatWorkNotifier:
         return access_token
 
     def _get_access_token(self, session, corp_id, corp_secret):
-        """get chat ids for `usernames`, `fullnames` & `groups`.
-        entries with a matching chat ids will be removed from the input lists.
-
-        :type session: sqlalchemy.orm.Session
-        :type usernames: list[str]
-        :type fullnames: list[tuple[str, str]]
-        :type groups: list[str]
-        :returns: chat ids, new chat ids found?
-        :rtype: list[ChatIdEntry], bool
-
-        """
         logger.debug('loading cached access token')
         access_token = self._get_cached_access_token(session, corp_id, corp_secret)
         logger.debug('found cached access token: {0}'.format(access_token))
@@ -169,29 +144,12 @@ class WeChatWorkNotifier:
 
     @staticmethod
     def _get_cached_access_token(session, corp_id, corp_secret):
-        """get chat ids from the cache (DB). remove found entries from `usernames`, `fullnames` & `groups`
-
-        :type session: sqlalchemy.orm.Session
-        :type usernames: list[str]
-        :type fullnames: list[tuple[str, str]]
-        :type groups: list[str]
-        :rtype: list[ChatIdEntry]
-
-        """
         access_token = session.query(AccessTokenEntry).filter(
             AccessTokenEntry.id == '{}{}'.format(corp_id, corp_secret)).one_or_none()
 
         return access_token
 
     def _get_new_access_token(self, corp_id, corp_secret):
-        """get chat ids by querying the telegram `bot`
-
-        :type usernames: list[str]
-        :type fullnames: list[tuple[str, str]]
-        :type groups: list[str]
-        :rtype: __generator[ChatIdEntry]
-
-        """
         response_json = self._request('get',
                                       _GET_ACCESS_TOKEN_URL.format(corp_id=corp_id, corp_secret=corp_secret)).json()
 
@@ -206,22 +164,12 @@ class WeChatWorkNotifier:
         return entry
 
     def _update_db(self, session, access_token):
-        """Update the DB with found `chat_ids`
-        :type session: sqlalchemy.orm.Session
-        :type chat_ids: list[ChatIdEntry]
-
-        """
         logger.info('saving updated access_token to db')
 
         session.add(access_token)
         session.commit()
 
     def _delete_db(self, session, access_token):
-        """Update the DB with found `chat_ids`
-        :type session: sqlalchemy.orm.Session
-        :type chat_ids: list[ChatIdEntry]
-
-        """
         logger.info('delete access_token from db')
 
         session.delete(access_token)
