@@ -22,7 +22,7 @@ class SignState(Enum):
     WRONG_ANSWER = 'Wrong answer'
     URL_REDIRECT = 'Url: {} redirect to {}'
     UNKNOWN = 'Unknown, url: {}'
-    NETWORK_ERROR = 'Network error, msg: {}, url: {}'
+    NETWORK_ERROR = 'Network error: {}'
     SIGN_IN_FAILED = 'Sign in failed, url: {}'
 
 
@@ -59,7 +59,7 @@ class PluginAutoSignIn():
 
         for site_name, site_config in sites.items():
             entry = Entry(
-                title='{} {}'.format(datetime.now().date(), site_name),
+                title='{} {}'.format(site_name, datetime.now().date()),
                 url=site_config.get('url', ''),
             )
             cookie = site_config.get('cookie')
@@ -106,9 +106,9 @@ class PluginAutoSignIn():
             return task.requests.request(method, url, **kwargs)
         except Exception as e:
             if url in [entry['url'], entry['base_url']]:
-                entry['result'] = SignState.NETWORK_ERROR.value.format(str(e), url)
+                entry['result'] = SignState.NETWORK_ERROR.value.format(str(e))
             else:
-                entry['messages'] = SignState.NETWORK_ERROR.value.format(str(e), url)
+                entry['messages'] = SignState.NETWORK_ERROR.value.format(str(e))
         return None
 
     def sign_in_by_get(self, task, entry):
@@ -244,7 +244,7 @@ class PluginAutoSignIn():
     def check_state(self, entry, response, original_url):
         if not response:
             if not entry['result']:
-                entry['result'] = SignState.NETWORK_ERROR.value.format(response, original_url)
+                entry['result'] = SignState.NETWORK_ERROR.value.format(response)
             entry.fail(entry['result'])
             return SignState.NETWORK_ERROR
 
@@ -257,7 +257,7 @@ class PluginAutoSignIn():
 
         succeed_regex = entry['site_config'].get('succeed_regex')
         if not succeed_regex:
-            entry['result'] = SignState.SUCCEED
+            entry['result'] = SignState.SUCCEED.value
             return SignState.SUCCEED
 
         succeed_msg = re.search(succeed_regex, content)
