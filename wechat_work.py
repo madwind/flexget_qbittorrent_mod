@@ -16,6 +16,7 @@ _AGENT_ID = 'agent_id'
 _TO_USER = 'to_user'
 _GET_ACCESS_TOKEN_URL = 'https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid={corp_id}&corpsecret={corp_secret}'
 _POST_MESSAGE_URL = 'https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token={access_token}'
+_TEXT_LIMIT = 1024
 
 AccessTokenBase = db_schema.versioned_base('wechat_work_access_token', 0)
 
@@ -90,11 +91,13 @@ class WeChatWorkNotifier:
         return None
 
     def _send_msgs(self, msg, access_token):
+        msg_limit, msg_extend = self._get_msg_limit(msg)
+
         data = {
             'touser': self._to_user,
             'msgtype': 'text',
             'agentid': self._agent_id,
-            'text': {'content': msg},
+            'text': {'content': msg_limit},
             'safe': 0,
             'enable_id_trans': 0,
             'enable_duplicate_check': 0,
@@ -104,6 +107,26 @@ class WeChatWorkNotifier:
                                       json=data).json()
         if response_json.get('errcode') != 0:
             logger.error(response_json)
+
+        if msg_extend:
+            self._send_msgs(msg_extend, access_token)
+
+    def _get_msg_limit(self, msg):
+        msg_encode = msg.encode()
+        if len(msg_encode) < _TEXT_LIMIT:
+            return msg, ''
+        msg_lines = msg.split('\n')
+        msg_limit_len = 0
+        for line in msg_lines:
+            line_len = len(line.encode())
+
+            if msg_limit_len == 0 and line_len >= _TEXT_LIMIT:
+                return msg_encode[:_TEXT_LIMIT].decode(), msg_encode[_TEXT_LIMIT:].decode()
+
+            if msg_limit_len + line_len + 1 < _TEXT_LIMIT:
+                msg_limit_len += line_len + 1
+            else:
+                return msg_encode[:msg_limit_len].decode(), msg_encode[msg_limit_len:].decode()
 
     def _get_access_token_n_update_db(self, session):
         corp_id = self._corp_id
