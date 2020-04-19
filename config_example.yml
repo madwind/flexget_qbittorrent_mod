@@ -437,18 +437,39 @@ tasks:
       fields:
         - title
     notify:
-      entries:
-        message: "{{title}} {{result}} {{messages}}"
-        what:
-          - accepted
-          - failed
+      task:
+        always_send: false
+        message: |+
+          {%- if task.accepted -%}
+          {%- for group in task.accepted|groupby('task') -%}
+          FlexGet has just signed in {{ group.list|length }} sites for task {{ group.grouper }}:
+          {% for entry in group.list %}
+          {{ loop.index }}: {{ entry.title }} {{ entry.result }}
+          {%- if entry.messages|d('') %}
+          Messages: {{ entry.messages }}
+          {% endif %}
+          {%- endfor -%}
+          {%- endfor -%}
+          {%- endif -%}
+          {%- if task.failed %}
+          {% for group in task.failed|groupby('task') %}
+          The following sites have failed for task {{ group.grouper }}:
+          {% for entry in group.list %}
+          {{ loop.index }}: {{ entry.title }} Reason: {{ entry.reason|d('unknown') }}
+          {%- if entry.messages|d('') %}
+          Messages: {{ entry.messages }}
+          {% endif %}
+          {%- endfor -%}
+          {%- endfor -%}
+          {% else %} Task did not produce any entries.
+          {%- endif -%}
         via:
           - wechat_work:
-              corp_id: 'xxxxxxxxxxxxxx'
-              corp_secret: 'xxxxxxxxxxxxxxxxxxxxxx'
-              agent_id: 'xxxxxx'
-              to_user: 'xxxxxx'
-          #- telegram:
-          #    bot_token: 1040068650:AAEZMesbnhboXcnbZvwsjJJkz6-_Fh9owlA
-          #    recipients:
-          #      - username: 'IvonWei'
+              corp_id: 'xxxxxxxxxxxxxxxxxxx'
+              corp_secret: 'xxxxxxxxxxxxxxxxx'
+              agent_id: 'xxxxxxxxxxxxx'
+              to_user: 'xxxxxxxxxxx'
+          - telegram:
+              bot_token: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+              recipients:
+                - username: 'xxxxxxxxxx'
