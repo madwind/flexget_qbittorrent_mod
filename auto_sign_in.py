@@ -278,7 +278,7 @@ class PluginAutoSignIn():
     def _decode(self, response, encoding):
         try:
             content = gzip.decompress(response.content)
-        except gzip.BadGzipFile:
+        except OSError:
             content = response.content
         return content.decode(encoding, 'ignore')
 
