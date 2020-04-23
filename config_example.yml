@@ -432,6 +432,10 @@ tasks:
         haidan:
           url: https://www.haidan.cc/
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+        lbj007:
+          url: https://lbj007.com/attendance.php
+          cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+          succeed_regex: '(这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。)|(您今天已经签到过了，请勿重复刷新。)'
     accept_all: yes
     seen:
       fields:
@@ -461,7 +465,8 @@ tasks:
           {% endif %}
           {%- endfor -%}
           {%- endfor -%}
-          {% else %} Task did not produce any entries.
+          {% else %}
+          Task did not produce any entries.
           {%- endif -%}
         via:
           - wechat_work:
