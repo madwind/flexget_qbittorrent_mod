@@ -276,11 +276,12 @@ class PluginAutoSignIn():
         return SignState.NO_SIGN_IN
 
     def _decode(self, response, encoding):
+        content_encoding = response.encoding if response.encoding else encoding
         try:
             content = gzip.decompress(response.content)
         except OSError:
             content = response.content
-        return content.decode(encoding, 'ignore')
+        return content.decode(content_encoding, 'ignore')
 
 
 @event('plugin.register')
