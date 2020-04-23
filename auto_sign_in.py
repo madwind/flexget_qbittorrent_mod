@@ -1,6 +1,7 @@
 import gzip
 import itertools
 import json
+import os
 import re
 from datetime import datetime
 from enum import Enum
@@ -153,6 +154,16 @@ class PluginAutoSignIn():
             else:
                 question_json = {}
 
+            question_extend_file_path = path.dirname(__file__) + '/question_extend.json'
+            if Path(question_extend_file_path).is_file():
+                with open(question_extend_file_path) as question_extend_file:
+                    question_extend_json = json.loads(question_extend_file.read())
+                os.remove(question_extend_file_path)
+            else:
+                question_extend_json = {}
+
+            self._dict_merge(question_json, question_extend_json)
+
             site_question = question_json.get(entry['url'])
             if site_question:
                 local_answer = site_question.get(question_id)
@@ -282,6 +293,13 @@ class PluginAutoSignIn():
         except OSError:
             content = response.content
         return content.decode(content_encoding, 'ignore')
+
+    def _dict_merge(self, dict1, dict2):
+        for i in dict2:
+            if isinstance(dict1.get(i), dict) and isinstance(dict2.get(i), dict):
+                self._dict_merge(dict1[i], dict2[i])
+            else:
+                dict1[i] = dict2[i]
 
 
 @event('plugin.register')
