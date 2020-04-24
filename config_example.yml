@@ -465,8 +465,6 @@ tasks:
           {% endif %}
           {%- endfor -%}
           {%- endfor -%}
-          {% else %}
-          Task did not produce any entries.
           {%- endif -%}
         via:
           - wechat_work:
