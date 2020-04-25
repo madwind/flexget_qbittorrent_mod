@@ -7,6 +7,11 @@ from flexget.utils.soup import get_soup
 from loguru import logger
 from requests import RequestException
 
+try:
+    import brotli
+except ImportError:
+    brotli = None
+
 
 class PluginHtmlRss():
     schema = {
@@ -70,8 +75,13 @@ class PluginHtmlRss():
         elements = []
         if url and root_element_selector:
             try:
+                if brotli:
+                    config.get('headers')['accept-encoding'] = 'gzip, deflate, br'
                 response = task.requests.get(url, headers=config.get('headers'))
                 content = response.content
+                content_encoding = response.headers.get('content-encoding')
+                if content_encoding == 'br':
+                    content = brotli.decompress(response.content)
             except RequestException as e:
                 raise plugin.PluginError(
                     'Unable to download the Html for task {} ({}): {}'.format(task.name, url, e)
