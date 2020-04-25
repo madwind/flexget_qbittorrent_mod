@@ -9,12 +9,17 @@ from os import path
 from pathlib import Path
 from urllib.parse import urljoin
 
+import chardet
 from flexget import plugin
 from flexget.entry import Entry
 from flexget.event import event
 from flexget.utils.soup import get_soup
 from loguru import logger
-from requests import RequestException
+
+try:
+    import brotli
+except ImportError:
+    brotli = None
 
 
 class SignState(Enum):
@@ -67,11 +72,15 @@ class PluginAutoSignIn():
 
             entry['site_config'] = site_config
             entry['base_url'] = site_config.get('base_url')
-            headers = {'cookie': cookie, 'user-agent': user_agent,
-                       'referer': site_config.get('base_url', entry['url'])}
+            headers = {
+                'cookie': cookie,
+                'user-agent': user_agent,
+                'referer': site_config.get('base_url', entry['url']),
+            }
+            if brotli:
+                headers['accept-encoding'] = 'gzip, deflate, br'
             entry['headers'] = headers
             entry['data'] = site_config.get('data')
-            entry['encoding'] = site_config.get('encoding', 'utf-8')
             entry['result'] = ''
             entry['get_message'] = site_config.get('get_message', 'NexusPHP')
             entry['messages'] = ''
@@ -121,7 +130,7 @@ class PluginAutoSignIn():
         state = self.check_state(entry, response, entry['base_url'])
         if state != SignState.NO_SIGN_IN:
             return
-        content = self._decode(response, entry['encoding'])
+        content = self._decode(response)
         data = {}
         for key, regex in entry.get('data', {}).items():
             value_search = re.search(regex, content)
@@ -140,7 +149,7 @@ class PluginAutoSignIn():
         if state != SignState.NO_SIGN_IN:
             return
 
-        content = self._decode(response, entry['encoding'])
+        content = self._decode(response)
         question_element = get_soup(content).select_one('input[name="questionid"]')
         if question_element:
             question_id = question_element.get('value')
@@ -207,7 +216,7 @@ class PluginAutoSignIn():
         message_url = urljoin(entry['url'], '/messages.php')
         message_box_response = self._request(task, entry, 'get', message_url, headers=entry['headers'])
         if message_box_response:
-            unread_elements = get_soup(self._decode(message_box_response, entry['encoding'])).select(
+            unread_elements = get_soup(self._decode(message_box_response)).select(
                 'td > img[alt*="Unread"]')
             for unread_element in unread_elements:
                 td = unread_element.parent.nextSibling.nextSibling
@@ -219,7 +228,7 @@ class PluginAutoSignIn():
                 message_body = 'Can not read message body!'
                 if message_response:
                     body_element = get_soup(
-                        self._decode(message_response, entry['encoding'])).select_one('td[colspan*="2"]')
+                        self._decode(message_response)).select_one('td[colspan*="2"]')
                     if body_element:
                         message_body = body_element.text.strip()
 
@@ -232,7 +241,7 @@ class PluginAutoSignIn():
         message_url = urljoin(entry['url'], '/inbox.php')
         message_box_response = self._request(task, entry, 'get', message_url, headers=entry['headers'])
         if message_box_response:
-            unread_elements = get_soup(self._decode(message_box_response, entry['encoding'])).select(
+            unread_elements = get_soup(self._decode(message_box_response)).select(
                 "tr.unreadpm > td > strong > a")
             for unread_element in unread_elements:
                 title = unread_element.text
@@ -243,7 +252,7 @@ class PluginAutoSignIn():
                 message_body = 'Can not read message body!'
                 if message_response:
                     body_element = get_soup(
-                        self._decode(message_response, entry['encoding'])).select_one('div[id*="message"]')
+                        self._decode(message_response)).select_one('div[id*="message"]')
                     if body_element:
                         message_body = body_element.text.strip()
 
@@ -264,7 +273,7 @@ class PluginAutoSignIn():
             entry.fail(entry['result'])
             return SignState.URL_REDIRECT
 
-        content = self._decode(response, (entry['encoding']))
+        content = self._decode(response)
 
         succeed_regex = entry['site_config'].get('succeed_regex')
         if not succeed_regex:
@@ -286,13 +295,15 @@ class PluginAutoSignIn():
             return SignState.SIGN_IN_FAILED
         return SignState.NO_SIGN_IN
 
-    def _decode(self, response, encoding):
-        content_encoding = response.encoding if response.encoding else encoding
-        try:
-            content = gzip.decompress(response.content)
-        except OSError:
-            content = response.content
-        return content.decode(content_encoding, 'ignore')
+    def _decode(self, response):
+        content = response.content
+        content_encoding = response.headers.get('content-encoding')
+        if content_encoding == 'br':
+            content = brotli.decompress(content)
+        charset_encoding = chardet.detect(content).get('encoding')
+        if charset_encoding == 'ascii':
+            charset_encoding = 'unicode_escape'
+        return content.decode(charset_encoding, 'ignore')
 
     def _dict_merge(self, dict1, dict2):
         for i in dict2:
