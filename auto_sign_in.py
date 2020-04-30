@@ -32,23 +32,18 @@ class SignState(Enum):
     SIGN_IN_FAILED = 'Sign in failed, url: {}'
 
 
-class PluginAutoSignIn():
+class PluginAutoSignIn:
     schema = {
-        'anyOf': [
-            {'type': 'boolean'},
-            {
+        'type': 'object',
+        'properties': {
+            'user-agent': {'type': 'string'},
+            'sites': {
                 'type': 'object',
                 'properties': {
-                    'user-agent': {'type': 'string'},
-                    'sites': {
-                        'type': 'object',
-                        'properties': {
-                        }
-                    }
-                },
-                'additionalProperties': False
+                }
             }
-        ]
+        },
+        'additionalProperties': False
     }
 
     def prepare_config(self, config):
