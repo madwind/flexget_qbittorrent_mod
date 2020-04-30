@@ -15,45 +15,41 @@ except ImportError:
 
 class PluginHtmlRss():
     schema = {
-        'anyOf': [
-            {'type': 'boolean'},
-            {
+        'type': 'object',
+        'properties': {
+            'url': {'type': 'string', 'format': 'url'},
+            'headers': {
                 'type': 'object',
                 'properties': {
-                    'url': {'type': 'string', 'format': 'url'},
-                    'headers': {
+                    'cookie': {'type': 'string'},
+                    'user-agent': {'type': 'string'},
+                }
+            },
+            'params': {'type': 'string'},
+            "root_element_selector": {'type': 'string'},
+            'fields': {
+                'type': 'object',
+                'properties': {
+                    'title': {
                         'type': 'object',
                         'properties': {
-                            'cookie': {'type': 'string'},
-                            'user-agent': {'type': 'string'},
+                            'element_selector': {'type': 'string'},
+                            'attribute': {'type': 'string'},
                         }
                     },
-                    'params': {'type': 'string'},
-                    "root_element_selector": {'type': 'string'},
-                    'fields': {
+                    'url': {
                         'type': 'object',
                         'properties': {
-                            'title': {
-                                'type': 'object',
-                                'properties': {
-                                    'element_selector': {'type': 'string'},
-                                    'attribute': {'type': 'string'},
-                                }
-                            },
-                            'url': {
-                                'type': 'object',
-                                'properties': {
-                                    'element_selector': {'type': 'string'},
-                                    'attribute': {'type': 'string'},
-                                },
-                            }
-                        }
+                            'element_selector': {'type': 'string'},
+                            'attribute': {'type': 'string'},
+                        },
                     }
                 },
-                'required': ['url'],
-                'additionalProperties': False
+                'required': ['title', 'url'],
             }
-        ]
+        },
+        'required': ['url'],
+        'additionalProperties': False
     }
 
     def prepare_config(self, config):

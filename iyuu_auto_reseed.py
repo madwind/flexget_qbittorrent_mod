@@ -17,30 +17,25 @@ from qbittorrent_client import QBittorrentClientFactory
 
 class PluginIYUUAutoReseed():
     schema = {
-        'anyOf': [
-            {'type': 'boolean'},
-            {
+        'type': 'object',
+        'properties': {
+            'iyuu': {'type': 'string'},
+            'version': {'type': 'string'},
+            'passkeys': {
                 'type': 'object',
                 'properties': {
-                    'iyuu': {'type': 'string'},
-                    'version': {'type': 'string'},
-                    'passkeys': {
-                        'type': 'object',
-                        'properties': {
-                        }
-                    },
-                    'qbittorrent_ressed': {
-                        'host': {'type': 'string'},
-                        'use_ssl': {'type': 'boolean'},
-                        'port': {'type': 'integer'},
-                        'username': {'type': 'string'},
-                        'password': {'type': 'string'},
-                        'verify_cert': {'type': 'boolean'}
-                    }
-                },
-                'additionalProperties': False
+                }
+            },
+            'qbittorrent_ressed': {
+                'host': {'type': 'string'},
+                'use_ssl': {'type': 'boolean'},
+                'port': {'type': 'integer'},
+                'username': {'type': 'string'},
+                'password': {'type': 'string'},
+                'verify_cert': {'type': 'boolean'}
             }
-        ]
+        },
+        'additionalProperties': False
     }
 
     def prepare_config(self, config):
