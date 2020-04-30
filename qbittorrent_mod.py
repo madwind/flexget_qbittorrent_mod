@@ -47,22 +47,17 @@ class QBittorrentModBase:
 
 class PluginQBittorrentModInput(QBittorrentModBase):
     schema = {
-        'anyOf': [
-            {'type': 'boolean'},
-            {
-                'type': 'object',
-                'properties': {
-                    'host': {'type': 'string'},
-                    'use_ssl': {'type': 'boolean'},
-                    'port': {'type': 'integer'},
-                    'username': {'type': 'string'},
-                    'password': {'type': 'string'},
-                    'verify_cert': {'type': 'boolean'},
-                    'enabled': {'type': 'boolean'},
-                },
-                'additionalProperties': False
-            }
-        ]
+        'type': 'object',
+        'properties': {
+            'host': {'type': 'string'},
+            'use_ssl': {'type': 'boolean'},
+            'port': {'type': 'integer'},
+            'username': {'type': 'string'},
+            'password': {'type': 'string'},
+            'verify_cert': {'type': 'boolean'},
+            'enabled': {'type': 'boolean'},
+        },
+        'additionalProperties': False
     }
 
     def prepare_config(self, config):
@@ -81,75 +76,70 @@ class PluginQBittorrentModInput(QBittorrentModBase):
 
 class PluginQBittorrentMod(QBittorrentModBase):
     schema = {
-        'anyOf': [
-            {'type': 'boolean'},
-            {
+        'type': 'object',
+        'properties': {
+            'host': {'type': 'string'},
+            'use_ssl': {'type': 'boolean'},
+            'port': {'type': 'integer'},
+            'username': {'type': 'string'},
+            'password': {'type': 'string'},
+            'verify_cert': {'type': 'boolean'},
+            'action': {
                 'type': 'object',
                 'properties': {
-                    'host': {'type': 'string'},
-                    'use_ssl': {'type': 'boolean'},
-                    'port': {'type': 'integer'},
-                    'username': {'type': 'string'},
-                    'password': {'type': 'string'},
-                    'verify_cert': {'type': 'boolean'},
-                    'action': {
+                    'add': {
                         'type': 'object',
                         'properties': {
-                            'add': {
+                            'savepath': {'type': 'string'},
+                            'cookie': {'type': 'string'},
+                            'category': {'type': 'string'},
+                            'skip_checking': {'type': 'boolean'},
+                            'paused': {'type': 'string'},
+                            'root_folder': {'type': 'string'},
+                            'rename': {'type': 'string'},
+                            'upLimit': {'type': 'integer'},
+                            'dlLimit': {'type': 'integer'},
+                            'autoTMM': {'type': 'boolean'},
+                            'sequentialDownload': {'type': 'string'},
+                            'firstLastPiecePrio': {'type': 'string'},
+                            'reject_on_dl_speed': {'type': 'integer'},
+                            'reject_on_dl_limit': {'type': 'integer'}
+                        }
+                    },
+                    'remove': {
+                        'type': 'object',
+                        'properties': {
+                            'check_reseed': {
+                                'oneOf': [{'type': 'boolean'}, {'type': 'array', 'items': {'type': 'string'}}]},
+                            'delete_files': {'type': 'boolean'},
+                            'keep_disk_space': {'type': 'integer'},
+                            'dl_limit_on_succeeded': {'type': 'integer'},
+                            'dl_limit_interval': {'type': 'integer'},
+                            'show_entry': {'type': 'string'}
+                        }
+                    },
+                    'resume': {
+                        'type': 'object',
+                        'properties': {
+                            'recheck_torrents': {'type': 'boolean'},
+                        }
+                    },
+                    'modify': {
+                        'type': 'object',
+                        'properties': {
+                            'tag_by_tracker': {'type': 'boolean'},
+                            'replace_trackers': {
                                 'type': 'object',
                                 'properties': {
-                                    'savepath': {'type': 'string'},
-                                    'cookie': {'type': 'string'},
-                                    'category': {'type': 'string'},
-                                    'skip_checking': {'type': 'boolean'},
-                                    'paused': {'type': 'string'},
-                                    'root_folder': {'type': 'string'},
-                                    'rename': {'type': 'string'},
-                                    'upLimit': {'type': 'integer'},
-                                    'dlLimit': {'type': 'integer'},
-                                    'autoTMM': {'type': 'boolean'},
-                                    'sequentialDownload': {'type': 'string'},
-                                    'firstLastPiecePrio': {'type': 'string'},
-                                    'reject_on_dl_speed': {'type': 'integer'},
-                                    'reject_on_dl_limit': {'type': 'integer'}
-                                }
-                            },
-                            'remove': {
-                                'type': 'object',
-                                'properties': {
-                                    'check_reseed': {
-                                        'oneOf': [{'type': 'boolean'}, {'type': 'array', 'items': {'type': 'string'}}]},
-                                    'delete_files': {'type': 'boolean'},
-                                    'keep_disk_space': {'type': 'integer'},
-                                    'dl_limit_on_succeeded': {'type': 'integer'},
-                                    'dl_limit_interval': {'type': 'integer'},
-                                    'show_entry': {'type': 'string'}
-                                }
-                            },
-                            'resume': {
-                                'type': 'object',
-                                'properties': {
-                                    'recheck_torrents': {'type': 'boolean'},
-                                }
-                            },
-                            'modify': {
-                                'type': 'object',
-                                'properties': {
-                                    'tag_by_tracker': {'type': 'boolean'},
-                                    'replace_trackers': {
-                                        'type': 'object',
-                                        'properties': {
-                                        }
-                                    }
                                 }
                             }
                         }
-                    },
-                    'fail_html': {'type': 'boolean'}
-                },
-                'additionalProperties': False,
-            }
-        ]
+                    }
+                }
+            },
+            'fail_html': {'type': 'boolean'}
+        },
+        'additionalProperties': False,
     }
 
     def prepare_config(self, config):
@@ -165,20 +155,11 @@ class PluginQBittorrentMod(QBittorrentModBase):
         qBittorrent.
         """
         config = self.prepare_config(config)
-        if not config['enabled']:
+        if not config.get('action').get('add'):
             return
-        # If the download plugin is not enabled, we need to call it to get our temp .torrent files
-
         if 'download' not in task.config:
             download = plugin.get('download', self)
-            for entry in task.accepted:
-                if entry.get('transmission_id'):
-                    # The torrent is already loaded in deluge, we don't need to get anything
-                    continue
-                if list(config['action'])[0] != 'add' and entry.get('torrent_info_hash'):
-                    # If we aren't adding the torrent new, all we need is info hash
-                    continue
-                download.get_temp_file(task, entry, handle_magnets=True, fail_html=config['fail_html'])
+            download.get_temp_files(task, handle_magnets=True, fail_html=config['fail_html'])
 
     @plugin.priority(135)
     def on_task_output(self, task, config):
@@ -189,9 +170,6 @@ class PluginQBittorrentMod(QBittorrentModBase):
         # don't add when learning
         if task.options.learn:
             return
-        if not config['enabled']:
-            return
-            # Do not run if there is nothing to do
         if not task.accepted and not action_config.get('remove'):
             return
         if not self.client:
@@ -233,7 +211,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
 
         for entry in task.accepted:
             if reject_reason:
-                entry.reject(reason=reject_reason)
+                entry.reject(reason=reject_reason, remember=True)
                 logger.info('reject {}, because: {}', entry['title'], reject_reason)
                 continue
 
