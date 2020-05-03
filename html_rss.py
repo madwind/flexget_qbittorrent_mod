@@ -105,6 +105,7 @@ class PluginHtmlRss():
                     entry['url'] = base_url + params
                 else:
                     entry['url'] = urljoin(base_url, params)
+                entry['original_url'] = entry['url']
                 entries.append(entry)
         return entries
 
