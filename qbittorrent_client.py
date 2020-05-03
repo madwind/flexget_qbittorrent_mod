@@ -82,7 +82,7 @@ class QBittorrentClient:
             response = self.session.request(method, url, **kwargs)
             if response.status_code == 403 or (self.API_URL_LOGIN in url and response.text == 'Fails.'):
                 msg = (
-                    'Failure. URL: {}, data: {}, status_code: {}'.format(url, kwargs)
+                    'Failure. URL: {}, data: {}, status_code: {}'.format(url, kwargs, response.status_code)
                     if not msg_on_fail
                     else msg_on_fail
                 )
