@@ -10,7 +10,7 @@ from pathlib import Path
 from urllib.parse import urljoin
 
 import chardet
-from flexget import plugin
+from flexget import plugin, config_schema
 from flexget.entry import Entry
 from flexget.event import event
 from flexget.utils.soup import get_soup
@@ -78,6 +78,7 @@ class PluginAutoSignIn:
             entry['data'] = site_config.get('data')
             entry['result'] = ''
             entry['get_message'] = site_config.get('get_message', 'NexusPHP')
+            entry['message_url'] = site_config.get('message_url')
             entry['messages'] = ''
             entry['cookie'] = cookie
             entry['method'] = site_config.get('method', 'get')
@@ -208,7 +209,7 @@ class PluginAutoSignIn:
         entry.fail(entry['result'])
 
     def get_nexusphp_message(self, task, entry):
-        message_url = urljoin(entry['url'], '/messages.php')
+        message_url = entry['message_url'] if entry['message_url'] else urljoin(entry['url'], '/messages.php')
         message_box_response = self._request(task, entry, 'get', message_url, headers=entry['headers'])
         if message_box_response:
             unread_elements = get_soup(self._decode(message_box_response)).select(
@@ -306,6 +307,14 @@ class PluginAutoSignIn:
                 self._dict_merge(dict1[i], dict2[i])
             else:
                 dict1[i] = dict2[i]
+
+    def is_url(self, instance):
+        regexp = (
+                '('
+                + '|'.join(['ftp', 'http', 'https', 'file', 'udp', 'socks5h?'])
+                + r'):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?'
+        )
+        return re.match(regexp, instance)
 
 
 @event('plugin.register')

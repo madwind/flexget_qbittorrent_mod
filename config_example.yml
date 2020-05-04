@@ -344,6 +344,7 @@ tasks:
         m-team:
           url: https://pt.m-team.cc/
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+          message_url: https://pt.m-team.cc/messages.php?action=viewmailbox&box=-2
         moecat:
           url: https://moecat.best/bakatest.php
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
