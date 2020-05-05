@@ -196,17 +196,13 @@ class PluginQBittorrentMod(QBittorrentModBase):
             dl_rate_limit = server_state.get('dl_rate_limit')
             if dl_rate_limit and dl_rate_limit < reject_on_dl_limit:
                 reject_reason = 'dl_limit < reject_on_dl_limit'
-            else:
-                del add_options['reject_on_dl_limit']
+            del add_options['reject_on_dl_limit']
 
         reject_on_dl_speed = add_options.get('reject_on_dl_speed')
-        if reject_on_dl_speed:
+        if reject_on_dl_speed is not None:
             dl_info_speed = server_state.get('dl_info_speed')
             if dl_info_speed and dl_info_speed > reject_on_dl_speed:
                 reject_reason = 'dl_speed > reject_on_dl_speed'
-            else:
-                del add_options['reject_on_dl_speed']
-        else:
             del add_options['reject_on_dl_speed']
 
         for entry in task.accepted:
