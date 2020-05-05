@@ -88,7 +88,6 @@ class WeChatWorkNotifier:
             return requests.request(method, url, **kwargs)
         except Exception as e:
             raise PluginError(str(e))
-        return None
 
     def _send_msgs(self, msg, access_token):
         msg_limit, msg_extend = self._get_msg_limit(msg)
