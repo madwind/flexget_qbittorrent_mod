@@ -68,7 +68,7 @@ schedules:
     interval:
       minutes: 10
 
-  - tasks: [sign_in]
+  - tasks: [sign_in, warner]
     schedule:
       hour: 8-23/1
 

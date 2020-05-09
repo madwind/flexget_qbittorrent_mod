@@ -150,7 +150,7 @@ schedules:
     interval:
       minutes: 10
 
-  - tasks: [sign_in]
+  - tasks: [sign_in, warner]
     schedule:
       #8点到23点 每小时执行一次
       hour: 8-23/1
