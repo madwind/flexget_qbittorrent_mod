@@ -306,7 +306,58 @@ tasks:
     template:
       - from_qbittorrent_template
       - qbittorrent_base_template
-      - qbittorrent_modify_template  
+      - qbittorrent_modify_template
+
+  #服务器状态预警
+  warner:
+    disable: [seen, seen_info_hash, retry_failed]
+    from_qbittorrent_mod:
+      #生成一个带有server_state属性的entry
+      server_state: yes
+    if:
+      #server_state 可选参数
+      #  "alltime_dl": 67529305436235,
+      #  "alltime_ul": 128593516966029,
+      #  "average_time_queue": 663,
+      #  "connection_status": "connected",
+      #  "dht_nodes": 0,
+      #  "dl_info_data": 3785088790745,
+      #  "dl_info_speed": 6971053,
+      #  "dl_rate_limit": 8388608,
+      #  "free_space_on_disk": 43182977024,
+      #  "global_ratio": "1.90",
+      #  "queued_io_jobs": 0,
+      #  "queueing": false,
+      #  "read_cache_hits": "45.29",
+      #  "read_cache_overload": "0",
+      #  "refresh_interval": 1500,
+      #  "total_buffers_size": 367558656,
+      #  "total_peer_connections": 141,
+      #  "total_queued_size": 0,
+      #  "total_wasted_session": 6118864719,
+      #  "up_info_data": 7115470683649,
+      #  "up_info_speed": 12400847,
+      #  "up_rate_limit": 10485760,
+      #  "use_alt_speed_limits": false,
+      #  "write_cache_overload": "0"
+
+      #如果剩余空间小于5G
+      - 'server_state["free_space_on_disk"] < 5242880': accept
+    template:
+      - from_qbittorrent_template
+    notify:
+      entries:
+        message: "Title: {{title}}\nfree_space_on_disk: {{(server_state['free_space_on_disk']/1024/1024/1024)|int}} GiB"
+        via:
+          - wechat_work:
+              corp_id: 'xxxxxxxxxxxxxxxxxxx'
+              corp_secret: 'xxxxxxxxxxxxxxxxx'
+              agent_id: 'xxxxxxxxxxxxx'
+              to_user: 'xxxxxxxxxxx'
+          - telegram:
+              bot_token: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+              recipients:
+                - username: 'xxxxxxxxxx'
 ```
 
 ### add可选参数

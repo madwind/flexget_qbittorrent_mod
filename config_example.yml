@@ -476,3 +476,25 @@ tasks:
               bot_token: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
               recipients:
                 - username: 'xxxxxxxxxx'
+
+  warner:
+    disable: [seen, seen_info_hash, retry_failed]
+    from_qbittorrent_mod:
+      server_state: yes
+    if:
+      - 'server_state["free_space_on_disk"] < 5242880': accept
+    template:
+      - from_qbittorrent_template
+    notify:
+      entries:
+        message: "Title: {{title}}\nfree_space_on_disk: {{(server_state['free_space_on_disk']/1024/1024/1024)|int}} GiB"
+        via:
+          - wechat_work:
+              corp_id: 'xxxxxxxxxxxxxxxxxxx'
+              corp_secret: 'xxxxxxxxxxxxxxxxx'
+              agent_id: 'xxxxxxxxxxxxx'
+              to_user: 'xxxxxxxxxxx'
+          - telegram:
+              bot_token: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+              recipients:
+                - username: 'xxxxxxxxxx'
