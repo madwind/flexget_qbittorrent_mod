@@ -5,6 +5,7 @@ import sys
 from os import path
 
 from flexget import plugin
+from flexget.entry import Entry
 from flexget.event import event
 from loguru import logger
 
@@ -55,6 +56,7 @@ class PluginQBittorrentModInput(QBittorrentModBase):
             'username': {'type': 'string'},
             'password': {'type': 'string'},
             'verify_cert': {'type': 'boolean'},
+            'server_state': {'type': 'boolean'},
             'enabled': {'type': 'boolean'},
         },
         'additionalProperties': False
@@ -71,6 +73,13 @@ class PluginQBittorrentModInput(QBittorrentModBase):
             return
         if not self.client:
             self.client = self.create_client(config)
+        if config.get('server_state'):
+            entry = Entry(
+                title='qBittorrent server state',
+                url=''
+            )
+            entry['server_state'] = self.client.get_task_data(id(task)).get('server_state')
+            return [entry]
         return list(self.client.get_task_data(id(task)).get('entry_dict').values())
 
 
