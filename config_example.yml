@@ -16,7 +16,7 @@ templates:
       action:
         add:
           reject_on_dl_limit: 4191304
-          reject_on_dl_speed: 0
+          reject_on_dl_speed: no
           category: Rss
           autoTMM: yes
 
@@ -95,8 +95,8 @@ tasks:
       action:
         add:
           category: PTer
-          reject_on_dl_limit: 0
-          reject_on_dl_speed: 0
+          reject_on_dl_limit: no
+          reject_on_dl_speed: no
     template:
       - qbittorrent_base_template
       - qbittorrent_add_template
@@ -130,8 +130,8 @@ tasks:
     qbittorrent_mod:
       action:
         add:
-          reject_on_dl_limit: 0
-          reject_on_dl_speed: 0
+          reject_on_dl_limit: no
+          reject_on_dl_speed: no
     template:
       - qbittorrent_base_template
       - qbittorrent_add_template
@@ -236,8 +236,8 @@ tasks:
     qbittorrent_mod:
       action:
         add:
-          reject_on_dl_limit: 0
-          reject_on_dl_speed: 0
+          reject_on_dl_limit: no
+          reject_on_dl_speed: no
           skip_checking: yes
     template:
       - qbittorrent_base_template
@@ -479,6 +479,7 @@ tasks:
 
   warner:
     disable: [seen, seen_info_hash, retry_failed]
+
     from_qbittorrent_mod:
       server_state: yes
     if:

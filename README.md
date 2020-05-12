@@ -256,9 +256,9 @@ tasks:
       action:
         add:
           #忽略reject_on_dl_limit 始终添加
-          reject_on_dl_limit: 0
+          reject_on_dl_limit: no
           #忽略reject_on_dl_speed 始终添加
-          reject_on_dl_speed: 0
+          reject_on_dl_speed: no
           #跳过校验
           skip_checking: true
     template:
