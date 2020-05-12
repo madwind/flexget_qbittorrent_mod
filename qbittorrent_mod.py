@@ -111,8 +111,8 @@ class PluginQBittorrentMod(QBittorrentModBase):
                             'autoTMM': {'type': 'boolean'},
                             'sequentialDownload': {'type': 'string'},
                             'firstLastPiecePrio': {'type': 'string'},
-                            'reject_on_dl_speed': {'type': 'integer'},
-                            'reject_on_dl_limit': {'type': 'integer'}
+                            'reject_on_dl_speed': {"oneOf": [{"type": "boolean"}, {"type": "integer"}]},
+                            'reject_on_dl_limit': {"oneOf": [{"type": "boolean"}, {"type": "integer"}]},
                         }
                     },
                     'remove': {
