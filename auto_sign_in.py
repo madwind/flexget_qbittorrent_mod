@@ -194,17 +194,20 @@ class PluginAutoSignIn:
             answer_list.reverse()
             if local_answer and local_answer in choices and len(local_answer) <= choice_range:
                 answer_list.insert(0, local_answer)
-
+            times = 0
             for answer in answer_list:
                 data = {'questionid': question_id, 'choice[]': answer, 'usercomment': '此刻心情:无', 'submit': '提交'}
                 response = self._request(task, entry, 'post', entry['url'], headers=entry['headers'], data=data)
                 state = self.check_state(entry, response, entry['url'])
                 if state == SignState.SUCCEED:
+                    entry['result'] = '{} ( {} attempts.)'.format(entry['result'], times)
+
                     question_json[entry['url']][question_id] = answer
                     with open(question_file_path, mode='w') as question_file:
                         json.dump(question_json, question_file)
                     logger.info('{}, correct answer: {}', entry['title'], data)
                     return
+                times += 1
         entry['result'] = 'no answer'
         entry.fail(entry['result'])
 
