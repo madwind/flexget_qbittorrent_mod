@@ -128,14 +128,17 @@ class PluginAutoSignIn:
             return
         content = self._decode(response)
         data = {}
-        for key, regex in entry.get('data', {}).items():
-            value_search = re.search(regex, content)
-            if value_search:
-                data[key] = value_search.group()
+        for key, value in entry.get('data', {}).items():
+            if key=='fixed':
+                self._dict_merge(data, value)
             else:
-                entry['result'] = 'Cannot find key: {}, url: {}'.format(key, entry['url'])
-                entry.fail(entry['result'])
-                return
+                value_search = re.search(value, content)
+                if value_search:
+                    data[key] = value_search.group()
+                else:
+                    entry['result'] = 'Cannot find key: {}, url: {}'.format(key, entry['url'])
+                    entry.fail(entry['result'])
+                    return
         response = self._request(task, entry, 'post', entry['url'], headers=entry['headers'], data=data)
         self.check_state(entry, response, entry['url'])
 

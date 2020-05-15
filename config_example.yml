@@ -307,7 +307,8 @@ tasks:
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
           method: post
           data:
-            action: 'sign_in'
+            fixed:
+              action: 'sign_in'
           succeed_regex: '(已连续签到.*天，此次签到您获得了.*魔力值奖励!)|(请不要重复签到哦！)'
         hddolby:
           url: https://www.hddolby.com/attendance.php
