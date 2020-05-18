@@ -1,4 +1,3 @@
-import gzip
 import itertools
 import json
 import os
@@ -10,7 +9,7 @@ from pathlib import Path
 from urllib.parse import urljoin
 
 import chardet
-from flexget import plugin, config_schema
+from flexget import plugin
 from flexget.entry import Entry
 from flexget.event import event
 from flexget.utils.soup import get_soup
@@ -128,11 +127,11 @@ class PluginAutoSignIn:
             return
         content = self._decode(response)
         data = {}
-        for key, value in entry.get('data', {}).items():
-            if key=='fixed':
-                self._dict_merge(data, value)
+        for key, regex in entry.get('data', {}).items():
+            if key == 'fixed':
+                self._dict_merge(data, regex)
             else:
-                value_search = re.search(value, content)
+                value_search = re.search(regex, content)
                 if value_search:
                     data[key] = value_search.group()
                 else:
@@ -270,7 +269,7 @@ class PluginAutoSignIn:
             entry.fail(entry['result'])
             return SignState.NETWORK_ERROR
 
-        if original_url != response.url:
+        if response.url not in [entry['url'], entry['base_url']]:
             entry['result'] = SignState.URL_REDIRECT.value.format(original_url, response.url)
             entry.fail(entry['result'])
             return SignState.URL_REDIRECT
