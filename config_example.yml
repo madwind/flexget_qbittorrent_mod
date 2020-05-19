@@ -323,7 +323,7 @@ tasks:
           base_url: https://www.haidan.video/index.php
           url: https://www.haidan.video/signin.php
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-          succeed_regex: '(恭喜您,获得了\d*魔力值 !)|(已经打卡))'
+          succeed_regex: '(恭喜您,获得了\d*魔力值 !)|((?<=value=")已经打卡(?="))'
         hdarea:
           base_url: https://www.hdarea.co/torrents.php
           url: https://www.hdarea.co/sign_in.php?action=sign_in
