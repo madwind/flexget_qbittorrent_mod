@@ -108,7 +108,11 @@ class PluginAutoSignIn:
 
     def _request(self, task, entry, method, url, **kwargs):
         try:
-            return task.requests.request(method, url, allow_redirects=True, **kwargs)
+            response = task.requests.request(method, url, allow_redirects=False, **kwargs)
+            if response.status_code == 302:
+                redirect_url = urljoin(url, response.headers['Location'])
+                response = self._request(task, entry, method, redirect_url, **kwargs)
+            return response
         except Exception as e:
             if url in [entry['url'], entry['base_url']]:
                 entry['result'] = SignState.NETWORK_ERROR.value.format(str(e))
