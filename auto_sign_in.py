@@ -2,6 +2,7 @@ import itertools
 import json
 import os
 import re
+import time
 from datetime import datetime
 from enum import Enum
 from os import path
@@ -20,6 +21,13 @@ try:
 except ImportError:
     brotli = None
 
+try:
+    from selenium import webdriver
+    from selenium.webdriver import DesiredCapabilities
+except ImportError:
+    webdriver = None
+    DesiredCapabilities = None
+
 
 class SignState(Enum):
     NO_SIGN_IN = 'No sign in'
@@ -36,6 +44,7 @@ class PluginAutoSignIn:
         'type': 'object',
         'properties': {
             'user-agent': {'type': 'string'},
+            'command_executor': {'type': 'string'},
             'sites': {
                 'type': 'object',
                 'properties': {
@@ -47,6 +56,7 @@ class PluginAutoSignIn:
 
     def prepare_config(self, config):
         config.setdefault('user-agent', '')
+        config.setdefault('command_executor', '')
         config.setdefault('sites', {})
         return config
 
@@ -54,6 +64,7 @@ class PluginAutoSignIn:
         config = self.prepare_config(config)
         sites = config.get('sites')
         user_agent = config.get('user-agent')
+        command_executor = config.get('command_executor')
 
         entries = []
 
@@ -66,10 +77,14 @@ class PluginAutoSignIn:
 
             entry['site_config'] = site_config
             entry['base_url'] = site_config.get('base_url')
+            cf = site_config.get('cf')
+            referer = site_config.get('base_url', entry['url'])
+            if cf and command_executor and webdriver:
+                cookie = self.selenium_get_cookie(command_executor, referer, cookie, user_agent)
             headers = {
                 'cookie': cookie,
                 'user-agent': user_agent,
-                'referer': site_config.get('base_url', entry['url']),
+                'referer': referer,
             }
             if brotli:
                 headers['accept-encoding'] = 'gzip, deflate, br'
@@ -324,6 +339,30 @@ class PluginAutoSignIn:
                 + r'):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?'
         )
         return re.match(regexp, instance)
+
+    def selenium_get_cookie(self, command_executor, url, cookie, user_agent):
+        options = webdriver.ChromeOptions()
+        options.add_argument('--headless')
+        options.add_argument('user-agent=' + user_agent)
+        driver = webdriver.Remote(command_executor=command_executor,
+                                  desired_capabilities=DesiredCapabilities.CHROME,
+                                  options=options)
+        driver.get(url)
+        for i in cookie.split(';'):
+            key, value, = i.split('=')
+            key = key.strip()
+            if key not in ['__cfduid', 'cf_clearance']:
+                driver.add_cookie({'name': key.strip(), 'value': value.strip()})
+
+        time.sleep(5)
+
+        receive_cookie = ''
+        for c in driver.get_cookies():
+            receive_cookie += '{}={}; '.format(c['name'], c['value'])
+
+        driver.quit()
+
+        return receive_cookie.strip()
 
 
 @event('plugin.register')

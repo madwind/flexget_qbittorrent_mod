@@ -282,16 +282,17 @@ tasks:
   sign_in:
     auto_sign_in:
       user-agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36'
+      command_executor: 'http://selenium-chrome:4444/wd/hub'
       sites:
         1ptba:
           url: https://1ptba.com/attendance.php
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-          succeed_regex: '(这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。)|(您今天已经签到过了，请勿重复刷新。)'
+          succeed_regex: '这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。|您今天已经签到过了，请勿重复刷新。'
         52pt:
           url: https://52pt.site/bakatest.php
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
           method: question
-          succeed_regex: '(连续.*天签到,获得.*点魔力值)|(今天已经签过到了\(已连续.*天签到\))'
+          succeed_regex: '连续.*天签到,获得.*点魔力值|今天已经签过到了\(已连续.*天签到\)'
           wrong_regex: '回答错误,失去 1 魔力值,这道题还会再考一次'
         avgv:
           url: http://avgv.cc/
@@ -312,7 +313,7 @@ tasks:
         discfan:
           url: https://discfan.net/attendance.php
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-          succeed_regex: '(這是您的第 .* 次簽到，已連續簽到 .* 天，本次簽到獲得 .* 個魔力值。)|(您今天已經簽到過了，請勿重複刷新。)'
+          succeed_regex: '這是您的第 .* 次簽到，已連續簽到 .* 天，本次簽到獲得 .* 個魔力值。|您今天已經簽到過了，請勿重複刷新。'
         eastgame:
           url: https://pt.eastgame.org/
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
@@ -323,7 +324,7 @@ tasks:
           base_url: https://www.haidan.video/index.php
           url: https://www.haidan.video/signin.php
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-          succeed_regex: '(恭喜您,获得了\d*魔力值 !)|((?<=value=")已经打卡(?="))'
+          succeed_regex: '恭喜您,获得了\d*魔力值 !|(?<=value=")已经打卡(?=")'
         hdarea:
           base_url: https://www.hdarea.co/torrents.php
           url: https://www.hdarea.co/sign_in.php?action=sign_in
@@ -332,30 +333,30 @@ tasks:
           data:
             fixed:
               action: 'sign_in'
-          succeed_regex: '(已连续签到.*天，此次签到您获得了.*魔力值奖励!)|(请不要重复签到哦！)'
+          succeed_regex: '已连续签到.*天，此次签到您获得了.*魔力值奖励!|请不要重复签到哦！'
         hdbd:
           url: https://pt.hdbd.us/
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
         hddolby:
           url: https://www.hddolby.com/attendance.php
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-          succeed_regex: '(这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。)|(您今天已经签到过了，请勿重复刷新。)'
+          succeed_regex: '这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。|您今天已经签到过了，请勿重复刷新。'
         hddisk:
           url: https://hddisk.life/attendance.php
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-          succeed_regex: '(这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。)|(您今天已经签到过了，请勿重复刷新。)'
+          succeed_regex: '这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。|您今天已经签到过了，请勿重复刷新。'
         hdfans:
           url: https://hdfans.org/
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
         hdhome:
           url: https://hdhome.org/attendance.php
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-          succeed_regex: '(这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。)|(您今天已经签到过了，请勿重复刷新。)'
+          succeed_regex: '这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。|您今天已经签到过了，请勿重复刷新。'
         hdstreet:
           url: https://hdstreet.club/bakatest.php
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
           method: question
-          succeed_regex: '(连续.*天签到,获得.*点魔力值)|(今天已经签过到了\(已连续.*天签到\))'
+          succeed_regex: '连续.*天签到,获得.*点魔力值|今天已经签过到了\(已连续.*天签到\)'
           wrong_regex: '回答错误,失去 1 魔力值,这道题还会再考一次'
         hdtime:
           url: https://hdtime.org/
@@ -363,7 +364,7 @@ tasks:
         hdzone:
           url: http://hdzone.me/attendance.php
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-          succeed_regex: '(这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。)|(您今天已经签到过了，请勿重复刷新。)'
+          succeed_regex: '这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。|您今天已经签到过了，请勿重复刷新。'
         j99:
           url: https://pt.j99.info/
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
@@ -373,11 +374,11 @@ tasks:
         lbj007:
           url: https://lbj007.com/attendance.php
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-          succeed_regex: '(这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。)|(您今天已经签到过了，请勿重复刷新。)'
+          succeed_regex: '这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。|您今天已经签到过了，请勿重复刷新。'
         leaguehd:
           url: https://leaguehd.com/attendance.php
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-          succeed_regex: '(这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。)|(您今天已经签到过了，请勿重复刷新。)'
+          succeed_regex: '这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。|您今天已经签到过了，请勿重复刷新。'
         m-team:
           url: https://pt.m-team.cc/
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
@@ -385,8 +386,9 @@ tasks:
         moecat:
           url: https://moecat.best/bakatest.php
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+          cf: yes
           method: question
-          succeed_regex: '(连续.*天签到,获得.*点魔力值)|(今天已经签过到了\(已连续.*天签到\))'
+          succeed_regex: '连续.*天签到,获得.*点魔力值|今天已经签过到了\(已连续.*天签到\)'
           wrong_regex: '回答错误,失去 1 魔力值,这道题还会再考一次'
         msg:
           url: https://pt.msg.vg/
@@ -404,11 +406,11 @@ tasks:
         pterclub:
           url: https://pterclub.com/attendance-ajax.php
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-          succeed_regex: '(这是您的第 .* 次签到，已连续签到 .* 天。<\\\/p><p>本次签到获得 .* 克猫粮。)|(您今天已经签到过了，请勿重复刷新。)'
+          succeed_regex: '这是您的第 .* 次签到，已连续签到 .* 天。<\\\/p><p>本次签到获得 .* 克猫粮。|您今天已经签到过了，请勿重复刷新。'
         pthome:
           url: https://www.pthome.net/attendance.php
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-          succeed_regex: '(这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。)|(您今天已经签到过了，请勿重复刷新。)'
+          succeed_regex: '这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。|您今天已经签到过了，请勿重复刷新。'
         ptsbao:
           url: https://ptsbao.club/
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
@@ -419,7 +421,7 @@ tasks:
         soulvoice:
           url: https://pt.soulvoice.club/attendance.php
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-          succeed_regex: '(这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。)|(您今天已经签到过了，请勿重复刷新。)'
+          succeed_regex: '这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。|您今天已经签到过了，请勿重复刷新。'
         totheglory:
           base_url: https://totheglory.im/
           url: https://totheglory.im/signed.php
@@ -427,8 +429,8 @@ tasks:
           method: post
           data:
             signed_timestamp: '(?<=signed_timestamp: ")\d{10}'
-            signed_token: '(?<=signed_token: ").*(?=")'
-          succeed_regex: '(<b style="color:green;">已签到</b>)|(您已连续签到.*天，奖励.*积分，明天继续签到将获得.*积分奖励。)'
+            signed_token: '(?<=signed_token: ").*(?="'
+          succeed_regex: '<b style="color:green;">已签到</b>|您已连续签到.*天，奖励.*积分，明天继续签到将获得.*积分奖励。'
         tjupt:
           url: https://tjupt.org/
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
@@ -436,13 +438,13 @@ tasks:
           url: https://yingk.com/bakatest.php
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
           method: question
-          succeed_regex: '(连续.*天签到,获得.*点魔力值)|(今天已经签过到了\(已连续.*天签到\))'
+          succeed_regex: '连续.*天签到,获得.*点魔力值|今天已经签过到了\(已连续.*天签到\)'
           wrong_regex: '回答错误,失去 1 魔力值,这道题还会再考一次'
         wenyuan:
           url: https://www.xn--7p0ar28b.xyz/bakatest.php
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
           method: question
-          succeed_regex: '(连续.*天签到,获得.*点魔力值)|(今天已经签过到了\(已连续.*天签到\))'
+          succeed_regex: '连续.*天签到,获得.*点魔力值|今天已经签过到了\(已连续.*天签到\)'
           wrong_regex: '回答错误,失去 1 魔力值,这道题还会再考一次'
     accept_all: yes
     seen:
