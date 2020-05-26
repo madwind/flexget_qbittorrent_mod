@@ -105,9 +105,7 @@ class PluginAutoSignIn:
                 continue
 
             command_executor = config.get('command_executor')
-
             cf = entry['site_config'].get('cf')
-
             if cf and command_executor and webdriver:
                 cookie = self.selenium_get_cookie(command_executor, entry['headers']['referer'], cookie,
                                                   entry['headers']['user-agent'])
