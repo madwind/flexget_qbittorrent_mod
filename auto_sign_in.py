@@ -64,7 +64,6 @@ class PluginAutoSignIn:
         config = self.prepare_config(config)
         sites = config.get('sites')
         user_agent = config.get('user-agent')
-        command_executor = config.get('command_executor')
 
         entries = []
 
@@ -77,10 +76,9 @@ class PluginAutoSignIn:
 
             entry['site_config'] = site_config
             entry['base_url'] = site_config.get('base_url')
-            cf = site_config.get('cf')
+
             referer = site_config.get('base_url', entry['url'])
-            if cf and command_executor and webdriver:
-                cookie = self.selenium_get_cookie(command_executor, referer, cookie, user_agent)
+
             headers = {
                 'cookie': cookie,
                 'user-agent': user_agent,
@@ -105,6 +103,16 @@ class PluginAutoSignIn:
             if not entry['cookie']:
                 entry['result'] = 'Manual url: {}'.format(entry['url'])
                 continue
+
+            command_executor = config.get('command_executor')
+
+            cf = entry['site_config'].get('cf')
+
+            if cf and command_executor and webdriver:
+                cookie = self.selenium_get_cookie(command_executor, entry['headers']['referer'], cookie,
+                                                  entry['headers']['user-agent'])
+                entry['cookie'] = cookie
+                entry['headers']['cookie'] = cookie
 
             method = entry['method']
             if method == 'post':
