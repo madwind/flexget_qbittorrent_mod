@@ -301,8 +301,6 @@ class PluginAutoSignIn:
             'imagestring': (None, code)
         }
         response = self._request(task, entry, 'post', entry['url'], headers=entry['headers'], files=data, params=params)
-        content = self._decode(response)
-        logger.info(content)
         state = self.check_state(entry, response, response.request.url)
         if state == SignState.WRONG_ANSWER:
             with open(path.dirname(__file__) + "/temp.png", "wb") as code_file:
