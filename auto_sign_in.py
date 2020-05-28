@@ -50,9 +50,9 @@ class PluginAutoSignIn:
         'properties': {
             'user-agent': {'type': 'string'},
             'command_executor': {'type': 'string'},
-            'app_id': {'type': 'string'},
-            'api_key': {'type': 'string'},
-            'secret_key': {'type': 'string'},
+            'aipocr_app_id': {'type': 'string'},
+            'aipocr_api_key': {'type': 'string'},
+            'aipocr_secret_key': {'type': 'string'},
             'sites': {
                 'type': 'object',
                 'properties': {
