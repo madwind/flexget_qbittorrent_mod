@@ -249,9 +249,9 @@ class PluginAutoSignIn:
         entry.fail(entry['result'])
 
     def sign_in_by_code(self, task, entry, config):
-        app_id = config.get('app_id')
-        api_key = config.get('api_key')
-        secret_key = config.get('secret_key')
+        app_id = config.get('aipocr_app_id')
+        api_key = config.get('aipocr_api_key')
+        secret_key = config.get('aipocr_secret_key')
 
         if not app_id and api_key and secret_key:
             entry['result'] = 'Api not set'

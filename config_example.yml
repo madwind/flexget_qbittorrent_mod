@@ -283,6 +283,9 @@ tasks:
     auto_sign_in:
       user-agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36'
       command_executor: 'http://selenium-chrome:4444/wd/hub'
+      aipocr_app_id: 'xxxxxx'
+      aipocr_api_key: 'xxxxxx'
+      aipocr_secret_key: 'xxxxxx'
       sites:
         1ptba:
           url: https://1ptba.com/attendance.php
@@ -397,9 +400,12 @@ tasks:
           url: https://nanyangpt.com/
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
         opencd:
-          url: https://open.cd/
+          base_url: https://open.cd/
+          url: https://open.cd/plugin_sign-in.php
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-          succeed_regex: '查看簽到記錄'
+          method: code
+          succeed_regex: '查看簽到記錄|{"state":"success","signindays":"\d+","integral":"\d+"}'
+          wrong_regex: '验证码错误'
         oshen:
           url: http://www.oshen.win/
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
