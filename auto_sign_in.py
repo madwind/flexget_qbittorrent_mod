@@ -28,6 +28,11 @@ except ImportError:
     webdriver = None
     DesiredCapabilities = None
 
+try:
+    from aip import AipOcr
+except ImportError:
+    AipOcr = None
+
 
 class SignState(Enum):
     NO_SIGN_IN = 'No sign in'
@@ -45,6 +50,9 @@ class PluginAutoSignIn:
         'properties': {
             'user-agent': {'type': 'string'},
             'command_executor': {'type': 'string'},
+            'app_id': {'type': 'string'},
+            'api_key': {'type': 'string'},
+            'secret_key': {'type': 'string'},
             'sites': {
                 'type': 'object',
                 'properties': {
@@ -117,6 +125,8 @@ class PluginAutoSignIn:
                 self.sign_in_by_post_data(task, entry)
             elif method == 'question':
                 self.sign_in_by_question(task, entry)
+            elif method == 'code':
+                self.sign_in_by_code(task, entry, config)
             else:
                 self.sign_in_by_get(task, entry)
 
@@ -238,6 +248,68 @@ class PluginAutoSignIn:
         entry['result'] = 'no answer'
         entry.fail(entry['result'])
 
+    def sign_in_by_code(self, task, entry, config):
+        app_id = config.get('app_id')
+        api_key = config.get('api_key')
+        secret_key = config.get('secret_key')
+
+        if not app_id and api_key and secret_key:
+            entry['result'] = 'Api not set'
+            entry.fail(entry['result'])
+            return
+
+        client = AipOcr(app_id, api_key, secret_key)
+
+        response = self._request(task, entry, 'get', entry['base_url'], headers=entry['headers'])
+        state = self.check_state(entry, response, entry['base_url'])
+        if state != SignState.NO_SIGN_IN:
+            return
+
+        response = self._request(task, entry, 'get', entry['url'], headers=entry['headers'])
+        content = self._decode(response)
+        image_hash_re = re.search('(?<=imagehash=).*?(?=")', content)
+        img_src_re = re.search('(?<=img src=").*?(?=")', content)
+
+        if image_hash_re and img_src_re:
+            image_hash = image_hash_re.group()
+            img_src = img_src_re.group()
+            img_response = self._request(task, entry, 'get', urljoin(entry['url'], img_src), headers=entry['headers'])
+        else:
+            entry['result'] = 'Cannot find key: image_hash, url: {}'.format(entry['url'])
+            entry.fail(entry['result'])
+            return
+
+        response = client.basicGeneral(img_response.content)
+        logger.info(response)
+        code = re.sub('\\W', '', response['words_result'][0]['words'])
+        if len(code) != 6:
+            response = client.webImage(img_response.content)
+            logger.info(response)
+            code = re.sub('\\W', '', response['words_result'][0]['words'])
+            if len(code) != 6:
+                with open(path.dirname(__file__) + "/temp.png", "wb") as code_file:
+                    code_file.write(img_response.content)
+                entry['result'] = 'ocr failed: {}, see temp.png'.format(code)
+                entry.fail(entry['result'])
+                return
+
+        params = {
+            'cmd': 'signin'
+        }
+        data = {
+            'imagehash': (None, image_hash),
+            'imagestring': (None, code)
+        }
+        response = self._request(task, entry, 'post', entry['url'], headers=entry['headers'], files=data, params=params)
+        content = self._decode(response)
+        logger.info(content)
+        state = self.check_state(entry, response, response.request.url)
+        if state == SignState.WRONG_ANSWER:
+            with open(path.dirname(__file__) + "/temp.png", "wb") as code_file:
+                code_file.write(img_response.content)
+            entry['result'] = 'ocr failed: {}, see temp.png'.format(code)
+            entry.fail(entry['result'])
+
     def get_nexusphp_message(self, task, entry):
         message_url = entry['message_url'] if entry['message_url'] else urljoin(entry['url'], '/messages.php')
         message_box_response = self._request(task, entry, 'get', message_url, headers=entry['headers'])
@@ -294,7 +366,7 @@ class PluginAutoSignIn:
             entry.fail(entry['result'])
             return SignState.NETWORK_ERROR
 
-        if response.url not in [entry['url'], entry['base_url']]:
+        if response.url not in [entry['url'], entry['base_url'], original_url]:
             entry['result'] = SignState.URL_REDIRECT.value.format(original_url, response.url)
             entry.fail(entry['result'])
             return SignState.URL_REDIRECT
