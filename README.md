@@ -8,7 +8,7 @@ tg: <https://t.me/flexget_qbittorrent_mod>
 - 修改：根据种子的tracker，修改种子的tag，或替换tracker
 - 辅种：查询IYUUAutoReseed辅种数据，校验完成后自动开始做种（需在<http://api.iyuu.cn/docs.php?service=App.User.Login&detail=1&type=fold>绑定登陆）
 - 删种：符合删除条件后（可根据剩余空间决定删除或放弃，若空间不足，可设置限速），删除包含辅种在内的所有种子
-- 自动签到：自动签到，支持答题，跳过cf盾(使用selenium),验证码签到(使用baidu aip),默认获取读取未读信件，可推送到notify插件
+- 自动签到：自动签到，支持答题，跳过cf盾(使用selenium)，验证码签到(使用baidu aip)，默认获取读取未读信件，可推送到notify插件
 - 企业微信消息推送
 
 参考：
