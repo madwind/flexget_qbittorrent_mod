@@ -5,6 +5,7 @@ import re
 import time
 from datetime import datetime
 from enum import Enum
+from io import BytesIO
 from os import path
 from pathlib import Path
 from urllib.parse import urljoin
@@ -32,6 +33,11 @@ try:
     from aip import AipOcr
 except ImportError:
     AipOcr = None
+
+try:
+    from PIL import Image
+except ImportError:
+    Image = None
 
 
 class SignState(Enum):
@@ -115,8 +121,14 @@ class PluginAutoSignIn:
             command_executor = config.get('command_executor')
             cf = entry['site_config'].get('cf')
             if cf and command_executor and webdriver:
-                cookie = self.selenium_get_cookie(command_executor, entry['headers']['referer'], entry['cookie'],
-                                                  entry['headers']['user-agent'])
+                try:
+                    cookie = self.selenium_get_cookie(command_executor, entry['headers']['referer'], entry['cookie'],
+                                                      entry['headers']['user-agent'])
+                except Exception as e:
+                    entry['result'] = str(e)
+                    entry.fail(entry['result'])
+                    return
+
                 entry['cookie'] = cookie
                 entry['headers']['cookie'] = cookie
 
@@ -281,14 +293,33 @@ class PluginAutoSignIn:
 
         response = client.basicGeneral(img_response.content)
         logger.info(response)
-        code = re.sub('\\W', '', response['words_result'][0]['words'])
+        code = re.sub('\\W|[a-z]', '', response['words_result'][0]['words'])
         if len(code) != 6:
-            response = client.webImage(img_response.content)
-            logger.info(response)
-            code = re.sub('\\W', '', response['words_result'][0]['words'])
+            if Image:
+                img = Image.open(BytesIO(img_response.content))
+                width = img.size[0]
+                height = img.size[1]
+                for i in range(0, width):
+                    for j in range(0, height):
+                        try:
+                            r, g, b = img.getpixel((i, j))
+                            if r != 0 or g != 0 or b != 0:
+                                r = 100
+                                g = 100
+                                b = 100
+                                img.putpixel((i, j), (r, g, b))
+                        except Exception as e:
+                            continue
+                img_byte_arr = BytesIO()
+                img.save(img_byte_arr)
+                response = client.basicGeneral(img_byte_arr)
+                logger.info(response)
             if len(code) != 6:
                 with open(path.dirname(__file__) + "/temp.png", "wb") as code_file:
                     code_file.write(img_response.content)
+                if Image:
+                    with open(path.dirname(__file__) + "/temp2.png", "wb") as code_file:
+                        code_file.write(img_byte_arr)
                 entry['result'] = 'ocr failed: {}, see temp.png'.format(code)
                 entry.fail(entry['result'])
                 return
