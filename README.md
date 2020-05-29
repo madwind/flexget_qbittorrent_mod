@@ -22,14 +22,14 @@ tg: <https://t.me/flexget_qbittorrent_mod>
 ### 系统需求
 - qBittorrent 4.1.4+
 - Flexget 3.0.19+
-- Python 3 (python-telegram-bot brotli selenium baidu-aip)
-- selenium/standalone-chrome(dcoker)
+- Python 3 (python-telegram-bot brotli selenium baidu-aip pillow)
+- selenium/standalone-chrome
 
 ### 测试环境（全docker环境）
 - qBittorrent 4.2.5
 - Flexget 3.1.57
-- Python 3.8 (python-telegram-bot brotli selenium baidu-aip)
-- selenium/standalone-chrome(dcoker)
+- Python 3.8 (python-telegram-bot brotli selenium baidu-aip pillow)
+- selenium/standalone-chrome
 
 ### 安装插件
 - 下载插件 [releases](https://github.com/IvonWei/flexget_qbittorrent_mod/releases/latest/download/dist.zip)
