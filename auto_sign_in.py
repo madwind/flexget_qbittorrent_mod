@@ -302,11 +302,9 @@ class PluginAutoSignIn:
                 for i in range(0, width):
                     for j in range(0, height):
                         try:
-                            r, g, b = img.getpixel((i, j))
-                            if r != 0 or g != 0 or b != 0:
-                                r = 100
-                                g = 100
-                                b = 100
+                            data = self.check_pixel(img, i, j, width, height)
+                            if data:
+                                r, g, b = data
                                 img.putpixel((i, j), (r, g, b))
                         except Exception as e:
                             continue
@@ -338,6 +336,31 @@ class PluginAutoSignIn:
                 code_file.write(img_response.content)
             entry['result'] = 'ocr failed: {}, see temp.png'.format(code)
             entry.fail(entry['result'])
+
+    def check_pixel(img, i, j, width, height):
+        if i < 25 or i > 122 or j < 15 or j > 24:
+            return 255, 255, 255
+        r, g, b = img.getpixel((i, j))
+        if r != 0 or g != 0 or b != 0:
+            return 255, 255, 255
+        else:
+            if i + 1 < width:
+                r, g, b = img.getpixel((i + 1, j))
+                if r == 0 and g == 0 and b == 0:
+                    return False
+            if i - 1 > 0:
+                r, g, b = img.getpixel((i - 1, j))
+                if r == 0 and g == 0 and b == 0:
+                    return False
+            if j + 1 < height:
+                r, g, b = img.getpixel((i, j + 1))
+                if r == 0 and g == 0 and b == 0:
+                    return False
+            if j - 1 > 0:
+                r, g, b = img.getpixel((i, j - 1))
+                if r == 0 and g == 0 and b == 0:
+                    return False
+            return 255, 255, 255
 
     def get_nexusphp_message(self, task, entry):
         message_url = entry['message_url'] if entry['message_url'] else urljoin(entry['url'], '/messages.php')
