@@ -1,0 +1,70 @@
+version: '3.7'
+services:
+  qbittorrent:
+    image: linuxserver/qbittorrent
+    container_name: qbittorrent
+    environment:
+      PUID: 1000
+      PGID: 1000
+      UMASK_SET: 022
+      WEBUI_PORT: 8080
+    volumes:
+      - <path for config files>:/config
+      - <path for data files>:/downloads
+    expose:
+      - "8080"
+    ports:
+      - "60566:60566"
+      - "60566:60566/udp"
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+    networks:
+      - nginx-network
+
+  flexget:
+    image: ivonwei/flexget
+    container_name: flexget
+    environment:
+      FG_WEBUI_PASSWD: 12nfo34ivc043iv9
+      FG_LOG_LEVEL: INFO
+      TZ: Asia/Shanghai
+    volumes:
+      - <path for config files>:/root/.flexget/config
+      - <path for data files>:/downloads
+    ports:
+      - "3539:3539"
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+    networks:
+      - nginx-network
+
+  selenium-chrome:
+    image: selenium/standalone-chrome
+    container_name: selenium-chrome
+    volumes:
+      - /dev/shm:/dev/shm
+    expose:
+      - "4444"
+    ports:
+    - '4444:4444'
+    environment:
+      TZ: Asia/Shanghai
+      START_XVFB: "false"
+      #SE_OPTS: -timeout 86400
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+    networks:
+      - nginx-network
+
+networks:
+  nginx-network:
+    name: nginx-network
