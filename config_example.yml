@@ -355,6 +355,13 @@ tasks:
           url: https://hdhome.org/attendance.php
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
           succeed_regex: '这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。|您今天已经签到过了，请勿重复刷新。'
+        hdpost:
+          url: https://hdpost.top/api/check
+          login_url: https://hdpost.top/api/auth/signin
+          login_data:
+            usernameOrEmail: 'xxxxxxxxx'
+            password: 'xxxxxxxxxxx'
+          succeed_regex: '"keepDays":\d+'
         hdstreet:
           url: https://hdstreet.club/bakatest.php
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'

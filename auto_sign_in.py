@@ -86,6 +86,8 @@ class PluginAutoSignIn:
                 title='{} {}'.format(site_name, datetime.now().date()),
                 url=site_config.get('url', ''),
             )
+            entry['login_url'] = site_config.get('login_url');
+            entry['login_data'] = site_config.get('login_data');
             cookie = site_config.get('cookie')
 
             entry['site_config'] = site_config
@@ -114,6 +116,18 @@ class PluginAutoSignIn:
     def on_task_output(self, task, config):
         for entry in task.accepted:
 
+            if entry['login_url'] and entry['login_data']:
+                response = self._request(task, entry, 'post', entry['login_url'], data=entry['login_data'])
+                if response.status_code == 200:
+                    receive_cookie = ''
+                    for name, value in response.cookies.get_dict().items():
+                        receive_cookie += '{}={}; '.format(name, value)
+                    entry['cookie'] = receive_cookie
+                else:
+                    entry['result'] = 'login failed'
+                    entry.fail(entry['result'])
+                    continue
+
             if not entry['cookie']:
                 entry['result'] = 'Manual url: {}'.format(entry['url'])
                 continue
@@ -129,11 +143,11 @@ class PluginAutoSignIn:
                     except Exception as e:
                         entry['result'] = str(e)
                         entry.fail(entry['result'])
-                        return
+                        continue
                 else:
                     entry['result'] = 'command_executor or webdriver not existed'
                     entry.fail(entry['result'])
-                    return
+                    continue
 
                 entry['cookie'] = cookie
                 entry['headers']['cookie'] = cookie
