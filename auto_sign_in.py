@@ -120,12 +120,18 @@ class PluginAutoSignIn:
 
             command_executor = config.get('command_executor')
             cf = entry['site_config'].get('cf')
-            if cf and command_executor and webdriver:
-                try:
-                    cookie = self.selenium_get_cookie(command_executor, entry['headers']['referer'], entry['cookie'],
-                                                      entry['headers']['user-agent'])
-                except Exception as e:
-                    entry['result'] = str(e)
+            if cf:
+                if command_executor and webdriver:
+                    try:
+                        cookie = self.selenium_get_cookie(command_executor, entry['headers']['referer'],
+                                                          entry['cookie'],
+                                                          entry['headers']['user-agent'])
+                    except Exception as e:
+                        entry['result'] = str(e)
+                        entry.fail(entry['result'])
+                        return
+                else:
+                    entry['result'] = 'command_executor or webdriver not existed'
                     entry.fail(entry['result'])
                     return
 
@@ -265,7 +271,11 @@ class PluginAutoSignIn:
         api_key = config.get('aipocr_api_key')
         secret_key = config.get('aipocr_secret_key')
 
-        if not app_id and api_key and secret_key:
+        if not (AipOcr and Image):
+            entry['result'] = 'baidu-aip or pillow not existed'
+            entry.fail(entry['result'])
+            return
+        if not (app_id and api_key and secret_key):
             entry['result'] = 'Api not set'
             entry.fail(entry['result'])
             return
@@ -291,76 +301,63 @@ class PluginAutoSignIn:
             entry.fail(entry['result'])
             return
 
-        response = client.basicGeneral(img_response.content)
+        img = Image.open(BytesIO(img_response.content))
+        width = img.size[0]
+        height = img.size[1]
+        for i in range(0, width):
+            for j in range(0, height):
+                noise = self._detect_noise(img, i, j, width, height)
+                if noise:
+                    img.putpixel((i, j), (255, 255, 255))
+        img_byte_arr = BytesIO()
+        img.save(img_byte_arr, format='png')
+        response = client.basicAccurate(img_byte_arr.getvalue(), {"language_type": "ENG"})
+        code = re.sub('\\W', '', response['words_result'][0]['words'])
+        code = code.upper()
         logger.info(response)
-        code = re.sub('\\W|[a-z]', '', response['words_result'][0]['words'])
-        if len(code) != 6:
-            if Image:
-                img = Image.open(BytesIO(img_response.content))
-                width = img.size[0]
-                height = img.size[1]
-                for i in range(0, width):
-                    for j in range(0, height):
-                        try:
-                            data = self.check_pixel(img, i, j, width, height)
-                            if data:
-                                r, g, b = data
-                                img.putpixel((i, j), (r, g, b))
-                        except Exception as e:
-                            continue
-                img_byte_arr = BytesIO()
-                img.save(img_byte_arr)
-                response = client.basicGeneral(img_byte_arr)
-                logger.info(response)
-            if len(code) != 6:
-                with open(path.dirname(__file__) + "/temp.png", "wb") as code_file:
-                    code_file.write(img_response.content)
-                if Image:
-                    with open(path.dirname(__file__) + "/temp2.png", "wb") as code_file:
-                        code_file.write(img_byte_arr)
-                entry['result'] = 'ocr failed: {}, see temp.png'.format(code)
-                entry.fail(entry['result'])
-                return
-
-        params = {
-            'cmd': 'signin'
-        }
-        data = {
-            'imagehash': (None, image_hash),
-            'imagestring': (None, code)
-        }
-        response = self._request(task, entry, 'post', entry['url'], headers=entry['headers'], files=data, params=params)
-        state = self.check_state(entry, response, response.request.url)
-        if state == SignState.WRONG_ANSWER:
+        if len(code) == 6:
+            params = {
+                'cmd': 'signin'
+            }
+            data = {
+                'imagehash': (None, image_hash),
+                'imagestring': (None, code)
+            }
+            response = self._request(task, entry, 'post', entry['url'], headers=entry['headers'], files=data,
+                                     params=params)
+            state = self.check_state(entry, response, response.request.url)
+        if len(code) != 6 or state == SignState.WRONG_ANSWER:
             with open(path.dirname(__file__) + "/temp.png", "wb") as code_file:
                 code_file.write(img_response.content)
+            with open(path.dirname(__file__) + "/temp2.png", "wb") as code_file:
+                code_file.write(img_byte_arr.getvalue())
             entry['result'] = 'ocr failed: {}, see temp.png'.format(code)
             entry.fail(entry['result'])
 
-    def check_pixel(img, i, j, width, height):
+    def _detect_noise(self, img, i, j, width, height):
         if i < 25 or i > 122 or j < 15 or j > 24:
-            return 255, 255, 255
-        r, g, b = img.getpixel((i, j))
-        if r != 0 or g != 0 or b != 0:
-            return 255, 255, 255
+            return True
+        pixel = img.getpixel((i, j))
+        if pixel[0] != 0 or pixel[1] != 0 or pixel[2] != 0:
+            return True
         else:
             if i + 1 < width:
-                r, g, b = img.getpixel((i + 1, j))
-                if r == 0 and g == 0 and b == 0:
+                pixel = img.getpixel((i + 1, j))
+                if pixel[0] == 0 and pixel[1] == 0 and pixel[2] == 0:
                     return False
             if i - 1 > 0:
-                r, g, b = img.getpixel((i - 1, j))
-                if r == 0 and g == 0 and b == 0:
+                pixel = img.getpixel((i - 1, j))
+                if pixel[0] == 0 and pixel[1] == 0 and pixel[2] == 0:
                     return False
             if j + 1 < height:
-                r, g, b = img.getpixel((i, j + 1))
-                if r == 0 and g == 0 and b == 0:
+                pixel = img.getpixel((i, j + 1))
+                if pixel[0] == 0 and pixel[1] == 0 and pixel[2] == 0:
                     return False
             if j - 1 > 0:
-                r, g, b = img.getpixel((i, j - 1))
-                if r == 0 and g == 0 and b == 0:
+                pixel = img.getpixel((i, j + 1))
+                if pixel[0] == 0 and pixel[1] == 0 and pixel[2] == 0:
                     return False
-            return 255, 255, 255
+            return True
 
     def get_nexusphp_message(self, task, entry):
         message_url = entry['message_url'] if entry['message_url'] else urljoin(entry['url'], '/messages.php')
