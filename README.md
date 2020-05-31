@@ -38,7 +38,7 @@ tg: <https://t.me/flexget_qbittorrent_mod>
 ~/.flexget/plugins/  # Linux
 C:\Users\<YOURUSER>\flexget\plugins\  # Windows
 ```
-- 将所有的 .py 文件解压至plugins
+- 将所有的 .py 文件 与 question_extend.json 解压至plugins
 - 若启用了Web-UI或守护进程，则重启flexget重新加载配置
 
 ### 配置模板
