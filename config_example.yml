@@ -442,7 +442,7 @@ tasks:
           method: post
           data:
             signed_timestamp: '(?<=signed_timestamp: ")\d{10}'
-            signed_token: '(?<=signed_token: ").*(?="'
+            signed_token: '(?<=signed_token: ").*(?=")'
           succeed_regex: '<b style="color:green;">已签到</b>|您已连续签到.*天，奖励.*积分，明天继续签到将获得.*积分奖励。'
         tjupt:
           url: https://tjupt.org/
