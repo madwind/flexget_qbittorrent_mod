@@ -97,7 +97,7 @@ templates:
           #根据tracker添加种子标签 例如以下的tracker会为种子添加 "pt1" 标签 v0.1.3新增
           tag_by_tracker: true
           #批量替换tracker 例如把http替换成https (需要完全匹配) v0.1.3新增
-          replace_tracker:
+          replace_trackers:
             'http://tracker.pt1.com/announce.php?passkey=xxxxxxxxxxxxxx': 'https://tracker.pt1.com/announce.php?passkey=xxxxxxxxxxxxxx'
 
   #恢复
