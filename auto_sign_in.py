@@ -86,8 +86,9 @@ class PluginAutoSignIn:
                 title='{} {}'.format(site_name, datetime.now().date()),
                 url=site_config.get('url', ''),
             )
-            entry['login_url'] = site_config.get('login_url');
-            entry['login_data'] = site_config.get('login_data');
+            entry['request_method'] = site_config.get('request_method', 'get')
+            entry['login_url'] = site_config.get('login_url')
+            entry['login_data'] = site_config.get('login_data')
             cookie = site_config.get('cookie')
 
             entry['site_config'] = site_config
@@ -184,7 +185,7 @@ class PluginAutoSignIn:
         return None
 
     def sign_in_by_get(self, task, entry):
-        response = self._request(task, entry, 'get', entry['url'], headers=entry['headers'])
+        response = self._request(task, entry, entry['request_method'], entry['url'], headers=entry['headers'])
         self.check_state(entry, response, entry['url'])
 
     def sign_in_by_post_data(self, task, entry):
@@ -376,6 +377,9 @@ class PluginAutoSignIn:
     def get_nexusphp_message(self, task, entry):
         message_url = entry['message_url'] if entry['message_url'] else urljoin(entry['url'], '/messages.php')
         message_box_response = self._request(task, entry, 'get', message_url, headers=entry['headers'])
+        if message_box_response.url != message_url:
+            entry['messages'] = 'Can not read message box!'
+            return
         if message_box_response:
             unread_elements = get_soup(self._decode(message_box_response)).select(
                 'td > img[alt*="Unread"]')
@@ -401,6 +405,9 @@ class PluginAutoSignIn:
     def get_gazelle_message(self, task, entry):
         message_url = urljoin(entry['url'], '/inbox.php')
         message_box_response = self._request(task, entry, 'get', message_url, headers=entry['headers'])
+        if message_box_response.url != message_url:
+            entry['messages'] = 'Can not read message box!'
+            return
         if message_box_response:
             unread_elements = get_soup(self._decode(message_box_response)).select(
                 "tr.unreadpm > td > strong > a")
