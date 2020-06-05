@@ -377,7 +377,8 @@ class PluginAutoSignIn:
     def get_nexusphp_message(self, task, entry):
         message_url = entry['message_url'] if entry['message_url'] else urljoin(entry['url'], '/messages.php')
         message_box_response = self._request(task, entry, 'get', message_url, headers=entry['headers'])
-        if message_box_response.url != message_url:
+        state = self.check_net_state(entry, message_box_response, message_url)
+        if state:
             entry['messages'] = 'Can not read message box!'
             return
         if message_box_response:
@@ -405,7 +406,8 @@ class PluginAutoSignIn:
     def get_gazelle_message(self, task, entry):
         message_url = urljoin(entry['url'], '/inbox.php')
         message_box_response = self._request(task, entry, 'get', message_url, headers=entry['headers'])
-        if message_box_response.url != message_url:
+        state = self.check_net_state(entry, message_box_response, message_url)
+        if state:
             entry['messages'] = 'Can not read message box!'
             return
         if message_box_response:
@@ -429,7 +431,7 @@ class PluginAutoSignIn:
         else:
             entry['messages'] = 'Can not read message box!'
 
-    def check_state(self, entry, response, original_url):
+    def check_net_state(self, entry, response, original_url):
         if not response:
             if not entry['result']:
                 entry['result'] = SignState.NETWORK_ERROR.value.format(response)
@@ -440,6 +442,11 @@ class PluginAutoSignIn:
             entry['result'] = SignState.URL_REDIRECT.value.format(original_url, response.url)
             entry.fail(entry['result'])
             return SignState.URL_REDIRECT
+
+    def check_state(self, entry, response, original_url):
+        state = self.check_net_state(entry, response, original_url)
+        if state:
+            return state
 
         content = self._decode(response)
 
