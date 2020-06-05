@@ -320,7 +320,7 @@ tasks:
       aipocr_app_id: 'xxxxxxxxx'
       aipocr_api_key: 'xxxxxxxxx'
       aipocr_secret_key: 'xxxxxxxxx'
-      #默认所有站短都获取未读消息
+      #默认所有站点都获取未读消息
       sites:
         #仅访问
         pt1:
@@ -454,7 +454,7 @@ tasks:
       #  "write_cache_overload": "0"
 
       #如果剩余空间小于5G
-      - 'server_state["free_space_on_disk"] < 5242880': accept
+      - 'server_state["free_space_on_disk"] < 5368709120': accept
     template:
       - from_qbittorrent_template
     notify:
