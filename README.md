@@ -310,6 +310,116 @@ tasks:
       - qbittorrent_base_template
       - qbittorrent_modify_template
 
+  #自动签到
+  sign_in:
+    auto_sign_in:
+      user-agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36'
+      #selenium-chrome远程地址
+      command_executor: 'http://selenium-chrome:4444/wd/hub'
+      #baidu ocr参数
+      aipocr_app_id: 'xxxxxxxxx'
+      aipocr_api_key: 'xxxxxxxxx'
+      aipocr_secret_key: 'xxxxxxxxx'
+      #默认所有站短都获取未读消息
+      sites:
+        #仅访问
+        pt1:
+          url: http://pt1.com/
+          cookie: 'xxxxxxxxxxxxx'
+          #获取未读消息 支持NexusPHP Gazelle,默认为NexusPHP
+          get_message: no
+        #访问签到地址 并使用正则匹配返回信息
+        pt2:
+          url: https://pt2.com/attendance.php
+          cookie: 'xxxxxxxxxx'
+          succeed_regex: '这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。|您今天已经签到过了，请勿重复刷新。'
+        #答题签到
+        pt3:
+          url: https://pt3.com/bakatest.php
+          cookie: 'xxxxxxxxx'
+          #使用selenium跳过cf盾
+          cf: yes
+          method: question
+          succeed_regex: '连续.*天签到,获得.*点魔力值|今天已经签过到了\(已连续.*天签到\)'
+          wrong_regex: '回答错误,失去 1 魔力值,这道题还会再考一次'
+        #模拟登录
+        pt4:
+          url: https://pt4.com/api/check
+          #请求方式
+          request_method: put
+          #登陆地址
+          login_url: https://pt4.com/api/auth/signin
+          #登陆数据
+          login_data:
+            usernameOrEmail: 'xxxxxxxxx'
+            password: 'xxxxxxxxxxx'
+          succeed_regex: '"keepDays":\d+|YOU_ALREADY_CHECK_IN'
+        #提交固定数据
+        pt5:
+          base_url: https://www.pt5.com/torrents.php
+          url: https://www.pt5.com/sign_in.php?action=sign_in
+          cookie: 'xxxxxxxxxxxxxxxx'
+          method: post
+          data:
+            fixed:
+              action: 'sign_in'
+          succeed_regex: '已连续签到.*天，此次签到您获得了.*魔力值奖励!|请不要重复签到哦！'
+        #提交动态数据
+        pt6:
+          #获取数据的url
+          base_url: https://pt6.com/
+          url: https://pt6.com/signed.php
+          cookie: 'xxxxxxxxxxxx'
+          method: post
+          data:
+            signed_timestamp: '(?<=signed_timestamp: ")\d{10}'
+            signed_token: '(?<=signed_token: ").*(?=")'
+          succeed_regex: '<b style="color:green;">已签到</b>|您已连续签到.*天，奖励.*积分，明天继续签到将获得.*积分奖励。'
+    accept_all: yes
+    retry_failed:
+      retry_time_multiplier: no
+    seen:
+      fields:
+        - title
+    notify:
+      task:
+        always_send: false
+        message: |+
+          {%- if task.accepted -%}
+          {%- for group in task.accepted|groupby('task') -%}
+          FlexGet has just signed in {{ group.list|length }} sites for task {{ group.grouper }}:
+          {% for entry in group.list %}
+          {{ loop.index }}: {{ entry.title }} {{ entry.result }}
+          {%- if entry.messages|d('') %}
+          Messages: {{ entry.messages }}
+          {% endif %}
+          {%- endfor -%}
+          {%- endfor -%}
+          {%- endif -%}
+          {%- if task.failed %}
+          {% for group in task.failed|groupby('task') %}
+          The following sites have failed for task {{ group.grouper }}:
+          {% for entry in group.list %}
+          {{ loop.index }}: {{ entry.title }} Reason: {{ entry.reason|d('unknown') }}
+          {%- if entry.messages|d('') %}
+          Messages: {{ entry.messages }}
+          {% endif %}
+          {%- endfor -%}
+          {%- endfor -%}
+          {%- endif -%}
+        via:
+          - wechat_work:
+             corp_id: 'xxxxxxxxxxxxx'
+             #小程序secret
+             corp_secret: 'xxxxxxxxxxxxxxx'
+             agent_id: 'xxxxxxxxxxxxxxxx'
+             #用户id
+             to_user: 'xxxxxxxxxxxxxxx'
+          - telegram:
+              bot_token: xxxxxxxxxxx
+              recipients:
+                - username: 'xxxxxxxxxxx'
+
   #服务器状态预警
   warner:
     disable: [seen, seen_info_hash, retry_failed]
