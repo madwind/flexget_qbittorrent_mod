@@ -41,6 +41,9 @@ C:\Users\<YOURUSER>\flexget\plugins\  # Windows
 - 将所有的 .py 文件 与 question_extend.json 解压至plugins
 - 若启用了Web-UI或守护进程，则重启flexget重新加载配置
 
+### 自建flexget镜像
+- 运行image-builder\build.sh 生成镜像，容器参数参考 image-builder\docker-compose.yml
+
 ### 配置模板
 更多配置可以学习Flexget官方文档
 
@@ -315,7 +318,7 @@ tasks:
     auto_sign_in:
       user-agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36'
       #selenium-chrome远程地址
-      command_executor: 'http://selenium-chrome:4444/wd/hub'
+      command_executor: 'http://xxxxxx:4444/wd/hub'
       #baidu ocr参数
       aipocr_app_id: 'xxxxxxxxx'
       aipocr_api_key: 'xxxxxxxxx'
