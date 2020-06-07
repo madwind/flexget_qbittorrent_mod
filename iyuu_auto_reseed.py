@@ -93,6 +93,9 @@ class PluginIYUUAutoReseed():
                         download_page = site['download_page'].format(torrent_id=torrent_id,
                                                                      authkey=passkey['authkey'],
                                                                      torrent_pass=passkey['torrent_pass'])
+                    elif site_name == 'hdcity':
+                        download_page = site['download_page'].format(
+                            torrent_id=torrent_id + '&cuhash=' + passkey['cuhash'])
                     elif site_name == 'ccfbits':
                         download_page = site['download_page'].format(torrent_id=torrent_id, passkey=passkey)
                     else:
@@ -110,6 +113,8 @@ class PluginIYUUAutoReseed():
                     entry['category'] = client_torrent['qbittorrent_category']
                     entry['savepath'] = client_torrent['qbittorrent_save_path']
                     entry['paused'] = 'true'
+                    if site_name == 'hdcity':
+                        entry['download_headers'] = passkey['headers']
                     entries.append(entry)
         return entries
 

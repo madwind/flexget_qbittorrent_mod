@@ -204,6 +204,11 @@ tasks:
         haidan: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         hdarea: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         hdbd: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        hdcity:
+          cuhash: xxxxxxxxxxxxxxxxxxxxxxxx
+          headers:
+            cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxx'
+            user-agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36'
         hddisk: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         hddolby: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         hdhome: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -340,6 +345,10 @@ tasks:
         hdbd:
           url: https://pt.hdbd.us/
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+        hdcity:
+          url: https://hdcity.city/sign
+          cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx c_lang_folder=chs'
+          succeed_regex: '本次签到获得魅力\d+'
         hddolby:
           url: https://www.hddolby.com/attendance.php
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
