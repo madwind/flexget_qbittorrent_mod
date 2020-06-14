@@ -160,6 +160,8 @@ class PluginAutoSignIn:
                 self.sign_in_by_question(task, entry)
             elif method == 'code':
                 self.sign_in_by_code(task, entry, config)
+            elif method == 'hdsky':
+                self.sign_in_by_code_hdsky(task, entry, config)
             else:
                 self.sign_in_by_get(task, entry)
 
@@ -340,6 +342,75 @@ class PluginAutoSignIn:
             }
             response = self._request(task, entry, 'post', entry['url'], headers=entry['headers'], files=data,
                                      params=params)
+            state = self.check_state(entry, response, response.request.url)
+        if len(code) != 6 or state == SignState.WRONG_ANSWER:
+            with open(path.dirname(__file__) + "/opencd_code.png", "wb") as code_file:
+                code_file.write(img_response.content)
+            with open(path.dirname(__file__) + "/opencd_code2.png", "wb") as code_file:
+                code_file.write(img_byte_arr.getvalue())
+            entry['result'] = 'ocr failed: {}, see opencd_code.png'.format(code)
+            entry.fail(entry['result'])
+
+    def sign_in_by_code_hdsky(self, task, entry, config):
+        app_id = config.get('aipocr_app_id')
+        api_key = config.get('aipocr_api_key')
+        secret_key = config.get('aipocr_secret_key')
+
+        if not (AipOcr and Image):
+            entry['result'] = 'baidu-aip or pillow not existed'
+            entry.fail(entry['result'])
+            return
+        if not (app_id and api_key and secret_key):
+            entry['result'] = 'Api not set'
+            entry.fail(entry['result'])
+            return
+
+        client = AipOcr(app_id, api_key, secret_key)
+
+        response = self._request(task, entry, 'get', entry['base_url'], headers=entry['headers'])
+        state = self.check_state(entry, response, entry['base_url'])
+        if state != SignState.NO_SIGN_IN:
+            return
+
+        data = {
+            'action': (None, 'new'),
+        }
+        response = self._request(task, entry, 'post', 'https://hdsky.me/image_code_ajax.php', headers=entry['headers'],
+                                 files=data)
+        content = self._decode(response)
+        image_hash = json.loads(content)['code']
+
+        if image_hash:
+            img_response = self._request(task, entry, 'get',
+                                         'https://hdsky.me/image.php?action=regimage&imagehash={}'.format(image_hash),
+                                         headers=entry['headers'])
+        else:
+            entry['result'] = 'Cannot find: image_hash, url: {}'.format(entry['url'])
+            entry.fail(entry['result'])
+            return
+
+        img = Image.open(BytesIO(img_response.content))
+        width = img.size[0]
+        height = img.size[1]
+        for i in range(0, width):
+            for j in range(0, height):
+                noise = self._detect_noise(img, i, j, width, height)
+                if noise:
+                    img.putpixel((i, j), (255, 255, 255))
+        img_byte_arr = BytesIO()
+        img.save(img_byte_arr, format='png')
+        response = client.basicAccurate(img_byte_arr.getvalue(), {"language_type": "ENG"})
+        code = re.sub('\\W', '', response['words_result'][0]['words'])
+        code = code.upper()
+        logger.info(response)
+        if len(code) == 6:
+            data = {
+                'action': (None, 'showup'),
+                'imagehash': (None, image_hash),
+                'imagestring': (None, code)
+            }
+            response = self._request(task, entry, 'post', entry['url'], headers=entry['headers'], files=data)
+            print(response.text)
             state = self.check_state(entry, response, response.request.url)
         if len(code) != 6 or state == SignState.WRONG_ANSWER:
             with open(path.dirname(__file__) + "/temp.png", "wb") as code_file:

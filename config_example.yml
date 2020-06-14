@@ -212,6 +212,7 @@ tasks:
         hddisk: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         hddolby: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         hdhome: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        hdsky: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         hdstreet: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         hdtime: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         hdzone: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -223,10 +224,12 @@ tasks:
         nanyangpt: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         open: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         oshen: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        ourbits: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         pterclub: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         pthome: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         ptsbao: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         skyeysnow: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        springsunday: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         soulvoice: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         tjupt: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         totheglory: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -372,6 +375,13 @@ tasks:
             usernameOrEmail: 'xxxxxxxxx'
             password: 'xxxxxxxxxxx'
           succeed_regex: '"keepDays":\d+|YOU_ALREADY_CHECK_IN'
+        hdsky:
+          base_url: https://hdsky.me/
+          url: https://hdsky.me/showup.php
+          cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+          method: hdsky
+          succeed_regex: '已签到|{"success":true,"message":\d+}'
+          wrong_regex: '{"success":false,"message":"invalid_imagehash"}'
         hdstreet:
           url: https://hdstreet.club/bakatest.php
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
@@ -426,6 +436,10 @@ tasks:
         oshen:
           url: http://www.oshen.win/
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+        ourbits:
+          url: https://ourbits.club/attendance.php
+          cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+          succeed_regex: '这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。|您今天已经签到过了，请勿重复刷新。'
         pterclub:
           url: https://pterclub.com/attendance-ajax.php
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
@@ -445,6 +459,9 @@ tasks:
           url: https://pt.soulvoice.club/attendance.php
           cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
           succeed_regex: '这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。|您今天已经签到过了，请勿重复刷新。'
+        springsunday:
+          url: https://springsunday.net/
+          cookie: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
         totheglory:
           base_url: https://totheglory.im/
           url: https://totheglory.im/signed.php
