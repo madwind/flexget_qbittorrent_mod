@@ -154,7 +154,7 @@ class PluginAutoSignIn:
                 entry['headers']['cookie'] = cookie
 
             method = entry['method']
-            if method == 'post':
+            if method in ['post', 'post_form']:
                 self.sign_in_by_post_data(task, entry)
             elif method == 'question':
                 self.sign_in_by_question(task, entry)
@@ -208,7 +208,10 @@ class PluginAutoSignIn:
                     entry['result'] = 'Cannot find key: {}, url: {}'.format(key, entry['url'])
                     entry.fail(entry['result'])
                     return
-        response = self._request(task, entry, 'post', entry['url'], headers=entry['headers'], data=data)
+        if entry['method'] == 'post_form':
+            response = self._request(task, entry, 'post', entry['url'], headers=entry['headers'], files=data)
+        else:
+            response = self._request(task, entry, 'post', entry['url'], headers=entry['headers'], data=data)
         self.check_state(entry, response, entry['url'])
 
     def sign_in_by_question(self, task, entry):
@@ -284,21 +287,6 @@ class PluginAutoSignIn:
         entry.fail(entry['result'])
 
     def sign_in_by_code(self, task, entry, config):
-        app_id = config.get('aipocr_app_id')
-        api_key = config.get('aipocr_api_key')
-        secret_key = config.get('aipocr_secret_key')
-
-        if not (AipOcr and Image):
-            entry['result'] = 'baidu-aip or pillow not existed'
-            entry.fail(entry['result'])
-            return
-        if not (app_id and api_key and secret_key):
-            entry['result'] = 'Api not set'
-            entry.fail(entry['result'])
-            return
-
-        client = AipOcr(app_id, api_key, secret_key)
-
         response = self._request(task, entry, 'get', entry['base_url'], headers=entry['headers'])
         state = self.check_state(entry, response, entry['base_url'])
         if state != SignState.NO_SIGN_IN:
@@ -319,19 +307,7 @@ class PluginAutoSignIn:
             return
 
         img = Image.open(BytesIO(img_response.content))
-        width = img.size[0]
-        height = img.size[1]
-        for i in range(0, width):
-            for j in range(0, height):
-                noise = self._detect_noise(img, i, j, width, height)
-                if noise:
-                    img.putpixel((i, j), (255, 255, 255))
-        img_byte_arr = BytesIO()
-        img.save(img_byte_arr, format='png')
-        response = client.basicAccurate(img_byte_arr.getvalue(), {"language_type": "ENG"})
-        code = re.sub('\\W', '', response['words_result'][0]['words'])
-        code = code.upper()
-        logger.info(response)
+        code, img_byte_arr = self.get_ocr_code(config, entry, img)
         if len(code) == 6:
             params = {
                 'cmd': 'signin'
@@ -344,29 +320,14 @@ class PluginAutoSignIn:
                                      params=params)
             state = self.check_state(entry, response, response.request.url)
         if len(code) != 6 or state == SignState.WRONG_ANSWER:
-            with open(path.dirname(__file__) + "/opencd_code.png", "wb") as code_file:
+            with open(path.dirname(__file__) + "/opencd.png", "wb") as code_file:
                 code_file.write(img_response.content)
-            with open(path.dirname(__file__) + "/opencd_code2.png", "wb") as code_file:
+            with open(path.dirname(__file__) + "/opencd.png", "wb") as code_file:
                 code_file.write(img_byte_arr.getvalue())
-            entry['result'] = 'ocr failed: {}, see opencd_code.png'.format(code)
+            entry['result'] = 'ocr failed: {}, see opencd.png'.format(code)
             entry.fail(entry['result'])
 
     def sign_in_by_code_hdsky(self, task, entry, config):
-        app_id = config.get('aipocr_app_id')
-        api_key = config.get('aipocr_api_key')
-        secret_key = config.get('aipocr_secret_key')
-
-        if not (AipOcr and Image):
-            entry['result'] = 'baidu-aip or pillow not existed'
-            entry.fail(entry['result'])
-            return
-        if not (app_id and api_key and secret_key):
-            entry['result'] = 'Api not set'
-            entry.fail(entry['result'])
-            return
-
-        client = AipOcr(app_id, api_key, secret_key)
-
         response = self._request(task, entry, 'get', entry['base_url'], headers=entry['headers'])
         state = self.check_state(entry, response, entry['base_url'])
         if state != SignState.NO_SIGN_IN:
@@ -388,8 +349,40 @@ class PluginAutoSignIn:
             entry['result'] = 'Cannot find: image_hash, url: {}'.format(entry['url'])
             entry.fail(entry['result'])
             return
-
         img = Image.open(BytesIO(img_response.content))
+        code, img_byte_arr = self.get_ocr_code(config, entry, img)
+        if len(code) == 6:
+            data = {
+                'action': (None, 'showup'),
+                'imagehash': (None, image_hash),
+                'imagestring': (None, code)
+            }
+            response = self._request(task, entry, 'post', entry['url'], headers=entry['headers'], files=data)
+            state = self.check_state(entry, response, response.request.url)
+        if len(code) != 6 or state == SignState.WRONG_ANSWER:
+            with open(path.dirname(__file__) + "/hdsky.png", "wb") as code_file:
+                code_file.write(img_response.content)
+            with open(path.dirname(__file__) + "/hdsky2.png", "wb") as code_file:
+                code_file.write(img_byte_arr.getvalue())
+            entry['result'] = 'ocr failed: {}, see hdsky.png'.format(code)
+            entry.fail(entry['result'])
+
+    def get_ocr_code(self, config, entry, img):
+        app_id = config.get('aipocr_app_id')
+        api_key = config.get('aipocr_api_key')
+        secret_key = config.get('aipocr_secret_key')
+
+        if not (AipOcr and Image):
+            entry['result'] = 'baidu-aip or pillow not existed'
+            entry.fail(entry['result'])
+            return
+        if not (app_id and api_key and secret_key):
+            entry['result'] = 'Api not set'
+            entry.fail(entry['result'])
+            return
+
+        client = AipOcr(app_id, api_key, secret_key)
+
         width = img.size[0]
         height = img.size[1]
         for i in range(0, width):
@@ -400,25 +393,10 @@ class PluginAutoSignIn:
         img_byte_arr = BytesIO()
         img.save(img_byte_arr, format='png')
         response = client.basicAccurate(img_byte_arr.getvalue(), {"language_type": "ENG"})
+        logger.info(response)
         code = re.sub('\\W', '', response['words_result'][0]['words'])
         code = code.upper()
-        logger.info(response)
-        if len(code) == 6:
-            data = {
-                'action': (None, 'showup'),
-                'imagehash': (None, image_hash),
-                'imagestring': (None, code)
-            }
-            response = self._request(task, entry, 'post', entry['url'], headers=entry['headers'], files=data)
-            print(response.text)
-            state = self.check_state(entry, response, response.request.url)
-        if len(code) != 6 or state == SignState.WRONG_ANSWER:
-            with open(path.dirname(__file__) + "/temp.png", "wb") as code_file:
-                code_file.write(img_response.content)
-            with open(path.dirname(__file__) + "/temp2.png", "wb") as code_file:
-                code_file.write(img_byte_arr.getvalue())
-            entry['result'] = 'ocr failed: {}, see temp.png'.format(code)
-            entry.fail(entry['result'])
+        return code, img_byte_arr
 
     def _detect_noise(self, img, i, j, width, height):
         if i < 25 or i > 122 or j < 15 or j > 24:
