@@ -1,5 +1,6 @@
 from urllib.parse import urljoin
 
+import chardet
 from flexget import plugin
 from flexget.entry import Entry
 from flexget.event import event
@@ -73,11 +74,8 @@ class PluginHtmlRss():
             try:
                 if brotli:
                     config.get('headers')['accept-encoding'] = 'gzip, deflate, br'
-                response = task.requests.get(url, headers=config.get('headers'))
-                content = response.content
-                content_encoding = response.headers.get('content-encoding')
-                if content_encoding == 'br':
-                    content = brotli.decompress(response.content)
+                response = task.requests.get(url, headers=config.get('headers'), timeout=60)
+                content = self._decode(response)
             except RequestException as e:
                 raise plugin.PluginError(
                     'Unable to download the Html for task {} ({}): {}'.format(task.name, url, e)
@@ -108,6 +106,16 @@ class PluginHtmlRss():
                 entry['original_url'] = entry['url']
                 entries.append(entry)
         return entries
+
+    def _decode(self, response):
+        content = response.content
+        content_encoding = response.headers.get('content-encoding')
+        if content_encoding == 'br':
+            content = brotli.decompress(content)
+        charset_encoding = chardet.detect(content).get('encoding')
+        if charset_encoding == 'ascii':
+            charset_encoding = 'unicode_escape'
+        return content.decode(charset_encoding if charset_encoding else 'utf-8', 'ignore')
 
 
 @event('plugin.register')

@@ -10,6 +10,8 @@ from flexget.event import event
 from flexget.utils import json
 from requests import RequestException
 
+from ptsites.executor import Executor
+
 d = path.dirname(__file__)
 sys.path.append(d)
 from qbittorrent_client import QBittorrentClientFactory
@@ -73,7 +75,6 @@ class PluginIYUUAutoReseed():
                         continue
                     client_torrent = torrent_dict[info_hash]
                     base_url = site['base_url']
-                    protocol = 'https'
                     site_name = ''
                     passkey = ''
                     for key, value in passkeys.items():
@@ -87,34 +88,16 @@ class PluginIYUUAutoReseed():
                     site['download_page'] = site['download_page'].replace('{}', '{torrent_id}')
                     torrent_id = str(torrent['torrent_id'])
 
-                    if site_name == 'totheglory':
-                        download_page = site['download_page'].format(torrent_id=torrent_id + '/' + passkey)
-                    elif site_name == 'dicmusic':
-                        download_page = site['download_page'].format(torrent_id=torrent_id,
-                                                                     authkey=passkey['authkey'],
-                                                                     torrent_pass=passkey['torrent_pass'])
-                    elif site_name == 'hdcity':
-                        download_page = site['download_page'].format(
-                            torrent_id=torrent_id + '&cuhash=' + passkey['cuhash'])
-                    elif site_name == 'ccfbits':
-                        download_page = site['download_page'].format(torrent_id=torrent_id, passkey=passkey)
-                    else:
-                        download_page = site['download_page'].format(torrent_id=torrent_id + '&passkey=' + passkey)
-
-                    if site_name == 'm-team':
-                        download_page = download_page + '&https=1'
-
                     entry = Entry(
                         title=client_torrent['title'],
-                        url='{}://{}/{}'.format(protocol, base_url, download_page),
                         torrent_info_hash=torrent['info_hash']
                     )
+
                     entry['autoTMM'] = client_torrent['qbittorrent_auto_tmm']
                     entry['category'] = client_torrent['qbittorrent_category']
                     entry['savepath'] = client_torrent['qbittorrent_save_path']
                     entry['paused'] = 'true'
-                    if site_name == 'hdcity':
-                        entry['download_headers'] = passkey['headers']
+                    Executor.execute_build_reseed_entry(entry, base_url, site, site_name, passkey, torrent_id)
                     entries.append(entry)
         return entries
 

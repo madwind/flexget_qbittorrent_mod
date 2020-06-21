@@ -1,0 +1,84 @@
+import json
+import os
+from io import BytesIO
+
+from flexget import plugin
+
+from ptsites.executor import Executor, SignState
+from ptsites.utils.baidu_ocr import BaiduOcr
+
+try:
+    from PIL import Image
+except ImportError:
+    Image = None
+
+# auto_sign_in
+BASE_URL = 'https://hdsky.me/'
+IMAGE_HASH_URL = 'https://hdsky.me/image_code_ajax.php'
+IMAGE_URL = 'https://hdsky.me/image.php?action=regimage&imagehash={}'
+URL = 'https://hdsky.me/showup.php'
+SUCCEED_REGEX = '已签到|{"success":true,"message":\\d+}'
+WRONG_REGEX = '{"success":false,"message":"invalid_imagehash"}'
+
+
+class MainClass(Executor):
+    @staticmethod
+    def build_sign_in_entry(entry, site_name, config):
+        site_config = entry['site_config']
+        if not isinstance(site_config, str):
+            raise plugin.PluginError('{} site_config is not a String'.format(site_name))
+        entry['base_url'] = BASE_URL
+        entry['url'] = URL
+        entry['succeed_regex'] = SUCCEED_REGEX
+        entry['wrong_regex'] = WRONG_REGEX
+        headers = {
+            'cookie': site_config,
+            'user-agent': config.get('user-agent'),
+            'referer': BASE_URL
+        }
+        entry['headers'] = headers
+
+    def do_sign_in(self, entry, config):
+        base_response = self._request(entry, 'get', BASE_URL, headers=entry['headers'])
+        sign_in_state, base_content = self.check_sign_in_state(entry, base_response, BASE_URL)
+        if sign_in_state != SignState.NO_SIGN_IN:
+            return
+
+        data = {
+            'action': (None, 'new')
+        }
+
+        image_hash_response = self._request(entry, 'post', IMAGE_HASH_URL, files=data)
+        image_hash_net_state = self.check_net_state(entry, image_hash_response, IMAGE_HASH_URL)
+        if image_hash_net_state:
+            return
+        content = self._decode(image_hash_response)
+        image_hash = json.loads(content)['code']
+
+        if image_hash:
+            img_url = IMAGE_URL.format(image_hash)
+            img_response = self._request(entry, 'get', img_url)
+            img_net_state = self.check_net_state(entry, img_response, img_url)
+            if img_net_state:
+                return
+        else:
+            entry['result'] = 'Cannot find: image_hash'
+            entry.fail(entry['result'])
+            return
+        img = Image.open(BytesIO(img_response.content))
+        code, img_byte_arr = BaiduOcr.get_ocr_code(img, entry, config)
+        if len(code) == 6:
+            data = {
+                'action': (None, 'showup'),
+                'imagehash': (None, image_hash),
+                'imagestring': (None, code)
+            }
+            response = self._request(entry, 'post', URL, files=data)
+            final_state = self.final_check(entry, response, response.request.url)
+        if len(code) != 6 or final_state == SignState.WRONG_ANSWER:
+            with open(os.path.dirname(__file__) + "/hdsky.png", "wb") as code_file:
+                code_file.write(img_response.content)
+            with open(os.path.dirname(__file__) + "/hdsky2.png", "wb") as code_file:
+                code_file.write(img_byte_arr.getvalue())
+            entry['result'] = 'ocr failed: {}, see hdsky.png'.format(code)
+            entry.fail(entry['result'])
