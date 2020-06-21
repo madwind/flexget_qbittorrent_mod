@@ -83,7 +83,7 @@ schedules:
 tasks:
   pterclub:
     rss:
-      url: https://pterclub.com/torrentrss.php?rows=10&cat413=1&tag_internal=yes&isize=1&linktype=dl&passkey=69a8dbba1bc9d7bdc1bf8f02bd8539e2
+      url: https://pterclub.com/torrentrss.php?rows=10&cat413=1&tag_internal=yes&isize=1&linktype=dl&passkey=xxxxxxxx
       all_entries: no
       other_fields:
         - link
