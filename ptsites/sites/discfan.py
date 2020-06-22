@@ -4,7 +4,7 @@ from ptsites.executor import Executor
 
 # auto_sign_in
 URL = 'https://discfan.net/attendance.php'
-SUCCEED_REGEX = '這是您的第 \\d+ 次簽到，已連續簽到 \\d+ 天，本次簽到獲得 \\d+ 個魔力值。|您今天已經簽到過了，請勿重複刷新。'
+SUCCEED_REGEX = '這是您的第 .* 次簽到，已連續簽到 .* 天，本次簽到獲得 .* 個魔力值。|您今天已經簽到過了，請勿重複刷新。'
 
 
 class MainClass(Executor):
