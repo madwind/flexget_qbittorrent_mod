@@ -1,6 +1,6 @@
 import json
 
-from ptsites.executor import Executor
+from ..executor import Executor
 
 # auto_sign_in
 BASE_URL = 'https://hdpost.top/'

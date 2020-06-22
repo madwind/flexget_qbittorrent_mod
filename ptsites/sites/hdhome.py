@@ -1,6 +1,6 @@
 from flexget import plugin
 
-from ptsites.executor import Executor
+from ..executor import Executor
 
 # auto_sign_in
 URL = 'https://hdhome.org/attendance.php'

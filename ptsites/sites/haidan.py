@@ -1,6 +1,6 @@
 from flexget import plugin
 
-from ptsites.executor import Executor, SignState
+from ..executor import Executor, SignState
 
 # auto_sign_in
 BASE_URL = 'https://www.haidan.video/index.php'

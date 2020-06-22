@@ -1,8 +1,6 @@
 import hashlib
-import sys
 import time
 from json import JSONDecodeError
-from os import path
 
 from flexget import plugin
 from flexget.entry import Entry
@@ -10,11 +8,8 @@ from flexget.event import event
 from flexget.utils import json
 from requests import RequestException
 
-from ptsites.executor import Executor
-
-d = path.dirname(__file__)
-sys.path.append(d)
-from qbittorrent_client import QBittorrentClientFactory
+from .ptsites.executor import Executor
+from .qbittorrent_client import QBittorrentClientFactory
 
 
 class PluginIYUUAutoReseed():

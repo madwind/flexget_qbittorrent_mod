@@ -4,7 +4,7 @@ import requests
 from flexget import plugin
 from loguru import logger
 
-from ptsites.executor import Executor
+from ..executor import Executor
 
 # auto_sign_in
 URL = 'https://hdcity.city/sign'

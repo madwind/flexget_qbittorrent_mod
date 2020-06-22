@@ -1,18 +1,13 @@
 import math
 import os
 import re
-import sys
-from os import path
 
 from flexget import plugin
 from flexget.entry import Entry
 from flexget.event import event
 from loguru import logger
 
-d = path.dirname(__file__)
-sys.path.append(d)
-
-from qbittorrent_client import QBittorrentClientFactory
+from .qbittorrent_client import QBittorrentClientFactory
 
 
 class QBittorrentModBase:

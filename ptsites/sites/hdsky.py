@@ -4,8 +4,8 @@ from io import BytesIO
 
 from flexget import plugin
 
-from ptsites.executor import Executor, SignState
-from ptsites.utils.baidu_ocr import BaiduOcr
+from ..executor import Executor, SignState
+from ..utils.baidu_ocr import BaiduOcr
 
 try:
     from PIL import Image

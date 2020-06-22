@@ -5,7 +5,7 @@ from flexget import plugin
 from flexget.entry import Entry
 from flexget.event import event
 
-from ptsites.executor import Executor
+from .ptsites.executor import Executor
 
 
 class PluginAutoSignIn:

@@ -2,7 +2,7 @@ import re
 
 from flexget import plugin
 
-from ptsites.executor import Executor
+from ..executor import Executor
 from urllib.parse import urljoin
 
 # auto_sign_in
