@@ -1,6 +1,8 @@
 import json
 
-from ..executor import Executor
+from loguru import logger
+
+from ..executor import Executor, SignState
 
 # auto_sign_in
 BASE_URL = 'https://hdpost.top/'
@@ -29,8 +31,8 @@ class MainClass(Executor):
     def do_sign_in(self, entry, config):
         login = entry['site_config'].get('login')
         if login:
-            response = self._request(entry, 'post', LOGIN_URL, headers=entry['headers'], data=login)
-            if response.status_code == 200:
+            login_response = self._request(entry, 'post', LOGIN_URL, headers=entry['headers'], data=login)
+            if login_response.status_code == 200:
                 response = self._request(entry, 'put', URL)
                 self.final_check(entry, response, URL)
             else:
@@ -39,3 +41,18 @@ class MainClass(Executor):
         else:
             entry['result'] = 'login data not found'
             entry.fail(entry['result'])
+
+    def check_net_state(self, entry, response, original_url, is_message=False):
+        if not response and response.status_code != 422:
+            logger.info('noonono')
+            if not is_message:
+                if not entry['result'] and not is_message:
+                    entry['result'] = SignState.NETWORK_ERROR.value.format('Response is None')
+                entry.fail(entry['result'])
+            return SignState.NETWORK_ERROR
+
+        if response.url != original_url:
+            if not is_message:
+                entry['result'] = SignState.URL_REDIRECT.value.format(original_url, response.url)
+                entry.fail(entry['result'])
+            return SignState.URL_REDIRECT
