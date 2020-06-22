@@ -7,4 +7,6 @@ PS：对于大部分人而言 iyuu(辅种) amt(删种) flexget-nexusphp(筛选�
 
 tg: <https://t.me/flexget_qbittorrent_mod>
 
+qq群: 1128215750
+
 wiki: <https://github.com/IvonWei/flexget_qbittorrent_mod/wiki>
