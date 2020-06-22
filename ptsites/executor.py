@@ -359,9 +359,12 @@ class Executor:
 
     def final_check(self, entry, response, original_url):
         sign_in_state, content = self.check_sign_in_state(entry, response, original_url)
-        if sign_in_state == SignState.NO_SIGN_IN:
+        if sign_in_state in [SignState.NETWORK_ERROR, SignState.URL_REDIRECT]:
+            return
+        elif sign_in_state == SignState.NO_SIGN_IN:
             entry['result'] = SignState.SIGN_IN_FAILED
             entry.fail(entry['result'])
+            logger.warning(content)
 
     def _decode(self, response):
         content = response.content
