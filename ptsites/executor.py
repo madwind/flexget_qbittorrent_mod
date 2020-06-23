@@ -7,6 +7,7 @@ import time
 from enum import Enum
 from pathlib import Path
 from urllib.parse import urljoin
+from . import sites
 
 import chardet
 import requests
@@ -91,12 +92,12 @@ class Executor:
         site_config = entry['site_config']
         if isinstance(site_config, str) or not site_config.get('url'):
             try:
-                site_module = importlib.import_module('ptsites.sites.{}'.format(site_name.lower()))
+                site_module = getattr(sites, site_name.lower())
                 site_class = getattr(site_module, 'MainClass')
                 site_class.build_sign_in_entry(entry, site_name, config)
                 entry['site_class'] = site_class
-            except ModuleNotFoundError as e:
-                raise plugin.PluginError('No site named: {}'.format(site_name))
+            except AttributeError as e:
+                raise plugin.PluginError(str(e.args))
         else:
             Executor.build_sign_in_entry(entry, site_name, config)
 
