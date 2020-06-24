@@ -419,10 +419,10 @@ class Executor:
     @staticmethod
     def execute_build_reseed_entry(entry, base_url, site, site_name, passkey, torrent_id):
         try:
-            site_module = importlib.import_module('ptsites.sites.{}'.format(site_name.lower()))
+            site_module = getattr(sites, site_name.lower())
             site_class = getattr(site_module, 'MainClass')
             site_class.build_reseed_entry(entry, base_url, site, passkey, torrent_id)
-        except ModuleNotFoundError as e:
+        except AttributeError as e:
             Executor.build_reseed_entry(entry, base_url, site, passkey, torrent_id)
 
     @staticmethod
