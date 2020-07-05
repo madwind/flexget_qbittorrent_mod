@@ -16,7 +16,7 @@ except ImportError:
 # auto_sign_in
 BASE_URL = 'https://open.cd/'
 URL = 'https://open.cd/plugin_sign-in.php'
-SUCCEED_REGEX = '查看簽到記錄|{"state":"success","signindays":"\d+","integral":"\\d+"}'
+SUCCEED_REGEX = '查看簽到記錄|{"state":"success","signindays":"\\d+","integral":"\\d+"}'
 WRONG_REGEX = '验证码错误'
 
 # html_rss

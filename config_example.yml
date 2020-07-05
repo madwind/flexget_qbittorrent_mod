@@ -232,6 +232,7 @@ tasks:
         hdtime: xxxxxxxx
         hdzone: xxxxxxxx
         joyhd: xxxxxxxx
+        keepfrds: xxxxxxxx
         leaguehd: xxxxxxxx
         moecat: xxxxxxxx
         msg: xxxxxxxx
@@ -341,6 +342,7 @@ tasks:
         hitpt: 'xxxxxxxx'
         j99: 'xxxxxxxx'
         joyhd: 'xxxxxxxx'
+        keepfrds: 'xxxxxxxx'
         lbj007: 'xxxxxxxx'
         leaguehd: 'xxxxxxxx'
         m-team: 'xxxxxxxx'

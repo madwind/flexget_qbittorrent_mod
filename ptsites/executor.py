@@ -1,4 +1,3 @@
-import importlib
 import itertools
 import json
 import os
@@ -7,7 +6,6 @@ import time
 from enum import Enum
 from pathlib import Path
 from urllib.parse import urljoin
-from . import sites
 
 import chardet
 import requests
@@ -15,6 +13,8 @@ from flexget import plugin
 from flexget.utils.soup import get_soup
 from loguru import logger
 from requests.adapters import HTTPAdapter
+
+from . import sites
 
 try:
     import brotli

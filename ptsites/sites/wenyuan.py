@@ -4,7 +4,7 @@ from ..executor import Executor
 
 # auto_sign_in
 URL = 'https://www.xn--7p0ar28b.xyz/bakatest.php'
-SUCCEED_REGEX = '连续\\d+天签到,获得\\d+点魔力值|今天已经签过到了\(已连续\\d+天签到\)'
+SUCCEED_REGEX = '连续\\d+天签到,获得\\d+点魔力值|今天已经签过到了\\(已连续\\d+天签到\\)'
 WRONG_REGEX = '回答错误,失去 1 魔力值,这道题还会再考一次'
 
 
