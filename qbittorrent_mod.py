@@ -446,7 +446,10 @@ class PluginQBittorrentMod(QBittorrentModBase):
         if re_object:
             domain = re_object.group().split('.')
             if len(domain) > 1:
-                return domain[len(domain) - 2]
+                site_name = domain[len(domain) - 2]
+                if site_name == 'edu':
+                    site_name = domain[len(domain) - 3]
+                return site_name
 
     def on_task_learn(self, task, config):
         """ Make sure all temp files are cleaned up when entries are learned """
