@@ -27,7 +27,7 @@ templates:
     qbittorrent_mod:
       action:
         add:
-          reject_on_dl_limit: 8388607
+          reject_on_dl_limit: 8388608
           reject_on_dl_speed: 6291456
           category: Rss
           autoTMM: yes
