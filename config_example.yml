@@ -64,7 +64,7 @@ templates:
           tag_by_tracker: yes
 
 schedules:
-  - tasks: [pterclub, rssdownload]
+  - tasks: [pterclub, rss_download]
     interval:
       minutes: 1
 
