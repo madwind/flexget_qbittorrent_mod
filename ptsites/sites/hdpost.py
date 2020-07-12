@@ -1,5 +1,3 @@
-import json
-
 from loguru import logger
 
 from ..executor import Executor, SignState

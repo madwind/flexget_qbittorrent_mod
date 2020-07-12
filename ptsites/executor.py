@@ -67,8 +67,6 @@ class Executor:
             'user-agent': user_agent,
             'referer': referer
         }
-        if brotli:
-            headers['accept-encoding'] = 'gzip, deflate, br'
         entry['headers'] = headers
         entry['data'] = site_config.get('data')
         entry['get_message'] = site_config.get('get_message', 'NexusPHP')
@@ -78,8 +76,24 @@ class Executor:
         entry['aipocr'] = config.get('aipocr')
         entry['command_executor'] = config.get('command_executor')
 
-        entry['result'] = ''
-        entry['messages'] = ''
+    @staticmethod
+    def build_sign_in_entry_common(entry, site_name, config, url, succeed_regex, base_url=None,
+                                   wrong_regex=None):
+        site_config = entry['site_config']
+        if not isinstance(site_config, str):
+            raise plugin.PluginError('{} site_config is not a String'.format(site_name))
+        entry['url'] = url
+        entry['succeed_regex'] = succeed_regex
+        if base_url:
+            entry['base_url'] = base_url
+        if wrong_regex:
+            entry['wrong_regex'] = wrong_regex
+        headers = {
+            'cookie': site_config,
+            'user-agent': config.get('user-agent'),
+            'referer': base_url if base_url else url
+        }
+        entry['headers'] = headers
 
     def do_sign_in(self, entry, config):
         self.sign_in_by_get(entry, config)
@@ -100,6 +114,8 @@ class Executor:
                 raise plugin.PluginError(str(e.args))
         else:
             Executor.build_sign_in_entry(entry, site_name, config)
+        entry['result'] = ''
+        entry['messages'] = ''
 
     def execute_sign_in(self, entry, config):
         # command_executor = config.get('command_executor')

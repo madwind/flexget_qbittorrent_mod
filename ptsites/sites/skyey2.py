@@ -1,9 +1,7 @@
 import re
-
-from flexget import plugin
+from urllib.parse import urljoin
 
 from ..executor import Executor
-from urllib.parse import urljoin
 
 # auto_sign_in
 URL = 'https://www.skyey2.com/login.php'

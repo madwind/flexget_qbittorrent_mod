@@ -52,8 +52,6 @@ class PluginAutoSignIn:
                 title='{} {}'.format(site_name, datetime.now().date()),
             )
             entry['site_config'] = site_config
-            entry['result'] = ''
-            entry['messages'] = ''
             Executor.execute_build_sign_in_entry(entry, site_name, config)
             entries.append(entry)
         return entries

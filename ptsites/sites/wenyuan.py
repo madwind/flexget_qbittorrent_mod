@@ -1,5 +1,3 @@
-from flexget import plugin
-
 from ..executor import Executor
 
 # auto_sign_in
@@ -11,18 +9,7 @@ WRONG_REGEX = '回答错误,失去 1 魔力值,这道题还会再考一次'
 class MainClass(Executor):
     @staticmethod
     def build_sign_in_entry(entry, site_name, config):
-        site_config = entry['site_config']
-        if not isinstance(site_config, str):
-            raise plugin.PluginError('{} site_config is not a String'.format(site_name))
-        entry['url'] = URL
-        entry['succeed_regex'] = SUCCEED_REGEX
-        entry['wrong_regex'] = WRONG_REGEX
-        headers = {
-            'cookie': site_config,
-            'user-agent': config.get('user-agent'),
-            'referer': URL
-        }
-        entry['headers'] = headers
+        Executor.build_sign_in_entry_common(entry, site_name, config, URL, SUCCEED_REGEX, wrong_regex=WRONG_REGEX)
 
     def do_sign_in(self, entry, config):
         self.sign_in_by_question(entry, config)

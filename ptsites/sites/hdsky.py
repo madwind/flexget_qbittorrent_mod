@@ -2,8 +2,6 @@ import json
 import os
 from io import BytesIO
 
-from flexget import plugin
-
 from ..executor import Executor, SignState
 from ..utils.baidu_ocr import BaiduOcr
 
@@ -24,19 +22,8 @@ WRONG_REGEX = '{"success":false,"message":"invalid_imagehash"}'
 class MainClass(Executor):
     @staticmethod
     def build_sign_in_entry(entry, site_name, config):
-        site_config = entry['site_config']
-        if not isinstance(site_config, str):
-            raise plugin.PluginError('{} site_config is not a String'.format(site_name))
-        entry['base_url'] = BASE_URL
-        entry['url'] = URL
-        entry['succeed_regex'] = SUCCEED_REGEX
-        entry['wrong_regex'] = WRONG_REGEX
-        headers = {
-            'cookie': site_config,
-            'user-agent': config.get('user-agent'),
-            'referer': BASE_URL
-        }
-        entry['headers'] = headers
+        Executor.build_sign_in_entry_common(entry, site_name, config, URL, SUCCEED_REGEX, base_url=BASE_URL,
+                                            wrong_regex=WRONG_REGEX)
 
     def do_sign_in(self, entry, config):
         base_response = self._request(entry, 'get', BASE_URL, headers=entry['headers'])
