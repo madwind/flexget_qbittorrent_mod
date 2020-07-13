@@ -443,5 +443,5 @@ class Executor:
 
     @staticmethod
     def build_reseed_entry(entry, base_url, site, passkey, torrent_id):
-        download_page = site['download_page'].format(torrent_id=torrent_id + '&passkey=' + passkey)
+        download_page = site['download_page'].format(torrent_id=torrent_id, passkey=passkey)
         entry['url'] = 'https://{}/{}'.format(base_url, download_page)
