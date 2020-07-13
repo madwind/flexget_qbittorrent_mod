@@ -20,8 +20,3 @@ class MainClass(Executor):
 
     def do_sign_in(self, entry, config):
         self.sign_in_by_post_data(entry, config)
-
-    @staticmethod
-    def build_reseed_entry(entry, base_url, site, passkey, torrent_id):
-        download_page = site['download_page'].format(torrent_id=torrent_id, passkey=passkey)
-        entry['url'] = 'https://{}/{}'.format(base_url, download_page)
