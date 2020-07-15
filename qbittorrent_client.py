@@ -9,7 +9,7 @@ from loguru import logger
 from requests import RequestException, Session
 
 logger = logger.bind(name='qbittorrent_client')
-__version__ = 'v0.5.7'
+__version__ = 'v0.5.8'
 
 
 def singleton(cls):
@@ -49,6 +49,7 @@ class QBittorrentClient:
 
     API_URL_SET_APPLICATION_PREFERENCES = '/api/v2/app/setPreferences'
     API_URL_RESUME = '/api/v2/torrents/resume'
+    API_URL_PAUSE = '/api/v2/torrents/pause'
     API_URL_RECHECK_TORRENTS = '/api/v2/torrents/recheck'
     API_URL_EDIT_TRACKERS = '/api/v2/torrents/editTracker'
     API_URL_DELETE_TORRENTS = '/api/v2/torrents/delete'
@@ -223,6 +224,17 @@ class QBittorrentClient:
                 self.url + self.API_URL_RESUME,
                 data=data,
                 msg_on_fail='resume_torrents failed.',
+                verify=self._verify,
+            )
+
+    def pause_torrents(self, hashes):
+        data = {'hashes': hashes}
+        if self._check_action('pause_torrents', hashes):
+            self._request(
+                'post',
+                self.url + self.API_URL_PAUSE,
+                data=data,
+                msg_on_fail='pause_torrents failed.',
                 verify=self._verify,
             )
 

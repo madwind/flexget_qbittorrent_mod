@@ -128,6 +128,9 @@ class PluginQBittorrentMod(QBittorrentModBase):
                             'recheck_torrents': {'type': 'boolean'},
                         }
                     },
+                    'pause': {
+                        'type': 'boolean'
+                    },
                     'modify': {
                         'type': 'object',
                         'properties': {
@@ -416,6 +419,15 @@ class PluginQBittorrentMod(QBittorrentModBase):
             logger.info('recheck {}', recheck_hashes)
             self.client.recheck_torrents(str.join('|', recheck_hashes))
         self.client.resume_torrents(str.join('|', hashes))
+
+    def pause_entries(self, task, pause_options):
+        if not pause_options:
+            return
+        hashes = []
+        for entry in task.accepted:
+            hashes.append(entry['torrent_info_hash'])
+            logger.info('pause: {}', entry['title'])
+        self.client.pause_torrents(str.join('|', hashes))
 
     def modify_entries(self, task, modify_options):
         tag_by_tracker = modify_options.get('tag_by_tracker')
