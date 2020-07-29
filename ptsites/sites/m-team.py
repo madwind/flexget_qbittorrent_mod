@@ -40,3 +40,4 @@ class MainClass(Executor):
                     response = self._request(entry, 'post', VERIFY_URL, files=data)
 
         self.final_check(entry, response, entry['url'])
+        entry['result'] = entry['result'] + ' with google_auth'
