@@ -347,7 +347,9 @@ tasks:
         keepfrds: 'xxxxxxxx'
         lbj007: 'xxxxxxxx'
         leaguehd: 'xxxxxxxx'
-        m-team: 'xxxxxxxx'
+        m-team:
+          cookie: 'xxxxxxxx'
+          secret_key: 'xxxxxxxx'
         moecat: 'xxxxxxxx'
         msg: 'xxxxxxxx'
         nanyangpt: 'xxxxxxxx'
