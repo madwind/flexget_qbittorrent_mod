@@ -4,7 +4,7 @@ from ..utils.google_auth import GoogleAuth
 from ..executor import Executor, SignState
 
 # auto_sign_in
-URL = 'https://pt.m-team.cc/'
+URL = ' https://pt.m-team.cc/index.php'
 VERIFY_URL = 'https://pt.m-team.cc/verify.php'
 SUCCEED_REGEX = '歡迎回來'
 MESSAGE_URL = 'https://pt.m-team.cc/messages.php?action=viewmailbox&box=-2'
@@ -28,6 +28,7 @@ class MainClass(Executor):
     def sign_in_by_get(self, entry, config):
         response = self._request(entry, 'get', entry['url'], headers=entry['headers'])
         net_state = self.check_net_state(entry, response, entry['url'])
+        use_google_auth = False
         if net_state == SignState.URL_REDIRECT:
             if response.url.startswith(VERIFY_URL):
                 content = self._decode(response)
@@ -40,4 +41,5 @@ class MainClass(Executor):
                     response = self._request(entry, 'post', VERIFY_URL, files=data)
 
         self.final_check(entry, response, entry['url'])
-        entry['result'] = entry['result'] + ' with google_auth'
+        if use_google_auth:
+            entry['result'] = entry['result'] + ' with google_auth'
