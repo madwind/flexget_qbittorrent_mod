@@ -138,7 +138,8 @@ class Executor:
         if site_class:
             site_object = site_class()
             site_object.do_sign_in(entry, config)
-            site_object.get_message(entry, config)
+            if not entry.failed:
+                site_object.get_message(entry, config)
         else:
             method = entry.get('method')
             if method == 'get':
@@ -151,11 +152,11 @@ class Executor:
                 entry['result'] = 'No method named: {}'.format(method)
                 entry.fail(entry['result'])
                 return
-
-            if str(entry['get_message']).lower() == 'nexusphp':
-                self.get_nexusphp_message(entry, config)
-            elif str(entry['get_message']).lower() == 'gazelle':
-                self.get_gazelle_message(entry, config)
+            if not entry.failed:
+                if str(entry['get_message']).lower() == 'nexusphp':
+                    self.get_nexusphp_message(entry, config)
+                elif str(entry['get_message']).lower() == 'gazelle':
+                    self.get_gazelle_message(entry, config)
         logger.info('{} {}\n{}'.format(entry['title'], entry['result'], entry['messages']).strip())
 
     def _request(self, entry, method, url, is_message=False, **kwargs):
