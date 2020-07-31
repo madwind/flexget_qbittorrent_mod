@@ -30,7 +30,7 @@ class MainClass(Executor):
         login = entry['site_config'].get('login')
         if login:
             login_response = self._request(entry, 'post', LOGIN_URL, headers=entry['headers'], data=login)
-            if login_response.status_code == 200:
+            if login_response and login_response.status_code == 200:
                 response = self._request(entry, 'put', URL)
                 self.final_check(entry, response, URL)
             else:
@@ -42,7 +42,6 @@ class MainClass(Executor):
 
     def check_net_state(self, entry, response, original_url, is_message=False):
         if not response and response.status_code != 422:
-            logger.info('noonono')
             if not is_message:
                 if not entry['result'] and not is_message:
                     entry['result'] = SignState.NETWORK_ERROR.value.format('Response is None')
