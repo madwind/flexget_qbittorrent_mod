@@ -4,8 +4,8 @@ from ..utils.google_auth import GoogleAuth
 from ..executor import Executor, SignState
 
 # auto_sign_in
-URL = ' https://pt.m-team.cc/index.php'
-VERIFY_URL = 'https://pt.m-team.cc/verify.php'
+URL = 'https://pt.m-team.cc/'
+VERIFY_URL = 'https://pt.m-team.cc/verify.php?returnto=%2F'
 SUCCEED_REGEX = '歡迎回來'
 MESSAGE_URL = 'https://pt.m-team.cc/messages.php?action=viewmailbox&box=-2'
 
