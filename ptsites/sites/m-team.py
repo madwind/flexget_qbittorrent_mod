@@ -43,3 +43,17 @@ class MainClass(Executor):
         self.final_check(entry, response, entry['url'])
         if use_google_auth:
             entry['result'] = entry['result'] + ' with google_auth'
+
+    def check_net_state(self, entry, response, original_url, is_message=False):
+        if not response:
+            if not is_message:
+                if not entry['result'] and not is_message:
+                    entry['result'] = SignState.NETWORK_ERROR.value.format('Response is None')
+                entry.fail(entry['result'])
+            return SignState.NETWORK_ERROR
+
+        if response.url not in [original_url, VERIFY_URL]:
+            if not is_message:
+                entry['result'] = SignState.URL_REDIRECT.value.format(original_url, response.url)
+                entry.fail(entry['result'])
+            return SignState.URL_REDIRECT
