@@ -1,4 +1,5 @@
-from ..executor import Executor, SignState
+from ..nexusphp import NexusPHP
+from ..site_base import SignState
 
 # auto_sign_in
 BASE_URL = 'https://www.haidan.video/index.php'
@@ -6,10 +7,10 @@ URL = 'https://www.haidan.video/signin.php'
 SUCCEED_REGEX = '(?<=value=")已经打卡(?=")'
 
 
-class MainClass(Executor):
+class MainClass(NexusPHP):
     @staticmethod
     def build_sign_in_entry(entry, site_name, config):
-        Executor.build_sign_in_entry_common(entry, site_name, config, URL, SUCCEED_REGEX, base_url=BASE_URL)
+        NexusPHP.build_sign_in_entry(entry, site_name, config, URL, SUCCEED_REGEX, base_url=BASE_URL)
 
     def check_net_state(self, entry, response, original_url, is_message=False):
         if not response:

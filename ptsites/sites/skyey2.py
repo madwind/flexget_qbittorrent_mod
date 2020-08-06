@@ -1,7 +1,7 @@
 import re
 from urllib.parse import urljoin
 
-from ..executor import Executor
+from ..nexusphp import NexusPHP
 
 # auto_sign_in
 URL = 'https://www.skyey2.com/login.php'
@@ -10,7 +10,7 @@ FORMHASH_REGEX = '(?<="formhash" value=").*(?=")'
 SUCCEED_REGEX = '欢迎您回来，.*?(?=，)'
 
 
-class MainClass(Executor):
+class MainClass(NexusPHP):
     @staticmethod
     def build_sign_in_entry(entry, site_name, config):
         entry['url'] = URL
@@ -21,7 +21,7 @@ class MainClass(Executor):
         }
         entry['headers'] = headers
 
-    def do_sign_in(self, entry, config):
+    def sign_in(self, entry, config):
         login = entry['site_config'].get('login')
         response = self._request(entry, 'get', URL, headers=entry['headers'])
         state = self.check_net_state(entry, response, URL)

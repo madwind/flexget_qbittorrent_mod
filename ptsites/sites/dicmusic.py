@@ -1,6 +1,4 @@
-
-
-from ..executor import Executor
+from ..gazelle import Gazelle
 
 # auto_sign_in
 URL = 'https://dicmusic.club/'
@@ -12,13 +10,10 @@ SUCCEED_REGEX = '积分 \\(.*?\\)'
 #   authkey: ‘{ authkey }’
 #   torrent_pass: '{ torrent_pass }'
 
-class MainClass(Executor):
+class MainClass(Gazelle):
     @staticmethod
     def build_sign_in_entry(entry, site_name, config):
-        Executor.build_sign_in_entry_common(entry, site_name, config, URL, SUCCEED_REGEX)
-
-    def get_message(self, entry, config):
-        self.get_gazelle_message(entry, config)
+        Gazelle.build_sign_in_entry(entry, site_name, config, URL, SUCCEED_REGEX)
 
     @staticmethod
     def build_reseed_entry(entry, base_url, site, passkey, torrent_id):

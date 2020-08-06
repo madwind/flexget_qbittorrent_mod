@@ -3,7 +3,8 @@ import re
 from io import BytesIO
 from urllib.parse import urljoin
 
-from ..executor import Executor, SignState
+from ..nexusphp import NexusPHP
+from ..site_base import SignState
 from ..utils.baidu_ocr import BaiduOcr
 
 try:
@@ -39,10 +40,10 @@ FIELDS = {
 }
 
 
-class MainClass(Executor):
+class MainClass(NexusPHP):
     @staticmethod
     def build_sign_in_entry(entry, site_name, config):
-        Executor.build_sign_in_entry_common(entry, site_name, config, URL, SUCCEED_REGEX, base_url=BASE_URL,
+        NexusPHP.build_sign_in_entry(entry, site_name, config, URL, SUCCEED_REGEX, base_url=BASE_URL,
                                             wrong_regex=WRONG_REGEX)
 
     @staticmethod
@@ -50,7 +51,7 @@ class MainClass(Executor):
         config['root_element_selector'] = ROOT_ELEMENT_SELECTOR
         config['fields'] = FIELDS
 
-    def do_sign_in(self, entry, config):
+    def sign_in(self, entry, config):
         base_response = self._request(entry, 'get', BASE_URL, headers=entry['headers'])
         sign_in_state, base_content = self.check_sign_in_state(entry, base_response, BASE_URL)
         if sign_in_state != SignState.NO_SIGN_IN:

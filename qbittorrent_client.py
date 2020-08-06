@@ -64,6 +64,10 @@ class QBittorrentClient:
     build_entry_lock = threading.Lock()
 
     def __init__(self, config):
+        self.session = {}
+        self._verify = True
+        self.url = ''
+        self.connected = False
         self._reseed_dict = {}
         self._entry_dict = {}
         self._server_state = {}
@@ -118,10 +122,7 @@ class QBittorrentClient:
         'localhost'.
         """
         self.session = Session()
-        if not self._config.get('verify_cert'):
-            self._verify = True
-        else:
-            self._verify = self._config.get('verify_cert')
+        self._verify = self._config.get('verify_cert', True)
 
         self.url = '{}://{}:{}'.format('https' if self._config['use_ssl'] else 'http', self._config['host'],
                                        self._config['port']
@@ -402,7 +403,7 @@ class QBittorrentClient:
 
     def _update_reseed_addition(self, reseed_entry_list):
         reseed_last_activity = max(reseed_entry_list,
-                                   key=lambda reseed_entry: reseed_entry['qbittorrent_last_activity'])
+                                   key=lambda _reseed_entry: _reseed_entry['qbittorrent_last_activity'])
         for reseed_entry in reseed_entry_list:
             if reseed_entry['qbittorrent_last_activity'] <= reseed_last_activity['qbittorrent_last_activity']:
                 reseed_entry['qbittorrent_reseed_last_activity'] = reseed_last_activity['qbittorrent_last_activity']

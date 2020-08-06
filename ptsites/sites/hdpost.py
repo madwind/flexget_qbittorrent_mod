@@ -1,8 +1,8 @@
-from loguru import logger
-
-from ..executor import Executor, SignState
+from ..nexusphp import NexusPHP
 
 # auto_sign_in
+from ..site_base import SignState
+
 BASE_URL = 'https://hdpost.top/'
 LOGIN_URL = 'https://hdpost.top/api/auth/signin'
 URL = 'https://hdpost.top/api/check'
@@ -15,7 +15,7 @@ SUCCEED_REGEX = '"keepDays":\\d+|YOU_ALREADY_CHECK_IN'
 #    password: 'xxxxxxxx'
 
 
-class MainClass(Executor):
+class MainClass(NexusPHP):
     @staticmethod
     def build_sign_in_entry(entry, site_name, config):
         entry['url'] = URL
@@ -26,7 +26,7 @@ class MainClass(Executor):
         }
         entry['headers'] = headers
 
-    def do_sign_in(self, entry, config):
+    def sign_in(self, entry, config):
         login = entry['site_config'].get('login')
         if login:
             login_response = self._request(entry, 'post', LOGIN_URL, headers=entry['headers'], data=login)

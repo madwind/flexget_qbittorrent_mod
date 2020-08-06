@@ -3,7 +3,7 @@ import re
 import requests
 from loguru import logger
 
-from ..executor import Executor
+from ..nexusphp import NexusPHP
 
 # auto_sign_in
 URL = 'https://hdcity.city/sign'
@@ -17,10 +17,10 @@ SUCCEED_REGEX = '本次签到获得魅力\d+'
 #     cookie: '{ cookie }'
 #     user-agent: '{? headers.user_agent ?}'
 
-class MainClass(Executor):
+class MainClass(NexusPHP):
     @staticmethod
     def build_sign_in_entry(entry, site_name, config):
-        Executor.build_sign_in_entry_common(entry, site_name, config, URL, SUCCEED_REGEX)
+        NexusPHP.build_sign_in_entry(entry, site_name, config, URL, SUCCEED_REGEX)
 
     @staticmethod
     def build_reseed_entry(entry, base_url, site, passkey, torrent_id):

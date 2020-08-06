@@ -52,14 +52,14 @@ class PluginAutoSignIn:
                 title='{} {}'.format(site_name, datetime.now().date()),
             )
             entry['site_config'] = site_config
-            Executor.execute_build_sign_in_entry(entry, site_name, config)
+            Executor.build_sign_in_entry(entry, site_name, config)
             entries.append(entry)
         return entries
 
     def on_task_output(self, task, config):
         max_workers = config.get('max_workers', 1)
         with ThreadPoolExecutor(max_workers=max_workers) as t:
-            all_task = [t.submit(Executor().execute_sign_in, entry, config) for entry in task.accepted]
+            all_task = [t.submit(Executor.sign_in, entry, config) for entry in task.accepted]
             wait(all_task, return_when=ALL_COMPLETED)
 
 

@@ -92,7 +92,7 @@ class PluginIYUUAutoReseed():
                     entry['category'] = client_torrent['qbittorrent_category']
                     entry['savepath'] = client_torrent['qbittorrent_save_path']
                     entry['paused'] = 'true'
-                    Executor.execute_build_reseed_entry(entry, base_url, site, site_name, passkey, torrent_id)
+                    Executor.build_reseed_entry(entry, base_url, site, site_name, passkey, torrent_id)
                     entries.append(entry)
         return entries
 

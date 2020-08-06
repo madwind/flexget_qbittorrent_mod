@@ -1,11 +1,11 @@
-from ..executor import Executor
+from ..nexusphp import NexusPHP
 
 # auto_sign_in
 URL = 'https://pt.keepfrds.com/'
 SUCCEED_REGEX = '欢迎回来'
 
 
-class MainClass(Executor):
+class MainClass(NexusPHP):
     @staticmethod
     def build_sign_in_entry(entry, site_name, config):
-        Executor.build_sign_in_entry_common(entry, site_name, config, URL, SUCCEED_REGEX)
+        NexusPHP.build_sign_in_entry(entry, site_name, config, URL, SUCCEED_REGEX)

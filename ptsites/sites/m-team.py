@@ -1,7 +1,8 @@
 import re
 
+from ..site_base import SignState
 from ..utils.google_auth import GoogleAuth
-from ..executor import Executor, SignState
+from ..nexusphp import NexusPHP
 
 # auto_sign_in
 URL = 'https://pt.m-team.cc/'
@@ -10,15 +11,15 @@ SUCCEED_REGEX = '歡迎回來'
 MESSAGE_URL = 'https://pt.m-team.cc/messages.php?action=viewmailbox&box=-2'
 
 
-class MainClass(Executor):
+class MainClass(NexusPHP):
     @staticmethod
     def build_sign_in_entry(entry, site_name, config):
         if isinstance(entry['site_config'], str):
-            Executor.build_sign_in_entry_common(entry, site_name, config, URL, SUCCEED_REGEX)
+            NexusPHP.build_sign_in_entry(entry, site_name, config, URL, SUCCEED_REGEX)
         else:
             entry['secret_key'] = entry['site_config']['secret_key']
             entry['site_config'] = entry['site_config']['cookie']
-            Executor.build_sign_in_entry_common(entry, site_name, config, URL, SUCCEED_REGEX)
+            NexusPHP.build_sign_in_entry(entry, site_name, config, URL, SUCCEED_REGEX)
 
     @staticmethod
     def build_reseed_entry(entry, base_url, site, passkey, torrent_id):

@@ -1,4 +1,4 @@
-from ..executor import Executor
+from ..nexusphp import NexusPHP
 
 # auto_sign_in
 URL = 'https://yingk.com/bakatest.php'
@@ -6,10 +6,10 @@ SUCCEED_REGEX = '连续\\d+天签到,获得\\d+点魔力值|今天已经签过�
 WRONG_REGEX = '回答错误,失去 1 魔力值,这道题还会再考一次'
 
 
-class MainClass(Executor):
+class MainClass(NexusPHP):
     @staticmethod
     def build_sign_in_entry(entry, site_name, config):
-        Executor.build_sign_in_entry_common(entry, site_name, config, URL, SUCCEED_REGEX, wrong_regex=WRONG_REGEX)
+        NexusPHP.build_sign_in_entry(entry, site_name, config, URL, SUCCEED_REGEX, wrong_regex=WRONG_REGEX)
 
-    def do_sign_in(self, entry, config):
+    def sign_in(self, entry, config):
         self.sign_in_by_question(entry, config)
