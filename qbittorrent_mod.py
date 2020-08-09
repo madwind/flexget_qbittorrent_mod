@@ -162,6 +162,13 @@ class PluginQBittorrentMod(QBittorrentModBase):
         if not add_options:
             return
 
+        if not self.client:
+            self.client = self.create_client(config)
+            if self.client:
+                logger.debug('Successfully connected to qBittorrent.')
+            else:
+                raise plugin.PluginError("Couldn't connect to qBittorrent.")
+
         task_data = self.client.get_task_data(id(task))
         server_state = task_data.get('server_state')
 
