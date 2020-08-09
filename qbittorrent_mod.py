@@ -157,13 +157,39 @@ class PluginQBittorrentMod(QBittorrentModBase):
 
     @plugin.priority(120)
     def on_task_download(self, task, config):
-        """
-        Call download plugin to generate torrent files to load into
-        qBittorrent.
-        """
         config = self.prepare_config(config)
-        if not config.get('action').get('add'):
+        add_options = config.get('action').get('add')
+        if not add_options:
             return
+
+        task_data = self.client.get_task_data(id(task))
+        server_state = task_data.get('server_state')
+
+        reject_on_dl_limit = add_options.get('reject_on_dl_limit')
+        reject_reason = ''
+
+        if reject_on_dl_limit:
+            dl_rate_limit = server_state.get('dl_rate_limit')
+            if dl_rate_limit and dl_rate_limit < reject_on_dl_limit:
+                reject_reason = 'dl_limit < reject_on_dl_limit'
+
+        reject_on_dl_speed = add_options.get('reject_on_dl_speed')
+        if reject_on_dl_speed:
+            dl_info_speed = server_state.get('dl_info_speed')
+            if dl_info_speed and dl_info_speed > reject_on_dl_speed:
+                reject_reason = 'dl_speed > reject_on_dl_speed'
+
+        if reject_on_dl_limit is not None:
+            del add_options['reject_on_dl_limit']
+        if reject_on_dl_speed is not None:
+            del add_options['reject_on_dl_speed']
+
+        for entry in task.accepted:
+            if reject_reason:
+                entry.reject(reason=reject_reason, remember=True)
+                logger.info('reject {}, because: {}', entry['title'], reject_reason)
+                continue
+
         if 'download' not in task.config:
             download = plugin.get('download', self)
             download.get_temp_files(task, handle_magnets=True, fail_html=config['fail_html'])
@@ -194,34 +220,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
             raise plugin.PluginError('Unknown action.')
 
     def add_entries(self, task, add_options):
-        task_data = self.client.get_task_data(id(task))
-        server_state = task_data.get('server_state')
-
-        reject_on_dl_limit = add_options.get('reject_on_dl_limit')
-        reject_reason = ''
-
-        if reject_on_dl_limit:
-            dl_rate_limit = server_state.get('dl_rate_limit')
-            if dl_rate_limit and dl_rate_limit < reject_on_dl_limit:
-                reject_reason = 'dl_limit < reject_on_dl_limit'
-
-        reject_on_dl_speed = add_options.get('reject_on_dl_speed')
-        if reject_on_dl_speed:
-            dl_info_speed = server_state.get('dl_info_speed')
-            if dl_info_speed and dl_info_speed > reject_on_dl_speed:
-                reject_reason = 'dl_speed > reject_on_dl_speed'
-
-        if reject_on_dl_limit is not None:
-            del add_options['reject_on_dl_limit']
-        if reject_on_dl_speed is not None:
-            del add_options['reject_on_dl_speed']
-
         for entry in task.accepted:
-            if reject_reason:
-                entry.reject(reason=reject_reason, remember=True)
-                logger.info('reject {}, because: {}', entry['title'], reject_reason)
-                continue
-
             add_options['autoTMM'] = entry.get('autoTMM', add_options.get('autoTMM'))
             add_options['category'] = entry.get('category', add_options.get('category'))
             add_options['savepath'] = entry.get('savepath', add_options.get('savepath'))
