@@ -215,12 +215,12 @@ class SiteBase:
         entry['result'] = SignState.SIGN_IN_FAILED.value.format('No answer')
         entry.fail(entry['result'])
 
-    def get_nexusphp_message(self, entry, config):
-        message_url = entry.get('message_url') if entry.get('message_url') else urljoin(entry['url'], '/messages.php')
+    def get_nexusphp_message(self, entry, config, messages_url='/messages.php'):
+        message_url = urljoin(entry['url'], messages_url)
         message_box_response = self._request(entry, 'get', message_url, is_message=True)
         net_state = self.check_net_state(entry, message_box_response, message_url, is_message=True)
         if net_state:
-            entry['messages'] = 'Can not read message box!'
+            entry['messages'] = entry['messages'] + '\nCan not read message box! url:{}'.format(message_url)
             entry.fail(entry['messages'])
             return
 

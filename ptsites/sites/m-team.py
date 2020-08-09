@@ -8,7 +8,7 @@ from ..nexusphp import NexusPHP
 URL = 'https://pt.m-team.cc/'
 VERIFY_URL = 'https://pt.m-team.cc/verify.php?returnto=%2F'
 SUCCEED_REGEX = '歡迎回來'
-MESSAGE_URL = 'https://pt.m-team.cc/messages.php?action=viewmailbox&box=-2'
+SYSTEM_MESSAGE_URL = '/messages.php?action=viewmailbox&box=-2'
 
 
 class MainClass(NexusPHP):
@@ -58,3 +58,7 @@ class MainClass(NexusPHP):
                 entry['result'] = SignState.URL_REDIRECT.value.format(original_url, response.url)
                 entry.fail(entry['result'])
             return SignState.URL_REDIRECT
+
+    def get_message(self, entry, config):
+        self.get_nexusphp_message(entry, config)
+        self.get_nexusphp_message(entry, config, messages_url=SYSTEM_MESSAGE_URL)
