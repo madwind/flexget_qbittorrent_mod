@@ -44,7 +44,7 @@ class MainClass(NexusPHP):
     @staticmethod
     def build_sign_in_entry(entry, site_name, config):
         NexusPHP.build_sign_in_entry(entry, site_name, config, URL, SUCCEED_REGEX, base_url=BASE_URL,
-                                            wrong_regex=WRONG_REGEX)
+                                     wrong_regex=WRONG_REGEX)
 
     @staticmethod
     def build_html_rss_config(config):
@@ -80,20 +80,21 @@ class MainClass(NexusPHP):
 
         img = Image.open(BytesIO(img_response.content))
         code, img_byte_arr = BaiduOcr.get_ocr_code(img, entry, config)
-        if len(code) == 6:
-            params = {
-                'cmd': 'signin'
-            }
-            data = {
-                'imagehash': (None, image_hash),
-                'imagestring': (None, code)
-            }
-            response = self._request(entry, 'post', URL, files=data, params=params)
-            final_state = self.final_check(entry, response, response.request.url)
-        if len(code) != 6 or final_state == SignState.WRONG_ANSWER:
-            with open(os.path.dirname(__file__) + "/opencd.png", "wb") as code_file:
-                code_file.write(img_response.content)
-            with open(os.path.dirname(__file__) + "/opencd.png", "wb") as code_file:
-                code_file.write(img_byte_arr.getvalue())
-            entry['result'] = 'ocr failed: {}, see opencd.png'.format(code)
-            entry.fail(entry['result'])
+        if not entry.failed:
+            if len(code) == 6:
+                params = {
+                    'cmd': 'signin'
+                }
+                data = {
+                    'imagehash': (None, image_hash),
+                    'imagestring': (None, code)
+                }
+                response = self._request(entry, 'post', URL, files=data, params=params)
+                final_state = self.final_check(entry, response, response.request.url)
+            if len(code) != 6 or final_state == SignState.WRONG_ANSWER:
+                with open(os.path.dirname(__file__) + "/opencd.png", "wb") as code_file:
+                    code_file.write(img_response.content)
+                with open(os.path.dirname(__file__) + "/opencd.png", "wb") as code_file:
+                    code_file.write(img_byte_arr.getvalue())
+                entry['result'] = 'ocr failed: {}, see opencd.png'.format(code)
+                entry.fail(entry['result'])

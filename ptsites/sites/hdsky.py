@@ -55,18 +55,19 @@ class MainClass(NexusPHP):
             return
         img = Image.open(BytesIO(img_response.content))
         code, img_byte_arr = BaiduOcr.get_ocr_code(img, entry, config)
-        if len(code) == 6:
-            data = {
-                'action': (None, 'showup'),
-                'imagehash': (None, image_hash),
-                'imagestring': (None, code)
-            }
-            response = self._request(entry, 'post', URL, files=data)
-            final_state = self.final_check(entry, response, response.request.url)
-        if len(code) != 6 or final_state == SignState.WRONG_ANSWER:
-            with open(os.path.dirname(__file__) + "/hdsky.png", "wb") as code_file:
-                code_file.write(img_response.content)
-            with open(os.path.dirname(__file__) + "/hdsky2.png", "wb") as code_file:
-                code_file.write(img_byte_arr.getvalue())
-            entry['result'] = 'ocr failed: {}, see hdsky.png'.format(code)
-            entry.fail(entry['result'])
+        if not entry.failed:
+            if len(code) == 6:
+                data = {
+                    'action': (None, 'showup'),
+                    'imagehash': (None, image_hash),
+                    'imagestring': (None, code)
+                }
+                response = self._request(entry, 'post', URL, files=data)
+                final_state = self.final_check(entry, response, response.request.url)
+            if len(code) != 6 or final_state == SignState.WRONG_ANSWER:
+                with open(os.path.dirname(__file__) + "/hdsky.png", "wb") as code_file:
+                    code_file.write(img_response.content)
+                with open(os.path.dirname(__file__) + "/hdsky2.png", "wb") as code_file:
+                    code_file.write(img_byte_arr.getvalue())
+                entry['result'] = 'ocr failed: {}, see hdsky.png'.format(code)
+                entry.fail(entry['result'])

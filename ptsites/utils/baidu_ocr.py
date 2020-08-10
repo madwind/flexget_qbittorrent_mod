@@ -23,11 +23,11 @@ class BaiduOcr:
         if not (AipOcr and Image):
             entry['result'] = 'baidu-aip or pillow not existed'
             entry.fail(entry['result'])
-            return
+            return None, None
         if not (app_id and api_key and secret_key):
             entry['result'] = 'Api not set'
             entry.fail(entry['result'])
-            return
+            return None, None
 
         client = AipOcr(app_id, api_key, secret_key)
 
