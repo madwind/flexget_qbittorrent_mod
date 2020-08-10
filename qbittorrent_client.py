@@ -9,7 +9,7 @@ from loguru import logger
 from requests import RequestException, Session
 
 logger = logger.bind(name='qbittorrent_client')
-__version__ = 'v0.5.9'
+__version__ = 'v0.5.10'
 
 
 def singleton(cls):
