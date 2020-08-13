@@ -194,7 +194,8 @@ class PluginQBittorrentMod(QBittorrentModBase):
         for entry in task.accepted:
             if reject_reason:
                 entry.reject(reason=reject_reason, remember=True)
-                logger.info('reject {}, because: {}', entry['title'], reject_reason)
+                site_name = self._get_site_name(entry.get('url'))
+                logger.info('reject {}, because: {}, site: {}', entry['title'], reject_reason, site_name)
                 continue
 
         if 'download' not in task.config:
@@ -287,10 +288,11 @@ class PluginQBittorrentMod(QBittorrentModBase):
             keep_disk_space = keep_disk_space * 1024 * 1024 * 1024
 
             if keep_disk_space < free_space_on_disk:
-                dl_limit = math.floor(dl_limit_on_succeeded / 1024) * 1024
-                if dl_limit_on_succeeded is not None and dl_limit != dl_rate_limit:
-                    self.client.set_application_preferences('{{"dl_limit": {}}}'.format(dl_limit))
-                    logger.debug("set dl_limit to {} KiB/s", dl_limit / 1024)
+                if dl_limit_on_succeeded is not None:
+                    dl_limit = math.floor(dl_limit_on_succeeded / 1024) * 1024
+                    if dl_limit != dl_rate_limit:
+                        self.client.set_application_preferences('{{"dl_limit": {}}}'.format(dl_limit))
+                        logger.debug("set dl_limit to {} KiB/s", dl_limit / 1024)
                 return
             else:
                 if not task.accepted:
