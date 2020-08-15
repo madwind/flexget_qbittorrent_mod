@@ -18,6 +18,7 @@ class PluginIYUUAutoReseed():
         'properties': {
             'iyuu': {'type': 'string'},
             'version': {'type': 'string'},
+            'limit':  {'type': 'integer'},
             'passkeys': {
                 'type': 'object',
                 'properties': {
@@ -37,7 +38,7 @@ class PluginIYUUAutoReseed():
 
     def prepare_config(self, config):
         config.setdefault('iyuu', '')
-        config.setdefault('version', '0.3.0')
+        config.setdefault('version', '1.10.6')
         config.setdefault('passkeys', {})
         config.setdefault('qbittorrent_ressed', {})
         return config
@@ -45,6 +46,7 @@ class PluginIYUUAutoReseed():
     def on_task_input(self, task, config):
         config = self.prepare_config(config)
         passkeys = config.get('passkeys')
+        limit = config.get('limit', 1)
 
         torrent_dict, torrents_hashes = self.get_torrents_data(task, config)
         try:
@@ -62,6 +64,7 @@ class PluginIYUUAutoReseed():
         sites_json = response_json['data']['sites']
 
         entries = []
+        site_limit = {}
         if response_json and not isinstance(reseed_json, list):
             for info_hash, seeds_data in reseed_json.items():
                 for torrent in seeds_data['torrent']:
@@ -79,6 +82,12 @@ class PluginIYUUAutoReseed():
                             break
                     if not passkey:
                         continue
+                    if not site_limit.get(site_name):
+                        site_limit['site_name'] = 1
+                    else:
+                        if site_limit['site_name'] > limit:
+                            continue
+                        site_limit['site_name'] = site_limit['site_name'] + 1
 
                     site['download_page'] = site['download_page'].replace('{}', '{torrent_id}')
                     torrent_id = str(torrent['torrent_id'])
