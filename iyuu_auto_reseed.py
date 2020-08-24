@@ -18,7 +18,7 @@ class PluginIYUUAutoReseed():
         'properties': {
             'iyuu': {'type': 'string'},
             'version': {'type': 'string'},
-            'limit':  {'type': 'integer'},
+            'limit': {'type': 'integer'},
             'passkeys': {
                 'type': 'object',
                 'properties': {
@@ -72,7 +72,8 @@ class PluginIYUUAutoReseed():
                     if not site:
                         continue
                     client_torrent = torrent_dict[info_hash]
-                    base_url = site['base_url']
+                    base_url = site['base_url'] if site['base_url'] != 'pt.upxin.net' else 'pt.hdupt.com'
+
                     site_name = ''
                     passkey = ''
                     for key, value in passkeys.items():
@@ -83,12 +84,11 @@ class PluginIYUUAutoReseed():
                     if not passkey:
                         continue
                     if not site_limit.get(site_name):
-                        site_limit['site_name'] = 1
+                        site_limit[site_name] = 1
                     else:
-                        if site_limit['site_name'] > limit:
+                        if site_limit[site_name] >= limit:
                             continue
-                        site_limit['site_name'] = site_limit['site_name'] + 1
-
+                        site_limit[site_name] = site_limit[site_name] + 1
                     site['download_page'] = site['download_page'].replace('{}', '{torrent_id}')
                     torrent_id = str(torrent['torrent_id'])
 

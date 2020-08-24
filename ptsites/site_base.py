@@ -289,14 +289,14 @@ class SiteBase:
                 entry.fail(entry['result'])
             return SignState.URL_REDIRECT
 
-    def check_sign_in_state(self, entry, response, original_url):
+    def check_sign_in_state(self, entry, response, original_url, regex=None):
         net_state = self.check_net_state(entry, response, original_url)
         if net_state:
             return net_state, None
 
         content = self._decode(response)
 
-        succeed_regex = entry.get('succeed_regex')
+        succeed_regex = regex if regex else entry.get('succeed_regex')
         if not succeed_regex:
             entry['result'] = SignState.SUCCEED.value
             return SignState.SUCCEED, content
