@@ -2,7 +2,7 @@ from ..nexusphp import NexusPHP
 
 # auto_sign_in
 URL = 'https://chdbits.co/bakatest.php'
-SUCCEED_REGEX = '签到成功,获得\\d+点魔力值|今天已经签过到了\\(已连续\\d+天签到\\)'
+SUCCEED_REGEX = '签到成功,获得\\d+点魔力值|连续\\d+天签到,获得\\d+点魔力值|今天已经签过到了\\(已连续\\d+天签到\\)'
 WRONG_REGEX = '回答错误,失去 1 魔力值,这道题还会再考一次'
 
 
