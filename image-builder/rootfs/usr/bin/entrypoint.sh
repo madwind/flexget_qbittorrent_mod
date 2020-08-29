@@ -14,4 +14,8 @@ if [ ! -z "${FG_WEBUI_PASSWD}" ]; then
   flexget web passwd "${FG_WEBUI_PASSWD}"
 fi
 
+echo flexget:x:${PUID:-0}:${GUID:-0}:flexget:/home:/bin/ash >> /etc/passwd
+
+su flexget
+
 flexget -L ${FG_LOG_LEVEL:-info} daemon start --autoreload-config
