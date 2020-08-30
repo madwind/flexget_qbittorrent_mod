@@ -1,0 +1,9 @@
+web_server:
+  bind: 0.0.0.0
+  port: 3539
+
+tasks:
+  example-task:
+    rss: http://example.com/feed.xml
+    download: /downloads
+      
