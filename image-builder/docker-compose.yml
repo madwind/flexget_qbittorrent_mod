@@ -1,29 +1,5 @@
 version: '3.7'
 services:
-  qbittorrent:
-    image: linuxserver/qbittorrent
-    container_name: qbittorrent
-    environment:
-      PUID: 1000
-      PGID: 1000
-      UMASK_SET: 022
-      WEBUI_PORT: 8080
-    volumes:
-      - <path for config files>:/config
-      - <path for data files>:/downloads
-    expose:
-      - "8080"
-    ports:
-      - "60566:60566"
-      - "60566:60566/udp"
-    restart: always
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "200k"
-    networks:
-      - nginx-network
-
   flexget:
     image: ivonwei/flexget
     container_name: flexget
@@ -34,7 +10,7 @@ services:
       PUID: 1000
       PGID: 1000
     volumes:
-      - <path for config files>:/root/.flexget/config
+      - <path for config files>:/config
       - <path for data files>:/downloads
     ports:
       - "3539:3539"
@@ -43,9 +19,3 @@ services:
       driver: "json-file"
       options:
         max-size: "200k"
-    networks:
-      - nginx-network
-
-networks:
-  nginx-network:
-    name: nginx-network

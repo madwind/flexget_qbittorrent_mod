@@ -11,9 +11,14 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
   	echo "Asia/Shanghai" >  /etc/timezone && \
     rm -rf /var/cache/apk/*
 
-VOLUME /root/.flexget/config /downloads
-WORKDIR /root/.flexget/config
+# copy local files
+COPY root/ /
 
-COPY rootfs /
+# add default volumes
+VOLUME /config /downloas
+WORKDIR /config
 
-ENTRYPOINT ["/usr/bin/entrypoint.sh"]
+# expose port for flexget webui
+EXPOSE 3539 3539/tcp
+
+ENTRYPOINT ["sh","-c","/usr/bin/entrypoint.sh"]
