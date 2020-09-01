@@ -31,14 +31,14 @@ class MainClass(NexusPHP):
         login_url = urljoin(URL, re.search(LOGIN_URL_REGEX, content).group())
         formhash = re.search(FORMHASH_REGEX, content).group()
         data = {
-            'formhash': (None, formhash),
-            'referer': (None, '/'),
-            'loginfield': (None, 'username'),
-            'username': (None, login['username']),
-            'password': (None, login['password']),
-            'loginsubmit': (None, 'true')
+            'formhash': formhash,
+            'referer': '/',
+            'loginfield': 'username',
+            'username': login['username'],
+            'password': login['password'],
+            'loginsubmit': 'true'
         }
-        response = self._request(entry, 'post', login_url, files=data)
+        response = self._request(entry, 'post', login_url, data=data)
         self.final_check(entry, response, login_url)
 
     def get_message(self, entry, config):

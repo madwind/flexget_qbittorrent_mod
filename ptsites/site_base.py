@@ -138,10 +138,7 @@ class SiteBase:
                     entry['result'] = 'Cannot find key: {}, url: {}'.format(key, entry['url'])
                     entry.fail(entry['result'])
                     return
-        if entry.get('method') == 'post_form':
-            response = self._request(entry, 'post', entry['url'], files=data)
-        else:
-            response = self._request(entry, 'post', entry['url'], data=data)
+        response = self._request(entry, 'post', entry['url'], data=data)
         self.final_check(entry, response, entry['url'])
 
     def sign_in_by_question(self, entry, config):
