@@ -25,8 +25,11 @@ echo docker:x:${PGID:-0}: >> /etc/group
 # permissions
 chown -R docker:docker /config
 chown docker:docker /downloads
+chown docker:docker /home/docker/.config/matplotlib
+
 chmod 775 \
 	/config \
-	/downloads
+	/downloads \
+	/home/docker/.config/matplotlib
 
 su docker -c "flexget -c /config/config.yml -L ${FG_LOG_LEVEL:-info} daemon start --autoreload-config"
