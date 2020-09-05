@@ -8,12 +8,14 @@ COPY root/ /
 
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && \
     apk add --no-cache ca-certificates nodejs build-base libffi-dev openssl-dev unzip bash tzdata zlib-dev jpeg-dev && \
-    pip install -i https://mirrors.aliyun.com/pypi/simple/ -U pip && \
-    pip install -i https://mirrors.aliyun.com/pypi/simple flexget python-telegram-bot brotli baidu-aip pillow pandas matplotlib && \
+    pip install -U --no-cache-dir pip && \
+    pip install -U --no-cache-dir flexget python-telegram-bot brotli baidu-aip pillow pandas matplotlib && \
 	  cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
   	echo "Asia/Shanghai" >  /etc/timezone && \
     chmod +x /usr/bin/entrypoint.sh && \
-    rm -rf /var/cache/apk/*
+    rm -rf /var/cache/apk/*  \
+    /tmp/* \
+		/root/.cache
 
 # add default volumes
 VOLUME /config /downloads /home/docker/.config/matplotlib
@@ -22,4 +24,4 @@ WORKDIR /config
 # expose port for flexget webui
 EXPOSE 3539 3539/tcp
 
-ENTRYPOINT ["/usr/bin/entrypoint.sh"]
+ENTRYPOINT ["sh","-c","/usr/bin/entrypoint.sh"]
