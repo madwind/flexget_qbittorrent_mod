@@ -2,6 +2,7 @@ import json
 import os
 from io import BytesIO
 
+from ..site_base import SiteBase
 from ..nexusphp import NexusPHP
 from ..site_base import SignState
 from ..utils.baidu_ocr import BaiduOcr
@@ -22,12 +23,12 @@ WRONG_REGEX = '{"success":false,"message":"invalid_imagehash"}'
 
 class MainClass(NexusPHP):
     @staticmethod
-    def build_sign_in_entry(entry, site_name, config):
-        NexusPHP.build_sign_in_entry(entry, site_name, config, URL, SUCCEED_REGEX, base_url=BASE_URL,
+    def build_sign_in(entry, config):
+        SiteBase.build_sign_in_entry(entry, config, URL, SUCCEED_REGEX, base_url=BASE_URL,
                                      wrong_regex=WRONG_REGEX)
 
     def sign_in(self, entry, config):
-        base_response = self._request(entry, 'get', BASE_URL, headers=entry['headers'])
+        entry['base_response'] = base_response = self._request(entry, 'get', BASE_URL)
         sign_in_state, base_content = self.check_sign_in_state(entry, base_response, BASE_URL)
         if sign_in_state != SignState.NO_SIGN_IN:
             return

@@ -4,23 +4,28 @@ from loguru import logger
 from . import sites
 from .site_base import SiteBase
 
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    plt = None
+
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
+
 
 class Executor:
 
     @staticmethod
-    def build_sign_in_entry(entry, site_name, config):
-        site_config = entry['site_config']
-        if isinstance(site_config, str) or not site_config.get('url'):
-            try:
-                site_module = getattr(sites, site_name.lower())
-                site_class = getattr(site_module, 'MainClass')
-                site_class.build_sign_in_entry(entry, site_name, config)
-                entry['site_class'] = site_class
-            except AttributeError as e:
-                raise plugin.PluginError(str(e.args))
-        else:
-            SiteBase.build_sign_in_entry(entry, site_name, config)
-            entry['site_class'] = SiteBase
+    def build_sign_in_entry(entry, config):
+        try:
+            site_module = getattr(sites, entry['site_name'].lower())
+            site_class = getattr(site_module, 'MainClass')
+            site_class.build_sign_in(entry, config)
+            entry['site_class'] = site_class
+        except AttributeError as e:
+            raise plugin.PluginError(str(e.args))
         entry['result'] = ''
         entry['messages'] = ''
 
@@ -50,10 +55,10 @@ class Executor:
         #         entry.fail(entry['result'])
         #         return
         #     entry['headers']['cookie'] = cookie
-
         site_class = entry.get('site_class')
         site_object = site_class()
         site_object.sign_in(entry, config)
         if not entry.failed:
+            site_object.get_details(entry, config)
             site_object.get_message(entry, config)
         logger.info('{} {}\n{}'.format(entry['title'], entry['result'], entry['messages']).strip())

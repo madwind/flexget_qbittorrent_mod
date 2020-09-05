@@ -1,3 +1,4 @@
+from ..site_base import SiteBase
 from ..nexusphp import NexusPHP
 from ..site_base import SignState
 
@@ -9,8 +10,8 @@ SUCCEED_REGEX = '(?<=value=")已经打卡(?=")'
 
 class MainClass(NexusPHP):
     @staticmethod
-    def build_sign_in_entry(entry, site_name, config):
-        NexusPHP.build_sign_in_entry(entry, site_name, config, URL, SUCCEED_REGEX, base_url=BASE_URL)
+    def build_sign_in(entry, config):
+        SiteBase.build_sign_in_entry(entry, config, URL, SUCCEED_REGEX, base_url=BASE_URL)
 
     def check_net_state(self, entry, response, original_url, is_message=False):
         if not response:
@@ -25,3 +26,8 @@ class MainClass(NexusPHP):
                 entry['result'] = SignState.URL_REDIRECT.value.format(original_url, response.url)
                 entry.fail(entry['result'])
             return SignState.URL_REDIRECT
+
+    def build_selector(self):
+        selector = super(MainClass, self).build_selector()
+        selector['details_content']['details_bar'] = '#head > div.userpanel > div.userinfo.medium'
+        return selector

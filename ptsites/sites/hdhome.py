@@ -1,3 +1,4 @@
+from ..site_base import SiteBase
 from ..nexusphp import NexusPHP
 
 # auto_sign_in
@@ -28,8 +29,8 @@ FIELDS = {
 
 class MainClass(NexusPHP):
     @staticmethod
-    def build_sign_in_entry(entry, site_name, config):
-        NexusPHP.build_sign_in_entry(entry, site_name, config, URL, SUCCEED_REGEX)
+    def build_sign_in(entry, config):
+        SiteBase.build_sign_in_entry(entry, config, URL, SUCCEED_REGEX)
 
     @staticmethod
     def build_html_rss_config(config):

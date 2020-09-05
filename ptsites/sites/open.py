@@ -3,6 +3,7 @@ import re
 from io import BytesIO
 from urllib.parse import urljoin
 
+from ..site_base import SiteBase
 from ..nexusphp import NexusPHP
 from ..site_base import SignState
 from ..utils.baidu_ocr import BaiduOcr
@@ -42,8 +43,8 @@ FIELDS = {
 
 class MainClass(NexusPHP):
     @staticmethod
-    def build_sign_in_entry(entry, site_name, config):
-        NexusPHP.build_sign_in_entry(entry, site_name, config, URL, SUCCEED_REGEX, base_url=BASE_URL,
+    def build_sign_in(entry, config):
+        SiteBase.build_sign_in_entry(entry, config, URL, SUCCEED_REGEX, base_url=BASE_URL,
                                      wrong_regex=WRONG_REGEX)
 
     @staticmethod
@@ -52,7 +53,7 @@ class MainClass(NexusPHP):
         config['fields'] = FIELDS
 
     def sign_in(self, entry, config):
-        base_response = self._request(entry, 'get', BASE_URL, headers=entry['headers'])
+        entry['base_response'] = base_response = self._request(entry, 'get', BASE_URL)
         sign_in_state, base_content = self.check_sign_in_state(entry, base_response, BASE_URL)
         if sign_in_state != SignState.NO_SIGN_IN:
             return
@@ -98,3 +99,9 @@ class MainClass(NexusPHP):
                     code_file.write(img_byte_arr.getvalue())
                 entry['result'] = 'ocr failed: {}, see opencd.png'.format(code)
                 entry.fail(entry['result'])
+
+    def build_selector(self):
+        selector = super(MainClass, self).build_selector()
+        selector['details_content'][
+            'details_bar'] = '#info_block > tbody > tr > td > table > tbody > tr > td:nth-child(2)'
+        return selector

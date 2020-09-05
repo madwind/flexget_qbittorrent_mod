@@ -21,7 +21,7 @@ class BaiduOcr:
         secret_key = config['aipocr'].get('secret_key')
 
         if not (AipOcr and Image):
-            entry['result'] = 'baidu-aip or pillow not existed'
+            entry['result'] = 'Dependency does not exist: [baidu-aip, pillow]'
             entry.fail(entry['result'])
             return None, None
         if not (app_id and api_key and secret_key):

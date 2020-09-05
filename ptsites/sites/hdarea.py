@@ -1,3 +1,4 @@
+from ..site_base import SiteBase
 from ..nexusphp import NexusPHP
 
 # auto_sign_in
@@ -14,8 +15,8 @@ DATA = {
 
 class MainClass(NexusPHP):
     @staticmethod
-    def build_sign_in_entry(entry, site_name, config):
-        NexusPHP.build_sign_in_entry(entry, site_name, config, URL, SUCCEED_REGEX, base_url=BASE_URL)
+    def build_sign_in(entry, config):
+        SiteBase.build_sign_in_entry(entry, config, URL, SUCCEED_REGEX, base_url=BASE_URL)
         entry['data'] = DATA
 
     def sign_in(self, entry, config):

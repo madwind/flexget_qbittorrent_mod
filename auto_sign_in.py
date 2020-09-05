@@ -5,6 +5,7 @@ from flexget import plugin
 from flexget.entry import Entry
 from flexget.event import event
 
+from .ptsites.utils.details_report import DetailsReport
 from .ptsites.executor import Executor
 
 
@@ -51,8 +52,9 @@ class PluginAutoSignIn:
             entry = Entry(
                 title='{} {}'.format(site_name, datetime.now().date()),
             )
+            entry['site_name'] = site_name
             entry['site_config'] = site_config
-            Executor.build_sign_in_entry(entry, site_name, config)
+            Executor.build_sign_in_entry(entry, config)
             entries.append(entry)
         return entries
 
@@ -61,6 +63,9 @@ class PluginAutoSignIn:
         with ThreadPoolExecutor(max_workers=max_workers) as t:
             all_task = [t.submit(Executor.sign_in, entry, config) for entry in task.accepted]
             wait(all_task, return_when=ALL_COMPLETED)
+        # for entry in task.accepted:
+        #     Executor.sign_in(entry, config)
+        DetailsReport().build(task)
 
 
 @event('plugin.register')

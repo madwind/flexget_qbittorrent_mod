@@ -9,6 +9,7 @@ from urllib.parse import urljoin
 
 import chardet
 import requests
+from flexget import plugin
 from flexget.utils.soup import get_soup
 from loguru import logger
 from requests.adapters import HTTPAdapter
@@ -51,55 +52,33 @@ class SiteBase:
         self.requests = None
 
     @staticmethod
-    def build_sign_in_entry(entry, site_name, config):
+    def build_sign_in_entry(entry, config, url, succeed_regex, base_url=None,
+                            wrong_regex=None):
         site_config = entry['site_config']
-        entry['url'] = site_config.get('url', '')
-        cookie = site_config.get('cookie')
-        user_agent = config.get('user-agent')
-        entry['base_url'] = site_config.get('base_url')
-        referer = site_config.get('base_url', entry['url'])
+        if not isinstance(site_config, str):
+            raise plugin.PluginError('{} site_config is not a String'.format(entry['site_name']))
+        entry['url'] = url
+        entry['succeed_regex'] = succeed_regex
+        if base_url:
+            entry['base_url'] = base_url
+        if wrong_regex:
+            entry['wrong_regex'] = wrong_regex
         headers = {
-            'cookie': cookie,
-            'user-agent': user_agent,
-            'referer': referer
+            'cookie': site_config,
+            'user-agent': config.get('user-agent'),
+            'referer': base_url if base_url else url
         }
         entry['headers'] = headers
-        entry['data'] = site_config.get('data')
-        entry['get_message'] = site_config.get('get_message', 'NexusPHP')
-        entry['message_url'] = site_config.get('message_url')
-        entry['method'] = site_config.get('method', 'get')
-
-        entry['aipocr'] = config.get('aipocr')
-        entry['command_executor'] = config.get('command_executor')
 
     @staticmethod
     def build_reseed_entry(entry, base_url, site, passkey, torrent_id):
         download_page = site['download_page'].format(torrent_id=torrent_id, passkey=passkey)
         entry['url'] = 'https://{}/{}'.format(base_url, download_page)
 
-    def sign_in(self, entry, config):
-        method = entry.get('method')
-        if method == 'get':
-            self.sign_in_by_get(entry, config)
-        elif method in ['post', 'post_form']:
-            self.sign_in_by_post_data(entry, config)
-        elif method == 'question':
-            self.sign_in_by_question(entry, config)
-        else:
-            entry['result'] = 'No method named: {}'.format(method)
-            entry.fail(entry['result'])
-            return
-
-    def get_message(self, entry, config):
-        if str(entry['get_message']).lower() == 'nexusphp':
-            self.get_nexusphp_message(entry, config)
-        elif str(entry['get_message']).lower() == 'gazelle':
-            self.get_gazelle_message(entry, config)
-
     def _request(self, entry, method, url, is_message=False, **kwargs):
         if not self.requests:
             self.requests = requests.Session()
-            headers = kwargs.get('headers')
+            headers = entry['headers']
             if headers:
                 if brotli:
                     headers['accept-encoding'] = 'gzip, deflate, br'
@@ -118,11 +97,11 @@ class SiteBase:
         return None
 
     def sign_in_by_get(self, entry, config):
-        response = self._request(entry, 'get', entry['url'], headers=entry['headers'])
+        entry['base_response'] = response = self._request(entry, 'get', entry['url'])
         self.final_check(entry, response, entry['url'])
 
     def sign_in_by_post_data(self, entry, config):
-        base_response = self._request(entry, 'get', entry['base_url'], headers=entry['headers'])
+        entry['base_response'] = base_response = self._request(entry, 'get', entry['base_url'])
         sign_in_state, base_content = self.check_sign_in_state(entry, base_response, entry['base_url'])
         if sign_in_state != SignState.NO_SIGN_IN:
             return
@@ -142,7 +121,7 @@ class SiteBase:
         self.final_check(entry, response, entry['url'])
 
     def sign_in_by_question(self, entry, config):
-        base_response = self._request(entry, 'get', entry['url'], headers=entry['headers'])
+        entry['base_response'] = base_response = self._request(entry, 'get', entry['url'])
         sign_in_state, base_content = self.check_sign_in_state(entry, base_response, entry['url'])
         if sign_in_state != SignState.NO_SIGN_IN:
             return
@@ -212,65 +191,53 @@ class SiteBase:
         entry['result'] = SignState.SIGN_IN_FAILED.value.format('No answer')
         entry.fail(entry['result'])
 
-    def get_nexusphp_message(self, entry, config, messages_url='/messages.php'):
-        message_url = urljoin(entry['url'], messages_url)
-        message_box_response = self._request(entry, 'get', message_url, is_message=True)
-        net_state = self.check_net_state(entry, message_box_response, message_url, is_message=True)
-        if net_state:
-            entry['messages'] = entry['messages'] + '\nCan not read message box! url:{}'.format(message_url)
-            entry.fail(entry['messages'])
+    def get_details_base(self, entry, config, selector):
+        if selector['from_page']:
+            entry['base_response'] = base_response = self._request(entry, 'get', selector['from_page'])
+            base_net_state = self.check_net_state(entry, base_response, selector['from_page'])
+            if base_net_state:
+                return
+        if not entry.get('base_response'):
+            entry.fail('site: {} base_response is None!'.format(entry['site_name']))
+            entry['result'] = entry['result'] + '\nbase_response is None!'
             return
-
-        unread_elements = get_soup(self._decode(message_box_response)).select(
-            'td > img[alt*="Unread"]')
-        failed = False
-        for unread_element in unread_elements:
-            td = unread_element.parent.nextSibling.nextSibling
-            title = td.text
-            href = td.a.get('href')
-            message_url = urljoin(message_url, href)
-            message_response = self._request(entry, 'get', message_url, is_message=True)
-            net_state = self.check_net_state(entry, message_response, message_url, is_message=True)
-            if net_state:
-                message_body = 'Can not read message body!'
-                failed = True
+        if selector['details_link']:
+            content = self._decode(entry['base_response'])
+            logger.info(content)
+            details_link_match = re.search(selector['details_link'], content)
+            if details_link_match:
+                details_link = details_link_match.group()
             else:
-                body_element = get_soup(self._decode(message_response)).select_one('td[colspan*="2"]')
-                if body_element:
-                    message_body = body_element.text.strip()
-            entry['messages'] = entry['messages'] + (
-                '\nTitle: {}\nLink: {}\n{}'.format(title, message_url, message_body))
-        if failed:
-            entry.fail('Can not read message body!')
-
-    def get_gazelle_message(self, entry, config):
-        message_url = urljoin(entry['url'], '/inbox.php')
-        message_box_response = self._request(entry, 'get', message_url, is_message=True)
-        net_state = self.check_net_state(entry, message_box_response, message_url, is_message=True)
-        if net_state:
-            entry['messages'] = 'Can not read message box!'
-            entry.fail(entry['messages'])
-            return
-        unread_elements = get_soup(self._decode(message_box_response)).select("tr.unreadpm > td > strong > a")
-        failed = False
-        for unread_element in unread_elements:
-            title = unread_element.text
-            href = unread_element.get('href')
-            message_url = urljoin(message_url, href)
-            message_response = self._request(entry, 'get', message_url, is_message=True)
-            net_state = self.check_net_state(entry, message_response, message_url, is_message=True)
+                entry.fail('Can not find user detail link!')
+                entry['result'] = entry['result'] + '\nCan not find user detail link!'
+                return
+            details_link = urljoin(entry['url'], details_link)
+            details_response = self._request(entry, 'get', details_link)
+            net_state = self.check_net_state(entry, details_response, details_link)
             if net_state:
-                message_body = 'Can not read message body!'
-                failed = True
-            else:
-                body_element = get_soup(
-                    self._decode(message_response)).select_one('div[id*="message"]')
-                if body_element:
-                    message_body = body_element.text.strip()
-            entry['messages'] = entry['messages'] + (
-                '\nTitle: {}\nLink: {}\n{}'.format(title, message_url, message_body))
-        if failed:
-            entry.fail('Can not read message body!')
+                return
+        else:
+            details_response = entry['base_response']
+        soup = get_soup(self._decode(details_response))
+        details_text = ''
+        for name, sel in selector['details_content'].items():
+            if sel:
+                details_info = soup.select_one(sel)
+                if details_info:
+                    details_text = details_text + details_info.get_text()
+                else:
+                    logger.warning('site: {} can not find element {}', entry['site_name'], name)
+                    logger.warning('{}', soup)
+
+        if details_text:
+            details = {}
+            for detail_name, detail_config in selector['details'].items():
+                details[detail_name] = self.get_attr(entry['site_name'], details_text, detail_config)
+            entry['details'] = details
+            logger.info('site_name: {}, details: {}', entry['site_name'], entry['details'])
+        else:
+            entry.fail('Can not find element!')
+            entry['result'] = entry['result'] + '\nCan not find any element!'
 
     def check_net_state(self, entry, response, original_url, is_message=False):
         if not response:
@@ -326,6 +293,8 @@ class SiteBase:
         charset_encoding = chardet.detect(content).get('encoding')
         if charset_encoding == 'ascii':
             charset_encoding = 'unicode_escape'
+        elif charset_encoding == 'Windows-1254':
+            charset_encoding = 'utf-8'
         return content.decode(charset_encoding if charset_encoding else 'utf-8', 'ignore')
 
     def _dict_merge(self, dict1, dict2):
@@ -342,6 +311,18 @@ class SiteBase:
                 + r'):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?'
         )
         return re.match(regexp, instance)
+
+    def get_attr(self, site, content, detail_config):
+        if detail_config is None:
+            return '*'
+        detail_match = re.search(detail_config['regex'], content, re.DOTALL)
+        if not detail_match:
+            logger.info('site: {}, regex: {}，content: {}', site, detail_config['regex'], content)
+            return '*'
+        detail = detail_match.group(detail_config['group']).replace(',', '')
+        if detail_config.get('suffix'):
+            detail = detail + detail_config.get('suffix')
+        return detail
 
     def selenium_get_cookie(self, command_executor, headers):
         options = webdriver.ChromeOptions()

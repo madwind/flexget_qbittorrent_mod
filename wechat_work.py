@@ -16,6 +16,7 @@ _AGENT_ID = 'agent_id'
 _TO_USER = 'to_user'
 _GET_ACCESS_TOKEN_URL = 'https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid={corp_id}&corpsecret={corp_secret}'
 _POST_MESSAGE_URL = 'https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token={access_token}'
+_UPLOAD_IMAGE = 'https://qyapi.weixin.qq.com/cgi-bin/media/upload?access_token={access_token}&type=image'
 _TEXT_LIMIT = 1024
 
 AccessTokenBase = db_schema.versioned_base('wechat_work_access_token', 0)
@@ -61,6 +62,7 @@ class WeChatWorkNotifier:
             _CORP_SECRET: {'type': 'string'},
             _AGENT_ID: {'type': 'string'},
             _TO_USER: {'type': 'string'},
+            'image': {'type': 'string'}
         },
         'additionalProperties': False,
     }
@@ -71,12 +73,15 @@ class WeChatWorkNotifier:
         if not access_token:
             return
         self._send_msgs(message, access_token)
+        if self.image:
+            self._send_images(access_token)
 
     def _parse_config(self, config):
         self._corp_id = config.get(_CORP_ID)
         self._corp_secret = config.get(_CORP_SECRET)
         self._agent_id = config.get(_AGENT_ID)
         self._to_user = config.get(_TO_USER)
+        self.image = config.get('image')
 
     def _real_init(self, session, config):
         self._parse_config(config)
@@ -196,6 +201,32 @@ class WeChatWorkNotifier:
 
         session.delete(access_token)
         session.commit()
+
+    def _get_media_id(self, access_token):
+        file = ('images', ('flexget.png', open(self.image, 'rb'), 'image/png')),
+        response_json = self._request('post', _UPLOAD_IMAGE.format(access_token=access_token.access_token),
+                                      files=file).json()
+        if response_json.get('errcode') != 0:
+            logger.error(response_json)
+        else:
+            return response_json.get('media_id')
+
+    def _send_images(self, access_token):
+        media_id = self._get_media_id(access_token)
+        if media_id is None:
+            return
+        data = {
+            "touser": self._to_user,
+            "msgtype": "image",
+            "agentid": self._agent_id,
+            "image": {
+                "media_id": media_id
+            }
+        }
+        response_json = self._request('post', _POST_MESSAGE_URL.format(access_token=access_token.access_token),
+                                      json=data).json()
+        if response_json.get('errcode') != 0:
+            logger.error(response_json)
 
 
 @event('plugin.register')

@@ -3,12 +3,13 @@ import re
 import requests
 from loguru import logger
 
+from ..site_base import SiteBase
 from ..nexusphp import NexusPHP
 
 # auto_sign_in
-URL = 'https://hdcity.city/sign'
-TORRENT_URL = 'https://hdcity.city/t-{}'
-SUCCEED_REGEX = '本次签到获得魅力\d+'
+URL = 'https://hdcity.work/sign'
+TORRENT_URL = 'https://hdcity.work/t-{}'
+SUCCEED_REGEX = '本次签到获得魅力\\d+'
 
 
 # iyuu_auto_reseed
@@ -19,8 +20,8 @@ SUCCEED_REGEX = '本次签到获得魅力\d+'
 
 class MainClass(NexusPHP):
     @staticmethod
-    def build_sign_in_entry(entry, site_name, config):
-        NexusPHP.build_sign_in_entry(entry, site_name, config, URL, SUCCEED_REGEX)
+    def build_sign_in(entry, config):
+        SiteBase.build_sign_in_entry(entry, config, URL, SUCCEED_REGEX)
 
     @staticmethod
     def build_reseed_entry(entry, base_url, site, passkey, torrent_id):
@@ -38,3 +39,37 @@ class MainClass(NexusPHP):
             entry['url'] = download_url
         else:
             entry.reject()
+
+    def build_selector(self):
+        selector = super(MainClass, self).build_selector()
+        selector['details_link'] = None
+        selector['details_content']['details_bar'] = '#bottomnav > div.button-group'
+        selector['details_content']['details_table'] = None
+
+        selector['details']['downloaded'] = {
+            'regex': '(arrow_downward)([\\d.]+ ?[ZEPTGMK]?i?B)',
+            'group': 2,
+            'default': '0 KiB'
+        }
+        selector['details']['uploaded'] = {
+            'regex': '(arrow_upward)([\\d.]+ ?[ZEPTGMK]?i?B)',
+            'group': 2,
+            'default': '0 KiB'
+        }
+        selector['details']['share_ratio'] = None
+        selector['details']['points'] = {
+            'regex': '(\\d+)(Bonus|魅力值 )',
+            'group': 1,
+            'default': 0
+        }
+        selector['details']['seeding'] = {
+            'regex': '(play_arrow)(\\d+)',
+            'group': 2,
+            'default': 0
+        }
+        selector['details']['leeching'] = {
+            'regex': '(play_arrow)(\\d+)/(\\d+)',
+            'group': 3,
+            'default': 0
+        }
+        return selector

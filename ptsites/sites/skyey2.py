@@ -1,7 +1,7 @@
 import re
 from urllib.parse import urljoin
 
-from ..nexusphp import NexusPHP
+from ..discuz import Discuz
 
 # auto_sign_in
 URL = 'https://www.skyey2.com/login.php'
@@ -10,9 +10,9 @@ FORMHASH_REGEX = '(?<="formhash" value=").*(?=")'
 SUCCEED_REGEX = '欢迎您回来，.*?(?=，)'
 
 
-class MainClass(NexusPHP):
+class MainClass(Discuz):
     @staticmethod
-    def build_sign_in_entry(entry, site_name, config):
+    def build_sign_in(entry, config):
         entry['url'] = URL
         entry['succeed_regex'] = SUCCEED_REGEX
         headers = {
@@ -23,7 +23,7 @@ class MainClass(NexusPHP):
 
     def sign_in(self, entry, config):
         login = entry['site_config'].get('login')
-        response = self._request(entry, 'get', URL, headers=entry['headers'])
+        response = self._request(entry, 'get', URL)
         state = self.check_net_state(entry, response, URL)
         if state:
             return
@@ -38,7 +38,7 @@ class MainClass(NexusPHP):
             'password': login['password'],
             'loginsubmit': 'true'
         }
-        response = self._request(entry, 'post', login_url, data=data)
+        entry['base_response'] = response = self._request(entry, 'post', login_url, data=data)
         self.final_check(entry, response, login_url)
 
     def get_message(self, entry, config):
