@@ -203,7 +203,6 @@ class SiteBase:
             return
         if selector['details_link']:
             content = self._decode(entry['base_response'])
-            logger.info(content)
             details_link_match = re.search(selector['details_link'], content)
             if details_link_match:
                 details_link = details_link_match.group()

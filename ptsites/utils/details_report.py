@@ -71,6 +71,8 @@ class DetailsReport:
                    'seeding',
                    'leeching',
                    'hr', ]
+        col_widths = [0.12, 0.19, 0.19, 0.13, 0.13, 0.08, 0.08, 0.08]
+
         data = {'sort_column': []}
 
         total_details = {}
@@ -157,9 +159,9 @@ class DetailsReport:
                 continue
             data[column].append('{}{}'.format(self.buid_data_text(column, total_details[column]),
                                               self.buid_data_text(column, total_changed[column], append=True)))
-        data['sort_column'].append(total_changed['uploaded'])
+        data['sort_column'].append(float('inf'))
         df = pd.DataFrame(data)
-        df.sort_values(by=['sort_column'])
+        df.sort_values(by=['sort_column'], ascending=False, inplace=True)
         df.drop(columns=['sort_column'], inplace=True)
         line_count = len(data['site'])
         fig, ax = plt.subplots(figsize=(9, line_count / 2))
@@ -180,8 +182,9 @@ class DetailsReport:
                 else:
                     cc.append('white')
             colors.append(cc)
-        ax.table(cellText=df.values, cellColours=colors, bbox=[0, 0, 1, 1], colLabels=df.columns, loc='center')
-        plt.title(datetime.now().date())
+        ax.table(cellText=df.values, cellColours=colors, bbox=[0, 0, 1, 1], colLabels=df.columns, colWidths=col_widths,
+                 loc='best')
+        plt.title(datetime.now().replace(microsecond=0))
         plt.savefig('details_report.png', dpi=200)
 
     def _get_user_details(self, session, site):
