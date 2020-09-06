@@ -71,9 +71,11 @@ class DetailsReport:
                    'seeding',
                    'leeching',
                    'hr', ]
-        col_widths = [0.12, 0.19, 0.19, 0.13, 0.13, 0.08, 0.08, 0.08]
 
-        data = {'sort_column': []}
+        data = {
+            'sort_column': [],
+            'default_order': []
+        }
 
         total_details = {}
 
@@ -84,7 +86,11 @@ class DetailsReport:
             total_details[column] = 0
             total_changed[column] = 0
 
+        order = len(task.all_entries)
+
         for entry in task.all_entries:
+            data['default_order'].append(order)
+            order = order - 1
             user_details_db = self._get_user_details(session, entry['site_name'])
             if user_details_db is None:
                 user_details_db = UserDetailsEntry(
@@ -160,15 +166,13 @@ class DetailsReport:
             data[column].append('{}{}'.format(self.buid_data_text(column, total_details[column]),
                                               self.buid_data_text(column, total_changed[column], append=True)))
         data['sort_column'].append(float('inf'))
+        data['default_order'].append(float('inf'))
         df = pd.DataFrame(data)
-        df.sort_values(by=['sort_column'], ascending=False, inplace=True)
-        df.drop(columns=['sort_column'], inplace=True)
+        df.sort_values(by=['sort_column', 'default_order'], ascending=False, inplace=True)
+        df.drop(columns=['sort_column', 'default_order'], inplace=True)
         line_count = len(data['site'])
-        fig, ax = plt.subplots(figsize=(9, line_count / 2))
-        # hide axes
-        fig.patch.set_visible(False)
-        ax.axis('off')
-        ax.axis('tight')
+        fig = plt.figure(figsize=(8, line_count / 1.8))
+        plt.axis('off')
         colors = []
         for x in df.values:
             cc = []
@@ -182,10 +186,15 @@ class DetailsReport:
                 else:
                     cc.append('white')
             colors.append(cc)
-        ax.table(cellText=df.values, cellColours=colors, bbox=[0, 0, 1, 1], colLabels=df.columns, colWidths=col_widths,
-                 loc='best')
+        col_widths = [0.14, 0.16, 0.16, 0.14, 0.14, 0.1, 0.1, 0.06]
+        table = plt.table(cellText=df.values, cellColours=colors, bbox=[0, 0, 1, 1], colLabels=df.columns,
+                          colWidths=col_widths,
+                          loc='best')
+        table.auto_set_font_size(False)
+        table.set_fontsize(10)
+        fig.tight_layout()
         plt.title(datetime.now().replace(microsecond=0))
-        plt.savefig('details_report.png', dpi=200)
+        plt.savefig('details_report.png', bbox_inches='tight', dpi=300)
 
     def _get_user_details(self, session, site):
         user_details = session.query(UserDetailsEntry).filter(
@@ -219,12 +228,12 @@ class DetailsReport:
             return ''
         if key in ['downloaded', 'uploaded']:
             if append:
-                specifier = '{:+g} {}iB'
+                specifier = '\n{:+g} {}iB'
             else:
                 specifier = '{:g} {}iB'
             return self.build_suffix(value, specifier)
         if append:
-            return '{:+g}'.format(value)
+            return '\n{:+g}'.format(value)
         else:
             return '{:g}'.format(value)
 
