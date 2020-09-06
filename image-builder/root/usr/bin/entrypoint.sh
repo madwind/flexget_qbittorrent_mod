@@ -2,6 +2,9 @@
 #
 # entrypoint.sh
 
+# make folders
+mkdir -p /home/docker
+
 # remove config-lock
 [[ -f /config/.config-lock ]] && \
   { echo "Removing lockfile"; rm -f /config/.config-lock; }
@@ -25,11 +28,11 @@ echo docker:x:${PGID:-0}: >> /etc/group
 # permissions
 chown -R docker:docker /config
 chown docker:docker /downloads
-chown docker:docker /home/docker/.config/matplotlib
+chown docker:docker /home/docker
 
 chmod 775 \
 	/config \
 	/downloads \
-	/home/docker/.config/matplotlib
+  /home/docker
 
 su docker -c "flexget -c /config/config.yml -L ${FG_LOG_LEVEL:-info} daemon start --autoreload-config"
