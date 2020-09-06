@@ -43,19 +43,20 @@ templates:
       action:
         remove:
           check_reseed:
+            - chdbits
             - totheglory
             - m-team
-            - hdhome
             - open
             - pterclub
             - springsunday
             - ourbits
             - hdsky
+            - keepfrds
+            - leaguehd
           delete_files: yes
           keep_disk_space: 10
-          dl_limit_on_succeeded: 8388608
+          alt_dl_limit_on_succeeded: 8388608
           dl_limit_interval: 900
-          #show_entry: 633645aa28a4aa48e8b7d2ac618fe691e81df30f
 
   qbittorrent_modify_template:
     qbittorrent_mod:
@@ -382,31 +383,33 @@ tasks:
           {%- if task.accepted -%}
           {%- for group in task.accepted|groupby('task') -%}
           FlexGet has just signed in {{ group.list|length }} sites for task {{ group.grouper }}:
-          {% for entry in group.list %}
+          {%- for entry in group.list %}
           {{ loop.index }}: {{ entry.title }} {{ entry.result }}
-          {%- if entry.messages|d('') %}
-          Messages: {{ entry.messages }}
-          {% endif %}
           {%- endfor -%}
           {%- endfor -%}
           {%- endif -%}
           {%- if task.failed %}
           {% for group in task.failed|groupby('task') %}
           The following sites have failed for task {{ group.grouper }}:
-          {% for entry in group.list %}
-          {{ loop.index }}: {{ entry.title }} {{ entry.result }}
-          {%- if entry.messages|d('') %}
-          Messages: {{ entry.messages }}
-          {% endif %}
+          {%- for entry in group.list %}
+          {{ loop.index }}: {{ entry.title }} {{ entry.result }} Reason: {{entry.reason|d('unknown')}}
           {%- endfor -%}
           {%- endfor -%}
           {%- endif -%}
+          {%- for group in task.entries|groupby('task') %}
+          {% for entry in group.list %}
+          {%- if entry.messages|d('') %}
+          {{ entry.title }} Messages: {{ entry.messages }}
+          {% endif %}
+          {%- endfor -%}
+          {%- endfor -%}
         via:
           - wechat_work:
               corp_id: 'xxxxxxxx'
               corp_secret: 'xxxxxxxx'
               agent_id: 'xxxxxxxx'
               to_user: 'xxxxxxxx'
+              image: 'details_report.png'
           - telegram:
               bot_token: xxxxxxxx
               recipients:
