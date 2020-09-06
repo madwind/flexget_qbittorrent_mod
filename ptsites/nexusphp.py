@@ -22,7 +22,7 @@ class NexusPHP(SiteBase):
             'details_link': 'userdetails.php\\?id=\\d+',
             'details_content': {
                 'details_bar': '#info_block > tbody > tr > td > table > tbody > tr > td:nth-child(1) > span',
-                'details_table': '#outer > table > tbody > tr > td > table > tbody',
+                'details_table': '#outer table:last-child',
             },
             'details': {
                 'downloaded': {

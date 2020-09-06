@@ -27,12 +27,12 @@ class MeanTorrent(SiteBase):
                 'downloaded': {
                     'regex': '(downloaded).*?([\\d]+)',
                     'group': 2,
-                    'suffix': 'B'
+                    'handle': self.handle_suffix
                 },
                 'uploaded': {
                     'regex': '(uploaded).*?([\\d]+)',
                     'group': 2,
-                    'suffix': 'B'
+                    'handle': self.handle_suffix
                 },
                 'share_ratio': None,
                 'points': {
@@ -54,3 +54,6 @@ class MeanTorrent(SiteBase):
 
     def get_meantorrent_message(self, entry, config, messages_url='/messages.php'):
         pass
+
+    def handle_suffix(self, value):
+        return str(value) + 'B'

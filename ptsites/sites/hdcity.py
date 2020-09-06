@@ -49,27 +49,22 @@ class MainClass(NexusPHP):
         selector['details']['downloaded'] = {
             'regex': '(arrow_downward)([\\d.]+ ?[ZEPTGMK]?i?B)',
             'group': 2,
-            'default': '0 KiB'
         }
         selector['details']['uploaded'] = {
             'regex': '(arrow_upward)([\\d.]+ ?[ZEPTGMK]?i?B)',
             'group': 2,
-            'default': '0 KiB'
         }
         selector['details']['share_ratio'] = None
         selector['details']['points'] = {
             'regex': '(\\d+)(Bonus|魅力值 )',
             'group': 1,
-            'default': 0
         }
         selector['details']['seeding'] = {
             'regex': '(play_arrow)(\\d+)',
             'group': 2,
-            'default': 0
         }
         selector['details']['leeching'] = {
             'regex': '(play_arrow)(\\d+)/(\\d+)',
             'group': 3,
-            'default': 0
         }
         return selector

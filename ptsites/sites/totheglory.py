@@ -29,16 +29,21 @@ class MainClass(NexusPHP):
         selector['details']['points'] = {
             'regex': '(积分).*?([\\d,.]+)',
             'group': 2,
-            'default': 0
         }
         selector['details']['seeding'] = {
             'regex': '(做种活动).*?(\\d+)',
             'group': 2,
-            'default': 0
         }
         selector['details']['leeching'] = {
             'regex': '(做种活动).*?(\\d+)\\D+(\\d+)',
             'group': 3,
-            'default': 0
+        }
+        selector['details']['hr'] = {
+            'regex': '(HP).*?(\\d+)',
+            'group': 2,
+            'handle': self.handle_hr
         }
         return selector
+
+    def handle_hr(self, hr):
+        return str(15 - int(hr))

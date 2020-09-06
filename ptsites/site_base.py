@@ -225,18 +225,23 @@ class SiteBase:
                 if details_info:
                     details_text = details_text + details_info.get_text()
                 else:
-                    logger.warning('site: {} can not find element {}', entry['site_name'], name)
-                    logger.warning('{}', soup)
-
+                    entry.fail('can not find element: {}'.format(name))
+                    logger.error('site: {} can not find element: {}, soup: {}', entry['site_name'], name, soup)
+                    return
         if details_text:
             details = {}
             for detail_name, detail_config in selector['details'].items():
-                details[detail_name] = self.get_attr(entry['site_name'], details_text, detail_config)
+                detail_value = self.get_detail_value(details_text, detail_config)
+                if not detail_value:
+                    entry.fail('can not find element: {}'.format(detail_name))
+                    logger.error('site: {}, regex: {}，content: {}', entry['site_name'], detail_config['regex'], content)
+                    return
+                details[detail_name] = detail_value
             entry['details'] = details
             logger.info('site_name: {}, details: {}', entry['site_name'], entry['details'])
         else:
             entry.fail('Can not find element!')
-            entry['result'] = entry['result'] + '\nCan not find any element!'
+            entry['result'] = 'Can not find any element!'
 
     def check_net_state(self, entry, response, original_url, is_message=False):
         if not response:
@@ -311,16 +316,16 @@ class SiteBase:
         )
         return re.match(regexp, instance)
 
-    def get_attr(self, site, content, detail_config):
+    def get_detail_value(self, content, detail_config):
         if detail_config is None:
             return '*'
         detail_match = re.search(detail_config['regex'], content, re.DOTALL)
         if not detail_match:
-            logger.info('site: {}, regex: {}，content: {}', site, detail_config['regex'], content)
-            return '*'
+            return None
         detail = detail_match.group(detail_config['group']).replace(',', '')
-        if detail_config.get('suffix'):
-            detail = detail + detail_config.get('suffix')
+        handle = detail_config.get('handle')
+        if handle:
+            detail = handle(detail)
         return detail
 
     def selenium_get_cookie(self, command_executor, headers):

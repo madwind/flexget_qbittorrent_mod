@@ -18,7 +18,9 @@ class MainClass(NexusPHP):
         selector['details']['points'] = {
             'regex': '(猫粮).*?([\\d,.]+)',
             'group': 2,
-            'default': 0
         }
-
+        selector['details']['hr'] = {
+            'regex': '(H&R).*?(\\d+)',
+            'group': 2,
+        }
         return selector

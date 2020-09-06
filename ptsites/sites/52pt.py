@@ -14,3 +14,11 @@ class MainClass(NexusPHP):
 
     def sign_in(self, entry, config):
         self.sign_in_by_question(entry, config)
+
+    def build_selector(self):
+        selector = super(MainClass, self).build_selector()
+        selector['details']['hr'] = {
+            'regex': '(H&R).*?(\\d+)',
+            'group': 2,
+        }
+        return selector

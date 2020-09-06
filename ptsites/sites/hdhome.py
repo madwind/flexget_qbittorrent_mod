@@ -36,3 +36,11 @@ class MainClass(NexusPHP):
     def build_html_rss_config(config):
         config['root_element_selector'] = ROOT_ELEMENT_SELECTOR
         config['fields'] = FIELDS
+
+    def build_selector(self):
+        selector = super(MainClass, self).build_selector()
+        selector['details']['hr'] = {
+            'regex': '(H&R).*?(\\d+)',
+            'group': 2,
+        }
+        return selector

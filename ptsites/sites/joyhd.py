@@ -16,6 +16,5 @@ class MainClass(NexusPHP):
         selector['details']['points'] = {
             'regex': '(银元).*?([\\d,.]+)',
             'group': 2,
-            'default': 0
         }
         return selector
