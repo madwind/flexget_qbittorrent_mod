@@ -58,7 +58,7 @@ class DetailsReport:
         if not (plt and pd):
             logger.warning('Dependency does not exist: [matplotlib, pandas]')
             return
-        if not task.accepted:
+        if not task.accepted and not task.failed:
             return
 
         session = Session()
