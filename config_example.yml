@@ -357,7 +357,10 @@ tasks:
         nanyangpt: 'xxxxxxxx'
         open: 'xxxxxxxx'
         oshen: 'xxxxxxxx'
-        ourbits: 'xxxxxxxx'
+        ourbits:
+          login:
+            username: 'xxxxxxxx'
+            password: 'xxxxxxxx'
         pterclub: 'xxxxxxxx'
         pthome: 'xxxxxxxx'
         ptsbao: 'xxxxxxxx'
