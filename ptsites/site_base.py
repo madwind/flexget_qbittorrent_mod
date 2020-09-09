@@ -283,7 +283,7 @@ class SiteBase:
     def final_check(self, entry, response, original_url):
         sign_in_state, content = self.check_sign_in_state(entry, response, original_url)
         if sign_in_state == SignState.NO_SIGN_IN:
-            entry['result'] = SignState.SIGN_IN_FAILED
+            entry['result'] = SignState.SIGN_IN_FAILED.value.format('no sign in')
             entry.fail(entry['result'])
             logger.warning(content)
             return SignState.SIGN_IN_FAILED
