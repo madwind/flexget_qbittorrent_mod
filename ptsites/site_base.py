@@ -43,7 +43,7 @@ class SignState(Enum):
     WRONG_ANSWER = 'Wrong answer'
     URL_REDIRECT = 'Url: {} redirect to {}'
     UNKNOWN = 'Unknown, url: {}'
-    NETWORK_ERROR = 'Network error: {}'
+    NETWORK_ERROR = 'Network error: url: {url}, error: {error}'
     SIGN_IN_FAILED = 'Sign in failed, {}'
 
 
@@ -75,14 +75,14 @@ class SiteBase:
         download_page = site['download_page'].format(torrent_id=torrent_id, passkey=passkey)
         entry['url'] = 'https://{}/{}'.format(base_url, download_page)
 
-    def _request(self, entry, method, url, is_message=False, **kwargs):
+    def _request(self, entry, method, url, **kwargs):
         if not self.requests:
             self.requests = requests.Session()
             headers = entry['headers']
             if headers:
                 if brotli:
                     headers['accept-encoding'] = 'gzip, deflate, br'
-                self.requests.headers = headers
+                self.requests.headers.update(headers)
             self.requests.mount('http://', HTTPAdapter(max_retries=2))
             self.requests.mount('https://', HTTPAdapter(max_retries=2))
         try:
@@ -92,8 +92,7 @@ class SiteBase:
                 response = self._request(entry, method, redirect_url, **kwargs)
             return response
         except Exception as e:
-            if not is_message:
-                entry['result'] = SignState.NETWORK_ERROR.value.format(str(e.args))
+            entry.fail(entry['prefix'] + '=> ' + SignState.NETWORK_ERROR.value.format(url=url, error=str(e.args)))
         return None
 
     def sign_in_by_get(self, entry, config):
@@ -114,8 +113,7 @@ class SiteBase:
                 if value_search:
                     data[key] = value_search.group()
                 else:
-                    entry['result'] = 'Cannot find key: {}, url: {}'.format(key, entry['url'])
-                    entry.fail(entry['result'])
+                    entry.fail('Cannot find key: {}, url: {}'.format(key, entry['url']))
                     return
         response = self._request(entry, 'post', entry['url'], data=data)
         self.final_check(entry, response, entry['url'])
@@ -188,8 +186,7 @@ class SiteBase:
                     logger.info('{}, correct answer: {}', entry['title'], data)
                     return
                 times += 1
-        entry['result'] = SignState.SIGN_IN_FAILED.value.format('No answer')
-        entry.fail(entry['result'])
+        entry.fail(SignState.SIGN_IN_FAILED.value.format('No answer.'))
 
     def get_details_base(self, entry, config, selector):
         if selector['from_page']:
@@ -198,8 +195,7 @@ class SiteBase:
             if base_net_state:
                 return
         if not entry.get('base_response'):
-            entry.fail('site: {} base_response is None!'.format(entry['site_name']))
-            entry['result'] = entry['result'] + '\nbase_response is None!'
+            entry.fail('Details=> base_response is None.')
             return
         if selector['details_link']:
             content = self._decode(entry['base_response'])
@@ -207,8 +203,7 @@ class SiteBase:
             if details_link_match:
                 details_link = details_link_match.group()
             else:
-                entry.fail('Can not find user detail link!')
-                entry['result'] = entry['result'] + '\nCan not find user detail link!'
+                entry.fail('Details=> User details link not found.')
                 return
             details_link = urljoin(entry['url'], details_link)
             details_response = self._request(entry, 'get', details_link)
@@ -225,36 +220,34 @@ class SiteBase:
                 if details_info:
                     details_text = details_text + details_info.get_text()
                 else:
-                    entry.fail('can not find element: {}'.format(name))
-                    logger.error('site: {} can not find element: {}, soup: {}', entry['site_name'], name, soup)
+                    entry.fail('Element: {} not found.'.format(name))
+                    logger.error('site: {} element: {} not found, selecotr: {}, soup: {}', entry['site_name'], name,
+                                 sel, soup)
                     return
         if details_text:
             details = {}
             for detail_name, detail_config in selector['details'].items():
                 detail_value = self.get_detail_value(details_text, detail_config)
                 if not detail_value:
-                    entry.fail('can not find element: {}'.format(detail_name))
-                    logger.error('site: {}, regex: {}，content: {}', entry['site_name'], detail_config['regex'], content)
+                    entry.fail('Details=> detail: {} not found.'.format(detail_name))
+                    logger.error('Details=> site: {}, regex: {}，content: {}', entry['site_name'],
+                                 detail_config['regex'], content)
                     return
                 details[detail_name] = detail_value
             entry['details'] = details
             logger.info('site_name: {}, details: {}', entry['site_name'], entry['details'])
         else:
-            entry.fail('Can not find element!')
-            entry['result'] = 'Can not find any element!'
+            entry.fail('Details=> details_text is None.')
 
-    def check_net_state(self, entry, response, original_url, is_message=False):
+    def check_net_state(self, entry, response, original_url):
         if not response:
-            if not is_message:
-                if not entry['result'] and not is_message:
-                    entry['result'] = SignState.NETWORK_ERROR.value.format('Response is None')
-                entry.fail(entry['result'])
+            entry.fail(
+                entry['prefix'] + '=> ' + SignState.NETWORK_ERROR.value.format(url=original_url,
+                                                                               error='Response is None'))
             return SignState.NETWORK_ERROR
 
         if response.url != original_url:
-            if not is_message:
-                entry['result'] = SignState.URL_REDIRECT.value.format(original_url, response.url)
-                entry.fail(entry['result'])
+            entry.fail(entry['prefix'] + '=> ' + SignState.URL_REDIRECT.value.format(original_url, response.url))
             return SignState.URL_REDIRECT
 
     def check_sign_in_state(self, entry, response, original_url, regex=None):
@@ -283,9 +276,7 @@ class SiteBase:
     def final_check(self, entry, response, original_url):
         sign_in_state, content = self.check_sign_in_state(entry, response, original_url)
         if sign_in_state == SignState.NO_SIGN_IN:
-            entry['result'] = SignState.SIGN_IN_FAILED.value.format('no sign in')
-            entry.fail(entry['result'])
-            logger.warning(content)
+            entry.fail(SignState.SIGN_IN_FAILED.value.format('no sign in'))
             return SignState.SIGN_IN_FAILED
         return sign_in_state
 

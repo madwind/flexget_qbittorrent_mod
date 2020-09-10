@@ -56,8 +56,8 @@ class NexusPHP(SiteBase):
 
     def get_nexusphp_message(self, entry, config, messages_url='/messages.php'):
         message_url = urljoin(entry['url'], messages_url)
-        message_box_response = self._request(entry, 'get', message_url, is_message=True)
-        net_state = self.check_net_state(entry, message_box_response, message_url, is_message=True)
+        message_box_response = self._request(entry, 'get', message_url)
+        net_state = self.check_net_state(entry, message_box_response, message_url)
         if net_state:
             entry['messages'] = entry['messages'] + '\nCan not read message box! url:{}'.format(message_url)
             entry.fail(entry['messages'])
@@ -71,8 +71,8 @@ class NexusPHP(SiteBase):
             title = td.text
             href = td.a.get('href')
             message_url = urljoin(message_url, href)
-            message_response = self._request(entry, 'get', message_url, is_message=True)
-            net_state = self.check_net_state(entry, message_response, message_url, is_message=True)
+            message_response = self._request(entry, 'get', message_url)
+            net_state = self.check_net_state(entry, message_response, message_url)
             if net_state:
                 message_body = 'Can not read message body!'
                 failed = True

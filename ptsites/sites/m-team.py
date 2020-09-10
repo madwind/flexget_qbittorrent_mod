@@ -46,18 +46,15 @@ class MainClass(NexusPHP):
         if use_google_auth:
             entry['result'] = entry['result'] + ' with google_auth'
 
-    def check_net_state(self, entry, response, original_url, is_message=False):
+    def check_net_state(self, entry, response, original_url):
         if not response:
-            if not is_message:
-                if not entry['result'] and not is_message:
-                    entry['result'] = SignState.NETWORK_ERROR.value.format('Response is None')
-                entry.fail(entry['result'])
+            entry.fail(
+                entry['prefix'] + '=> ' + SignState.NETWORK_ERROR.value.format(url=original_url,
+                                                                               error='Response is None'))
             return SignState.NETWORK_ERROR
 
         if response.url not in [original_url, VERIFY_URL]:
-            if not is_message:
-                entry['result'] = SignState.URL_REDIRECT.value.format(original_url, response.url)
-                entry.fail(entry['result'])
+            entry.fail(entry['prefix'] + '=> ' + SignState.URL_REDIRECT.value.format(original_url, response.url))
             return SignState.URL_REDIRECT
 
     def get_message(self, entry, config):

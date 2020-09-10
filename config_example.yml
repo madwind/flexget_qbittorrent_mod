@@ -400,6 +400,7 @@ tasks:
           {%- endfor -%}
           {%- endif -%}
           {%- for group in task.entries|groupby('task') %}
+          Messages:
           {% for entry in group.list %}
           {%- if entry.messages|d('') %}
           {{ entry.title }} Messages: {{ entry.messages }}

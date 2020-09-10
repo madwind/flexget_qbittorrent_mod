@@ -57,8 +57,11 @@ class Executor:
         #     entry['headers']['cookie'] = cookie
         site_class = entry.get('site_class')
         site_object = site_class()
+        entry['prefix'] = 'Sign_in'
         site_object.sign_in(entry, config)
         if not entry.failed:
+            entry['prefix'] = 'Details'
             site_object.get_details(entry, config)
+            entry['prefix'] = 'Messages'
             site_object.get_message(entry, config)
         logger.info('{} {}\n{}'.format(entry['title'], entry['result'], entry['messages']).strip())

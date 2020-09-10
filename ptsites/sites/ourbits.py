@@ -34,12 +34,20 @@ class MainClass(NexusPHP):
 
     def sign_in(self, entry, config):
         login = entry['site_config'].get('login')
-        login['2fa_code'] = ''
-        login['trackerssl'] = 'yes'
-        login_response = self._request(entry, 'post', LOGIN_URL, data=login)
+        if not login:
+            entry.fail(entry['Login data not found!'])
+            return
+
+        data = {
+            '2fa_code': '',
+            'trackerssl': 'yes',
+            'username': login['username'],
+            'password': login['password'],
+        }
+
+        login_response = self._request(entry, 'post', LOGIN_URL, data=data)
         login_state = self.check_net_state(entry, login_response, LOGIN_SUCCEED_URL)
         if login_state:
-            entry['result'] = 'login failed'
-            entry.fail(entry['result'])
+            entry.fail('Login failed!')
         else:
             self.sign_in_by_get(entry, config)
