@@ -63,19 +63,24 @@ class PluginQBittorrentModInput(QBittorrentModBase):
 
     def on_task_input(self, task, config):
         config = self.prepare_config(config)
-
         if not config['enabled']:
             return
-        if not self.client:
-            self.client = self.create_client(config)
         if config.get('server_state'):
             entry = Entry(
                 title='qBittorrent server state',
                 url=''
             )
-            entry['server_state'] = self.client.get_task_data(id(task)).get('server_state')
+            entry['server_state'] = {}
+            try:
+                self.client = self.create_client(config)
+                entry['server_state'] = self.client.get_task_data(id(task)).get('server_state')
+                entry['server_state']['flexget_connected'] = True
+            except plugin.PluginError:
+                entry['server_state']['flexget_connected'] = False
             return [entry]
-        return list(self.client.get_task_data(id(task)).get('entry_dict').values())
+        else:
+            self.client = self.create_client(config)
+            return list(self.client.get_task_data(id(task)).get('entry_dict').values())
 
 
 class PluginQBittorrentMod(QBittorrentModBase):

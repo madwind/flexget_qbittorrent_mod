@@ -4,65 +4,7 @@ web_server:
 
 variables:
   headers:
-    user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36'
-
-templates:
-  from_qbittorrent_template:
-    from_qbittorrent_mod:
-      host: qbittorrent.example.com
-      port: 443
-      use_ssl: yes
-      username: xxxxxxxx
-      password: xxxxxxxx
-
-  qbittorrent_base_template:
-    qbittorrent_mod:
-      host: qbittorrent.example.com
-      port: 443
-      use_ssl: yes
-      username: xxxxxxxx
-      password: xxxxxxxx
-
-  qbittorrent_add_template:
-    qbittorrent_mod:
-      action:
-        add:
-          reject_on_dl_limit: 8388608
-          reject_on_dl_speed: 6291456
-          category: Rss
-          autoTMM: yes
-
-  qbittorrent_resume_template:
-    qbittorrent_mod:
-      action:
-        resume:
-          recheck_torrents: yes
-
-  qbittorrent_delete_template:
-    qbittorrent_mod:
-      action:
-        remove:
-          check_reseed:
-            - chdbits
-            - totheglory
-            - m-team
-            - open
-            - pterclub
-            - springsunday
-            - ourbits
-            - hdsky
-            - keepfrds
-            - leaguehd
-          delete_files: yes
-          keep_disk_space: 10
-          alt_dl_limit_on_succeeded: 8388608
-          dl_limit_interval: 900
-
-  qbittorrent_modify_template:
-    qbittorrent_mod:
-      action:
-        modify:
-          tag_by_tracker: yes
+    user_agent: 'xxxxxxxx'
 
 schedules:
   - tasks: [pterclub, rss_download]
@@ -213,11 +155,12 @@ tasks:
         1ptba: xxxxxxxx
         52pt: xxxxxxxx
         beitai: xxxxxxxx
-        brobits: xxxxxxxx
         btschool: xxxxxxxx
+        chdbits: xxxxxxxx
         discfan: xxxxxxxx
         eastgame: xxxxxxxx
         et8: xxxxxxxx
+        hd-torrents: xxxxxxxx
         haidan: xxxxxxxx
         hdarea: xxxxxxxx
         hdbd: xxxxxxxx
@@ -231,6 +174,7 @@ tasks:
         hdsky: xxxxxxxx
         hdstreet: xxxxxxxx
         hdtime: xxxxxxxx
+        hdupt: xxxxxxxx
         hdzone: xxxxxxxx
         joyhd: xxxxxxxx
         keepfrds: xxxxxxxx
@@ -320,7 +264,7 @@ tasks:
         avgv: 'xxxxxxxx'
         beitai: 'xxxxxxxx'
         btschool: 'xxxxxxxx'
-        crypt: 'xxxxxxxx'
+        chdbits: 'xxxxxxxx'
         dhcmusic: 'xxxxxxxx'
         dicmusic: 'xxxxxxxx'
         discfan: 'xxxxxxxx'
@@ -342,6 +286,7 @@ tasks:
         hdsky: 'xxxxxxxx'
         hdstreet: 'xxxxxxxx'
         hdtime: 'xxxxxxxx'
+        hdupt: 'xxxxxxxx'
         hdzone: 'xxxxxxxx'
         hitpt: 'xxxxxxxx'
         j99: 'xxxxxxxx'
@@ -424,12 +369,23 @@ tasks:
     from_qbittorrent_mod:
       server_state: yes
     if:
+      - 'not server_state["flexget_connected"]': accept
+      - 'server_state["dl_info_speed"] < 1048576': accept
+      - 'server_state["up_info_speed"] < 1048576': accept
       - 'server_state["free_space_on_disk"] < 5368709120': accept
     template:
       - from_qbittorrent_template
     notify:
       entries:
-        message: "Title: {{title}}\nfree_space_on_disk: {{(server_state['free_space_on_disk']/1024/1024/1024)|int}} GiB"
+        message: |+
+          qBittorrent Server State:
+          {% if not server_state.flexget_connected %}
+          flexget_connected: False
+          {% else %}
+          dl_info_speed: {{(server_state['dl_info_speed']/1024/1024)|int}} MiB
+          up_info_speed: {{(server_state['up_info_speed']/1024/1024)|int}} MiB
+          free_space_on_disk: {{(server_state['free_space_on_disk']/1024/1024/1024)|int}} GiB
+          {% endif %}
         via:
           - wechat_work:
               corp_id: 'xxxxxxxx'
@@ -440,3 +396,61 @@ tasks:
               bot_token: xxxxxxxx
               recipients:
                 - username: 'xxxxxxxx'
+
+templates:
+  from_qbittorrent_template:
+    from_qbittorrent_mod:
+      host: qbittorrent.example.com
+      port: 443
+      use_ssl: yes
+      username: xxxxxxxx
+      password: xxxxxxxx
+
+  qbittorrent_base_template:
+    qbittorrent_mod:
+      host: qbittorrent.example.com
+      port: 443
+      use_ssl: yes
+      username: xxxxxxxx
+      password: xxxxxxxx
+
+  qbittorrent_add_template:
+    qbittorrent_mod:
+      action:
+        add:
+          reject_on_dl_limit: 8388608
+          reject_on_dl_speed: 6291456
+          category: Rss
+          autoTMM: yes
+
+  qbittorrent_resume_template:
+    qbittorrent_mod:
+      action:
+        resume:
+          recheck_torrents: yes
+
+  qbittorrent_delete_template:
+    qbittorrent_mod:
+      action:
+        remove:
+          check_reseed:
+            - chdbits
+            - totheglory
+            - m-team
+            - open
+            - pterclub
+            - springsunday
+            - ourbits
+            - hdsky
+            - keepfrds
+            - leaguehd
+          delete_files: yes
+          keep_disk_space: 10
+          alt_dl_limit_on_succeeded: 8388608
+          dl_limit_interval: 900
+
+  qbittorrent_modify_template:
+    qbittorrent_mod:
+      action:
+        modify:
+          tag_by_tracker: yes
