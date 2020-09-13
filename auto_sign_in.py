@@ -5,8 +5,8 @@ from flexget import plugin
 from flexget.entry import Entry
 from flexget.event import event
 
-from .ptsites.utils.details_report import DetailsReport
 from .ptsites.executor import Executor
+from .ptsites.utils.details_report import DetailsReport
 
 
 class PluginAutoSignIn:
@@ -60,6 +60,10 @@ class PluginAutoSignIn:
 
     def on_task_output(self, task, config):
         max_workers = config.get('max_workers', 1)
+        date_now = str(datetime.now().date())
+        for entry in task.all_entries:
+            if date_now not in entry['title']:
+                entry.reject('{} out of date!', entry['title'])
         if max_workers == 1:
             for entry in task.accepted:
                 Executor.sign_in(entry, config)
