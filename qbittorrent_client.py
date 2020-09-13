@@ -84,7 +84,7 @@ class QBittorrentClient:
             self._reset_rid()
             self.connect()
         try:
-            response = self.session.request(method, url, **kwargs)
+            response = self.session.request(method, url, timeout=60, **kwargs)
             if response.status_code == 403 or (self.API_URL_LOGIN in url and response.text == 'Fails.'):
                 msg = (
                     'Failure. URL: {}, data: {}, status_code: {}'.format(url, kwargs, response.status_code)
