@@ -405,17 +405,21 @@ class PluginQBittorrentMod(QBittorrentModBase):
         logger.info('keep_disk_space: {:.2F} GB, free_space_on_disk: {:.2f} GB, delete_size: {:.2f} GB',
                     keep_disk_space / (1024 * 1024 * 1024), free_space_on_disk / (1024 * 1024 * 1024),
                     delete_size / (1024 * 1024 * 1024))
+        entries = []
         for torrent_hash in torrent_hashes:
             entry = all_entry_map.get(torrent_hash)
             entry.accept(reason='torrent with the same save path are all pass tested')
+            entries.append(entry)
+        entries.sort(key=lambda e: e['qbittorrent_last_activity'], reverse=True)
+
+        for entry in entries:
             logger.info(
-                '{}, size: {:.2f} GB, seeding_time: {:.2f} h, share_ratio: {:.2f}, last_activity: {}, reseed_last_activity: {}, site: {}',
+                '{}, size: {:.2f} GB, seeding_time: {:.2f} h, share_ratio: {:.2f}, last_activity: {},  site: {}',
                 entry['title'],
                 entry['qbittorrent_completed'] / (1024 * 1024 * 1024),
                 entry['qbittorrent_seeding_time'] / (60 * 60),
                 entry['qbittorrent_share_ratio'],
                 entry['qbittorrent_last_activity'],
-                entry['qbittorrent_reseed_last_activity'],
                 entry['qbittorrent_tags'])
 
     def resume_entries(self, task, resume_options):
