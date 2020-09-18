@@ -426,6 +426,7 @@ templates:
             - leaguehd
           delete_files: yes
           keep_disk_space: 10
+          dl_limit_on_succeeded: 0
           alt_dl_limit_on_succeeded: 8388608
           dl_limit_interval: 900
 
