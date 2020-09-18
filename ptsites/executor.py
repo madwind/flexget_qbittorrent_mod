@@ -25,7 +25,7 @@ class Executor:
             entry['site_class'] = site_class
             site_class.build_sign_in(entry, config)
         except AttributeError as e:
-            raise plugin.PluginError(str(e.args))
+            raise plugin.PluginError('site: {}, error: {}', entry['site_name'], str(e.args))
         entry['result'] = ''
         entry['messages'] = ''
 
