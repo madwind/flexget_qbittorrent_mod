@@ -51,7 +51,7 @@ class PluginIYUUAutoReseed():
         torrent_dict, torrents_hashes = self.get_torrents_data(task, config)
         try:
             response_json = task.requests.post('http://api.iyuu.cn/?service=App.Api.Reseed',
-                                               json=torrents_hashes).json()
+                                               json=torrents_hashes, timeout=60).json()
         except (RequestException, JSONDecodeError) as e:
             raise plugin.PluginError(
                 'Error when trying to send request to http://api.iyuu.cn/?service=App.Api.Reseed: {}'.format(e)
