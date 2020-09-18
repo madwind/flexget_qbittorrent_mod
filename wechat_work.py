@@ -101,6 +101,8 @@ class WeChatWorkNotifier:
                     content=all_messages,
                     failure_time=datetime.now()
                 )
+                session.add(entry)
+                session.commit()
                 raise PluginError(str(e))
             if self.image:
                 self._send_images(access_token)
@@ -123,7 +125,7 @@ class WeChatWorkNotifier:
         except Exception as e:
             raise PluginError(str(e))
 
-    def _send_msgs(self, msg, access_token, session):
+    def _send_msgs(self, msg, access_token):
         msg_limit, msg_extend = self._get_msg_limit(msg)
 
         data = {
