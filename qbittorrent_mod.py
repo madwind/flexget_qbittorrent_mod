@@ -1,6 +1,7 @@
 import math
 import os
 import re
+from datetime import datetime
 
 from flexget import plugin
 from flexget.entry import Entry
@@ -70,6 +71,7 @@ class PluginQBittorrentModInput(QBittorrentModBase):
                 title='qBittorrent server state',
                 url=''
             )
+            entry['time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             entry['server_state'] = {}
             try:
                 self.client = self.create_client(config)
