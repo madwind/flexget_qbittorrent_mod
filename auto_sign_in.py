@@ -63,7 +63,7 @@ class PluginAutoSignIn:
         date_now = str(datetime.now().date())
         for entry in task.all_entries:
             if date_now not in entry['title']:
-                entry.reject('{} out of date!', entry['title'])
+                entry.reject('{} out of date!'.format(entry['title']))
         if max_workers == 1:
             for entry in task.accepted:
                 Executor.sign_in(entry, config)
