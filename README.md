@@ -15,7 +15,7 @@
 对插件使用有疑问，或者发现有BUG建议，欢迎来tg或者qq群找我。
 
 PS：提问前
-- 学习 yaml 语法
+- 了解 yaml 语法
 - 了解 flexget rss订阅 基础用法
 - 清楚自己需要的功能
 - 看完wiki <https://github.com/IvonWei/flexget_qbittorrent_mod/wiki/home>
