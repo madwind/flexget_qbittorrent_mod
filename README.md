@@ -21,9 +21,11 @@ PS：提问前
 - 看完wiki <https://github.com/IvonWei/flexget_qbittorrent_mod/wiki/home>
 - 关于上述4个推荐项目，我懂的并不比别人多，所以请不要问我
 
+######进群口令: 115599
+
 tg: <https://t.me/flexget_qbittorrent_mod>
 
-qq群: 1128215750 (答案: 11223344)
+qq群: 1128215750
 
 目前实现的功能有：
 - 下载、修改、删除种子：<https://github.com/IvonWei/flexget_qbittorrent_mod/wiki/qbittorrent_mod>
