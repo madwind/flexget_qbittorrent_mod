@@ -19,9 +19,9 @@ PS：提问前
 - 了解 flexget rss订阅 基础用法
 - 清楚自己需要的功能
 - 看完wiki <https://github.com/IvonWei/flexget_qbittorrent_mod/wiki/home>
-- 关于上述4个推荐项目，我懂的并不比别人多，所以请不要问我
+- 关于上述4个推荐项目，我懂的并不比你多，所以请不要问我
 
-######进群口令: 115599
+口令: 115599
 
 tg: <https://t.me/flexget_qbittorrent_mod>
 
