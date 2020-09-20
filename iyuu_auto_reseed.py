@@ -6,7 +6,6 @@ from flexget import plugin
 from flexget.entry import Entry
 from flexget.event import event
 from flexget.utils import json
-from loguru import logger
 from requests import RequestException
 
 from .ptsites.executor import Executor
