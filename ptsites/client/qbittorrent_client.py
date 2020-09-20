@@ -299,7 +299,7 @@ class QBittorrentClient:
             verify=self._verify,
         )
 
-    def get_task_data(self, task_id):
+    def get_main_data_snapshot(self, task_id):
         if not self._task_dict.get(task_id):
             with self.build_entry_lock:
                 if not self._task_dict.get(task_id):
