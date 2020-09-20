@@ -8,7 +8,7 @@ from flexget.entry import Entry
 from flexget.event import event
 from loguru import logger
 
-from .qbittorrent_client import QBittorrentClientFactory
+from .ptsites.client.qbittorrent_client import QBittorrentClientFactory
 
 
 class QBittorrentModBase:
@@ -21,7 +21,7 @@ class QBittorrentModBase:
         config.setdefault('enabled', True)
         config.setdefault('host', 'localhost')
         config.setdefault('port', 8080)
-        config.setdefault('use_ssl', True)
+        config.setdefault('use_ssl', False)
         config.setdefault('verify_cert', True)
         return config
 
@@ -68,21 +68,21 @@ class PluginQBittorrentModInput(QBittorrentModBase):
             return
         if config.get('server_state'):
             entry = Entry(
-                title='qBittorrent server state',
+                title='qBittorrent',
                 url=''
             )
             entry['time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             entry['server_state'] = {}
             try:
                 self.client = self.create_client(config)
-                entry['server_state'] = self.client.get_task_data(id(task)).get('server_state')
+                entry['server_state'] = self.client.get_main_data_snapshot(id(task)).get('server_state')
                 entry['server_state']['flexget_connected'] = True
             except plugin.PluginError:
                 entry['server_state']['flexget_connected'] = False
             return [entry]
         else:
             self.client = self.create_client(config)
-            return list(self.client.get_task_data(id(task)).get('entry_dict').values())
+            return list(self.client.get_main_data_snapshot(id(task)).get('entry_dict').values())
 
 
 class PluginQBittorrentMod(QBittorrentModBase):
@@ -177,8 +177,8 @@ class PluginQBittorrentMod(QBittorrentModBase):
             else:
                 raise plugin.PluginError("Couldn't connect to qBittorrent.")
 
-        task_data = self.client.get_task_data(id(task))
-        server_state = task_data.get('server_state')
+        main_data_snapshot = self.client.get_main_data_snapshot(id(task))
+        server_state = main_data_snapshot.get('server_state')
 
         reject_on_dl_limit = add_options.get('reject_on_dl_limit')
         reject_reason = ''
@@ -287,8 +287,8 @@ class PluginQBittorrentMod(QBittorrentModBase):
 
         dl_limit_interval = remove_options.get('dl_limit_interval', 24 * 60 * 60)
         show_entry = remove_options.get('show_entry')
-        task_data = self.client.get_task_data(id(task))
-        server_state = task_data.get('server_state')
+        main_data_snapshot = self.client.get_main_data_snapshot(id(task))
+        server_state = main_data_snapshot.get('server_state')
 
         dl_rate_limit = server_state.get('dl_rate_limit')
         use_alt_speed_limits = server_state.get('use_alt_speed_limits')
@@ -327,8 +327,8 @@ class PluginQBittorrentMod(QBittorrentModBase):
         if not task.accepted:
             return
 
-        entry_dict = task_data.get('entry_dict')
-        reseed_dict = task_data.get('reseed_dict')
+        entry_dict = main_data_snapshot.get('entry_dict')
+        reseed_dict = main_data_snapshot.get('reseed_dict')
         accepted_entry_hashes = []
         delete_hashes = []
 
@@ -424,8 +424,8 @@ class PluginQBittorrentMod(QBittorrentModBase):
 
     def resume_entries(self, task, resume_options):
         recheck_torrents = resume_options.get('recheck_torrents')
-        task_data = self.client.get_task_data(id(task))
-        reseed_dict = task_data.get('reseed_dict')
+        main_data_snapshot = self.client.get_main_data_snapshot(id(task))
+        reseed_dict = main_data_snapshot.get('reseed_dict')
         hashes = []
         recheck_hashes = []
         for entry in task.accepted:
