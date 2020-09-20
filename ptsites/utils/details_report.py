@@ -115,7 +115,7 @@ class DetailsReport:
                         data[column].append(self.buid_data_text(column, value) + '*')
                     else:
                         data[column].append(self.buid_data_text(column, value))
-                    if column not in ['site']:
+                    if not entry.get('do_not_count') and column not in ['site']:
                         self.count(total_details, column, value)
                 data['sort_column'].append(0)
                 continue
@@ -148,7 +148,7 @@ class DetailsReport:
                     total_details[column] = 0
                 if total_changed.get(column) is None:
                     total_changed[column] = 0
-                if column not in ['share_ratio', 'points']:
+                if not entry.get('do_not_count') and column not in ['share_ratio', 'points']:
                     total_details[column] = total_details[column] + getattr(user_details_db, column)
                     if details_changed[column] != '*':
                         total_changed[column] = total_changed[column] + details_changed[column]
@@ -177,7 +177,7 @@ class DetailsReport:
         for x in df.values:
             cc = []
             for y in x:
-                if '-' in y and y != 'm-team':
+                if '-' in y and 'm-team' not in y:
                     cc.append('#f38181')
                 elif '+' in y:
                     cc.append('#95e1d3')
