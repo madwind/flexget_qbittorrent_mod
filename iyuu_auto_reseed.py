@@ -6,10 +6,10 @@ from flexget import plugin
 from flexget.entry import Entry
 from flexget.event import event
 from flexget.utils import json
+from loguru import logger
 from requests import RequestException
 
 from .ptsites.executor import Executor
-from .qbittorrent_client import QBittorrentClientFactory
 
 
 class PluginIYUUAutoReseed():
@@ -23,14 +23,6 @@ class PluginIYUUAutoReseed():
                 'type': 'object',
                 'properties': {
                 }
-            },
-            'qbittorrent_ressed': {
-                'host': {'type': 'string'},
-                'use_ssl': {'type': 'boolean'},
-                'port': {'type': 'integer'},
-                'username': {'type': 'string'},
-                'password': {'type': 'string'},
-                'verify_cert': {'type': 'boolean'}
             }
         },
         'additionalProperties': False
@@ -40,7 +32,6 @@ class PluginIYUUAutoReseed():
         config.setdefault('iyuu', '')
         config.setdefault('version', '1.10.6')
         config.setdefault('passkeys', {})
-        config.setdefault('qbittorrent_ressed', {})
         return config
 
     def on_task_input(self, task, config):
@@ -106,13 +97,12 @@ class PluginIYUUAutoReseed():
         return entries
 
     def get_torrents_data(self, task, config):
-        client = QBittorrentClientFactory().get_client(config.get('qbittorrent_ressed'))
-        task_data = client.get_task_data(id(task))
         torrent_dict = {}
         torrents_hashes = {}
         hashes = []
 
-        for entry in task_data.get('entry_dict').values():
+        for entry in task.all_entries:
+            entry.reject('torrent form client')
             if 'up' in entry['qbittorrent_state'].lower():
                 torrent_dict[entry['torrent_info_hash']] = entry
                 hashes.append(entry['torrent_info_hash'])
