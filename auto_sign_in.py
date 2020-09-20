@@ -51,6 +51,7 @@ class PluginAutoSignIn:
         for site_name, site_config in sites.items():
             entry = Entry(
                 title='{} {}'.format(site_name, datetime.now().date()),
+                url=''
             )
             entry['site_name'] = site_name
             entry['site_config'] = site_config
