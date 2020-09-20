@@ -89,7 +89,7 @@ class SiteBase:
             response = self.requests.request(method, url, allow_redirects=False, timeout=60, **kwargs)
             if response.status_code == 302:
                 redirect_url = urljoin(url, response.headers['Location'])
-                response = self._request(entry, method, redirect_url, **kwargs)
+                response = self._request(entry, 'get', redirect_url, **kwargs)
             return response
         except Exception as e:
             entry.fail(entry['prefix'] + '=> ' + SignState.NETWORK_ERROR.value.format(url=url, error=str(e.args)))
