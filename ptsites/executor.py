@@ -25,7 +25,7 @@ class Executor:
             entry['site_class'] = site_class
             site_class.build_sign_in(entry, config)
         except AttributeError as e:
-            raise plugin.PluginError('site: {}, error: {}', entry['site_name'], str(e.args))
+            raise plugin.PluginError('site: {}, error: {}'.format(entry['site_name'], str(e.args)))
         entry['result'] = ''
         entry['messages'] = ''
 
@@ -61,10 +61,10 @@ class Executor:
             entry['prefix'] = 'Sign_in'
             site_object.sign_in(entry, config)
             if not entry.failed:
+                logger.info('{} {}\n{}'.format(entry['title'], entry['result'], entry['messages']).strip())
                 entry['prefix'] = 'Details'
                 site_object.get_details(entry, config)
                 entry['prefix'] = 'Messages'
                 site_object.get_message(entry, config)
-            logger.info('{} {}\n{}'.format(entry['title'], entry['result'], entry['messages']).strip())
         else:
             logger.error('site: {}, unable to get class instance', entry['site_name'])
