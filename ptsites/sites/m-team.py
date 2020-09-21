@@ -1,7 +1,5 @@
 import re
 
-from loguru import logger
-
 from ..nexusphp import NexusPHP
 from ..site_base import SignState
 from ..utils.google_auth import GoogleAuth
@@ -41,7 +39,7 @@ class MainClass(NexusPHP):
             'password': login['password'],
         }
 
-        response = self._request(entry, 'post', LOGIN_URL, data=data)
+        entry['base_response'] = response = self._request(entry, 'post', LOGIN_URL, data=data)
 
         login_state = self.check_net_state(entry, response, URL)
         if login_state:
