@@ -7,12 +7,18 @@ from ..client.qbittorrent_client import QBittorrentClientFactory
 '''
 sign_in:
   qbittorrent:
-    name: <name>
-    host: <host>
-    port: <port>
-    use_ssl: <use_ssl>
-    username: <username>
-    password: <password>
+    - <name>: <name>
+      host: <host>
+      port: <port>
+      use_ssl: <use_ssl>
+      username: <username>
+      password: <password>
+    - <name>: <name>
+      host: <host>
+      port: <port>
+      use_ssl: <use_ssl>
+      username: <username>
+      password: <password>
 '''
 
 
