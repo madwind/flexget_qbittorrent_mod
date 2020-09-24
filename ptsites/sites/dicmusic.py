@@ -23,10 +23,3 @@ class MainClass(Gazelle):
                                                      authkey=passkey['authkey'],
                                                      torrent_pass=passkey['torrent_pass'])
         entry['url'] = 'https://{}/{}'.format(base_url, download_page)
-
-    def build_selector(self):
-        selector = super(MainClass, self).build_selector()
-        selector['details_content']['details_bar'] = None
-        selector['details']['seeding'] = None
-        selector['details']['leeching'] = None
-        return selector

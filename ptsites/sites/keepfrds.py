@@ -13,6 +13,6 @@ class MainClass(NexusPHP):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        selector['details_content'][
-            'details_bar'] = '#info_block > tbody > tr > td > table > tbody > tr > td:nth-child(1)'
+        selector['detail_sources'][0]['elements'][
+            'bar'] = '#info_block > tbody > tr > td > table > tbody > tr > td:nth-child(1)'
         return selector

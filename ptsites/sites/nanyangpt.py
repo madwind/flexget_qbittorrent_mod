@@ -13,7 +13,5 @@ class MainClass(NexusPHP):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        selector['details_content']['details_bar'] = None
-        selector['details']['seeding'] = None
-        selector['details']['leeching'] = None
+        selector['detail_sources'][0]['elements']['bar'] = '#userlink > ul > div:nth-child(3)'
         return selector

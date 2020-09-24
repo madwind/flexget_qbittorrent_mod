@@ -14,7 +14,6 @@ class MainClass(NexusPHP):
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
         selector['details']['points'] = {
-            'regex': '(银元).*?([\\d,.]+)',
-            'group': 2,
+            'regex': '银元.*?([\\d,.]+)'
         }
         return selector

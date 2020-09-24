@@ -25,5 +25,5 @@ class MainClass(NexusPHP):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        selector['details_content']['details_bar'] = '#head > div.userpanel > div.userinfo.medium'
+        selector['detail_sources'][0]['elements']['bar'] = '#head > div.userpanel > div.userinfo.medium'
         return selector

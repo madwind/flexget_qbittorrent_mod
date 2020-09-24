@@ -42,29 +42,23 @@ class MainClass(NexusPHP):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        selector['details_link'] = None
-        selector['details_content']['details_bar'] = '#bottomnav > div.button-group'
-        selector['details_content']['details_table'] = None
+        selector['detail_sources'][0]['elements']['bar'] = '#bottomnav > div.button-group'
+        selector['detail_sources'][0]['elements']['table'] = None
 
         selector['details']['downloaded'] = {
-            'regex': '(arrow_downward)([\\d.]+ ?[ZEPTGMK]?i?B)',
-            'group': 2,
+            'regex': 'arrow_downward([\\d.]+ ?[ZEPTGMK]?i?B)'
         }
         selector['details']['uploaded'] = {
-            'regex': '(arrow_upward)([\\d.]+ ?[ZEPTGMK]?i?B)',
-            'group': 2,
+            'regex': 'arrow_upward([\\d.]+ ?[ZEPTGMK]?i?B)'
         }
         selector['details']['share_ratio'] = None
         selector['details']['points'] = {
-            'regex': '(\\d+)(Bonus|魅力值 )',
-            'group': 1,
+            'regex': '(\\d+)Bonus|魅力值'
         }
         selector['details']['seeding'] = {
-            'regex': '(play_arrow)(\\d+)',
-            'group': 2,
+            'regex': 'play_arrow(\\d+)'
         }
         selector['details']['leeching'] = {
-            'regex': '(play_arrow)(\\d+)/(\\d+)',
-            'group': 3,
+            'regex': 'play_arrow\\d+/(\\d+)'
         }
         return selector

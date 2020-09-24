@@ -26,10 +26,7 @@ class MainClass(NexusPHP):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        selector['details']['hr'] = {
-            'regex': '(H&R).*?(\\d+)',
-            'group': 2,
-        }
+        selector['details']['hr'] = {'regex': 'H&R.*?(\\d+)'}
         return selector
 
     def sign_in(self, entry, config):

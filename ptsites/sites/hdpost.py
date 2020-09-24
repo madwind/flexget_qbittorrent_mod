@@ -31,8 +31,8 @@ class MainClass(MeanTorrent):
         if login:
             login_response = self._request(entry, 'post', LOGIN_URL, data=login)
             if login_response and login_response.status_code == 200:
-                response = self._request(entry, 'put', URL)
-                self.final_check(entry, response, URL)
+                entry['base_response'] = base_response = self._request(entry, 'put', URL)
+                self.final_check(entry, base_response, URL)
             else:
                 entry.fail('Login failed.')
         else:
@@ -48,8 +48,3 @@ class MainClass(MeanTorrent):
         if response.url != original_url:
             entry.fail(entry['prefix'] + '=> ' + SignState.URL_REDIRECT.value.format(original_url, response.url))
             return SignState.URL_REDIRECT
-
-    def build_selector(self):
-        selector = super(MainClass, self).build_selector()
-        selector['from_page'] = 'https://hdpost.top/status/account'
-        return selector

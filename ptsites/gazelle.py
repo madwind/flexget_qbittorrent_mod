@@ -18,36 +18,34 @@ class Gazelle(SiteBase):
 
     def build_selector(self):
         selector = {
-            'from_page': None,
-            'details_link': 'user.php\\?id=\\d+',
-            'details_content': {
-                'details_bar': None,
-                'details_table': '#content > div > div.sidebar > div.box.box_info.box_userinfo_stats > ul',
-            },
+            'user_id': 'user.php\\?id=(\\d+)',
+            'detail_sources': [
+                {
+                    'link': '/user.php?id={}',
+                    'elements': {'table': '#content > div > div.sidebar > div.box.box_info.box_userinfo_stats > ul'}
+                },
+                {
+                    'link': '/ajax.php?action=community_stats&userid={}'
+                }
+            ],
             'details': {
                 'downloaded': {
-                    'regex': '(下[载載]量|Downloaded).+?([\\d.]+ ?[ZEPTGMK]?i?B)',
-                    'group': 2,
+                    'regex': '下载量.+?([\\d.]+ ?[ZEPTGMK]?i?B)'
                 },
                 'uploaded': {
-                    'regex': '(上[传傳]量|Uploaded).+?([\\d.]+ ?[ZEPTGMK]?i?B)',
-                    'group': 2,
+                    'regex': '上传量.+?([\\d.]+ ?[ZEPTGMK]?i?B)'
                 },
                 'share_ratio': {
-                    'regex': '(分享率).*?(∞|[\\d.]+)',
-                    'group': 2,
+                    'regex': '分享率.*?(∞|[\\d.]+)'
                 },
                 'points': {
-                    'regex': '(积分).*?([\\d,.]+)',
-                    'group': 2,
+                    'regex': '积分.*?([\\d,.]+)'
                 },
                 'seeding': {
-                    'regex': '(当前活动|當前活動).*?(\\d+)',
-                    'group': 2,
+                    'regex': 'seeding":"?(\\d+)'
                 },
                 'leeching': {
-                    'regex': '(当前活动|當前活動).*?(\\d+)\\D+(\\d+)',
-                    'group': 3,
+                    'regex': 'leeching":"?(\\d+)'
                 },
                 'hr': None
             }

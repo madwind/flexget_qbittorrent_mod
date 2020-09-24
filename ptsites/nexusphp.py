@@ -18,38 +18,40 @@ class NexusPHP(SiteBase):
 
     def build_selector(self):
         selector = {
-            'from_page': None,
-            'details_link': 'userdetails.php\\?id=\\d+',
-            'details_content': {
-                'details_bar': '#info_block > tbody > tr > td > table > tbody > tr > td:nth-child(1) > span',
-                'details_table': '#outer table:last-child',
-            },
+            'user_id': 'userdetails.php\\?id=(\\d+)',
+            'detail_sources': [
+                {
+                    'link': '/userdetails.php?id={}',
+                    'elements': {
+                        'bar': '#info_block > tbody > tr > td > table > tbody > tr > td:nth-child(1) > span',
+                        'table': '#outer table:last-child'
+                    }
+                }
+            ],
             'details': {
                 'downloaded': {
                     'regex': '(下[载載]量|Downloaded).+?([\\d.]+ ?[ZEPTGMK]?i?B)',
-                    'group': 2,
+                    'group_index': 2
                 },
                 'uploaded': {
                     'regex': '(上[传傳]量|Uploaded).+?([\\d.]+ ?[ZEPTGMK]?i?B)',
-                    'group': 2,
+                    'group_index': 2
                 },
                 'share_ratio': {
-                    'regex': '(分享率).*?(无限|無限|[\\d.]+)',
-                    'group': 2,
+                    'regex': '分享率.*?(无限|無限|[\\d.]+)'
                 },
                 'points': {
-                    'regex': '(魔力).*?([\\d,.]+)',
-                    'group': 2,
+                    'regex': '魔力.*?([\\d,.]+)'
                 },
                 'seeding': {
                     'regex': '(当前活动|當前活動).*?(\\d+)',
-                    'group': 2,
+                    'group_index': 2
                 },
                 'leeching': {
-                    'regex': '(当前活动|當前活動).*?(\\d+)\\D+(\\d+)',
-                    'group': 3,
+                    'regex': '(当前活动|當前活動).*?\\d+\\D+(\\d+)',
+                    'group_index': 2
                 },
-                'hr': None,
+                'hr': None
             }
         }
         return selector

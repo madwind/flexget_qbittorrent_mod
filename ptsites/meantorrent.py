@@ -18,36 +18,27 @@ class MeanTorrent(SiteBase):
 
     def build_selector(self):
         selector = {
-            'from_page': None,
-            'details_link': None,
-            'details_content': {
-                'details_table': 'html',
-            },
+            'detail_sources': [{'link': '/status/account'}],
             'details': {
                 'downloaded': {
-                    'regex': '(downloaded).*?([\\d]+)',
-                    'group': 2,
+                    'regex': 'downloaded.*?([\\d]+)',
                     'handle': self.handle_suffix
                 },
                 'uploaded': {
-                    'regex': '(uploaded).*?([\\d]+)',
-                    'group': 2,
+                    'regex': 'uploaded.*?([\\d]+)',
                     'handle': self.handle_suffix
                 },
                 'share_ratio': None,
                 'points': {
-                    'regex': '(score).*?([\\d.,]+)',
-                    'group': 2,
+                    'regex': 'score.*?([\\d.,]+)'
                 },
                 'seeding': {
-                    'regex': '(seeded).*?(\\d+)',
-                    'group': 2,
+                    'regex': 'seeded.*?(\\d+)'
                 },
                 'leeching': {
-                    'regex': '(leeched).*?(\\d+)',
-                    'group': 2,
+                    'regex': 'leeched.*?(\\d+)'
                 },
-                'hr': None,
+                'hr': None
             }
         }
         return selector

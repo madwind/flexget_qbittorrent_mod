@@ -22,25 +22,15 @@ class MainClass(NexusPHP):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        selector['details_content'][
-            'details_bar'] = 'body > table:nth-child(3) > tbody > tr > td > table > tbody > tr > td:nth-child(1)'
-        selector['details_content'][
-            'details_table'] = '#main_table > tbody > tr:nth-child(1) > td > table > tbody > tr > td > table > tbody'
-        selector['details']['points'] = {
-            'regex': '(积分).*?([\\d,.]+)',
-            'group': 2,
-        }
-        selector['details']['seeding'] = {
-            'regex': '(做种活动).*?(\\d+)',
-            'group': 2,
-        }
-        selector['details']['leeching'] = {
-            'regex': '(做种活动).*?(\\d+)\\D+(\\d+)',
-            'group': 3,
-        }
+        selector['detail_sources'][0]['elements'][
+            'bar'] = 'body > table:nth-child(3) > tbody > tr > td > table > tbody > tr > td:nth-child(1)'
+        selector['detail_sources'][0]['elements'][
+            'table'] = '#main_table > tbody > tr:nth-child(1) > td > table > tbody > tr > td > table > tbody'
+        selector['details']['points'] = {'regex': '积分.*?([\\d,.]+)'}
+        selector['details']['seeding'] = {'regex': '做种活动.*?(\\d+)'}
+        selector['details']['leeching'] = {'regex': '做种活动.*?\\d+\\D+(\\d+)'}
         selector['details']['hr'] = {
-            'regex': '(HP).*?(\\d+)',
-            'group': 2,
+            'regex': 'HP.*?(\\d+)',
             'handle': self.handle_hr
         }
         return selector

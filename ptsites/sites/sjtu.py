@@ -13,9 +13,7 @@ class MainClass(NexusPHP):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        selector['details_content']['details_bar'] = None
-        selector['details_content'][
-            'details_table'] = 'body > table.mainouter > tbody > tr:nth-child(2) > td > table:nth-child(5) > tbody > tr > td > table > tbody'
-        selector['details']['seeding'] = None
-        selector['details']['leeching'] = None
+        selector['detail_sources'][0]['elements']['bar'] = '#peersStatus > li:nth-child(1) > span'
+        selector['detail_sources'][0]['elements'][
+            'table'] = 'body > table.mainouter > tbody > tr:nth-child(2) > td > table:nth-child(5) > tbody > tr > td > table > tbody'
         return selector

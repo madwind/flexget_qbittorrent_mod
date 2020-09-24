@@ -15,12 +15,6 @@ class MainClass(NexusPHP):
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
         selector['from_page'] = BASE_URL
-        selector['details']['points'] = {
-            'regex': '(猫粮).*?([\\d,.]+)',
-            'group': 2,
-        }
-        selector['details']['hr'] = {
-            'regex': '(H&R).*?(\\d+)',
-            'group': 2,
-        }
+        selector['details']['points'] = {'regex': '猫粮.*?([\\d,.]+)'}
+        selector['details']['hr'] = {'regex': 'H&R.*?(\\d+)'}
         return selector

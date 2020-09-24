@@ -189,49 +189,54 @@ class SiteBase:
         entry.fail(SignState.SIGN_IN_FAILED.value.format('No answer.'))
 
     def get_details_base(self, entry, config, selector):
-        if selector['from_page']:
-            entry['base_response'] = base_response = self._request(entry, 'get', selector['from_page'])
-            base_net_state = self.check_net_state(entry, base_response, selector['from_page'])
-            if base_net_state:
+        detail_sources = selector['detail_sources']
+
+        user_id = ''
+        user_id_selector = selector.get('user_id')
+        if user_id_selector:
+            if not entry.get('base_response'):
+                entry.fail('Details=> base_response is None.')
                 return
-        if not entry.get('base_response'):
-            entry.fail('Details=> base_response is None.')
-            return
-        if selector['details_link']:
-            content = self._decode(entry['base_response'])
-            details_link_match = re.search(selector['details_link'], content)
-            if details_link_match:
-                details_link = details_link_match.group()
+            base_content = self._decode(entry['base_response'])
+            user_id_match = re.search(user_id_selector, base_content)
+            if user_id_match:
+                user_id = user_id_match.group(1)
             else:
-                entry.fail('Details=> User details link not found.')
+                entry.fail('Details=> User id not found.')
                 return
-            details_link = urljoin(entry['url'], details_link)
-            details_response = self._request(entry, 'get', details_link)
-            net_state = self.check_net_state(entry, details_response, details_link)
+        details_text = ''
+        for detail_source in detail_sources:
+            detail_source['link'] = urljoin(entry['url'], detail_source['link'].format(user_id))
+            detail_response = self._request(entry, 'get', detail_source['link'])
+            net_state = self.check_net_state(entry, detail_response, detail_source['link'])
             if net_state:
                 return
-        else:
-            details_response = entry['base_response']
-        soup = get_soup(self._decode(details_response))
-        details_text = ''
-        for name, sel in selector['details_content'].items():
-            if sel:
-                details_info = soup.select_one(sel)
-                if details_info:
-                    details_text = details_text + details_info.get_text()
-                else:
-                    entry.fail('Element: {} not found.'.format(name))
-                    logger.error('site: {} element: {} not found, selecotr: {}, soup: {}', entry['site_name'], name,
-                                 sel, soup)
-                    return
+            detail_content = self._decode(detail_response)
+
+            elements = detail_source.get('elements')
+            if elements:
+                soup = get_soup(self._decode(detail_response))
+                for name, sel in elements.items():
+                    if sel:
+                        details_info = soup.select_one(sel)
+                        if details_info:
+                            details_text = details_text + details_info.get_text()
+                        else:
+                            entry.fail('Element: {} not found.'.format(name))
+                            logger.error('site: {} element: {} not found, selecotr: {}, soup: {}', entry['site_name'],
+                                         name, sel, soup)
+                            return
+            else:
+                details_text = details_text + detail_content
+
         if details_text:
             details = {}
             for detail_name, detail_config in selector['details'].items():
                 detail_value = self.get_detail_value(details_text, detail_config)
                 if not detail_value:
                     entry.fail('Details=> detail: {} not found.'.format(detail_name))
-                    logger.error('Details=> site: {}, regex: {}，content: {}', entry['site_name'],
-                                 detail_config['regex'], content)
+                    logger.error('Details=> site: {}, regex: {}，details_text: {}', entry['site_name'],
+                                 detail_config['regex'], details_text)
                     return
                 details[detail_name] = detail_value
             entry['details'] = details
@@ -313,7 +318,10 @@ class SiteBase:
         detail_match = re.search(detail_config['regex'], content, re.DOTALL)
         if not detail_match:
             return None
-        detail = detail_match.group(detail_config['group']).replace(',', '')
+        detail = detail_match.group(detail_config.get('group_index', 1))
+        if not detail:
+            return None
+        detail = detail.replace(',', '')
         handle = detail_config.get('handle')
         if handle:
             detail = handle(detail)
