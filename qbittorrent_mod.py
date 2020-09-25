@@ -387,7 +387,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                 else:
                     self._build_delete_hashes(delete_hashes, torrent_hashes, entry_dict, keep_disk_space,
                                               free_space_on_disk, delete_size)
-        if dl_limit_on_succeeded is not None:
+        if dl_limit_on_succeeded is not None and keep_disk_space is not None:
             if keep_disk_space > free_space_on_disk + delete_size:
                 dl_limit = (free_space_on_disk + delete_size) / dl_limit_interval
                 if dl_limit_on_succeeded and dl_limit > dl_limit_on_succeeded:
