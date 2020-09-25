@@ -3,8 +3,8 @@ import re
 import requests
 from loguru import logger
 
-from ..site_base import SiteBase
-from ..nexusphp import NexusPHP
+from ..schema.site_base import SiteBase
+from ..schema.nexusphp import NexusPHP
 
 # auto_sign_in
 URL = 'https://hdcity.work/sign'
@@ -42,6 +42,8 @@ class MainClass(NexusPHP):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
+        selector['user_id'] = None
+        selector['detail_sources'][0]['link'] = None
         selector['detail_sources'][0]['elements']['bar'] = '#bottomnav > div.button-group'
         selector['detail_sources'][0]['elements']['table'] = None
 
@@ -53,7 +55,7 @@ class MainClass(NexusPHP):
         }
         selector['details']['share_ratio'] = None
         selector['details']['points'] = {
-            'regex': '(\\d+)Bonus|魅力值'
+            'regex': '(\\d+)(Bonus|魅力值)'
         }
         selector['details']['seeding'] = {
             'regex': 'play_arrow(\\d+)'
@@ -61,4 +63,5 @@ class MainClass(NexusPHP):
         selector['details']['leeching'] = {
             'regex': 'play_arrow\\d+/(\\d+)'
         }
+        selector['details']['hr'] = None
         return selector

@@ -1,7 +1,7 @@
 import re
 from urllib.parse import urljoin
 
-from ..discuz import Discuz
+from ..schema.discuz import Discuz
 
 # auto_sign_in
 URL = 'https://www.skyey2.com/login.php'

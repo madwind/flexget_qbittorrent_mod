@@ -1,5 +1,5 @@
-from ..site_base import SiteBase
-from ..nexusphp import NexusPHP
+from ..schema.site_base import SiteBase
+from ..schema.nexusphp import NexusPHP
 
 # auto_sign_in
 URL = 'https://www.joyhd.net/'
@@ -16,4 +16,5 @@ class MainClass(NexusPHP):
         selector['details']['points'] = {
             'regex': '银元.*?([\\d,.]+)'
         }
+        selector['details']['hr'] = None
         return selector

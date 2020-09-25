@@ -1,5 +1,5 @@
-from ..site_base import SiteBase
-from ..gazelle import Gazelle
+from ..schema.site_base import SiteBase
+from ..schema.gazelle import Gazelle
 
 # auto_sign_in
 
@@ -23,3 +23,8 @@ class MainClass(Gazelle):
                                                      authkey=passkey['authkey'],
                                                      torrent_pass=passkey['torrent_pass'])
         entry['url'] = 'https://{}/{}'.format(base_url, download_page)
+
+    def build_selector(self):
+        selector = super(MainClass, self).build_selector()
+        selector['details']['hr'] = None
+        return selector

@@ -1,5 +1,5 @@
-from ..site_base import SiteBase
-from ..nexusphp import NexusPHP
+from ..schema.site_base import SiteBase
+from ..schema.nexusphp import NexusPHP
 
 # auto_sign_in
 URL = 'https://pt.sjtu.edu.cn/'
@@ -13,7 +13,15 @@ class MainClass(NexusPHP):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        selector['detail_sources'][0]['elements']['bar'] = '#peersStatus > li:nth-child(1) > span'
-        selector['detail_sources'][0]['elements'][
-            'table'] = 'body > table.mainouter > tbody > tr:nth-child(2) > td > table:nth-child(5) > tbody > tr > td > table > tbody'
+        selector['detail_sources'][0]['elements'] = {
+            'table': 'body > table.mainouter > tbody > tr:nth-child(2) > td > table:nth-child(5) > tbody > tr > td > table > tbody'}
+        detail_source = {
+            'link': '/viewpeerstatus.php',
+            'elements': {
+                'bar': 'li'
+            },
+            'do_not_strip': True
+        }
+        selector['detail_sources'].append(detail_source)
+        selector['details']['hr'] = None
         return selector

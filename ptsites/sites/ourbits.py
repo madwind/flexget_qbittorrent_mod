@@ -1,5 +1,4 @@
-from ..site_base import SiteBase
-from ..nexusphp import NexusPHP
+from ..schema.nexusphp import NexusPHP
 
 # auto_sign_in
 LOGIN_URL = 'https://ourbits.club/takelogin.php'
@@ -23,11 +22,6 @@ class MainClass(NexusPHP):
             'referer': URL
         }
         entry['headers'] = headers
-
-    def build_selector(self):
-        selector = super(MainClass, self).build_selector()
-        selector['details']['hr'] = {'regex': 'H&R.*?(\\d+)'}
-        return selector
 
     def sign_in(self, entry, config):
         login = entry['site_config'].get('login')

@@ -1,6 +1,6 @@
-from ..site_base import SiteBase
-from ..nexusphp import NexusPHP
-from ..site_base import SignState
+from ..schema.site_base import SiteBase
+from ..schema.nexusphp import NexusPHP
+from ..schema.site_base import SignState
 
 # auto_sign_in
 BASE_URL = 'https://pt.hdupt.com/'
@@ -25,3 +25,8 @@ class MainClass(NexusPHP):
         }
         response = self._request(entry, 'post', URL, files=data)
         self.final_check(entry, response, URL)
+
+    def build_selector(self):
+        selector = super(MainClass, self).build_selector()
+        selector['details']['hr'] = None
+        return selector

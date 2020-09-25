@@ -1,5 +1,5 @@
-from ..site_base import SiteBase
-from ..nexusphp import NexusPHP
+from ..schema.site_base import SiteBase
+from ..schema.nexusphp import NexusPHP
 
 # auto_sign_in
 BASE_URL = 'https://totheglory.im/'
@@ -37,3 +37,4 @@ class MainClass(NexusPHP):
 
     def handle_hr(self, hr):
         return str(15 - int(hr))
+

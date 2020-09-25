@@ -3,9 +3,9 @@ import re
 from io import BytesIO
 from urllib.parse import urljoin
 
-from ..site_base import SiteBase
-from ..nexusphp import NexusPHP
-from ..site_base import SignState
+from ..schema.site_base import SiteBase
+from ..schema.nexusphp import NexusPHP
+from ..schema.site_base import SignState
 from ..utils.baidu_ocr import BaiduOcr
 
 try:
@@ -104,5 +104,4 @@ class MainClass(NexusPHP):
         selector = super(MainClass, self).build_selector()
         selector['detail_sources'][0]['elements'][
             'bar'] = '#info_block > tbody > tr > td > table > tbody > tr > td:nth-child(2)'
-        selector['details']['hr'] = {'regex': 'H&R.*?(\\d+)'}
         return selector

@@ -1,7 +1,7 @@
-from ..meantorrent import MeanTorrent
+from ..schema.meantorrent import MeanTorrent
 
 # auto_sign_in
-from ..site_base import SignState
+from ..schema.site_base import SignState
 
 BASE_URL = 'https://hdpost.top/'
 LOGIN_URL = 'https://hdpost.top/api/auth/signin'
@@ -48,3 +48,8 @@ class MainClass(MeanTorrent):
         if response.url != original_url:
             entry.fail(entry['prefix'] + '=> ' + SignState.URL_REDIRECT.value.format(original_url, response.url))
             return SignState.URL_REDIRECT
+
+    def build_selector(self):
+        selector = super(MainClass, self).build_selector()
+        selector['details']['hr'] = None
+        return selector

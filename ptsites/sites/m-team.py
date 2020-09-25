@@ -1,7 +1,7 @@
 import re
 
-from ..nexusphp import NexusPHP
-from ..site_base import SignState
+from ..schema.nexusphp import NexusPHP
+from ..schema.site_base import SignState
 from ..utils.google_auth import GoogleAuth
 
 # auto_sign_in
@@ -27,6 +27,15 @@ class MainClass(NexusPHP):
     def build_reseed_entry(entry, base_url, site, passkey, torrent_id):
         download_page = site['download_page'].format(torrent_id=torrent_id, passkey=passkey)
         entry['url'] = 'https://{}/{}&https=1'.format(base_url, download_page)
+
+    def get_message(self, entry, config):
+        self.get_nexusphp_message(entry, config)
+        self.get_nexusphp_message(entry, config, messages_url=SYSTEM_MESSAGE_URL)
+
+    def build_selector(self):
+        selector = super(MainClass, self).build_selector()
+        selector['details']['hr'] = None
+        return selector
 
     def sign_in_by_get(self, entry, config):
         login = entry['site_config'].get('login')
@@ -77,6 +86,3 @@ class MainClass(NexusPHP):
             entry.fail(entry['prefix'] + '=> ' + SignState.URL_REDIRECT.value.format(original_url, response.url))
             return SignState.URL_REDIRECT
 
-    def get_message(self, entry, config):
-        self.get_nexusphp_message(entry, config)
-        self.get_nexusphp_message(entry, config, messages_url=SYSTEM_MESSAGE_URL)

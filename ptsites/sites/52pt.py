@@ -1,5 +1,5 @@
-from ..nexusphp import NexusPHP
-from ..site_base import SiteBase
+from ..schema.nexusphp import NexusPHP
+from ..schema.site_base import SiteBase
 
 # auto_sign_in
 URL = 'https://52pt.site/bakatest.php'
@@ -14,8 +14,3 @@ class MainClass(NexusPHP):
 
     def sign_in(self, entry, config):
         self.sign_in_by_question(entry, config)
-
-    def build_selector(self):
-        selector = super(MainClass, self).build_selector()
-        selector['details']['hr'] = {'regex': 'H&R.*?(\\d+)'}
-        return selector

@@ -2,9 +2,9 @@ import json
 import os
 from io import BytesIO
 
-from ..site_base import SiteBase
-from ..nexusphp import NexusPHP
-from ..site_base import SignState
+from ..schema.site_base import SiteBase
+from ..schema.nexusphp import NexusPHP
+from ..schema.site_base import SignState
 from ..utils.baidu_ocr import BaiduOcr
 
 try:
@@ -72,3 +72,8 @@ class MainClass(NexusPHP):
                     code_file.write(img_byte_arr.getvalue())
                 entry['result'] = 'ocr failed: {}, see hdsky.png'.format(code)
                 entry.fail(entry['result'])
+
+    def build_selector(self):
+        selector = super(MainClass, self).build_selector()
+        selector['details']['hr'] = None
+        return selector

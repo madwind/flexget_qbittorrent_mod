@@ -14,32 +14,30 @@ class Discuz(SiteBase):
 
     def build_selector(self):
         selector = {
-            'from_page': None,
-            'details_link': 'home.php\\?mod=space&amp;uid=\\d+',
-            'details_content': {
-                'details_bar': None,
-                'details_table': '#ct > div > div.bm > div > div.bm_c.u_profile',
-            },
+            'user_id': 'home.php\\?mod=space&amp;uid=(\\d+)',
+            'detail_sources': [
+                {
+                    'link': 'home.php?mod=space&amp;uid={}',
+                    'elements': {
+                        'table': '#ct > div > div.bm > div > div.bm_c.u_profile'
+                    }
+                }
+            ],
             'details': {
                 'downloaded': {
-                    'regex': '(下载量).*?([\\d.]+ ?[ZEPTGMK]?i?B)',
-                    'group': 2,
+                    'regex': '下载量.*?([\\d.]+ ?[ZEPTGMK]?i?B)'
                 },
                 'uploaded': {
-                    'regex': '(上传量).*?([\\d.]+ ?[ZEPTGMK]?i?B)',
-                    'group': 2,
+                    'regex': '上传量.*?([\\d.]+ ?[ZEPTGMK]?i?B)'
                 },
                 'share_ratio': {
-                    'regex': '(分享率).*?([\\d.,]+)',
-                    'group': 2,
+                    'regex': '分享率.*?([\\d.,]+)'
                 },
                 'points': {
-                    'regex': '(金币)([\\d.,]+)',
-                    'group': 2,
+                    'regex': '金币([\\d.,]+)'
                 },
                 'seeding': {
-                    'regex': '(即时保种数)(\\d+)',
-                    'group': 2,
+                    'regex': '即时保种数(\\d+)'
                 },
                 'leeching': None,
                 'hr': None,

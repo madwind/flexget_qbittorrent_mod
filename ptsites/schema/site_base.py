@@ -1,10 +1,6 @@
-import itertools
-import json
-import os
 import re
 import time
 from enum import Enum
-from pathlib import Path
 from urllib.parse import urljoin
 
 import chardet
@@ -96,7 +92,14 @@ class SiteBase:
         return None
 
     def sign_in_by_get(self, entry, config):
-        entry['base_response'] = response = self._request(entry, 'get', entry['url'])
+        if entry.get('base_url'):
+            entry['base_response'] = base_response = self._request(entry, 'get', entry['base_url'])
+            sign_in_state, base_content = self.check_sign_in_state(entry, base_response, entry['base_url'])
+            if sign_in_state != SignState.NO_SIGN_IN:
+                return
+        response = self._request(entry, 'get', entry['url'])
+        if not entry.get('base_url'):
+            entry['base_response'] = response
         self.final_check(entry, response, entry['url'])
 
     def sign_in_by_post_data(self, entry, config):
@@ -118,112 +121,50 @@ class SiteBase:
         response = self._request(entry, 'post', entry['url'], data=data)
         self.final_check(entry, response, entry['url'])
 
-    def sign_in_by_question(self, entry, config):
-        entry['base_response'] = base_response = self._request(entry, 'get', entry['url'])
-        sign_in_state, base_content = self.check_sign_in_state(entry, base_response, entry['url'])
-        if sign_in_state != SignState.NO_SIGN_IN:
+    def get_details_base(self, entry, config, selector):
+        if entry.get('base_response') is None:
+            entry.fail('Details=> base_response is None.')
             return
 
-        question_element = get_soup(base_content).select_one('input[name="questionid"]')
-        if question_element:
-            question_id = question_element.get('value')
-
-            local_answer = None
-
-            question_file_path = os.path.dirname(__file__) + '/question.json'
-            if Path(question_file_path).is_file():
-                with open(question_file_path) as question_file:
-                    question_json = json.loads(question_file.read())
-            else:
-                question_json = {}
-
-            question_extend_file_path = os.path.dirname(__file__) + '/question_extend.json'
-            if Path(question_extend_file_path).is_file():
-                with open(question_extend_file_path) as question_extend_file:
-                    question_extend_json = json.loads(question_extend_file.read())
-                os.remove(question_extend_file_path)
-            else:
-                question_extend_json = {}
-
-            self._dict_merge(question_json, question_extend_json)
-
-            site_question = question_json.get(entry['url'])
-            if site_question:
-                local_answer = site_question.get(question_id)
-            else:
-                question_json[entry['url']] = {}
-
-            choice_elements = get_soup(base_content).select('input[name="choice[]"]')
-            choices = []
-            for choice_element in choice_elements:
-                choices.append(choice_element.get('value', ''))
-
-            if choice_elements[0].get('type') == 'radio':
-                choice_range = 1
-            else:
-                choice_range = len(choices)
-
-            answer_list = []
-
-            for i in range(choice_range):
-                for arr in itertools.combinations(choices, i + 1):
-                    if list(arr) not in answer_list:
-                        answer_list.append(list(arr))
-            answer_list.reverse()
-            if local_answer and local_answer in choices and len(local_answer) <= choice_range:
-                answer_list.insert(0, local_answer)
-            times = 0
-            for answer in answer_list:
-                data = {'questionid': question_id, 'choice[]': answer, 'usercomment': '此刻心情:无', 'submit': '提交'}
-                response = self._request(entry, 'post', entry['url'], data=data)
-                state, content = self.check_sign_in_state(entry, response, entry['url'])
-                if state == SignState.SUCCEED:
-                    entry['result'] = '{} ( {} attempts.)'.format(entry['result'], times)
-
-                    question_json[entry['url']][question_id] = answer
-                    with open(question_file_path, mode='w') as question_file:
-                        json.dump(question_json, question_file)
-                    logger.info('{}, correct answer: {}', entry['title'], data)
-                    return
-                times += 1
-        entry.fail(SignState.SIGN_IN_FAILED.value.format('No answer.'))
-
-    def get_details_base(self, entry, config, selector):
-        detail_sources = selector['detail_sources']
-
+        base_content = self._decode(entry['base_response'])
         user_id = ''
         user_id_selector = selector.get('user_id')
         if user_id_selector:
-            if not entry.get('base_response'):
-                entry.fail('Details=> base_response is None.')
-                return
-            base_content = self._decode(entry['base_response'])
             user_id_match = re.search(user_id_selector, base_content)
             if user_id_match:
                 user_id = user_id_match.group(1)
             else:
                 entry.fail('Details=> User id not found.')
+                logger.debug('site: {} User id not found. content: {}'.format(entry['site_name'], base_content))
                 return
         details_text = ''
+        detail_sources = selector.get('detail_sources')
         for detail_source in detail_sources:
-            detail_source['link'] = urljoin(entry['url'], detail_source['link'].format(user_id))
-            detail_response = self._request(entry, 'get', detail_source['link'])
-            net_state = self.check_net_state(entry, detail_response, detail_source['link'])
-            if net_state:
-                return
-            detail_content = self._decode(detail_response)
-
+            if detail_source.get('link'):
+                detail_source['link'] = urljoin(entry['url'], detail_source['link'].format(user_id))
+                detail_response = self._request(entry, 'get', detail_source['link'])
+                net_state = self.check_net_state(entry, detail_response, detail_source['link'])
+                if net_state:
+                    return
+                detail_content = self._decode(detail_response)
+            else:
+                detail_content = base_content
+            do_not_strip = detail_source.get('do_not_strip')
             elements = detail_source.get('elements')
             if elements:
-                soup = get_soup(self._decode(detail_response))
+                soup = get_soup(detail_content)
                 for name, sel in elements.items():
                     if sel:
                         details_info = soup.select_one(sel)
                         if details_info:
-                            details_text = details_text + details_info.get_text()
+                            if do_not_strip:
+                                details_text = details_text + str(details_info)
+                            else:
+                                details_text = details_text + details_info.text
                         else:
                             entry.fail('Element: {} not found.'.format(name))
-                            logger.error('site: {} element: {} not found, selecotr: {}, soup: {}', entry['site_name'],
+                            logger.error('site: {} element: {} not found, selecotr: {}, soup: {}',
+                                         entry['site_name'],
                                          name, sel, soup)
                             return
             else:

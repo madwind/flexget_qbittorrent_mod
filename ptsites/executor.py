@@ -2,7 +2,7 @@ from flexget import plugin
 from loguru import logger
 
 from . import sites
-from .site_base import SiteBase
+from .schema.site_base import SiteBase
 
 try:
     import matplotlib.pyplot as plt

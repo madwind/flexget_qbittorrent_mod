@@ -1,5 +1,5 @@
-from ..site_base import SiteBase
-from ..nexusphp import NexusPHP
+from ..schema.site_base import SiteBase
+from ..schema.nexusphp import NexusPHP
 
 # auto_sign_in
 URL = 'https://hdhome.org/attendance.php'
@@ -36,8 +36,3 @@ class MainClass(NexusPHP):
     def build_html_rss_config(config):
         config['root_element_selector'] = ROOT_ELEMENT_SELECTOR
         config['fields'] = FIELDS
-
-    def build_selector(self):
-        selector = super(MainClass, self).build_selector()
-        selector['details']['hr'] = {'regex': 'H&R.*?(\\d+)'}
-        return selector
