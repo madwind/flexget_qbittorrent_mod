@@ -3,19 +3,19 @@ web_server:
   port: 3539
 
 schedules:
-  - tasks: [pterclub, totheglory, leaguehd, rss_download]
+  - tasks: [ pterclub, totheglory, leaguehd, rss_download ]
     interval:
       minutes: 1
 
-  - tasks: [reseed, resume, delete, modify]
+  - tasks: [ reseed, resume, delete, modify, clean ]
     interval:
       minutes: 5
 
-  - tasks: [opencd, springsunday]
+  - tasks: [ opencd, springsunday ]
     interval:
       minutes: 10
 
-  - tasks: [sign_in, warner]
+  - tasks: [ sign_in, warner ]
     schedule:
       hour: 8-23/1
 
@@ -65,34 +65,42 @@ templates:
       action:
         pause: yes
 
-  qbittorrent_delete_template:
+  qbittorrent_delete_keeper_template:
     qbittorrent_mod:
       action:
         remove:
-          check_reseed:
-            - chdbits
-            - totheglory
-            - m-team
-            - open
-            - pterclub
-            - springsunday
-            - ourbits
-            - hdsky
-            - keepfrds
-            - leaguehd
-          delete_files: yes
-          keep_disk_space: 10
-          dl_limit_on_succeeded: 0
-          alt_dl_limit_on_succeeded: 8388608
-          dl_limit_interval: 900
-          #show_entry: 633645aa28a4aa48e8b7d2ac618fe691e81df30f
+          keeper:
+            check_reseed:
+              - chdbits
+              - totheglory
+              - m-team
+              - open
+              - pterclub
+              - springsunday
+              - ourbits
+              - hdsky
+              - keepfrds
+              - leaguehd
+            delete_files: yes
+            keep_disk_space: 10
+            dl_limit_on_succeeded: 0
+            alt_dl_limit_on_succeeded: 8388608
+            dl_limit_interval: 900
+            #show_entry: 633645aa28a4aa48e8b7d2ac618fe691e81df30f
+
+  qbittorrent_delete_cleaner_template:
+    qbittorrent_mod:
+      action:
+        remove:
+          cleaner:
+            delete_files: yes
 
   qbittorrent_modify_template:
     qbittorrent_mod:
       action:
         modify:
           tag_by_tracker: yes
-            #replace_trackers:
+          #replace_trackers:
           #'http://tracker.pterclub.com/announce?passkey=xxxxxxxx': 'https://tracker.pterclub.com/announce?passkey=xxxxxxxx'
 
 tasks:
@@ -355,7 +363,7 @@ tasks:
 
   resume:
     priority: 2
-    disable: [seen, seen_info_hash, retry_failed]
+    disable: [ seen, seen_info_hash, retry_failed ]
     if:
       - qbittorrent_state == 'pausedUP' and qbittorrent_downloaded == 0 and qbittorrent_added_on > now - timedelta(hours=1): accept
     template:
@@ -365,7 +373,7 @@ tasks:
 
   delete:
     priority: 3
-    disable: [seen, seen_info_hash, retry_failed]
+    disable: [ seen, seen_info_hash, retry_failed ]
     if:
       - qbittorrent_category in ['Rss'] and qbittorrent_last_activity < now - timedelta(hours=2): accept
       - qbittorrent_state == 'missingFiles' or (qbittorrent_state in ['pausedDL'] and qbittorrent_completed == 0): accept
@@ -374,16 +382,26 @@ tasks:
     template:
       - from_qbittorrent_template
       - qbittorrent_base_template
-      - qbittorrent_delete_template
+      - qbittorrent_delete_keeper_template
 
   modify:
     priority: 4
-    disable: [seen, seen_info_hash, retry_failed]
+    disable: [ seen, seen_info_hash, retry_failed ]
     accept_all: yes
     template:
       - from_qbittorrent_template
       - qbittorrent_base_template
       - qbittorrent_modify_template
+
+  clean:
+    priority: 5
+    disable: [ seen, seen_info_hash, retry_failed ]
+    if:
+      - qbittorrent_tracker_msg == 'torrent not registered with this tracker': accept
+    template:
+      - from_qbittorrent_template
+      - qbittorrent_base_template
+      - qbittorrent_delete_cleaner_template
 
   sign_in:
     auto_sign_in:
@@ -509,9 +527,9 @@ tasks:
                 - username: 'xxxxxxxx'
 
   warner:
-    disable: [seen, seen_info_hash, retry_failed]
+    disable: [ seen, seen_info_hash, retry_failed ]
     from_qbittorrent_mod:
-      server_state: yes
+      server_state: 'qBittorrent Server State'
     if:
       - 'not server_state["flexget_connected"]': accept
       - 'server_state["dl_info_speed"] < 1048576': accept
@@ -523,7 +541,7 @@ tasks:
       entries:
         message: |+
           {{ time }}
-          qBittorrent Server State:
+          {{ title }}:
           {% if not server_state.flexget_connected -%}
           flexget_connected: False
           {%- else -%}
