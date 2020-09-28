@@ -52,7 +52,7 @@ class MainClass(NexusPHP):
 
         login_state = self.check_net_state(entry, response, URL)
         if login_state:
-            entry.fail('Login failed!')
+            return
 
         use_google_auth = False
         if response.url.startswith(VERIFY_URL):
@@ -85,4 +85,3 @@ class MainClass(NexusPHP):
         if response.url not in [original_url, VERIFY_URL]:
             entry.fail(entry['prefix'] + '=> ' + SignState.URL_REDIRECT.value.format(original_url, response.url))
             return SignState.URL_REDIRECT
-
