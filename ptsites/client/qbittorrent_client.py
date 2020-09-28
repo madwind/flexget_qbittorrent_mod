@@ -393,6 +393,10 @@ class QBittorrentClient:
 
     def _update_entry_trackers(self, torrent_hash):
         trackers = list(filter(lambda tracker: tracker.get('status') != 0, self.get_torrent_trackers(torrent_hash)))
+        for tracker in trackers:
+            self._entry_dict[torrent_hash]['qbittorrent_tracker_msg'] = tracker['msg']
+            if tracker['msg']:
+                break
         self._entry_dict[torrent_hash]['qbittorrent_trackers'] = trackers
 
     def _update_addition(self, entry):
