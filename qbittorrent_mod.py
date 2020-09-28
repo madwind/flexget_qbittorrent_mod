@@ -52,7 +52,7 @@ class PluginQBittorrentModInput(QBittorrentModBase):
             'username': {'type': 'string'},
             'password': {'type': 'string'},
             'verify_cert': {'type': 'boolean'},
-            'server_state': {'type': 'boolean'},
+            'server_state': {'oneOf': [{'type': 'boolean'}, {'type': 'string'}]},
             'enabled': {'type': 'boolean'},
         },
         'additionalProperties': False
@@ -66,9 +66,10 @@ class PluginQBittorrentModInput(QBittorrentModBase):
         config = self.prepare_config(config)
         if not config['enabled']:
             return
-        if config.get('server_state'):
+        server_state = config.get('server_state')
+        if server_state:
             entry = Entry(
-                title='qBittorrent',
+                title='qBittorrent Server State' if isinstance(server_state, bool) else server_state,
                 url=''
             )
             entry['time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -120,14 +121,18 @@ class PluginQBittorrentMod(QBittorrentModBase):
                     'remove': {
                         'type': 'object',
                         'properties': {
-                            'check_reseed': {
-                                'oneOf': [{'type': 'boolean'}, {'type': 'array', 'items': {'type': 'string'}}]},
-                            'delete_files': {'type': 'boolean'},
-                            'keep_disk_space': {'type': 'integer'},
-                            'dl_limit_on_succeeded': {'type': 'integer'},
-                            'alt_dl_limit_on_succeeded': {'type': 'integer'},
-                            'dl_limit_interval': {'type': 'integer'},
-                            'show_entry': {'type': 'string'}
+                            'keeper': {
+                                'keep_disk_space': {'type': 'integer'},
+                                'check_reseed': {
+                                    'oneOf': [{'type': 'boolean'}, {'type': 'array', 'items': {'type': 'string'}}]},
+                                'delete_files': {'type': 'boolean'},
+                                'dl_limit_on_succeeded': {'type': 'integer'},
+                                'alt_dl_limit_on_succeeded': {'type': 'integer'},
+                                'dl_limit_interval': {'type': 'integer'},
+                            },
+                            'cleaner': {
+                                'delete_files': {'type': 'boolean'},
+                            }
                         }
                     },
                     'resume': {
@@ -250,22 +255,6 @@ class PluginQBittorrentMod(QBittorrentModBase):
 
             is_magnet = entry['url'].startswith('magnet:')
 
-            if task.manager.options.test:
-                logger.info('Test mode.')
-                logger.info('Would add torrent to qBittorrent with:')
-                if not is_magnet:
-                    logger.info('File: {}', entry.get('file'))
-                else:
-                    logger.info('Url: {}', entry.get('url'))
-                logger.info('Save path: {}', add_options.get('savepath'))
-                logger.info('Category: {}', add_options.get('category'))
-                logger.info('Paused: {}', add_options.get('paused', 'false'))
-                if add_options.get('upLimit'):
-                    logger.info('Upload Speed Limit: {}', add_options.get('upLimit'))
-                if add_options.get('dlLimit'):
-                    logger.info('Download Speed Limit: {}', add_options.get('dlLimit'))
-                return
-
             if not is_magnet:
                 if 'file' not in entry:
                     entry.fail('File missing?')
@@ -281,12 +270,19 @@ class PluginQBittorrentMod(QBittorrentModBase):
                 self.client.add_torrent_url(entry['url'], add_options)
 
     def remove_entries(self, task, remove_options):
-        delete_files = remove_options.get('delete_files')
-        check_reseed = remove_options.get('check_reseed')
-        keep_disk_space = remove_options.get('keep_disk_space')
+        keeper_options = remove_options.get('keeper')
+        if keeper_options:
+            self.remove_entries_keeper(task, keeper_options)
+        else:
+            self.remove_entries_cleaner(task, remove_options.get('cleaner'))
 
-        dl_limit_interval = remove_options.get('dl_limit_interval', 24 * 60 * 60)
-        show_entry = remove_options.get('show_entry')
+    def remove_entries_keeper(self, task, keeper_options):
+        delete_files = keeper_options.get('delete_files')
+        check_reseed = keeper_options.get('check_reseed')
+        keep_disk_space = keeper_options.get('keep_disk_space')
+
+        dl_limit_interval = keeper_options.get('dl_limit_interval', 24 * 60 * 60)
+        show_entry = keeper_options.get('show_entry')
         main_data_snapshot = self.client.get_main_data_snapshot(id(task))
         server_state = main_data_snapshot.get('server_state')
 
@@ -295,44 +291,33 @@ class PluginQBittorrentMod(QBittorrentModBase):
         free_space_on_disk = server_state.get('free_space_on_disk')
 
         dl_limit_mode = 'dl_limit'
-        dl_limit_on_succeeded = remove_options.get('dl_limit_on_succeeded', 0)
-        alt_dl_limit_on_succeeded = remove_options.get('alt_dl_limit_on_succeeded', 0)
+        dl_limit_on_succeeded = keeper_options.get('dl_limit_on_succeeded', 0)
+        alt_dl_limit_on_succeeded = keeper_options.get('alt_dl_limit_on_succeeded', 0)
         if use_alt_speed_limits:
             dl_limit_mode = 'alt_dl_limit'
             dl_limit_on_succeeded = alt_dl_limit_on_succeeded
 
-        if keep_disk_space:
-            keep_disk_space = keep_disk_space * 1024 * 1024 * 1024
-            if keep_disk_space < free_space_on_disk:
-                if dl_limit_on_succeeded is not None:
-                    dl_limit = math.floor(dl_limit_on_succeeded / 1024) * 1024
-                    if dl_limit != dl_rate_limit:
-                        self.client.set_application_preferences('{{"{}": {}}}'.format(dl_limit_mode, dl_limit))
-                        logger.info("set {} to {} KiB/s", dl_limit_mode, dl_limit / 1024)
-                return
-            else:
-                if not task.accepted:
-                    dl_limit = free_space_on_disk / dl_limit_interval
-                    if dl_limit_on_succeeded and dl_limit > dl_limit_on_succeeded:
-                        dl_limit = dl_limit_on_succeeded
-                    dl_limit = math.floor(dl_limit / 1024) * 1024
-                    if dl_limit != dl_rate_limit:
-                        self.client.set_application_preferences('{{"{}": {}}}'.format(dl_limit_mode, dl_limit))
-                        logger.warning(
-                            "not enough disk space, but There are no eligible torrents, set {} to {} KiB/s",
-                            dl_limit_mode,
-                            dl_limit / 1024)
-                    return
-
-        if not task.accepted:
+        keep_disk_space = keep_disk_space * 1024 * 1024 * 1024
+        if keep_disk_space < free_space_on_disk:
+            if dl_limit_on_succeeded is not None:
+                dl_limit = math.floor(dl_limit_on_succeeded / 1024) * 1024
+                if dl_limit != dl_rate_limit:
+                    self.client.set_application_preferences('{{"{}": {}}}'.format(dl_limit_mode, dl_limit))
+                    logger.info("set {} to {} KiB/s", dl_limit_mode, dl_limit / 1024)
             return
 
-        entry_dict = main_data_snapshot.get('entry_dict')
-        reseed_dict = main_data_snapshot.get('reseed_dict')
         accepted_entry_hashes = []
         delete_hashes = []
 
         delete_size = 0
+
+        if not task.accepted:
+            self.calc_and_set_dl_limit(keep_disk_space, free_space_on_disk, delete_size, dl_limit_interval,
+                                       dl_limit_on_succeeded, dl_rate_limit, dl_limit_mode)
+            return
+
+        entry_dict = main_data_snapshot.get('entry_dict')
+        reseed_dict = main_data_snapshot.get('reseed_dict')
         entry_index = 0
         entry_show_index = -1
         for entry in task.accepted:
@@ -388,16 +373,21 @@ class PluginQBittorrentMod(QBittorrentModBase):
                     self._build_delete_hashes(delete_hashes, torrent_hashes, entry_dict, keep_disk_space,
                                               free_space_on_disk, delete_size)
         if dl_limit_on_succeeded is not None and keep_disk_space is not None:
-            if keep_disk_space > free_space_on_disk + delete_size:
-                dl_limit = (free_space_on_disk + delete_size) / dl_limit_interval
-                if dl_limit_on_succeeded and dl_limit > dl_limit_on_succeeded:
-                    dl_limit = dl_limit_on_succeeded
-                dl_limit = math.floor(dl_limit / 1024) * 1024
-                if dl_limit != dl_rate_limit:
-                    self.client.set_application_preferences('{{"{}": {}}}'.format(dl_limit_mode, dl_limit))
-                    logger.warning("not enough disk space, set {} to {} KiB/s", dl_limit_mode, dl_limit / 1024)
+            self.calc_and_set_dl_limit(keep_disk_space, free_space_on_disk, delete_size, dl_limit_interval,
+                                       dl_limit_on_succeeded, dl_rate_limit, dl_limit_mode)
         if len(delete_hashes) > 0:
             self.client.delete_torrents(str.join('|', delete_hashes), delete_files)
+
+    def calc_and_set_dl_limit(self, keep_disk_space, free_space_on_disk, delete_size, dl_limit_interval,
+                              dl_limit_on_succeeded, dl_rate_limit, dl_limit_mode):
+        if keep_disk_space > free_space_on_disk + delete_size:
+            dl_limit = (free_space_on_disk + delete_size) / dl_limit_interval
+            if dl_limit_on_succeeded and dl_limit > dl_limit_on_succeeded:
+                dl_limit = dl_limit_on_succeeded
+            dl_limit = math.floor(dl_limit / 1024) * 1024
+            if dl_limit != dl_rate_limit:
+                self.client.set_application_preferences('{{"{}": {}}}'.format(dl_limit_mode, dl_limit))
+                logger.warning("not enough disk space, set {} to {} KiB/s", dl_limit_mode, dl_limit / 1024)
 
     def _build_delete_hashes(self, delete_hashes, torrent_hashes, all_entry_map, keep_disk_space, free_space_on_disk,
                              delete_size):
@@ -420,6 +410,50 @@ class PluginQBittorrentMod(QBittorrentModBase):
                 entry['qbittorrent_seeding_time'] / (60 * 60),
                 entry['qbittorrent_share_ratio'],
                 entry['qbittorrent_last_activity'],
+                entry['qbittorrent_tags'])
+
+    def remove_entries_cleaner(self, task, cleaner_options):
+        delete_files = cleaner_options.get('delete_files')
+        delete_hashes = []
+        delete_files_hashes = []
+        accepted_entry_hashes = []
+        main_data_snapshot = self.client.get_main_data_snapshot(id(task))
+        entry_dict = main_data_snapshot.get('entry_dict')
+        reseed_dict = main_data_snapshot.get('reseed_dict')
+
+        for entry in task.accepted:
+            accepted_entry_hashes.append(entry['torrent_info_hash'])
+
+        for entry_hash in accepted_entry_hashes:
+            if entry_hash in delete_hashes or entry_hash in delete_files_hashes:
+                continue
+            save_path_with_name = entry_dict.get(entry_hash).get('qbittorrent_save_path_with_name')
+            reseed_entry_list = reseed_dict.get(save_path_with_name)
+            torrent_hashes = []
+
+            for reseed_entry in reseed_entry_list:
+                torrent_hashes.append(reseed_entry['torrent_info_hash'])
+            if not set(accepted_entry_hashes) >= set(torrent_hashes):
+                delete_hashes.extend(set(accepted_entry_hashes) & set(torrent_hashes))
+            else:
+                delete_files_hashes.extend(torrent_hashes)
+        if len(delete_hashes) > 0:
+            # self.client.delete_torrents(str.join('|', delete_hashes), False)
+            logger.info('delete: {}'.format(delete_hashes))
+        if len(delete_files_hashes) > 0:
+            # self.client.delete_torrents(str.join('|', delete_files_hashes), delete_files)
+            logger.info('delete: {}'.format(delete_files_hashes))
+        delete_hashes.extend(delete_files_hashes)
+        for torrent_hash in delete_hashes:
+            entry = entry_dict.get(torrent_hash)
+            logger.info(
+                '{}, size: {:.2f} GB, seeding_time: {:.2f} h, share_ratio: {:.2f}, last_activity: {}, tracker_msg: {},  site: {}',
+                entry['title'],
+                entry['qbittorrent_completed'] / (1024 * 1024 * 1024),
+                entry['qbittorrent_seeding_time'] / (60 * 60),
+                entry['qbittorrent_share_ratio'],
+                entry['qbittorrent_last_activity'],
+                entry['qbittorrent_tracker_msg'],
                 entry['qbittorrent_tags'])
 
     def resume_entries(self, task, resume_options):
