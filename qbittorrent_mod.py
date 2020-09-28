@@ -438,11 +438,9 @@ class PluginQBittorrentMod(QBittorrentModBase):
             else:
                 delete_files_hashes.extend(torrent_hashes)
         if len(delete_hashes) > 0:
-            # self.client.delete_torrents(str.join('|', delete_hashes), False)
-            logger.info('delete: {}'.format(delete_hashes))
+            self.client.delete_torrents(str.join('|', delete_hashes), False)
         if len(delete_files_hashes) > 0:
-            # self.client.delete_torrents(str.join('|', delete_files_hashes), delete_files)
-            logger.info('delete: {}'.format(delete_files_hashes))
+            self.client.delete_torrents(str.join('|', delete_files_hashes), delete_files)
         delete_hashes.extend(delete_files_hashes)
         for torrent_hash in delete_hashes:
             entry = entry_dict.get(torrent_hash)
