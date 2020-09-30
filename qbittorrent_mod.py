@@ -122,18 +122,26 @@ class PluginQBittorrentMod(QBittorrentModBase):
                         'type': 'object',
                         'properties': {
                             'keeper': {
-                                'keep_disk_space': {'type': 'integer'},
-                                'check_reseed': {
-                                    'oneOf': [{'type': 'boolean'}, {'type': 'array', 'items': {'type': 'string'}}]},
-                                'delete_files': {'type': 'boolean'},
-                                'dl_limit_on_succeeded': {'type': 'integer'},
-                                'alt_dl_limit_on_succeeded': {'type': 'integer'},
-                                'dl_limit_interval': {'type': 'integer'},
+                                'type': 'object',
+                                'properties': {
+                                    'keep_disk_space': {'type': 'integer'},
+                                    'check_reseed': {
+                                        'oneOf': [{'type': 'boolean'}, {'type': 'array', 'items': {'type': 'string'}}]},
+                                    'delete_files': {'type': 'boolean'},
+                                    'dl_limit_on_succeeded': {'type': 'integer'},
+                                    'alt_dl_limit_on_succeeded': {'type': 'integer'},
+                                    'dl_limit_interval': {'type': 'integer'}
+                                },
                             },
                             'cleaner': {
-                                'delete_files': {'type': 'boolean'},
+                                'type': 'object',
+                                'properties': {
+                                    'delete_files': {'type': 'boolean'}
+                                }
                             }
-                        }
+                        },
+                        "minProperties": 1,
+                        "maxProperties": 1,
                     },
                     'resume': {
                         'type': 'object',
@@ -155,17 +163,18 @@ class PluginQBittorrentMod(QBittorrentModBase):
                             }
                         }
                     }
-                }
+                },
+                "minProperties": 1,
+                "maxProperties": 1,
             },
-            'fail_html': {'type': 'boolean'}
+            'fail_html': {'type': 'boolean'},
         },
-        'additionalProperties': False,
+        'additionalProperties': False
     }
 
     def prepare_config(self, config):
         config = super().prepare_config(config)
         config.setdefault('fail_html', True)
-        config.setdefault('action', {})
         return config
 
     @plugin.priority(120)
@@ -270,11 +279,12 @@ class PluginQBittorrentMod(QBittorrentModBase):
                 self.client.add_torrent_url(entry['url'], add_options)
 
     def remove_entries(self, task, remove_options):
-        keeper_options = remove_options.get('keeper')
-        if keeper_options:
-            self.remove_entries_keeper(task, keeper_options)
+        (mode_name, option), = remove_options.items()
+        mode = getattr(self, 'remove_entries_' + mode_name, None)
+        if mode:
+            mode(task, option)
         else:
-            self.remove_entries_cleaner(task, remove_options.get('cleaner'))
+            raise plugin.PluginError('Unknown mode.')
 
     def remove_entries_keeper(self, task, keeper_options):
         delete_files = keeper_options.get('delete_files')
@@ -362,19 +372,14 @@ class PluginQBittorrentMod(QBittorrentModBase):
                         reason='torrents with the same save path are not all tested')
                 continue
             else:
-                if keep_disk_space:
-                    if keep_disk_space > free_space_on_disk + delete_size:
-                        delete_size += torrent_size
-                        self._build_delete_hashes(delete_hashes, torrent_hashes, entry_dict, keep_disk_space,
-                                                  free_space_on_disk, delete_size)
-                        if keep_disk_space < free_space_on_disk + delete_size:
-                            break
-                else:
+                if keep_disk_space > free_space_on_disk + delete_size:
+                    delete_size += torrent_size
                     self._build_delete_hashes(delete_hashes, torrent_hashes, entry_dict, keep_disk_space,
                                               free_space_on_disk, delete_size)
-        if dl_limit_on_succeeded is not None and keep_disk_space is not None:
-            self.calc_and_set_dl_limit(keep_disk_space, free_space_on_disk, delete_size, dl_limit_interval,
-                                       dl_limit_on_succeeded, dl_rate_limit, dl_limit_mode)
+                    if keep_disk_space < free_space_on_disk + delete_size:
+                        break
+        self.calc_and_set_dl_limit(keep_disk_space, free_space_on_disk, delete_size, dl_limit_interval,
+                                   dl_limit_on_succeeded, dl_rate_limit, dl_limit_mode)
         if len(delete_hashes) > 0:
             self.client.delete_torrents(str.join('|', delete_hashes), delete_files)
 
