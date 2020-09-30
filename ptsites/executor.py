@@ -4,16 +4,6 @@ from loguru import logger
 from . import sites
 from .schema.site_base import SiteBase
 
-try:
-    import matplotlib.pyplot as plt
-except ImportError:
-    plt = None
-
-try:
-    import pandas as pd
-except ImportError:
-    pd = None
-
 
 class Executor:
 

@@ -2,6 +2,8 @@ import json
 import os
 from io import BytesIO
 
+from loguru import logger
+
 from ..schema.site_base import SiteBase
 from ..schema.nexusphp import NexusPHP
 from ..schema.site_base import SignState
@@ -28,6 +30,10 @@ class MainClass(NexusPHP):
                                      wrong_regex=WRONG_REGEX)
 
     def sign_in(self, entry, config):
+        if not Image:
+            entry.fail('Dependency does not exist: [PIL]')
+            logger.warning('Dependency does not exist: [PIL]')
+            return
         entry['base_response'] = base_response = self._request(entry, 'get', BASE_URL)
         sign_in_state, base_content = self.check_sign_in_state(entry, base_response, BASE_URL)
         if sign_in_state != SignState.NO_SIGN_IN:
