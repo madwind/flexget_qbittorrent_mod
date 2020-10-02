@@ -21,12 +21,10 @@ class BaiduOcr:
         secret_key = config['aipocr'].get('secret_key')
 
         if not (AipOcr and Image):
-            entry['result'] = 'Dependency does not exist: [baidu-aip, pillow]'
-            entry.fail(entry['result'])
+            entry.fail('Dependency does not exist: [baidu-aip, pillow]')
             return None, None
         if not (app_id and api_key and secret_key):
-            entry['result'] = 'Api not set'
-            entry.fail(entry['result'])
+            entry.fail('AipOcr not set')
             return None, None
 
         client = AipOcr(app_id, api_key, secret_key)
@@ -42,6 +40,10 @@ class BaiduOcr:
         img.save(img_byte_arr, format='png')
         response = client.basicAccurate(img_byte_arr.getvalue(), {"language_type": "ENG"})
         logger.info(response)
+        if response.get('error_msg'):
+            entry.fail(response.get('error_msg'))
+            return None, None
+
         code = re.sub('\\W', '', response['words_result'][0]['words'])
         code = code.upper()
         return code, img_byte_arr
