@@ -12,7 +12,6 @@ class Executor:
         try:
             site_module = getattr(sites, entry['site_name'].lower())
             site_class = getattr(site_module, 'MainClass')
-            entry['site_class'] = site_class
             site_class.build_sign_in(entry, config)
         except AttributeError as e:
             raise plugin.PluginError('site: {}, error: {}'.format(entry['site_name'], str(e.args)))
@@ -45,9 +44,10 @@ class Executor:
         #         entry.fail(entry['result'])
         #         return
         #     entry['headers']['cookie'] = cookie
-        site_class = entry.get('site_class')
-        site_object = site_class()
-        if site_object:
+        try:
+            site_module = getattr(sites, entry['site_name'].lower())
+            site_class = getattr(site_module, 'MainClass')
+            site_object = site_class()
             entry['prefix'] = 'Sign_in'
             site_object.sign_in(entry, config)
             if not entry.failed:
@@ -56,5 +56,5 @@ class Executor:
                 site_object.get_details(entry, config)
                 entry['prefix'] = 'Messages'
                 site_object.get_message(entry, config)
-        else:
-            logger.error('site: {}, unable to get class instance', entry['site_name'])
+        except AttributeError as e:
+            raise plugin.PluginError('site: {}, error: {}'.format(entry['site_name'], str(e.args)))
