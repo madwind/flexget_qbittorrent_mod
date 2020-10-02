@@ -33,8 +33,17 @@ class MainClass(NexusPHP):
             'regex': 'HP.*?(\\d+)',
             'handle': self.handle_hr
         }
+        selector['details']['share_ratio'] = {
+            'regex': '分享率.*?(Inf\\.|[\\d.]+)',
+            'handle': self.handle_share_ratio
+        }
         return selector
 
     def handle_hr(self, hr):
         return str(15 - int(hr))
 
+    def handle_share_ratio(self, value):
+        if value == 'Inf.':
+            return '0'
+        else:
+            return value

@@ -170,7 +170,7 @@ class NexusPHP(SiteBase):
         entry.fail(SignState.SIGN_IN_FAILED.value.format('No answer.'))
 
     def handle_share_ratio(self, value):
-        if value in ['无限', '無限', '∞', '.']:
+        if value in ['无限', '無限', '∞']:
             return '0'
         else:
             return value
