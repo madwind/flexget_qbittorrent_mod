@@ -242,8 +242,6 @@ class DetailsReport:
             return value
         if key in ['downloaded', 'uploaded']:
             return float(self.convert_suffix(value))
-        if key in ['share_ratio'] and value in ['无限', '無限', '∞']:
-            return float(0)
         return float(value)
 
     def count(self, count_dict, key, value):

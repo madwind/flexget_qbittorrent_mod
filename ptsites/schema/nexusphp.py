@@ -13,6 +13,9 @@ from .site_base import SiteBase, SignState
 
 class NexusPHP(SiteBase):
 
+    def __init__(self):
+        super().__init__()
+
     def sign_in(self, entry, config):
         self.sign_in_by_get(entry, config)
 
@@ -44,7 +47,8 @@ class NexusPHP(SiteBase):
                     'group_index': 2
                 },
                 'share_ratio': {
-                    'regex': '分享率.*?(无限|無限|[\\d.]+)'
+                    'regex': '分享率.*?(无限|無限|[\\d.]+)',
+                    'handle': self.handle_share_ratio
                 },
                 'points': {
                     'regex': '魔力.*?([\\d,.]+)'
@@ -164,3 +168,9 @@ class NexusPHP(SiteBase):
                     return
                 times += 1
         entry.fail(SignState.SIGN_IN_FAILED.value.format('No answer.'))
+
+    def handle_share_ratio(self, value):
+        if value in ['无限', '無限', '∞', '.']:
+            return '0'
+        else:
+            return value
