@@ -18,8 +18,10 @@ except ImportError:
 
 UserDetailsBase = db_schema.versioned_base('user_details', 0)
 
-suffix = {'K': 1, 'M': 1024, 'G': 1048576, 'T': 1073741824, 'P': 1099511627776, 'E': 1125899906842624,
-          'Z': 1152921504606846976}
+suffix = {'B': 1, 'K': 1024, 'M': 1048576, 'G': 1073741824, 'T': 1099511627776, 'P': 1125899906842624,
+          'E': 1152921504606846976, 'Z': 1180591620717411303424}
+
+math_suffix = {'': 1, 'K': 1000, 'M': 1000000, 'B': 1000000000}
 
 
 class UserDetailsEntry(UserDetailsBase):
@@ -202,24 +204,26 @@ class DetailsReport:
         return user_details
 
     def convert_suffix(self, details_value):
-        if 'B' not in details_value:
-            return details_value
-        for key, value in suffix.items():
+        keys = list(suffix.keys())
+        keys.reverse()
+        for key in keys:
             found = re.search(key, details_value)
             if found:
                 num = re.search('[\\d.]+', details_value).group()
                 if num:
                     return float(num) * suffix[key]
-        if 'B' in details_value:
-            num = re.search('[\\d.]+', details_value).group()
-            if num:
-                return float(num) / 1024
 
     def build_suffix(self, details_value, specifier):
         for key, value in suffix.items():
             num = details_value / value
             if num < 1000:
                 return specifier.format(round(num, 3), key)
+
+    def build_math_suffix(self, details_value, specifier):
+        for key, value in math_suffix.items():
+            num = details_value / value
+            if num < 1000:
+                return specifier.format(round(num, 3), key).rstrip()
 
     def buid_data_text(self, key, value, append=False):
         if value == '*' or key == 'site':
@@ -232,6 +236,12 @@ class DetailsReport:
             else:
                 specifier = '{:g} {}iB'
             return self.build_suffix(value, specifier)
+        if key in ['points']:
+            if append:
+                specifier = '\n{:+g} {}'
+            else:
+                specifier = '{:g} {}'
+            return self.build_math_suffix(value, specifier)
         if append:
             return '\n{:+g}'.format(value)
         else:
