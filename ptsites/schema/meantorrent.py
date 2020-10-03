@@ -18,7 +18,11 @@ class MeanTorrent(SiteBase):
 
     def build_selector(self):
         selector = {
-            'detail_sources': [{'link': '/status/account'}],
+            'detail_sources': {
+                'default': {
+                    'link': '/status/account'
+                }
+            },
             'details': {
                 'downloaded': {
                     'regex': 'downloaded.*?([\\d]+)',

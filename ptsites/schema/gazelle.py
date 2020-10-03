@@ -19,15 +19,15 @@ class Gazelle(SiteBase):
     def build_selector(self):
         selector = {
             'user_id': 'user.php\\?id=(\\d+)',
-            'detail_sources': [
-                {
+            'detail_sources': {
+                'default': {
                     'link': '/user.php?id={}',
                     'elements': {'table': '#content > div > div.sidebar > div.box.box_info.box_userinfo_stats > ul'}
                 },
-                {
+                'extend': {
                     'link': '/ajax.php?action=community_stats&userid={}'
                 }
-            ],
+            },
             'details': {
                 'downloaded': {
                     'regex': '下载量.+?([\\d.]+ ?[ZEPTGMK]?i?B)'
@@ -36,7 +36,8 @@ class Gazelle(SiteBase):
                     'regex': '上传量.+?([\\d.]+ ?[ZEPTGMK]?i?B)'
                 },
                 'share_ratio': {
-                    'regex': '分享率.*?(∞|[\\d.]+)'
+                    'regex': '分享率.*?(∞|[\\d.]+)',
+                    'handle': self.handle_share_ratio
                 },
                 'points': {
                     'regex': '积分.*?([\\d,.]+)'
@@ -78,3 +79,9 @@ class Gazelle(SiteBase):
                 '\nTitle: {}\nLink: {}\n{}'.format(title, message_url, message_body))
         if failed:
             entry.fail('Can not read message body!')
+
+    def handle_share_ratio(self, value):
+        if value in ['∞']:
+            return '0'
+        else:
+            return value

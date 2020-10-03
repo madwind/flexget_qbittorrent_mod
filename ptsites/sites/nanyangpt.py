@@ -13,6 +13,16 @@ class MainClass(NexusPHP):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        selector['detail_sources'][0]['elements']['bar'] = '#userlink > ul > div:nth-child(3)'
-        selector['details']['hr'] = None
+        self.dict_merge(selector, {
+            'detail_sources': {
+                'default': {
+                    'elements': {
+                        'bar': '#userlink > ul > div:nth-child(3)'
+                    }
+                }
+            },
+            'details': {
+                'hr': None
+            }
+        })
         return selector

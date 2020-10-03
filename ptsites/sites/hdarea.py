@@ -24,5 +24,9 @@ class MainClass(NexusPHP):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        selector['details']['hr'] = None
+        self.dict_merge(selector, {
+            'details': {
+                'hr': None
+            }
+        })
         return selector

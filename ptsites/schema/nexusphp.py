@@ -28,23 +28,21 @@ class NexusPHP(SiteBase):
     def build_selector(self):
         selector = {
             'user_id': 'userdetails.php\\?id=(\\d+)',
-            'detail_sources': [
-                {
+            'detail_sources': {
+                'default': {
                     'link': '/userdetails.php?id={}',
                     'elements': {
                         'bar': '#info_block > tbody > tr > td > table > tbody > tr > td:nth-child(1) > span',
                         'table': '#outer table:last-child'
                     }
                 }
-            ],
+            },
             'details': {
                 'downloaded': {
-                    'regex': '(下[载載]量|Downloaded).+?([\\d.]+ ?[ZEPTGMK]?i?B)',
-                    'group_index': 2
+                    'regex': ('(下[载載]量|Downloaded).+?([\\d.]+ ?[ZEPTGMK]?i?B)', 2)
                 },
                 'uploaded': {
-                    'regex': '(上[传傳]量|Uploaded).+?([\\d.]+ ?[ZEPTGMK]?i?B)',
-                    'group_index': 2
+                    'regex': ('(上[传傳]量|Uploaded).+?([\\d.]+ ?[ZEPTGMK]?i?B)', 2)
                 },
                 'share_ratio': {
                     'regex': '分享率.*?(无限|無限|[\\d.]+)',
@@ -54,12 +52,10 @@ class NexusPHP(SiteBase):
                     'regex': '魔力.*?([\\d,.]+)'
                 },
                 'seeding': {
-                    'regex': '(当前活动|當前活動).*?(\\d+)',
-                    'group_index': 2
+                    'regex': ('(当前活动|當前活動).*?(\\d+)', 2)
                 },
                 'leeching': {
-                    'regex': '(当前活动|當前活動).*?\\d+\\D+(\\d+)',
-                    'group_index': 2
+                    'regex': ('(当前活动|當前活動).*?\\d+\\D+(\\d+)', 2)
                 },
                 'hr': {
                     'regex': 'H&R.*?(\\d+)'
@@ -126,7 +122,7 @@ class NexusPHP(SiteBase):
             else:
                 question_extend_json = {}
 
-            self._dict_merge(question_json, question_extend_json)
+            self.dict_merge(question_json, question_extend_json)
 
             site_question = question_json.get(entry['url'])
             if site_question:

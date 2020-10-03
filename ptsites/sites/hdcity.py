@@ -42,26 +42,35 @@ class MainClass(NexusPHP):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        selector['user_id'] = None
-        selector['detail_sources'][0]['link'] = None
-        selector['detail_sources'][0]['elements']['bar'] = '#bottomnav > div.button-group'
-        selector['detail_sources'][0]['elements']['table'] = None
-
-        selector['details']['downloaded'] = {
-            'regex': 'arrow_downward([\\d.]+ ?[ZEPTGMK]?i?B)'
-        }
-        selector['details']['uploaded'] = {
-            'regex': 'arrow_upward([\\d.]+ ?[ZEPTGMK]?i?B)'
-        }
-        selector['details']['share_ratio'] = None
-        selector['details']['points'] = {
-            'regex': '(\\d+)(Bonus|魅力值)'
-        }
-        selector['details']['seeding'] = {
-            'regex': 'play_arrow(\\d+)'
-        }
-        selector['details']['leeching'] = {
-            'regex': 'play_arrow\\d+/(\\d+)'
-        }
-        selector['details']['hr'] = None
+        self.dict_merge(selector, {
+            'user_id': None,
+            'detail_sources': {
+                'default': {
+                    'link': None,
+                    'elements': {
+                        'bar': '#bottomnav > div.button-group',
+                        'table': None
+                    }
+                }
+            },
+            'details': {
+                'downloaded': {
+                    'regex': 'arrow_downward([\\d.]+ ?[ZEPTGMK]?i?B)'
+                },
+                'uploaded': {
+                    'regex': 'arrow_upward([\\d.]+ ?[ZEPTGMK]?i?B)'
+                },
+                'share_ratio': None,
+                'points': {
+                    'regex': '(\\d+)(Bonus|魅力值)'
+                },
+                'seeding': {
+                    'regex': 'play_arrow(\\d+)'
+                },
+                'leeching': {
+                    'regex': 'play_arrow\\d+/(\\d+)'
+                },
+                'hr': None
+            }
+        })
         return selector

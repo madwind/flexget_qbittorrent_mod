@@ -15,14 +15,14 @@ class Discuz(SiteBase):
     def build_selector(self):
         selector = {
             'user_id': 'home.php\\?mod=space&amp;uid=(\\d+)',
-            'detail_sources': [
-                {
+            'detail_sources': {
+                'default': {
                     'link': 'home.php?mod=space&amp;uid={}',
                     'elements': {
                         'table': '#ct > div > div.bm > div > div.bm_c.u_profile'
                     }
                 }
-            ],
+            },
             'details': {
                 'downloaded': {
                     'regex': '下载量.*?([\\d.]+ ?[ZEPTGMK]?i?B)'

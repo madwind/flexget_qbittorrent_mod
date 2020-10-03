@@ -108,6 +108,13 @@ class MainClass(NexusPHP):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        selector['detail_sources'][0]['elements'][
-            'bar'] = '#info_block > tbody > tr > td > table > tbody > tr > td:nth-child(2)'
+        self.dict_merge(selector, {
+            'detail_sources': {
+                'default': {
+                    'elements': {
+                        'bar': '#info_block > tbody > tr > td > table > tbody > tr > td:nth-child(2)'
+                    }
+                }
+            }
+        })
         return selector

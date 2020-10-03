@@ -14,5 +14,11 @@ class MainClass(NexusPHP):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        selector['details']['points'] = {'regex': '猫粮.*?([\\d,.]+)'}
+        self.dict_merge(selector, {
+            'details': {
+                'points': {
+                    'regex': '猫粮.*?([\\d,.]+)'
+                }
+            }
+        })
         return selector

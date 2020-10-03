@@ -110,7 +110,7 @@ class SiteBase:
         data = {}
         for key, regex in entry.get('data', {}).items():
             if key == 'fixed':
-                self._dict_merge(data, regex)
+                self.dict_merge(data, regex)
             else:
                 value_search = re.search(regex, base_content)
                 if value_search:
@@ -139,7 +139,7 @@ class SiteBase:
                 return
         details_text = ''
         detail_sources = selector.get('detail_sources')
-        for detail_source in detail_sources:
+        for detail_source in detail_sources.values():
             if detail_source.get('link'):
                 detail_source['link'] = urljoin(entry['url'], detail_source['link'].format(user_id))
                 detail_response = self._request(entry, 'get', detail_source['link'])
@@ -238,10 +238,10 @@ class SiteBase:
             charset_encoding = 'utf-8'
         return content.decode(charset_encoding if charset_encoding else 'utf-8', 'ignore')
 
-    def _dict_merge(self, dict1, dict2):
+    def dict_merge(self, dict1, dict2):
         for i in dict2:
             if isinstance(dict1.get(i), dict) and isinstance(dict2.get(i), dict):
-                self._dict_merge(dict1[i], dict2[i])
+                self.dict_merge(dict1[i], dict2[i])
             else:
                 dict1[i] = dict2[i]
 
@@ -256,10 +256,14 @@ class SiteBase:
     def get_detail_value(self, content, detail_config):
         if detail_config is None:
             return '*'
-        detail_match = re.search(detail_config['regex'], content, re.DOTALL)
+        regex = detail_config['regex']
+        group_index = 1
+        if isinstance(regex, tuple):
+            regex, group_index = regex
+        detail_match = re.search(regex, content, re.DOTALL)
         if not detail_match:
             return None
-        detail = detail_match.group(detail_config.get('group_index', 1))
+        detail = detail_match.group(group_index)
         if not detail:
             return None
         detail = detail.replace(',', '')

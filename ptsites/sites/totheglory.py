@@ -22,28 +22,53 @@ class MainClass(NexusPHP):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        selector['detail_sources'][0]['elements'][
-            'bar'] = 'body > table:nth-child(3) > tbody > tr > td > table > tbody > tr > td:nth-child(1)'
-        selector['detail_sources'][0]['elements'][
-            'table'] = '#main_table > tbody > tr:nth-child(1) > td > table > tbody > tr > td > table > tbody'
-        selector['details']['points'] = {'regex': '积分.*?([\\d,.]+)'}
-        selector['details']['seeding'] = {'regex': '做种活动.*?(\\d+)'}
-        selector['details']['leeching'] = {'regex': '做种活动.*?\\d+\\D+(\\d+)'}
-        selector['details']['hr'] = {
-            'regex': 'HP.*?(\\d+)',
-            'handle': self.handle_hr
-        }
-        selector['details']['share_ratio'] = {
-            'regex': '分享率.*?(Inf\\.|[\\d.]+)',
-            'handle': self.handle_share_ratio
-        }
+        self.dict_merge(selector, {
+            'detail_sources': {
+                'default': {
+                    'elements': {
+                        'bar': 'body > table:nth-child(3) > tbody > tr > td > table > tbody > tr > td:nth-child(1)',
+                        'table': '#main_table > tbody > tr:nth-child(1) > td > table > tbody > tr > td > table > tbody'
+                    }
+                }
+            },
+            'details': {
+                'downloaded': {
+                    'regex': ('(下[载載]量|Downloaded).+?([\\d.]+ ?[ZEPTGMk]?i?B)', 2),
+                    'handle': self.handle_size
+                },
+                'uploaded': {
+                    'regex': ('(上[传傳]量|Uploaded).+?([\\d.]+ ?[ZEPTGMk]?i?B)', 2),
+                    'handle': self.handle_size
+                },
+                'share_ratio': {
+                    'regex': '分享率.*?(Inf\\.|[\\d.]+)',
+                    'handle': self.handle_share_ratio
+                },
+                'points': {
+                    'regex': '积分.*?([\\d,.]+)'
+                },
+                'seeding': {
+                    'regex': '做种活动.*?(\\d+)'
+                },
+                'leeching': {
+                    'regex': '做种活动.*?\\d+\\D+(\\d+)'
+                },
+                'hr': {
+                    'regex': 'HP.*?(\\d+)',
+                    'handle': self.handle_hr
+                }
+            }
+        })
         return selector
 
-    def handle_hr(self, hr):
-        return str(15 - int(hr))
+    def handle_size(self, size):
+        return size.upper()
 
     def handle_share_ratio(self, value):
         if value == 'Inf.':
             return '0'
         else:
             return value
+
+    def handle_hr(self, hr):
+        return str(15 - int(hr))
