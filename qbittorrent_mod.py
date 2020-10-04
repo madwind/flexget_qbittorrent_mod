@@ -512,9 +512,14 @@ class PluginQBittorrentMod(QBittorrentModBase):
                 if replace_trackers:
                     for orig_url, new_url in replace_trackers.items():
                         if tracker.get('url') == orig_url:
-                            self.client.edit_trackers(entry.get('torrent_info_hash'), orig_url, new_url)
+                            if new_url:
+                                self.client.edit_trackers(entry.get('torrent_info_hash'), orig_url, new_url)
+                                logger.info('{} update tracker {}', entry.get('title'), new_url)
+                            else:
+                                self.client.remove_trackers(entry.get('torrent_info_hash'), orig_url)
+                                logger.info('{} remove tracker {}', entry.get('title'), orig_url)
                             modify_tracker = True
-                            logger.info('{} update tracker {}', entry.get('title'), new_url)
+
             if not add_tag and not modify_tracker:
                 entry.reject()
 

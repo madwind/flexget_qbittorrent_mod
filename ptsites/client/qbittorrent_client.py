@@ -52,6 +52,7 @@ class QBittorrentClient:
     API_URL_PAUSE = '/api/v2/torrents/pause'
     API_URL_RECHECK_TORRENTS = '/api/v2/torrents/recheck'
     API_URL_EDIT_TRACKERS = '/api/v2/torrents/editTracker'
+    API_URL_REMOVE_TRACKERS = '/api/v2/torrents/removeTrackers'
     API_URL_DELETE_TORRENTS = '/api/v2/torrents/delete'
 
     API_URL_GET_MAIN_DATA = '/api/v2/sync/maindata'
@@ -247,6 +248,19 @@ class QBittorrentClient:
                 self.url + self.API_URL_EDIT_TRACKERS,
                 data=data,
                 msg_on_fail='edit_trackers failed.',
+                verify=self._verify,
+            )
+            if response.status_code == 200:
+                self._update_entry_trackers(torrent_hash)
+
+    def remove_trackers(self, torrent_hash, urls):
+        data = {'hash': torrent_hash, 'urls': urls}
+        if self._check_action('edit_trackers', torrent_hash):
+            response = self._request(
+                'post',
+                self.url + self.API_URL_REMOVE_TRACKERS,
+                data=data,
+                msg_on_fail='remove_trackers failed.',
                 verify=self._verify,
             )
             if response.status_code == 200:
