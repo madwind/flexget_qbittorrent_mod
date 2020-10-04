@@ -1,12 +1,12 @@
 import json
-import os
 from io import BytesIO
+from pathlib import Path
 
 from loguru import logger
 
-from ..schema.site_base import SiteBase
 from ..schema.nexusphp import NexusPHP
 from ..schema.site_base import SignState
+from ..schema.site_base import SiteBase
 from ..utils.baidu_ocr import BaiduOcr
 
 try:
@@ -31,7 +31,7 @@ class MainClass(NexusPHP):
 
     def sign_in(self, entry, config):
         if not Image:
-            entry.fail('Dependency does not exist: [PIL]')
+            entry.fail_with_prefix('Dependency does not exist: [PIL]')
             logger.warning('Dependency does not exist: [PIL]')
             return
         entry['base_response'] = base_response = self._request(entry, 'get', BASE_URL)
@@ -57,8 +57,7 @@ class MainClass(NexusPHP):
             if img_net_state:
                 return
         else:
-            entry['result'] = 'Cannot find: image_hash'
-            entry.fail(entry['result'])
+            entry.fail_with_prefix('Cannot find: image_hash')
             return
         img = Image.open(BytesIO(img_response.content))
         code, img_byte_arr = BaiduOcr.get_ocr_code(img, entry, config)
@@ -72,12 +71,9 @@ class MainClass(NexusPHP):
                 response = self._request(entry, 'post', URL, files=data)
                 final_state = self.final_check(entry, response, response.request.url)
             if len(code) != 6 or final_state == SignState.WRONG_ANSWER:
-                with open(os.path.dirname(__file__) + "/hdsky.png", "wb") as code_file:
-                    code_file.write(img_response.content)
-                with open(os.path.dirname(__file__) + "/hdsky2.png", "wb") as code_file:
-                    code_file.write(img_byte_arr.getvalue())
-                entry['result'] = 'ocr failed: {}, see hdsky.png'.format(code)
-                entry.fail(entry['result'])
+                code_file = Path('hdsky.png')
+                code_file.write_bytes(img_byte_arr)
+                entry.fail_with_prefix('ocr failed: {}, see hdsky.png'.format(code))
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()

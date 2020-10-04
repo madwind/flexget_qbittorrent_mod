@@ -26,7 +26,7 @@ class MainClass(NexusPHP):
     def sign_in(self, entry, config):
         login = entry['site_config'].get('login')
         if not login:
-            entry.fail('Login data not found!')
+            entry.fail_with_prefix('Login data not found!')
             return
 
         data = {
@@ -39,6 +39,6 @@ class MainClass(NexusPHP):
         login_response = self._request(entry, 'post', LOGIN_URL, data=data)
         login_state = self.check_net_state(entry, login_response, LOGIN_SUCCEED_URL)
         if login_state:
-            entry.fail('Login failed!')
+            entry.fail_with_prefix('Login failed!')
         else:
             self.sign_in_by_get(entry, config)

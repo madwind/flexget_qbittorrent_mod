@@ -15,13 +15,11 @@ class MainClass(NexusPHP):
 
     def check_net_state(self, entry, response, original_url):
         if not response:
-            entry.fail(
-                entry['prefix'] + '=> ' + SignState.NETWORK_ERROR.value.format(url=original_url,
-                                                                               error='Response is None'))
+            entry.fail_with_prefix(SignState.NETWORK_ERROR.value.format(url=original_url, error='Response is None'))
             return SignState.NETWORK_ERROR
 
         if response.url not in [BASE_URL, URL, original_url]:
-            entry.fail(entry['prefix'] + '=> ' + SignState.URL_REDIRECT.value.format(original_url, response.url))
+            entry.fail_with_prefix(SignState.URL_REDIRECT.value.format(original_url, response.url))
             return SignState.URL_REDIRECT
 
     def build_selector(self):

@@ -44,7 +44,7 @@ class MainClass(NexusPHP):
     def sign_in_by_get(self, entry, config):
         login = entry['site_config'].get('login')
         if not login:
-            entry.fail('Login data not found!')
+            entry.fail_with_prefix('Login data not found!')
             return
 
         data = {
@@ -72,20 +72,18 @@ class MainClass(NexusPHP):
                     entry['base_response'] = response = self._request(entry, 'post', VERIFY_URL, files=data)
                     use_google_auth = True
                 else:
-                    entry.fail('{} with google_auth'.format(attempts.group()))
+                    entry.fail_with_prefix('{} with google_auth'.format(attempts.group()))
             else:
-                entry.fail('Attempts text not found!  with google_auth')
+                entry.fail_with_prefix('Attempts text not found!  with google_auth')
         self.final_check(entry, response, entry['url'])
         if use_google_auth:
             entry['result'] = entry['result'] + ' with google_auth'
 
     def check_net_state(self, entry, response, original_url):
         if not response:
-            entry.fail(
-                entry['prefix'] + '=> ' + SignState.NETWORK_ERROR.value.format(url=original_url,
-                                                                               error='Response is None'))
+            entry.fail_with_prefix(SignState.NETWORK_ERROR.value.format(url=original_url, error='Response is None'))
             return SignState.NETWORK_ERROR
 
         if response.url not in [original_url, VERIFY_URL]:
-            entry.fail(entry['prefix'] + '=> ' + SignState.URL_REDIRECT.value.format(original_url, response.url))
+            entry.fail_with_prefix(SignState.URL_REDIRECT.value.format(original_url, response.url))
             return SignState.URL_REDIRECT

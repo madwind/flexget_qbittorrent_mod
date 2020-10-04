@@ -42,7 +42,7 @@ class MainClass:
                 entry['main_data_snapshot'] = self.client.get_main_data_snapshot(id(entry))
                 entry['result'] = 'ok!'
         except Exception as e:
-            entry.fail(entry['prefix'] + '=> error: {}'.format(e))
+            entry.fail_with_prefix('error: {}'.format(e))
 
     def get_message(self, entry, config):
         pass

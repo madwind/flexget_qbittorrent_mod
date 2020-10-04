@@ -1,7 +1,5 @@
 import itertools
 import json
-import os
-import sys
 from pathlib import Path
 from urllib.parse import urljoin
 
@@ -12,9 +10,6 @@ from .site_base import SiteBase, SignState
 
 
 class NexusPHP(SiteBase):
-
-    def __init__(self):
-        super().__init__()
 
     def sign_in(self, entry, config):
         self.sign_in_by_get(entry, config)
@@ -69,8 +64,7 @@ class NexusPHP(SiteBase):
         message_box_response = self._request(entry, 'get', message_url)
         net_state = self.check_net_state(entry, message_box_response, message_url)
         if net_state:
-            entry['messages'] = entry['messages'] + '\nCan not read message box! url:{}'.format(message_url)
-            entry.fail(entry['messages'])
+            entry.fail_with_prefix('Can not read message box! url:{}'.format(message_url))
             return
 
         unread_elements = get_soup(self._decode(message_box_response)).select(
@@ -93,7 +87,7 @@ class NexusPHP(SiteBase):
             entry['messages'] = entry['messages'] + (
                 '\nTitle: {}\nLink: {}\n{}'.format(title, message_url, message_body))
         if failed:
-            entry.fail('Can not read message body!')
+            entry.fail_with_prefix('Can not read message body!')
 
     def sign_in_by_question(self, entry, config):
         entry['base_response'] = base_response = self._request(entry, 'get', entry['url'])
@@ -106,23 +100,18 @@ class NexusPHP(SiteBase):
             question_id = question_element.get('value')
 
             local_answer = None
-            question_file_path = os.path.dirname(
-                os.path.dirname(os.path.dirname(os.path.dirname(__file__)))) + '/nexusphp_question.json'
-            if Path(question_file_path).is_file():
-                with open(question_file_path) as question_file:
-                    question_json = json.loads(question_file.read())
+            question_file = Path.cwd().joinpath('nexusphp_question.json')
+            if question_file.is_file():
+                question_json = json.loads(question_file.read_text())
             else:
                 question_json = {}
 
-            question_extend_file_path = os.path.dirname(__file__) + '/nexusphp_question.json'
-            if Path(question_extend_file_path).is_file():
-                with open(question_extend_file_path) as question_extend_file:
-                    question_extend_json = json.loads(question_extend_file.read())
-                os.remove(question_extend_file_path)
-            else:
-                question_extend_json = {}
-
-            self.dict_merge(question_json, question_extend_json)
+            question_extend_file = Path(__file__).with_name('nexusphp_question.json')
+            if question_extend_file.is_file():
+                question_extend_json = json.loads(question_extend_file.read_text())
+                self.dict_merge(question_json, question_extend_json)
+                question_file.write_text(json.dumps(question_json))
+                question_extend_file.unlink()
 
             site_question = question_json.get(entry['url'])
             if site_question:
@@ -158,12 +147,11 @@ class NexusPHP(SiteBase):
                     entry['result'] = '{} ( {} attempts.)'.format(entry['result'], times)
 
                     question_json[entry['url']][question_id] = answer
-                    with open(question_file_path, mode='w') as question_file:
-                        json.dump(question_json, question_file)
+                    question_file.write_text(json.dumps(question_json))
                     logger.info('{}, correct answer: {}', entry['title'], data)
                     return
                 times += 1
-        entry.fail(SignState.SIGN_IN_FAILED.value.format('No answer.'))
+        entry.fail_with_prefix(SignState.SIGN_IN_FAILED.value.format('No answer.'))
 
     def handle_share_ratio(self, value):
         if value in ['无限', '無限', '∞']:

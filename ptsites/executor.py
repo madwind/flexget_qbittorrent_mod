@@ -1,8 +1,16 @@
 from flexget import plugin
+from flexget.entry import Entry
 from loguru import logger
 
 from . import sites
 from .schema.site_base import SiteBase
+
+
+def fail_with_prefix(self, reason):
+    self.fail('{}=> {}'.format(self.get('prefix'), reason))
+
+
+Entry.fail_with_prefix = fail_with_prefix
 
 
 class Executor:

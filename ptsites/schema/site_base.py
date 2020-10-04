@@ -88,7 +88,7 @@ class SiteBase:
                 response = self._request(entry, 'get', redirect_url, **kwargs)
             return response
         except Exception as e:
-            entry.fail(entry['prefix'] + '=> ' + SignState.NETWORK_ERROR.value.format(url=url, error=str(e.args)))
+            entry.fail_with_prefix(SignState.NETWORK_ERROR.value.format(url=url, error=str(e.args)))
         return None
 
     def sign_in_by_get(self, entry, config):
@@ -116,14 +116,14 @@ class SiteBase:
                 if value_search:
                     data[key] = value_search.group()
                 else:
-                    entry.fail('Cannot find key: {}, url: {}'.format(key, entry['url']))
+                    entry.fail_with_prefix('Cannot find key: {}, url: {}'.format(key, entry['url']))
                     return
         response = self._request(entry, 'post', entry['url'], data=data)
         self.final_check(entry, response, entry['url'])
 
     def get_details_base(self, entry, config, selector):
         if entry.get('base_response') is None:
-            entry.fail('Details=> base_response is None.')
+            entry.fail_with_prefix('base_response is None.')
             return
 
         base_content = self._decode(entry['base_response'])
@@ -134,7 +134,7 @@ class SiteBase:
             if user_id_match:
                 user_id = user_id_match.group(1)
             else:
-                entry.fail('Details=> User id not found.')
+                entry.fail_with_prefix('User id not found.')
                 logger.debug('site: {} User id not found. content: {}'.format(entry['site_name'], base_content))
                 return
         details_text = ''
@@ -162,7 +162,7 @@ class SiteBase:
                             else:
                                 details_text = details_text + details_info.text
                         else:
-                            entry.fail('Element: {} not found.'.format(name))
+                            entry.fail_with_prefix('Element: {} not found.'.format(name))
                             logger.error('site: {} element: {} not found, selecotr: {}, soup: {}',
                                          entry['site_name'],
                                          name, sel, soup)
@@ -175,7 +175,7 @@ class SiteBase:
             for detail_name, detail_config in selector['details'].items():
                 detail_value = self.get_detail_value(details_text, detail_config)
                 if not detail_value:
-                    entry.fail('Details=> detail: {} not found.'.format(detail_name))
+                    entry.fail_with_prefix('detail: {} not found.'.format(detail_name))
                     logger.error('Details=> site: {}, regex: {}，details_text: {}', entry['site_name'],
                                  detail_config['regex'], details_text)
                     return
@@ -183,17 +183,15 @@ class SiteBase:
             entry['details'] = details
             logger.info('site_name: {}, details: {}', entry['site_name'], entry['details'])
         else:
-            entry.fail('Details=> details_text is None.')
+            entry.fail_with_prefix('details_text is None.')
 
     def check_net_state(self, entry, response, original_url):
         if not response:
-            entry.fail(
-                entry['prefix'] + '=> ' + SignState.NETWORK_ERROR.value.format(url=original_url,
-                                                                               error='Response is None'))
+            entry.fail_with_prefix(SignState.NETWORK_ERROR.value.format(url=original_url, error='Response is None'))
             return SignState.NETWORK_ERROR
 
         if response.url != original_url:
-            entry.fail(entry['prefix'] + '=> ' + SignState.URL_REDIRECT.value.format(original_url, response.url))
+            entry.fail_with_prefix(SignState.URL_REDIRECT.value.format(original_url, response.url))
             return SignState.URL_REDIRECT
 
     def check_sign_in_state(self, entry, response, original_url, regex=None):
@@ -222,7 +220,7 @@ class SiteBase:
     def final_check(self, entry, response, original_url):
         sign_in_state, content = self.check_sign_in_state(entry, response, original_url)
         if sign_in_state == SignState.NO_SIGN_IN:
-            entry.fail(SignState.SIGN_IN_FAILED.value.format('no sign in'))
+            entry.fail_with_prefix(SignState.SIGN_IN_FAILED.value.format('no sign in'))
             return SignState.SIGN_IN_FAILED
         return sign_in_state
 

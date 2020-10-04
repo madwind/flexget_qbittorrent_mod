@@ -34,19 +34,17 @@ class MainClass(MeanTorrent):
                 entry['base_response'] = base_response = self._request(entry, 'put', URL)
                 self.final_check(entry, base_response, URL)
             else:
-                entry.fail('Login failed.')
+                entry.fail_with_prefix_with_prefix('Login failed.')
         else:
-            entry.fail('Login data not found.')
+            entry.fail_with_prefix('Login data not found.')
 
     def check_net_state(self, entry, response, original_url):
         if not response and response.status_code != 422:
-            entry.fail(
-                entry['prefix'] + '=> ' + SignState.NETWORK_ERROR.value.format(url=original_url,
-                                                                               error='Response is None'))
+            entry.fail_with_prefix(SignState.NETWORK_ERROR.value.format(url=original_url, error='Response is None'))
             return SignState.NETWORK_ERROR
 
         if response.url != original_url:
-            entry.fail(entry['prefix'] + '=> ' + SignState.URL_REDIRECT.value.format(original_url, response.url))
+            entry.fail_with_prefix(SignState.URL_REDIRECT.value.format(original_url, response.url))
             return SignState.URL_REDIRECT
 
     def build_selector(self):

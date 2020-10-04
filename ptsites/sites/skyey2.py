@@ -24,7 +24,7 @@ class MainClass(Discuz):
     def sign_in(self, entry, config):
         login = entry['site_config'].get('login')
         if not login:
-            entry.fail(entry['Login data not found!'])
+            entry.fail_with_prefix('Login data not found!')
             return
         response = self._request(entry, 'get', URL)
         state = self.check_net_state(entry, response, URL)

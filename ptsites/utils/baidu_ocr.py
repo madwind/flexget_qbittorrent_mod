@@ -1,5 +1,6 @@
 import re
 from io import BytesIO
+
 from loguru import logger
 
 try:
@@ -21,10 +22,10 @@ class BaiduOcr:
         secret_key = config['aipocr'].get('secret_key')
 
         if not (AipOcr and Image):
-            entry.fail('Dependency does not exist: [baidu-aip, pillow]')
+            entry.fail_with_prefix('Dependency does not exist: [baidu-aip, pillow]')
             return None, None
         if not (app_id and api_key and secret_key):
-            entry.fail('AipOcr not set')
+            entry.fail_with_prefix('AipOcr not set')
             return None, None
 
         client = AipOcr(app_id, api_key, secret_key)
@@ -41,7 +42,7 @@ class BaiduOcr:
         response = client.basicAccurate(img_byte_arr.getvalue(), {"language_type": "ENG"})
         logger.info(response)
         if response.get('error_msg'):
-            entry.fail(response.get('error_msg'))
+            entry.fail_with_prefix(response.get('error_msg'))
             return None, None
 
         code = re.sub('\\W', '', response['words_result'][0]['words'])

@@ -1,7 +1,5 @@
 from urllib.parse import urljoin
-
 from flexget.utils.soup import get_soup
-
 from .site_base import SiteBase
 
 
@@ -78,7 +76,7 @@ class Gazelle(SiteBase):
             entry['messages'] = entry['messages'] + (
                 '\nTitle: {}\nLink: {}\n{}'.format(title, message_url, message_body))
         if failed:
-            entry.fail('Can not read message body!')
+            entry.fail_with_prefix('Can not read message body!')
 
     def handle_share_ratio(self, value):
         if value in ['∞']:
