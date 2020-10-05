@@ -395,9 +395,13 @@ tasks:
 
   clean:
     priority: 5
-    disable: [ seen, seen_info_hash, retry_failed ]
-    if:
-      - qbittorrent_tracker_msg == 'torrent not registered with this tracker': accept
+    disable: [seen, seen_info_hash, retry_failed]
+    regexp:
+      accept:
+        - '[Tt]orrent not registered with this tracker'
+        - 'Torrent banned'
+        - 'Unregistered torrent'
+      from: qbittorrent_tracker_msg
     template:
       - from_qbittorrent_template
       - qbittorrent_base_template
