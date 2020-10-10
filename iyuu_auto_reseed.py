@@ -102,7 +102,7 @@ class PluginIYUUAutoReseed():
 
         for entry in task.all_entries:
             entry.reject('torrent form client')
-            if 'up' in entry['qbittorrent_state'].lower():
+            if 'up' in entry['qbittorrent_state'].lower() and 'pause' not in entry['qbittorrent_state'].lower():
                 torrent_dict[entry['torrent_info_hash']] = entry
                 hashes.append(entry['torrent_info_hash'])
 
