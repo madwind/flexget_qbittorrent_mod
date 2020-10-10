@@ -146,7 +146,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                     'resume': {
                         'type': 'object',
                         'properties': {
-                            'recheck_torrents': {'type': 'boolean'},
+                            'recheck_torrents': {'type': 'boolean'}
                         }
                     },
                     'pause': {
@@ -162,7 +162,8 @@ class PluginQBittorrentMod(QBittorrentModBase):
                                 }
                             }
                         }
-                    }
+                    },
+                    'show': {'oneOf': [{'type': 'boolean'}, {'type': 'array', 'items': {'type': 'string'}}]},
                 },
                 "minProperties": 1,
                 "maxProperties": 1,
@@ -292,7 +293,6 @@ class PluginQBittorrentMod(QBittorrentModBase):
         keep_disk_space = keeper_options.get('keep_disk_space')
 
         dl_limit_interval = keeper_options.get('dl_limit_interval', 24 * 60 * 60)
-        show_entry = keeper_options.get('show_entry')
         main_data_snapshot = self.client.get_main_data_snapshot(id(task))
         server_state = main_data_snapshot.get('server_state')
 
@@ -328,20 +328,8 @@ class PluginQBittorrentMod(QBittorrentModBase):
 
         entry_dict = main_data_snapshot.get('entry_dict')
         reseed_dict = main_data_snapshot.get('reseed_dict')
-        entry_index = 0
-        entry_show_index = -1
         for entry in task.accepted:
-            entry_index = entry_index + 1
-            if show_entry and entry['torrent_info_hash'] == show_entry:
-                entry_show_index = entry_index
             accepted_entry_hashes.append(entry['torrent_info_hash'])
-
-        if show_entry:
-            entry_found = entry_dict.get(show_entry)
-            if entry_found:
-                logger.info('hash: {} ,index : {}', entry_found['torrent_info_hash'], entry_show_index)
-                for key, value in entry_found.items():
-                    logger.info('key: {}, value: {}', key, value)
 
         for entry_hash in accepted_entry_hashes:
             if entry_hash in delete_hashes:
@@ -522,6 +510,15 @@ class PluginQBittorrentMod(QBittorrentModBase):
 
             if not add_tag and not modify_tracker:
                 entry.reject()
+
+    def show_entries(self, task, show_options):
+        if not show_options:
+            return
+        for entry in task.accepted:
+            for key, value in entry.items():
+                if isinstance(show_options, list) and key not in show_options:
+                    continue
+                logger.info('key: {}, value: {}', key, value)
 
     def _get_site_name(self, tracker_url):
         re_object = re.search('(?<=//).*?(?=/)', tracker_url)
