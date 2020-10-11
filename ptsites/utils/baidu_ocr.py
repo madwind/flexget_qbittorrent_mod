@@ -47,7 +47,7 @@ class BaiduOcr:
 
         code = re.sub('\\W', '', response['words_result'][0]['words'])
         code = code.upper()
-        return code, img_byte_arr
+        return code, img_byte_arr.getvalue()
 
     @staticmethod
     def _detect_noise(img, i, j, width, height):
