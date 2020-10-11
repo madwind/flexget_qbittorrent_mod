@@ -1,4 +1,4 @@
-FROM python:3-alpine
+FROM python:3.8.6-alpine3.12
 
 LABEL maintainer="madwind.cn@gmail.com" \ 
         org.label-schema.name="flexget"
