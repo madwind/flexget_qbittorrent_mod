@@ -162,8 +162,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                                 }
                             }
                         }
-                    },
-                    'show': {'oneOf': [{'type': 'boolean'}, {'type': 'array', 'items': {'type': 'string'}}]},
+                    }
                 },
                 "minProperties": 1,
                 "maxProperties": 1,
@@ -510,15 +509,6 @@ class PluginQBittorrentMod(QBittorrentModBase):
 
             if not add_tag and not modify_tracker:
                 entry.reject()
-
-    def show_entries(self, task, show_options):
-        if not show_options:
-            return
-        for entry in task.accepted:
-            for key, value in entry.items():
-                if isinstance(show_options, list) and key not in show_options:
-                    continue
-                logger.info('key: {}, value: {}', key, value)
 
     def _get_site_name(self, tracker_url):
         re_object = re.search('(?<=//).*?(?=/)', tracker_url)
