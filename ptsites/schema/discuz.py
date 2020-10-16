@@ -37,7 +37,7 @@ class Discuz(SiteBase):
                     'regex': '金币([\\d.,]+)'
                 },
                 'seeding': {
-                    'regex': '即时保种数(\\d+)'
+                    'regex': '做种数(\\d+)'
                 },
                 'leeching': None,
                 'hr': None,
