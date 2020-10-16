@@ -214,6 +214,8 @@ class DetailsReport:
                     return float(num) * suffix[key]
 
     def build_suffix(self, details_value, specifier):
+        if details_value == 0:
+            return '0'
         for key, value in suffix.items():
             num = details_value / value
             if num < 1000:
