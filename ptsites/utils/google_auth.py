@@ -1,5 +1,9 @@
-import hmac, base64, struct, hashlib, time
+import base64
+import hashlib
+import hmac
+import struct
 import sys
+import time
 
 
 class GoogleAuth:
