@@ -215,6 +215,8 @@ class SiteBase:
         if wrong_regex and re.search(wrong_regex, content):
             return SignState.WRONG_ANSWER, content
 
+        logger.debug(content)
+
         return SignState.NO_SIGN_IN, content
 
     def final_check(self, entry, response, original_url):
