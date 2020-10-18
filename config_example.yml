@@ -3,35 +3,35 @@ web_server:
   port: 3539
 
 schedules:
-  - tasks: [ pterclub, totheglory, leaguehd, rss_download ]
+  - tasks: [pterclub, totheglory, rss_download]
     interval:
       minutes: 1
 
-  - tasks: [ reseed, resume, delete, modify, clean ]
+  - tasks: [reseed, resume, delete, modify, clean]
     interval:
       minutes: 5
 
-  - tasks: [ opencd, springsunday ]
+  - tasks: [opencd, springsunday, dmhy]
     interval:
       minutes: 10
 
-  - tasks: [ sign_in, warner ]
+  - tasks: [sign_in, warner]
     schedule:
       hour: 8-23/1
 
 variables:
   headers:
-    user_agent: 'xxxxxxxx'
+    user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36'
   via: &via_setting
     - wechat_work:
-        corp_id: 'xxxxxxxx'
-        corp_secret: 'xxxxxxxx'
-        agent_id: 'xxxxxxxx'
-        to_user: 'xxxxxxxx'
+        corp_id: 'xxxxxxxxxxxxx'
+        corp_secret: 'xxxxxxxxxxxxxxxxxxx'
+        agent_id: 'xxxxxxxxxxxx'
+        to_user: 'xxxxxxxxxxx'
     - telegram:
-        bot_token: xxxxxxxx
+        bot_token: xxxxxxxxxxxxx
         recipients:
-          - username: 'xxxxxxxx'
+          - username: 'xxxxxxxxxxxxxxxx'
 
 templates:
   from_qbittorrent_template:
@@ -39,8 +39,8 @@ templates:
       host: qbittorrent.example.com
       port: 443
       use_ssl: yes
-      username: xxxxxxxx
-      password: xxxxxxxx
+      username: admin
+      password: xxxxxxxxxxx
 
   qbittorrent_base_template:
     qbittorrent_mod: *qbittorrent_setting
@@ -50,7 +50,7 @@ templates:
       action:
         add:
           reject_on_dl_limit: 8388608
-          reject_on_dl_speed: 6291456
+          reject_on_dl_speed: 5242880
           category: Rss
           autoTMM: yes
 
@@ -80,13 +80,14 @@ templates:
               - ourbits
               - hdsky
               - keepfrds
-              - leaguehd
+              - tjupt
+              - skyey2
+              - dmhy
             delete_files: yes
             keep_disk_space: 10
             dl_limit_on_succeeded: 0
             alt_dl_limit_on_succeeded: 8388608
             dl_limit_interval: 900
-            #show_entry: 633645aa28a4aa48e8b7d2ac618fe691e81df30f
 
   qbittorrent_delete_cleaner_template:
     qbittorrent_mod:
@@ -100,13 +101,18 @@ templates:
       action:
         modify:
           tag_by_tracker: yes
-          #replace_trackers:
-          #'http://tracker.pterclub.com/announce?passkey=xxxxxxxx': 'https://tracker.pterclub.com/announce?passkey=xxxxxxxx'
+          replace_trackers:
+            'http://tracker.pterclub.com/announce?passkey=xxxxxxxxxxxxx': 'https://tracker.pterclub.com/announce?passkey=xxxxxxxxxxxxx'
+
+  show_entry_template:
+    show_entry:
+      state: entries
+      attribute: yes
 
 tasks:
   pterclub:
     rss:
-      url: https://pterclub.com/torrentrss.php?rows=10&cat413=1&tag_internal=yes&isize=1&linktype=dl&passkey=xxxxxxxx
+      url: https://pterclub.com/torrentrss.php?rows=10&cat413=1&tag_internal=yes&isize=1&linktype=dl&passkey=xxxxxxxxxxxxxxxxxxx
       all_entries: no
       other_fields:
         - link
@@ -129,9 +135,10 @@ tasks:
 
   totheglory:
     rss:
-      url: https://totheglory.im/putrss.php?par=xxxxxxxx
+      url: https://totheglory.im/putrss.php?par=xxxxxxxxxxxxxxxxxxxxxx
       all_entries: no
     no_entries_ok: yes
+    limit_new: 1
     regexp:
       accept:
         - TTG
@@ -145,9 +152,9 @@ tasks:
     html_rss:
       url: https://springsunday.net/torrents.php?incldead=0&spstate=4&pick=0&inclbookmarked=0&exclusive=0&search=&search_area=0&search_mode=0&sort=8&type=desc
       headers:
-        cookie: 'xxxxxxxx'
+        cookie: 'xxxxxxxxxxxxxxxx'
         user-agent: '{? headers.user_agent ?}'
-      params: '&passkey=xxxxxxxx'
+      params: '&passkey=xxxxxxxxxxxxxxxxxxx'
       root_element_selector: '.torrents > tbody > tr:not(:first-child)'
       fields:
         title:
@@ -156,63 +163,35 @@ tasks:
         url:
           element_selector: 'a[href*="download.php"]'
           attribute: href
+        promotion:
+          element_selector: '.pro_free2up'
+          attribute: alt
+        seeders:
+          element_selector: 'td:nth-child(7)'
+          attribute: textContent
         leechers:
           element_selector: 'td:nth-child(8)'
           attribute: textContent
     no_entries_ok: yes
     if:
-      - leechers|int > 4: accept
+      - leechers|int > 2 and seeders|int >0 and seeders|int < 3 and promotion: accept
     qbittorrent_mod:
       action:
         add:
           reject_on_dl_limit: no
-          reject_on_dl_speed: no
+          reject_on_dl_speed: 6291456
     template:
       - qbittorrent_base_template
       - qbittorrent_add_template
-
-  hdhome:
-    html_rss:
-      url: https://hdhome.org/torrents.php?incldead=1&spstate=4&inclbookmarked=0&search=&search_area=0&search_mode=0
-      headers:
-        cookie: 'xxxxxxxx'
-        user-agent: '{? headers.user_agent ?}'
-      params: '&passkey=xxxxxxxx'
-      root_element_selector: '#torrenttable > tbody > tr:not(:first-child)'
-      fields:
-        title:
-          element_selector: 'a[href*="details.php"]'
-          attribute: title
-        url:
-          element_selector: 'a[href*="download.php"]'
-          attribute: href
-        leecher:
-          element_selector: 'td:nth-child(7)'
-          attribute: textContent
-        hr:
-          element_selector: 'img.hitandrun'
-          attribute: alt
-    no_entries_ok: yes
-    if:
-      - leecher|int > 1: accept
-      - hr: reject
-    qbittorrent_mod:
-      action:
-        add:
-          reject_on_dl_limit: no
-          reject_on_dl_speed: no
-    template:
-      - qbittorrent_base_template
-      - qbittorrent_add_template
-
+      #- show_entry_template
 
   opencd:
     html_rss:
       url: https://open.cd/torrents.php?spstate=2&seeders=3&sort=7&type=asc
       headers:
-        cookie: 'xxxxxxxx'
+        cookie: 'xxxxxxxxxxxxxxxxxxxxxx'
         user-agent: '{? headers.user_agent ?}'
-      params: '&passkey=xxxxxxxx'
+      params: '&passkey=xxxxxxxxxxxxxxx'
       root_element_selector: '#form_torrent > table > tbody > tr:not(:first-child)'
       fields:
         title:
@@ -228,61 +207,94 @@ tasks:
           element_selector: '.progress_completed'
           attribute: class
     no_entries_ok: yes
+    limit_new: 1
     if:
       - promotion in ['Free', '2X Free']: accept
       - "progress and 'progress_completed' not in progress": reject
-      - size > 100*1024*1024*1024: reject
     template:
       - qbittorrent_base_template
       - qbittorrent_add_template
 
-  leaguehd:
-    inputs:
-      - rss:
-          url: https://leaguehd.com/torrentrss.php?rows=10&cat500=1&cat409=1&isize=1&linktype=dl&passkey=xxxxxxxx
-          all_entries: no
+  dmhy:
+    html_rss:
+      url: https://u2.dmhy.org/torrents.php?sort=8&type=desc
+      headers:
+        cookie: 'xxxxxxxxxxxxxxxxxxxxx'
+        user-agent: '{? headers.user_agent ?}'
+      params: '&passkey=xxxxxxxxxxxxxxxxx'
+      root_element_selector: '#outer > table.main > tbody > tr > td > table > tbody > tr:not(:first-child)'
+      fields:
+        title:
+          element_selector: 'a[href*="details.php"]'
+          attribute: textContent
+        url:
+          element_selector: 'a[href*="download.php"]'
+          attribute: href
+        promotion:
+          element_selector: 'img[class*="pro"]'
+          attribute: alt
+        promotion_time:
+          element_selector: 'b > time'
+          attribute: title
+        upload_ratio:
+          element_selector: 'img[alt="上传比率"] + b'
+          attribute: textContent
+        download_ratio:
+          element_selector: 'img[alt="下载比率"] + b'
+          attribute: textContent
+        seeders:
+          element_selector: 'td:nth-child(6)'
+          attribute: textContent
+        leechers:
+          element_selector: 'td:nth-child(7)'
+          attribute: textContent
     no_entries_ok: yes
-    accept_all: yes
+    if:
+      - promotion_time and promotion_time|parsedate < now + timedelta(hours=23): reject
+      - upload_ratio == '2.33X' and download_ratio == '0.00X' and leechers|int > 2 and seeders|int >0 and seeders|int < 3: accept
+      - promotion in ['FREE','2X Free'] and leechers|int > 2 and seeders|int >0 and seeders|int < 3: accept
     qbittorrent_mod:
       action:
         add:
           reject_on_dl_limit: no
-          reject_on_dl_speed: no
+          reject_on_dl_speed: 6291456
     template:
       - qbittorrent_base_template
       - qbittorrent_add_template
+      - show_entry_template
 
   rss_download:
     inputs:
       - rss:
-          url: https://www.tjupt.org/torrentrss.php?rows=10&official=1&passkey=xxxxxxxx
+          url: https://www.skyey2.com/ptrss.php?id=xxxxxxxxx
           all_entries: no
       - rss:
-          url: https://pt.m-team.cc/torrentrss.php?https=1&rows=10&tea9=1&isize=1&linktype=dl&passkey=xxxxxxxx
+          url: https://ourbits.club/torrentrss.php?rows=10&tea1=1&isize=1&passkey=xxxxxxxxxxxxxxxxxxx&https=1&linktype=dl
           all_entries: no
       - rss:
-          url: https://hdsky.me/torrentrss.php?rows=10&tea6=1&tea1=1&tea28=1&tea9=1&tea31=1&tea18=1&tea22=1&tea34=1&tea35=1&isize=1&linktype=dl&passkey=xxxxxxxx
+          url: https://chdbits.co/torrentrss.php?rows=10&tea14=1&tea13=1&tea1=1&isize=1&linktype=dl&passkey=xxxxxxxxxxxxxxxxxx
           all_entries: no
       - rss:
-          url: https://springsunday.net/torrentrss.php?rows=10&tea1=1&tea9=1&isize=1&https=1&linktype=dl&passkey=xxxxxxxx
+          url: https://pt.keepfrds.com/torrentrss.php?rows=10&tea6=1&tea3=1&tea8=1&tea9=1&tea10=1&isize=1&linktype=dl&passkey=xxxxxxxxxxxx
           all_entries: no
       - rss:
-          url: https://ourbits.club/torrentrss.php?rows=10&tea1=1&isize=1&passkey=xxxxxxxx&https=1&linktype=dl
+          url: https://www.tjupt.org/torrentrss.php?rows=10&official=1&passkey=xxxxxxxxxxxxxxx&linktype=dl
           all_entries: no
       - rss:
-          url: https://pt.keepfrds.com/torrentrss.php?rows=10&tea6=1&tea3=1&tea8=1&tea9=1&tea10=1&isize=1&linktype=dl&passkey=xxxxxxxx
+          url: https://pt.m-team.cc/torrentrss.php?https=1&rows=10&tea9=1&isize=1&linktype=dl&passkey=xxxxxxxxxxxxxxxx
           all_entries: no
       - rss:
-          url: https://open.cd/torrentrss.php?rows=10&isize=1&linktype=dl&passkey=xxxxxxxx
+          url: https://hdsky.me/torrentrss.php?rows=10&tea6=1&tea1=1&tea28=1&tea9=1&tea31=1&tea18=1&tea22=1&tea34=1&tea35=1&isize=1&linktype=dl&passkey=xxxxxxxxxxxx
           all_entries: no
       - rss:
-          url: https://chdbits.co/torrentrss.php?rows=10&tea14=1&tea13=1&tea1=1&isize=1&linktype=dl&passkey=xxxxxxxx
+          url: https://springsunday.net/torrentrss.php?rows=10&tea1=1&tea9=1&isize=1&https=1&linktype=dl&passkey=xxxxxxxxx
           all_entries: no
       - rss:
-          url: https://leaguehd.com/torrentrss.php?rows=10&cat405=1&isize=1&linktype=dl&passkey=xxxxxxxx
+          url: https://open.cd/torrentrss.php?rows=10&isize=1&linktype=dl&passkey=xxxxxxxxxxxxxx
           all_entries: no
     no_entries_ok: yes
     accept_all: yes
+    limit_new: 1
     template:
       - qbittorrent_base_template
       - qbittorrent_add_template
@@ -293,58 +305,60 @@ tasks:
       from_qbittorrent_mod: 250
       iyuu_auto_reseed: 240
     iyuu_auto_reseed:
-      iyuu: xxxxxxxx
+      iyuu: xxxxxxxxxxxxx
       passkeys:
-        1ptba: xxxxxxxx
-        52pt: xxxxxxxx
-        beitai: xxxxxxxx
-        brobits: xxxxxxxx
-        btschool: xxxxxxxx
-        chdbits: xxxxxxxx
+        1ptba: xxxxxxxxxxxxxxxxx
+        52pt: xxxxxxxxxxxxxxxxx
+        beitai: xxxxxxxxxxxxxxxxx
+        brobits: xxxxxxxxxxxxxxxxx
+        btschool: xxxxxxxxxxxxxxxxx
+        chdbits: xxxxxxxxxxxxxxxxx
         dicmusic:
-          authkey: xxxxxxxx
-          torrent_pass: xxxxxxxx
-        discfan: xxxxxxxx
-        eastgame: xxxxxxxx
-        et8: xxxxxxxx
-        hd-torrents: xxxxxxxx
-        haidan: xxxxxxxx
-        hdarea: xxxxxxxx
-        hdbd: xxxxxxxx
+          authkey: xxxxxxxxxxxxxxxxx
+          torrent_pass: xxxxxxxxxxxxxxxxx
+        discfan: xxxxxxxxxxxxxxxxx
+        dmhy: xxxxxxxxxxxxxxxxx
+        eastgame: xxxxxxxxxxxxxxxxx
+        et8: xxxxxxxxxxxxxxxxx
+        haidan: xxxxxxxxxxxxxxxxx
+        hd-torrents: xxxxxxxxxxxxxxxxx
+        hd4fans: xxxxxxxxxxxxxxxxx
+        hdarea: xxxxxxxxxxxxxxxxx
+        hdbd: xxxxxxxxxxxxxxxxx
         hdcity:
           headers:
-            cookie: 'xxxxxxxx'
+            cookie: xxxxxxxxxxxxxxxxx
             user-agent: '{? headers.user_agent ?}'
-        hddisk: xxxxxxxx
-        hddolby: xxxxxxxx
-        hdfans: xxxxxxxx
-        hdhome: xxxxxxxx
-        hdsky: xxxxxxxx
-        hdstreet: xxxxxxxx
-        hdtime: xxxxxxxx
-        hdupt: xxxxxxxx
-        hdzone: xxxxxxxx
-        hitpt: xxxxxxxx
-        joyhd: xxxxxxxx
-        keepfrds: xxxxxxxx
-        leaguehd: xxxxxxxx
-        msg: xxxxxxxx
-        m-team: xxxxxxxx
-        nicept: xxxxxxxx
-        nanyangpt: xxxxxxxx
-        open: xxxxxxxx
-        oshen: xxxxxxxx
-        ourbits: xxxxxxxx
-        pterclub: xxxxxxxx
-        pthome: xxxxxxxx
-        ptsbao: xxxxxxxx
-        skyeysnow: xxxxxxxx
-        soulvoice: xxxxxxxx
-        springsunday: xxxxxxxx
-        sjtu: xxxxxxxx
-        tjupt: xxxxxxxx
-        totheglory: xxxxxxxx
-        yingk: xxxxxxxx
+        hddisk: xxxxxxxxxxxxxxxxx
+        hddolby: xxxxxxxxxxxxxxxxx
+        hdfans: xxxxxxxxxxxxxxxxx
+        hdhome: xxxxxxxxxxxxxxxxx
+        hdsky: xxxxxxxxxxxxxxxxx
+        hdstreet: xxxxxxxxxxxxxxxxx
+        hdtime: xxxxxxxxxxxxxxxxx
+        hdupt: xxxxxxxxxxxxxxxxx
+        hdzone: xxxxxxxxxxxxxxxxx
+        hitpt: xxxxxxxxxxxxxxxxx
+        joyhd: xxxxxxxxxxxxxxxxx
+        keepfrds: xxxxxxxxxxxxxxxxx
+        leaguehd: xxxxxxxxxxxxxxxxx
+        msg: xxxxxxxxxxxxxxxxx
+        m-team: xxxxxxxxxxxxxxxxx
+        nicept: xxxxxxxxxxxxxxxxx
+        nanyangpt: xxxxxxxxxxxxxxxxx
+        open: xxxxxxxxxxxxxxxxx
+        oshen: xxxxxxxxxxxxxxxxx
+        ourbits: xxxxxxxxxxxxxxxxx
+        pterclub: xxxxxxxxxxxxxxxxx
+        pthome: xxxxxxxxxxxxxxxxx
+        ptsbao: xxxxxxxxxxxxxxxxx
+        skyeysnow: xxxxxxxxxxxxxxxxx
+        soulvoice: xxxxxxxxxxxxxxxxx
+        springsunday: xxxxxxxxxxxxxxxxx
+        sjtu: xxxxxxxxxxxxxxxxx
+        tjupt: xxxxxxxxxxxxxxxxx
+        totheglory: xxxxxxxxxxxxxxxxx
+        yingk: xxxxxxxxxxxxxxxxx
     accept_all: yes
     no_entries_ok: yes
     seen:
@@ -363,7 +377,7 @@ tasks:
 
   resume:
     priority: 2
-    disable: [ seen, seen_info_hash, retry_failed ]
+    disable: [seen, seen_info_hash, retry_failed]
     if:
       - qbittorrent_state == 'pausedUP' and qbittorrent_downloaded == 0 and qbittorrent_added_on > now - timedelta(hours=1): accept
     template:
@@ -373,9 +387,9 @@ tasks:
 
   delete:
     priority: 3
-    disable: [ seen, seen_info_hash, retry_failed ]
+    disable: [seen, seen_info_hash, retry_failed]
     if:
-      - qbittorrent_category in ['Rss'] and qbittorrent_last_activity < now - timedelta(hours=2): accept
+      - qbittorrent_category in ['Rss'] and qbittorrent_last_activity < now - timedelta(hours=31): accept
       - qbittorrent_state == 'missingFiles' or (qbittorrent_state in ['pausedDL'] and qbittorrent_completed == 0): accept
       - "'open' in qbittorrent_tags and (qbittorrent_seeding_time < 48*60*60 or qbittorrent_num_complete < 5) and not qbittorrent_state in ['pausedDL']": reject
     sort_by: qbittorrent_reseed_last_activity
@@ -386,7 +400,7 @@ tasks:
 
   modify:
     priority: 4
-    disable: [ seen, seen_info_hash, retry_failed ]
+    disable: [seen, seen_info_hash, retry_failed]
     accept_all: yes
     template:
       - from_qbittorrent_template
@@ -412,80 +426,85 @@ tasks:
       user-agent: '{? headers.user_agent ?}'
       max_workers: 1
       aipocr:
-        app_id: 'xxxxxxxx'
-        api_key: 'xxxxxxxx'
-        secret_key: 'xxxxxxxx'
+        app_id: '20097065'
+        api_key: '9lC9NoIV5m96VNnqTqchLk4l'
+        secret_key: 'ziZ7TRNR5rtrRc1zVVQ2xFLaeCsx69xO'
       sites:
         qbittorrent:
-          name: qbittorrent
-          host: qbittorrent.example.com
-          port: 443
-          use_ssl: yes
-          username: xxxxxxxx
-          password: xxxxxxxx
-        1ptba: 'xxxxxxxx'
-        52pt: 'xxxxxxxx'
-        avgv: 'xxxxxxxx'
-        beitai: 'xxxxxxxx'
-        btschool: 'xxxxxxxx'
-        chdbits: 'xxxxxxxx'
-        dhcmusic: 'xxxxxxxx'
-        dicmusic: 'xxxxxxxx'
-        discfan: 'xxxxxxxx'
-        eastgame: 'xxxxxxxx'
-        et8: 'xxxxxxxx'
-        haidan: 'xxxxxxxx'
-        hdarea: 'xxxxxxxx'
-        hdatmos: 'xxxxxxxx'
-        hdbd: 'xxxxxxxx'
-        hdcity: 'xxxxxxxx'
-        hddolby: 'xxxxxxxx'
-        hddisk: 'xxxxxxxx'
-        hdfans: 'xxxxxxxx'
-        hdhome: 'xxxxxxxx'
+          - name: qbittorrent
+            host: qbittorrent.example.com
+            port: 443
+            use_ssl: yes
+            username: admin
+            password: xxxxxxxxxxxxxxx
+        1ptba: 'xxxxxxxxxxxxxxxxx'
+        52pt: 'xxxxxxxxxxxxxxxxx'
+        avgv: 'xxxxxxxxxxxxxxxxx'
+        beitai: 'xxxxxxxxxxxxxxxxx'
+        btschool: 'xxxxxxxxxxxxxxxxx'
+        chdbits: 'xxxxxxxxxxxxxxxxx'
+        dhcmusic: 'xxxxxxxxxxxxxxxxx'
+        dicmusic: 'xxxxxxxxxxxxxxxxx'
+        discfan: 'xxxxxxxxxxxxxxxxx'
+        dmhy:
+          cookie: 'xxxxxxxxxxxxxxxxx'
+          username: 'xxxxxxxxxxxxxxxxx'
+          comment: 'xxxxxxxxxxxxxxxxx'
+        eastgame: 'xxxxxxxxxxxxxxxxx'
+        et8: 'xxxxxxxxxxxxxxxxx'
+        haidan: 'xxxxxxxxxxxxxxxxx'
+        hd4fans: 'xxxxxxxxxxxxxxxxx'
+        hdarea: 'xxxxxxxxxxxxxxxxx'
+        hdatmos: 'xxxxxxxxxxxxxxxxx'
+        hdbd: 'xxxxxxxxxxxxxxxxx'
+        hdcity: 'xxxxxxxxxxxxxxxxx'
+        hddolby: 'xxxxxxxxxxxxxxxxx'
+        hddisk: 'xxxxxxxxxxxxxxxxx'
+        hdfans: 'xxxxxxxxxxxxxxxxx'
+        hdhome: 'xxxxxxxxxxxxxxxxx'
         hdpost:
           login:
-            usernameOrEmail: 'xxxxxxxx'
-            password: 'xxxxxxxx'
-        hdsky: 'xxxxxxxx'
-        hdstreet: 'xxxxxxxx'
-        hdtime: 'xxxxxxxx'
-        hdupt: 'xxxxxxxx'
-        hdzone: 'xxxxxxxx'
-        hitpt: 'xxxxxxxx'
-        joyhd: 'xxxxxxxx'
-        keepfrds: 'xxxxxxxx'
-        lbj007: 'xxxxxxxx'
-        leaguehd: 'xxxxxxxx'
+            usernameOrEmail: 'xxxxxxxxxxxxxxxxx'
+            password: 'xxxxxxxxxxxxxxxxx'
+        hdsky: 'xxxxxxxxxxxxxxxxx'
+        #hdstreet: 'xxxxxxxxxxxxxxxxx'
+        hdtime: 'xxxxxxxxxxxxxxxxx'
+        hdupt: 'xxxxxxxxxxxxxxxxx'
+        hdzone: 'xxxxxxxxxxxxxxxxx'
+        hitpt: 'xxxxxxxxxxxxxxxxx'
+        joyhd: 'xxxxxxxxxxxxxxxxx'
+        keepfrds: 'xxxxxxxxxxxxxxxxx'
+        lbj007: 'xxxxxxxxxxxxxxxxx'
+        leaguehd: 'xxxxxxxxxxxxxxxxx'
         m-team:
           login:
-            username: 'xxxxxxxx'
-            password: 'xxxxxxxx'
-            secret_key: 'xxxxxxxx'
-        msg: 'xxxxxxxx'
-        nicept: 'xxxxxxxx'
-        nanyangpt: 'xxxxxxxx'
-        open: 'xxxxxxxx'
-        oshen: 'xxxxxxxx'
+            username: 'xxxxxxxxxxxxxxxxx'
+            password: 'xxxxxxxxxxxxxxxxx'
+            secret_key: 'xxxxxxxxxxxxxxxxx'
+        msg: 'xxxxxxxxxxxxxxxxx'
+        nicept: 'xxxxxxxxxxxxxxxxx'
+        nanyangpt: 'xxxxxxxxxxxxxxxxx'
+        open: 'xxxxxxxxxxxxxxxxx'
+        oshen: 'xxxxxxxxxxxxxxxxx'
         ourbits:
           login:
-            username: 'xxxxxxxx'
-            password: 'xxxxxxxx'
-        pterclub: 'xxxxxxxx'
-        pthome: 'xxxxxxxx'
-        ptsbao: 'xxxxxxxx'
+            username: 'xxxxxxxxxxxxxxxxx'
+            password: 'xxxxxxxxxxxxxxxxx'
+        pterclub: 'xxxxxxxxxxxxxxxxx'
+        pthome: 'xxxxxxxxxxxxxxxxx'
+        ptsbao: 'xxxxxxxxxxxxxxxxx'
         skyey2:
           login:
-            username: 'xxxxxxxx'
-            password: 'xxxxxxxx'
-        soulvoice: 'xxxxxxxx'
-        springsunday: 'xxxxxxxx'
-        sjtu: 'xxxxxxxx'
-        totheglory: 'xxxxxxxx'
-        tjupt: 'xxxxxxxx'
-        wenyuan: 'xxxxxxxx'
-        yingk: 'xxxxxxxx'
-        suannai: 'xxxxxxxx'
+            username: 'xxxxxxxxxxxxxxxxx'
+            password: 'xxxxxxxxxxxxxxxxx'
+        soulvoice: 'xxxxxxxxxxxxxxxxx'
+        springsunday: 'xxxxxxxxxxxxxxxxx'
+        sjtu: 'xxxxxxxxxxxxxxxxx'
+        totheglory: 'xxxxxxxxxxxxxxxxx'
+        tjupt: 'xxxxxxxxxxxxxxxxx'
+        #wenyuan: 'xxxxxxxxxxxxxxxxx'
+        #yingk: 'xxxxxxxxxxxxxxxxx'
+        suannai: 'xxxxxxxxxxxxxxxxx'
     accept_all: yes
     seen:
       fields:
@@ -520,20 +539,20 @@ tasks:
           {%- endfor -%}
         via:
           - wechat_work:
-              corp_id: 'xxxxxxxx'
-              corp_secret: 'xxxxxxxx'
-              agent_id: 'xxxxxxxx'
-              to_user: 'xxxxxxxx'
-              image: 'details_report.png'
+              corp_id: 'xxxxxxxxxxxxxxxxx'
+              corp_secret: 'xxxxxxxxxxxxxxxxx'
+              agent_id: 'xxxxxxxxxxxxxxxxx'
+              to_user: 'xxxxxxxxxxxxxxxxx'
+              image: 'xxxxxxxxxxxxxxxxx'
           - telegram:
-              bot_token: xxxxxxxx
+              bot_token: 'xxxxxxxxxxxxxxxxx'
               recipients:
-                - username: 'xxxxxxxx'
+                - username: 'xxxxxxxxxxxxxxxxx'
 
   warner:
-    disable: [ seen, seen_info_hash, retry_failed ]
+    disable: [seen, seen_info_hash, retry_failed]
     from_qbittorrent_mod:
-      server_state: 'qBittorrent Server State'
+      server_state: yes
     if:
       - 'not server_state["flexget_connected"]': accept
       - 'server_state["dl_info_speed"] < 1048576': accept
@@ -545,7 +564,7 @@ tasks:
       entries:
         message: |+
           {{ time }}
-          {{ title }}:
+          qBittorrent Server State:
           {% if not server_state.flexget_connected -%}
           flexget_connected: False
           {%- else -%}
