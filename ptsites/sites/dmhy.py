@@ -81,9 +81,9 @@ class MainClass(NexusPHP):
                     return
         site_config = entry['site_config']
         data['message'] = site_config.get('comment')
-        oost_answer_response = self._request(entry, 'post', entry['url'], data=data)
-        oost_answer_net_state = self.check_net_state(entry, oost_answer_response, entry['url'])
-        if oost_answer_net_state:
+        post_answer_response = self._request(entry, 'post', entry['url'], data=data)
+        post_answer_net_state = self.check_net_state(entry, post_answer_response, entry['url'])
+        if post_answer_net_state:
             return
         response = self._request(entry, 'get', entry['url'])
         self.final_check(entry, response, entry['url'])
