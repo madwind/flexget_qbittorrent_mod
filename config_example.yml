@@ -426,9 +426,9 @@ tasks:
       user-agent: '{? headers.user_agent ?}'
       max_workers: 1
       aipocr:
-        app_id: '20097065'
-        api_key: '9lC9NoIV5m96VNnqTqchLk4l'
-        secret_key: 'ziZ7TRNR5rtrRc1zVVQ2xFLaeCsx69xO'
+        app_id: 'xxxxxxxx'
+        api_key: 'xxxxxxxxxxx'
+        secret_key: 'xxxxxxxxxxxxxx'
       sites:
         qbittorrent:
           - name: qbittorrent
