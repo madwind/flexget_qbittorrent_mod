@@ -21,30 +21,27 @@ class Gazelle(SiteBase):
                 'default': {
                     'link': '/user.php?id={}',
                     'elements': {'table': '#content > div > div.sidebar > div.box.box_info.box_userinfo_stats > ul'}
-                },
-                'extend': {
-                    'link': '/ajax.php?action=community_stats&userid={}'
                 }
             },
             'details': {
                 'downloaded': {
-                    'regex': '下载量.+?([\\d.]+ ?[ZEPTGMK]?i?B)'
+                    'regex': ('(Download|下载量).+?([\\d.]+ ?[ZEPTGMK]?i?B)',2)
                 },
                 'uploaded': {
-                    'regex': '上传量.+?([\\d.]+ ?[ZEPTGMK]?i?B)'
+                    'regex': ('(Upload|上传量).+?([\\d.]+ ?[ZEPTGMK]?i?B)',2)
                 },
                 'share_ratio': {
-                    'regex': '分享率.*?(∞|[\\d.]+)',
+                    'regex': ('(Ratio|分享率).*?(∞|[\\d.]+)',2),
                     'handle': self.handle_share_ratio
                 },
                 'points': {
-                    'regex': '积分.*?([\\d,.]+)'
+                    'regex': ('(Gold|积分).*?([\\d,.]+)',2)
                 },
                 'seeding': {
-                    'regex': 'seeding":"?(\\d+)'
+                    'regex': '[Ss]eeding.+?(\\d+)'
                 },
                 'leeching': {
-                    'regex': 'leeching":"?(\\d+)'
+                    'regex': '[Ll]eeching.+?(\\d+)'
                 },
                 'hr': None
             }
