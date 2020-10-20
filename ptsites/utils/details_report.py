@@ -179,7 +179,7 @@ class DetailsReport:
         for x in df.values:
             cc = []
             for y in x:
-                if '-' in y and 'm-team' not in y:
+                if '\n-' in y:
                     cc.append('#f38181')
                 elif '+' in y:
                     cc.append('#95e1d3')
@@ -188,7 +188,7 @@ class DetailsReport:
                 else:
                     cc.append('white')
             colors.append(cc)
-        col_widths = [0.14, 0.16, 0.16, 0.14, 0.14, 0.1, 0.1, 0.06]
+        col_widths = [0.15, 0.16, 0.16, 0.13, 0.14, 0.1, 0.1, 0.06]
         table = plt.table(cellText=df.values, cellColours=colors, bbox=[0, 0, 1, 1], colLabels=df.columns,
                           colWidths=col_widths,
                           loc='best')
