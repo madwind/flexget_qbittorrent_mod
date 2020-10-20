@@ -173,12 +173,12 @@ tasks:
           element_selector: 'td:nth-child(8)'
           attribute: textContent
     no_entries_ok: yes
+    limit_new: 1
     if:
       - leechers|int > 2 and seeders|int >0 and seeders|int < 3 and promotion: accept
     qbittorrent_mod:
       action:
         add:
-          reject_on_dl_limit: no
           reject_on_dl_speed: 6291456
     template:
       - qbittorrent_base_template
@@ -249,14 +249,14 @@ tasks:
           element_selector: 'td:nth-child(7)'
           attribute: textContent
     no_entries_ok: yes
+    limit_new: 1
     if:
       - promotion_time and promotion_time|parsedate < now + timedelta(hours=23): reject
-      - upload_ratio == '2.33X' and download_ratio == '0.00X' and leechers|int > 2 and seeders|int >0 and seeders|int < 3: accept
-      - promotion in ['FREE','2X Free'] and leechers|int > 2 and seeders|int >0 and seeders|int < 3: accept
+      - upload_ratio == '2.33X' and download_ratio == '0.00X' and leechers|int > 5 and seeders|int >0 and seeders|int < 3: accept
+      - promotion in ['2X Free'] and leechers|int > 5 and seeders|int >0 and seeders|int < 3: accept
     qbittorrent_mod:
       action:
         add:
-          reject_on_dl_limit: no
           reject_on_dl_speed: 6291456
     template:
       - qbittorrent_base_template
@@ -452,7 +452,10 @@ tasks:
           comment: 'xxxxxxxxxxxxxxxxx'
         eastgame: 'xxxxxxxxxxxxxxxxx'
         et8: 'xxxxxxxxxxxxxxxxx'
+        filelist: 'xxxxxxxxxxxxxxxxx'
+        gazellegames: 'xxxxxxxxxxxxxxxxx'
         haidan: 'xxxxxxxxxxxxxxxxx'
+        hd-torrents: 'xxxxxxxxxxxxxxxxx'
         hd4fans: 'xxxxxxxxxxxxxxxxx'
         hdarea: 'xxxxxxxxxxxxxxxxx'
         hdatmos: 'xxxxxxxxxxxxxxxxx'
