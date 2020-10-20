@@ -1,6 +1,8 @@
 import random
 import re
 
+from loguru import logger
+
 from ..schema.nexusphp import NexusPHP
 from ..schema.site_base import SignState
 
@@ -8,7 +10,7 @@ from ..schema.site_base import SignState
 BASE_URL = 'https://u2.dmhy.org/'
 URL = 'https://u2.dmhy.org/showup.php?action=show'
 USERNAME_REGEX = '<bdo dir=\'ltr\'>{username}</bdo>'
-SUCCEED_REGEX = '.{120,200}奖励UCoin: <b>\\d+|<a href="showup.php">已签到</a>'
+SUCCEED_REGEX = '.{0,500}奖励UCoin: <b>\\d+|<a href="showup.php">已签到</a>'
 DATA = {
     'regex_keys': ['<input type="submit" name="(captcha_.*?)" value="(.*?)" />'],
     'req': '<input type="hidden" name="req" value="(.*?)" />',
@@ -97,6 +99,11 @@ class MainClass(NexusPHP):
         succeed_regex = regex if regex else entry.get('succeed_regex')
 
         succeed_list = re.findall(succeed_regex, content, re.DOTALL)
+        for a in succeed_list:
+            logger.info('------------------------------------')
+            logger.info(a)
+            logger.info('------------------------------------')
+        logger.info(content)
         if succeed_list:
             entry['result'] = re.sub('<.*?>|&shy;', '', succeed_list[-1])
             return SignState.SUCCEED, content
