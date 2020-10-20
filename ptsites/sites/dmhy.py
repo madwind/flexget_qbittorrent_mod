@@ -1,8 +1,6 @@
 import random
 import re
 
-from loguru import logger
-
 from ..schema.nexusphp import NexusPHP
 from ..schema.site_base import SignState
 
@@ -99,11 +97,6 @@ class MainClass(NexusPHP):
         succeed_regex = regex if regex else entry.get('succeed_regex')
 
         succeed_list = re.findall(succeed_regex, content, re.DOTALL)
-        for a in succeed_list:
-            logger.info('------------------------------------')
-            logger.info(a)
-            logger.info('------------------------------------')
-        logger.info(content)
         if succeed_list:
             entry['result'] = re.sub('<.*?>|&shy;', '', succeed_list[-1])
             return SignState.SUCCEED, content
