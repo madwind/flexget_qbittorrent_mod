@@ -1,3 +1,8 @@
+import re
+
+import requests
+from loguru import logger
+
 from ..schema.nexusphp import NexusPHP
 from ..schema.site_base import SiteBase
 
@@ -9,12 +14,36 @@ DATA = {
     'csrf': '(?<=x-csrf" content=").*?(?=")',
 }
 
+# iyuu_auto_reseed
+# hdsky:
+#   headers:
+#     cookie: '{ cookie }'
+#     user-agent: '{? headers.user_agent ?}'
+TORRENT_URL = 'https://hdchina.org/details.php?id={}&hit=1'
+
 
 class MainClass(NexusPHP):
     @staticmethod
     def build_sign_in(entry, config):
         SiteBase.build_sign_in_entry(entry, config, URL, SUCCEED_REGEX, base_url=BASE_URL)
         entry['data'] = DATA
+
+    @staticmethod
+    def build_reseed_entry(entry, base_url, site, passkey, torrent_id):
+        torrent_url = TORRENT_URL.format(torrent_id)
+        download_url = None
+        try:
+            response = requests.get(torrent_url, headers=passkey['headers'], timeout=30)
+            if response.status_code == 200:
+                re_search = re.search('https://hdchina\\.org/download\\.php\\?hash=.+?&uid=\\d+(?=")', response.text)
+                if re_search:
+                    download_url = re_search.group()
+        except Exception as e:
+            logger.warning(str(e.args))
+        if download_url:
+            entry['url'] = download_url
+        else:
+            entry.reject()
 
     def sign_in(self, entry, config):
         self.sign_in_by_post_data(entry, config)

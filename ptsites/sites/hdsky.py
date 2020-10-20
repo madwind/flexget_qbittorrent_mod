@@ -1,7 +1,9 @@
 import json
+import re
 from io import BytesIO
 from pathlib import Path
 
+import requests
 from loguru import logger
 
 from ..schema.nexusphp import NexusPHP
@@ -22,12 +24,36 @@ URL = 'https://hdsky.me/showup.php'
 SUCCEED_REGEX = '已签到|{"success":true,"message":\\d+}'
 WRONG_REGEX = '{"success":false,"message":"invalid_imagehash"}'
 
+# iyuu_auto_reseed
+# hdsky:
+#   headers:
+#     cookie: '{ cookie }'
+#     user-agent: '{? headers.user_agent ?}'
+TORRENT_URL = 'https://hdsky.me/details.php?id={}&hit=1'
+
 
 class MainClass(NexusPHP):
     @staticmethod
     def build_sign_in(entry, config):
         SiteBase.build_sign_in_entry(entry, config, URL, SUCCEED_REGEX, base_url=BASE_URL,
                                      wrong_regex=WRONG_REGEX)
+
+    @staticmethod
+    def build_reseed_entry(entry, base_url, site, passkey, torrent_id):
+        torrent_url = TORRENT_URL.format(torrent_id)
+        download_url = None
+        try:
+            response = requests.get(torrent_url, headers=passkey['headers'], timeout=30)
+            if response.status_code == 200:
+                re_search = re.search('https://hdsky\\.me/download\\.php\\?id=\\d+&passkey=.+?(?=")', response.text)
+                if re_search:
+                    download_url = re_search.group()
+        except Exception as e:
+            logger.warning(str(e.args))
+        if download_url:
+            entry['url'] = download_url
+        else:
+            entry.reject()
 
     def sign_in(self, entry, config):
         if not Image:

@@ -3,20 +3,20 @@ import re
 import requests
 from loguru import logger
 
-from ..schema.site_base import SiteBase
 from ..schema.nexusphp import NexusPHP
+from ..schema.site_base import SiteBase
 
 # auto_sign_in
 URL = 'https://hdcity.work/sign'
-TORRENT_URL = 'https://hdcity.work/t-{}'
 SUCCEED_REGEX = '本次签到获得魅力\\d+'
-
 
 # iyuu_auto_reseed
 # hdcity:
 #   headers:
 #     cookie: '{ cookie }'
 #     user-agent: '{? headers.user_agent ?}'
+TORRENT_URL = 'https://hdcity.work/t-{}'
+
 
 class MainClass(NexusPHP):
     @staticmethod
@@ -30,7 +30,7 @@ class MainClass(NexusPHP):
         try:
             response = requests.get(torrent_url, headers=passkey['headers'], timeout=30)
             if response.status_code == 200:
-                re_search = re.search('https://assets.hdcity.work/dl.php.*?(?=")', response.text)
+                re_search = re.search('https://assets\\.hdcity\\.work/dl\\.php.*?(?=")', response.text)
                 if re_search:
                     download_url = re_search.group()
         except Exception as e:
