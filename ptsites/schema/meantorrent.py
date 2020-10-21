@@ -24,12 +24,12 @@ class MeanTorrent(SiteBase):
                 }
             },
             'details': {
-                'downloaded': {
-                    'regex': 'downloaded.*?([\\d]+)',
-                    'handle': self.handle_suffix
-                },
                 'uploaded': {
                     'regex': 'uploaded.*?([\\d]+)',
+                    'handle': self.handle_suffix
+                },
+                'downloaded': {
+                    'regex': 'downloaded.*?([\\d]+)',
                     'handle': self.handle_suffix
                 },
                 'share_ratio': None,

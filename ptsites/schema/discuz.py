@@ -24,11 +24,11 @@ class Discuz(SiteBase):
                 }
             },
             'details': {
-                'downloaded': {
-                    'regex': '下载量.*?([\\d.]+ ?[ZEPTGMK]?i?B)'
-                },
                 'uploaded': {
                     'regex': '上传量.*?([\\d.]+ ?[ZEPTGMK]?i?B)'
+                },
+                'downloaded': {
+                    'regex': '下载量.*?([\\d.]+ ?[ZEPTGMK]?i?B)'
                 },
                 'share_ratio': {
                     'regex': '分享率.*?([\\d.,]+)'

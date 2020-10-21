@@ -28,8 +28,8 @@ class UserDetailsEntry(UserDetailsBase):
     __tablename__ = 'user_details'
 
     site = Column(String, primary_key=True)
-    downloaded = Column(Integer, index=True, nullable=True)
     uploaded = Column(Integer, index=True, nullable=True)
+    downloaded = Column(Integer, index=True, nullable=True)
     share_ratio = Column(Float, index=True, nullable=True)
     points = Column(Float, index=True, nullable=True)
     seeding = Column(Integer, index=True, nullable=True)
@@ -38,10 +38,10 @@ class UserDetailsEntry(UserDetailsBase):
 
     def __str__(self):
         x = ['site={0}'.format(self.site)]
-        if self.downloaded:
-            x.append('downloaded={0}'.format(self.downloaded))
         if self.uploaded:
             x.append('uploaded={0}'.format(self.uploaded))
+        if self.downloaded:
+            x.append('downloaded={0}'.format(self.downloaded))
         if self.share_ratio:
             x.append('share_ratio={0}'.format(self.share_ratio))
         if self.points:
@@ -66,8 +66,8 @@ class DetailsReport:
         session = Session()
 
         columns = ['site',
-                   'downloaded',
                    'uploaded',
+                   'downloaded',
                    'share_ratio',
                    'points',
                    'seeding',
@@ -97,8 +97,8 @@ class DetailsReport:
             if user_details_db is None:
                 user_details_db = UserDetailsEntry(
                     site=entry['site_name'],
-                    downloaded=0,
                     uploaded=0,
+                    downloaded=0,
                     share_ratio=0,
                     points=0,
                     seeding=0,
@@ -232,7 +232,7 @@ class DetailsReport:
             return value
         if value == 0 and append:
             return ''
-        if key in ['downloaded', 'uploaded']:
+        if key in ['uploaded', 'downloaded']:
             if append:
                 specifier = '\n{:+g} {}iB'
             else:
@@ -252,7 +252,7 @@ class DetailsReport:
     def transfer_data(self, key, value):
         if value == '*':
             return value
-        if key in ['downloaded', 'uploaded']:
+        if key in ['uploaded', 'downloaded']:
             return float(self.convert_suffix(value))
         return float(value)
 

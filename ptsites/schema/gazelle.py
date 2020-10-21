@@ -24,11 +24,11 @@ class Gazelle(SiteBase):
                 }
             },
             'details': {
-                'downloaded': {
-                    'regex': ('(Download|下载量).+?([\\d.]+ ?[ZEPTGMK]?i?B)',2)
-                },
                 'uploaded': {
                     'regex': ('(Upload|上传量).+?([\\d.]+ ?[ZEPTGMK]?i?B)',2)
+                },
+                'downloaded': {
+                    'regex': ('(Download|下载量).+?([\\d.]+ ?[ZEPTGMK]?i?B)',2)
                 },
                 'share_ratio': {
                     'regex': ('(Ratio|分享率).*?(∞|[\\d.]+)',2),

@@ -33,11 +33,11 @@ class NexusPHP(SiteBase):
                 }
             },
             'details': {
-                'downloaded': {
-                    'regex': ('(下[载載]量|Downloaded).+?([\\d.]+ ?[ZEPTGMK]?i?B)', 2)
-                },
                 'uploaded': {
                     'regex': ('(上[传傳]量|Uploaded).+?([\\d.]+ ?[ZEPTGMK]?i?B)', 2)
+                },
+                'downloaded': {
+                    'regex': ('(下[载載]量|Downloaded).+?([\\d.]+ ?[ZEPTGMK]?i?B)', 2)
                 },
                 'share_ratio': {
                     'regex': '分享率.*?(无限|無限|[\\d.]+)',
