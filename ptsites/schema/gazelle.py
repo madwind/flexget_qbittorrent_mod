@@ -38,10 +38,10 @@ class Gazelle(SiteBase):
                     'regex': ('(Gold|积分).*?([\\d,.]+)',2)
                 },
                 'seeding': {
-                    'regex': '[Ss]eeding.+?(\\d+)'
+                    'regex': '[Ss]eeding.+?([\\d,]+)'
                 },
                 'leeching': {
-                    'regex': '[Ll]eeching.+?(\\d+)'
+                    'regex': '[Ll]eeching.+?([\\d,]+)'
                 },
                 'hr': None
             }
