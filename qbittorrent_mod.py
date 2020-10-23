@@ -431,20 +431,25 @@ class PluginQBittorrentMod(QBittorrentModBase):
                 delete_files_hashes.extend(torrent_hashes)
         if len(delete_hashes) > 0:
             self.client.delete_torrents(str.join('|', delete_hashes), False)
+            self.print_clean_log(entry_dict, delete_hashes, False)
         if len(delete_files_hashes) > 0:
             self.client.delete_torrents(str.join('|', delete_files_hashes), delete_files)
-        delete_hashes.extend(delete_files_hashes)
-        for torrent_hash in delete_hashes:
+            self.print_clean_log(entry_dict, delete_files_hashes, delete_files)
+
+    def print_clean_log(self, entry_dict, hashes, delete_files):
+        for torrent_hash in hashes:
             entry = entry_dict.get(torrent_hash)
             logger.info(
-                '{}, size: {:.2f} GB, seeding_time: {:.2f} h, share_ratio: {:.2f}, last_activity: {}, tracker_msg: {}, site: {}',
+                '{}, size: {:.2f} GB, seeding_time: {:.2f} h, share_ratio: {:.2f}, last_activity: {}, tracker_msg: {}, site: {}, delete_files: {}',
                 entry['title'],
                 entry['qbittorrent_completed'] / (1024 * 1024 * 1024),
                 entry['qbittorrent_seeding_time'] / (60 * 60),
                 entry['qbittorrent_share_ratio'],
                 entry['qbittorrent_last_activity'],
                 entry['qbittorrent_tracker_msg'],
-                entry['qbittorrent_tags'])
+                entry['qbittorrent_tags'],
+                delete_files
+            )
 
     def resume_entries(self, task, resume_options):
         recheck_torrents = resume_options.get('recheck_torrents')
