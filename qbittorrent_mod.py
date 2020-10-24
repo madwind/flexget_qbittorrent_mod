@@ -162,6 +162,13 @@ class PluginQBittorrentMod(QBittorrentModBase):
                                 }
                             }
                         }
+                    },
+                    'manage_conn': {
+                        'type': 'object',
+                        'properties': {
+                            'min': {'type': 'integer'},
+                            'max': {'type': 'integer'}
+                        }
                     }
                 },
                 "minProperties": 1,
@@ -508,6 +515,32 @@ class PluginQBittorrentMod(QBittorrentModBase):
                             else:
                                 self.client.remove_trackers(entry.get('torrent_info_hash'), orig_url)
                                 logger.info('{} remove tracker {}', entry.get('title'), orig_url)
+
+    def manage_conn_entries(self, task, manage_conn_options):
+        min_conn = manage_conn_options.get('min')
+        max_conn = manage_conn_options.get('max')
+        for entry in task.accepted:
+            step = entry.get('step')
+            if not step:
+                return
+            server_state = entry.get('server_state')
+            server_queued_io_jobs = server_state.get('queued_io_jobs')
+            server_total_peer_connections = server_state.get('total_peer_connections')
+            application_preferences = self.client.get_application_preferences()
+            max_connect = application_preferences.get('max_connec')
+            if max_connect == -1:
+                max_connect = float('inf')
+            if (step > 0 and max_connect <= server_total_peer_connections) or (
+                    step < 0 and max_connect >= server_total_peer_connections):
+                max_connect_changed = server_total_peer_connections + step
+                if max_connect_changed < min_conn:
+                    max_connect_changed = min_conn
+                elif max_connect_changed > max_conn:
+                    max_connect_changed = max_conn
+
+                self.client.set_application_preferences('{{"max_connec": {}}}'.format(max_connect_changed))
+                logger.info('queued_io_jobs: {} , total_peer_connections: {}, set max_connec to {}',
+                            server_queued_io_jobs, server_total_peer_connections, max_connect_changed)
 
     def _get_site_name(self, tracker_url):
         re_object = re.search('(?<=//).*?(?=/)', tracker_url)
