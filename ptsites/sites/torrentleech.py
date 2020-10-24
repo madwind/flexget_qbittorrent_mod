@@ -49,4 +49,4 @@ class MainClass(SiteBase):
         return selector
 
     def get_hdt_message(self, entry, config, messages_url='/messages.php'):
-        pass
+        entry['result'] += '(TODO: Message)'

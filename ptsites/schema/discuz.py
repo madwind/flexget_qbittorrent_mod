@@ -46,4 +46,4 @@ class Discuz(SiteBase):
         return selector
 
     def get_discuz_message(self, entry, config, messages_url='/home.php?mod=space&do=pm'):
-        pass
+        entry['result'] += '(TODO: Message)'

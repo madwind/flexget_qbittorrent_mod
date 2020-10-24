@@ -56,4 +56,4 @@ class Unit3D(SiteBase):
         return selector
 
     def get_unit3d_message(self, entry, config, messages_url='/messages.php'):
-        pass
+        entry['result'] += '(TODO: Message)'

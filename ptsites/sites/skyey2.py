@@ -43,6 +43,3 @@ class MainClass(Discuz):
         }
         entry['base_response'] = response = self._request(entry, 'post', login_url, data=data)
         self.final_check(entry, response, login_url)
-
-    def get_message(self, entry, config):
-        pass

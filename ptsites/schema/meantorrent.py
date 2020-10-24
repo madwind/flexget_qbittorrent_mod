@@ -48,7 +48,7 @@ class MeanTorrent(SiteBase):
         return selector
 
     def get_meantorrent_message(self, entry, config, messages_url='/messages.php'):
-        pass
+        entry['result'] += '(TODO: Message)'
 
     def handle_suffix(self, value):
         return str(value) + 'B'
