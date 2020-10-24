@@ -87,25 +87,23 @@ class WeChatWorkNotifier:
     def notify(self, title, message, config):
         session = Session()
 
-        access_token = self._real_init(session, config)
-
         failure_message = self._get_failure_message(session, config)
 
         all_messages = failure_message + message
 
-        if access_token:
-            try:
+        try:
+            if access_token := self._real_init(session, config):
                 self._send_msgs(all_messages, access_token)
-            except Exception as e:
-                entry = MessageEntry(
-                    content=all_messages,
-                    failure_time=datetime.now()
-                )
-                session.add(entry)
-                session.commit()
-                raise PluginError(str(e))
-            if self.image:
-                self._send_images(access_token)
+                if self.image:
+                    self._send_images(access_token)
+        except Exception as e:
+            entry = MessageEntry(
+                content=all_messages,
+                failure_time=datetime.now()
+            )
+            session.add(entry)
+            session.commit()
+            raise PluginError(str(e))
 
     def _parse_config(self, config):
         self._corp_id = config.get(_CORP_ID)
