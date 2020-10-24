@@ -65,6 +65,13 @@ templates:
       action:
         pause: yes
 
+  qbittorrent_manage_conn_template:
+    qbittorrent_mod:
+      action:
+        manage_conn:
+          min: 100
+          max: 2000
+
   qbittorrent_delete_keeper_template:
     qbittorrent_mod:
       action:
@@ -420,6 +427,23 @@ tasks:
       - from_qbittorrent_template
       - qbittorrent_base_template
       - qbittorrent_delete_cleaner_template
+
+  manage_conn:
+    disable: [seen, seen_info_hash, retry_failed]
+    from_qbittorrent_mod:
+      server_state: yes
+    accept_all: yes
+    if:
+      - 'server_state["queued_io_jobs"] < 50':
+          set:
+            step: 50
+      - 'server_state["queued_io_jobs"] > 100':
+          set:
+            step: -50
+    template:
+      - from_qbittorrent_template
+      - qbittorrent_base_template
+      - qbittorrent_manage_conn_template
 
   sign_in:
     auto_sign_in:
