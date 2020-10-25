@@ -318,6 +318,7 @@ tasks:
     iyuu_auto_reseed:
       iyuu: xxxxxxxxxxxxx
       passkeys:
+        '1468': xxxxxxxxxxxxxxxxx
         1ptba: xxxxxxxxxxxxxxxxx
         52pt: xxxxxxxxxxxxxxxxx
         beitai: xxxxxxxxxxxxxxxxx
@@ -331,6 +332,8 @@ tasks:
         dmhy: xxxxxxxxxxxxxxxxx
         eastgame: xxxxxxxxxxxxxxxxx
         et8: xxxxxxxxxxxxxxxxx
+        filelist: xxxxxxxxxxxxxxxxx
+        gazellegames: xxxxxxxxxxxxxxxxx
         haidan: xxxxxxxxxxxxxxxxx
         hd-torrents: xxxxxxxxxxxxxxxxx
         hd4fans: xxxxxxxxxxxxxxxxx
@@ -351,6 +354,7 @@ tasks:
         hdzone: xxxxxxxxxxxxxxxxx
         hitpt: xxxxxxxxxxxxxxxxx
         joyhd: xxxxxxxxxxxxxxxxx
+        jptv: xxxxxxxxxxxxxxxxx
         keepfrds: xxxxxxxxxxxxxxxxx
         leaguehd: xxxxxxxxxxxxxxxxx
         msg: xxxxxxxxxxxxxxxxx
@@ -368,6 +372,7 @@ tasks:
         springsunday: xxxxxxxxxxxxxxxxx
         sjtu: xxxxxxxxxxxxxxxxx
         tjupt: xxxxxxxxxxxxxxxxx
+        torrentleech: xxxxxxxxxxxxxxxxx
         totheglory: xxxxxxxxxxxxxxxxx
         yingk: xxxxxxxxxxxxxxxxx
     accept_all: yes
