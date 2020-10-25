@@ -23,9 +23,6 @@ class MainClass(SiteBase):
         selector = {
             'detail_sources': {
                 'default': {
-                    'elements': {
-                        'bar': 'body > div.navbar.navbar-default.tl.loggedin > div.container-fluid.sub-navbar > ul',
-                    }
                 }
             },
             'details': {
@@ -36,10 +33,10 @@ class MainClass(SiteBase):
                     'regex': 'Uploaded.+?([\\d.]+ [ZEPTGMK]?B)'
                 },
                 'share_ratio': {
-                    'regex': 'Ratio: ([\\d.]+)'
+                    'regex': 'Ratio.+?([\\d.]+)'
                 },
                 'points': {
-                    'regex': 'TL Points:.+?([\\d,.]+)'
+                    'regex': 'TL Points.+?([\\d,.]+)'
                 },
                 'seeding': None,
                 'leeching': None,
