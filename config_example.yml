@@ -441,7 +441,7 @@ tasks:
       - 'server_state["queued_io_jobs"] < 20':
           set:
             step: 50
-      - 'server_state["queued_io_jobs"] > 50':
+      - 'server_state["queued_io_jobs"] > 80':
           set:
             step: -100
     template:
