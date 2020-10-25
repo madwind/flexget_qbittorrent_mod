@@ -8,13 +8,14 @@ SUCCEED_REGEX = '<span class="displayed-username">.+?</span>'
 class MainClass(SiteBase):
     @staticmethod
     def build_sign_in(entry, config):
-        SiteBase.build_sign_in_entry(entry, config, URL, SUCCEED_REGEX)
+        SiteBase.build_sign_in_entry(entry, config, URL + 'none.torrent', SUCCEED_REGEX)
 
     def sign_in(self, entry, config):
+        entry['url'] = URL
         self.sign_in_by_get(entry, config)
 
     def get_message(self, entry, config):
-        self.get_hdt_message(entry, config)
+        self.get_torrentleech_message(entry, config)
 
     def get_details(self, entry, config):
         self.get_details_base(entry, config, self.build_selector())
@@ -22,8 +23,7 @@ class MainClass(SiteBase):
     def build_selector(self):
         selector = {
             'detail_sources': {
-                'default': {
-                }
+                'default': {}
             },
             'details': {
                 'downloaded': {
@@ -45,5 +45,5 @@ class MainClass(SiteBase):
         }
         return selector
 
-    def get_hdt_message(self, entry, config, messages_url='/messages.php'):
+    def get_torrentleech_message(self, entry, config, messages_url='/messages.php'):
         entry['result'] += '(TODO: Message)'
