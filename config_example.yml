@@ -49,10 +49,12 @@ templates:
     qbittorrent_mod:
       action:
         add:
-          reject_on_dl_limit: 8388608
-          reject_on_dl_speed: 5242880
           category: Rss
           autoTMM: yes
+          reject_on:
+            bandwidth_limit: 13107200
+            dl_speed: 0.6
+            dl_limit: 8388608
 
   qbittorrent_resume_template:
     qbittorrent_mod:
@@ -134,8 +136,9 @@ tasks:
       action:
         add:
           category: PTer
-          reject_on_dl_limit: no
-          reject_on_dl_speed: no
+          reject_on:
+            dl_speed: no
+            dl_limit: no
     template:
       - qbittorrent_base_template
       - qbittorrent_add_template
@@ -186,7 +189,8 @@ tasks:
     qbittorrent_mod:
       action:
         add:
-          reject_on_dl_speed: no
+          reject_on:
+            dl_speed: 0.8
     template:
       - qbittorrent_base_template
       - qbittorrent_add_template
@@ -264,7 +268,8 @@ tasks:
     qbittorrent_mod:
       action:
         add:
-          reject_on_dl_speed: no
+          reject_on:
+            dl_speed: 0.8
     template:
       - qbittorrent_base_template
       - qbittorrent_add_template

@@ -114,8 +114,20 @@ class PluginQBittorrentMod(QBittorrentModBase):
                             'autoTMM': {'type': 'boolean'},
                             'sequentialDownload': {'type': 'string'},
                             'firstLastPiecePrio': {'type': 'string'},
-                            'reject_on_dl_speed': {'oneOf': [{'type': 'boolean'}, {'type': 'integer'}]},
-                            'reject_on_dl_limit': {'oneOf': [{'type': 'boolean'}, {'type': 'integer'}]},
+                            'reject_on': {
+                                'type': 'object',
+                                'properties': {
+                                    'bandwidth_limit': {'type': 'integer'},
+                                    'dl_speed': {
+                                        'oneOf': [
+                                            {'type': 'boolean'},
+                                            {'type': 'integer'},
+                                            {'type': 'number', 'minimum': 0.1, 'maximum': 0.9},
+                                        ]
+                                    },
+                                    'dl_limit': {'oneOf': [{'type': 'boolean'}, {'type': 'integer'}]}
+                                }
+                            }
                         }
                     },
                     'remove': {
@@ -201,24 +213,30 @@ class PluginQBittorrentMod(QBittorrentModBase):
         main_data_snapshot = self.client.get_main_data_snapshot(id(task))
         server_state = main_data_snapshot.get('server_state')
 
-        reject_on_dl_limit = add_options.get('reject_on_dl_limit')
+        reject_on = add_options.get('reject_on')
+        max_dl_speed = reject_on.get('max_dl_speed')
+        reject_on_dl_speed = reject_on.get('dl_speed')
+        reject_on_dl_limit = reject_on.get('dl_limit')
         reject_reason = ''
 
-        if reject_on_dl_limit:
-            dl_rate_limit = server_state.get('dl_rate_limit')
-            if dl_rate_limit and dl_rate_limit < reject_on_dl_limit:
-                reject_reason = 'dl_limit < reject_on_dl_limit'
+        dl_rate_limit = server_state.get('dl_rate_limit')
 
-        reject_on_dl_speed = add_options.get('reject_on_dl_speed')
+        if reject_on_dl_limit:
+            if dl_rate_limit and dl_rate_limit < reject_on_dl_limit:
+                reject_reason = 'dl_limit: {:.2F} MiB < reject_on_dl_limit: {:.2F} MiB'.format(
+                    dl_rate_limit / (1024 * 1024), reject_on_dl_limit / (1024 * 1024))
+
         if reject_on_dl_speed:
+            if isinstance(reject_on_dl_speed, float):
+                dl_rate_limit = dl_rate_limit if dl_rate_limit else max_dl_speed
+                reject_on_dl_speed = int(dl_rate_limit * reject_on_dl_speed)
             dl_info_speed = server_state.get('dl_info_speed')
             if dl_info_speed and dl_info_speed > reject_on_dl_speed:
-                reject_reason = 'dl_speed > reject_on_dl_speed'
+                reject_reason = 'dl_speed: {:.2F} MiB > reject_on_dl_speed: {:.2F} MiB'.format(
+                    dl_info_speed / (1024 * 1024), reject_on_dl_speed / (1024 * 1024))
 
-        if reject_on_dl_limit is not None:
-            del add_options['reject_on_dl_limit']
-        if reject_on_dl_speed is not None:
-            del add_options['reject_on_dl_speed']
+        if reject_on is not None:
+            del add_options['reject_on']
 
         for entry in task.accepted:
             if reject_reason:
@@ -391,7 +409,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
     def _build_delete_hashes(self, delete_hashes, torrent_hashes, all_entry_map, keep_disk_space, free_space_on_disk,
                              delete_size):
         delete_hashes.extend(torrent_hashes)
-        logger.info('keep_disk_space: {:.2F} GB, free_space_on_disk: {:.2f} GB, delete_size: {:.2f} GB',
+        logger.info('keep_disk_space: {:.2F} GiB, free_space_on_disk: {:.2f} GiB, delete_size: {:.2f} GiB',
                     keep_disk_space / (1024 * 1024 * 1024), free_space_on_disk / (1024 * 1024 * 1024),
                     delete_size / (1024 * 1024 * 1024))
         entries = []
@@ -447,7 +465,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
         for torrent_hash in hashes:
             entry = entry_dict.get(torrent_hash)
             logger.info(
-                '{}, size: {:.2f} GB, seeding_time: {:.2f} h, share_ratio: {:.2f}, last_activity: {}, tracker_msg: {}, site: {}, delete_files: {}',
+                '{}, size: {:.2f} GiB, seeding_time: {:.2f} h, share_ratio: {:.2f}, last_activity: {}, tracker_msg: {}, site: {}, delete_files: {}',
                 entry['title'],
                 entry['qbittorrent_completed'] / (1024 * 1024 * 1024),
                 entry['qbittorrent_seeding_time'] / (60 * 60),
