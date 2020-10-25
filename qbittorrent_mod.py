@@ -200,7 +200,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
     def on_task_download(self, task, config):
         config = self.prepare_config(config)
         add_options = config.get('action').get('add')
-        if not add_options:
+        if not add_options or not task.accepted:
             return
 
         if not self.client:
@@ -214,7 +214,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
         server_state = main_data_snapshot.get('server_state')
 
         reject_on = add_options.get('reject_on')
-        max_dl_speed = reject_on.get('max_dl_speed')
+        bandwidth_limit = reject_on.get('bandwidth_limit')
         reject_on_dl_speed = reject_on.get('dl_speed')
         reject_on_dl_limit = reject_on.get('dl_limit')
         reject_reason = ''
@@ -228,7 +228,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
 
         if reject_on_dl_speed:
             if isinstance(reject_on_dl_speed, float):
-                dl_rate_limit = dl_rate_limit if dl_rate_limit else max_dl_speed
+                dl_rate_limit = dl_rate_limit if dl_rate_limit else bandwidth_limit
                 reject_on_dl_speed = int(dl_rate_limit * reject_on_dl_speed)
             dl_info_speed = server_state.get('dl_info_speed')
             if dl_info_speed and dl_info_speed > reject_on_dl_speed:
