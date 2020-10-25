@@ -378,9 +378,9 @@ tasks:
     qbittorrent_mod:
       action:
         add:
-          reject_on_dl_limit: no
-          reject_on_dl_speed: no
           skip_checking: yes
+          dl_speed: no
+          dl_limit: no
     template:
       - qbittorrent_base_template
       - qbittorrent_add_template
@@ -438,12 +438,12 @@ tasks:
       server_state: yes
     accept_all: yes
     if:
-      - 'server_state["queued_io_jobs"] < 50':
+      - 'server_state["queued_io_jobs"] < 20':
           set:
             step: 50
-      - 'server_state["queued_io_jobs"] > 100':
+      - 'server_state["queued_io_jobs"] > 50':
           set:
-            step: -50
+            step: -100
     template:
       - from_qbittorrent_template
       - qbittorrent_base_template
