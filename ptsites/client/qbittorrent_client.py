@@ -9,7 +9,7 @@ from loguru import logger
 from requests import RequestException, Session
 
 logger = logger.bind(name='qbittorrent_client')
-__version__ = 'v0.7.7'
+__version__ = 'v0.7.8'
 
 
 def singleton(cls):
@@ -357,8 +357,8 @@ class QBittorrentClient:
             for torrent_hash in torrent_removed:
                 self._remove_torrent(torrent_hash)
 
-        for save_path_with_name, reseed_entry_list in self._reseed_dict.items():
-            self._update_reseed_addition(reseed_entry_list)
+        # for save_path_with_name, reseed_entry_list in self._reseed_dict.items():
+        #     self._update_reseed_addition(reseed_entry_list)
 
         update_addition_flag = self._last_update_time < datetime.now() - timedelta(hours=1)
         if update_addition_flag:
@@ -393,9 +393,12 @@ class QBittorrentClient:
             if not self._reseed_dict.get(save_path_with_name):
                 self._reseed_dict[save_path_with_name] = []
             self._reseed_dict[save_path_with_name].append(entry)
+        time_changed = False
         for key, value in torrent.items():
             if not is_new_entry and key in ['save_path', 'name']:
                 self._reset_rid()
+            if key in ['added_on', 'completion_on', 'last_activity']:
+                time_changed = True
             if key in ['added_on', 'completion_on', 'last_activity', 'seen_complete']:
                 timestamp = value if value > 0 else 0
                 entry['qbittorrent_' + key] = datetime.fromtimestamp(timestamp)
@@ -403,7 +406,9 @@ class QBittorrentClient:
                 entry['qbittorrent_' + key] = value
                 if key in ['tracker']:
                     self._update_entry_trackers(torrent_hash)
-        self._update_entry_last_activity(entry)
+        if time_changed:
+            self._update_entry_last_activity(entry)
+            self._update_reseed_addition(self._reseed_dict[entry['qbittorrent_save_path_with_name']])
 
     def _update_entry_trackers(self, torrent_hash):
         trackers = list(filter(lambda tracker: tracker.get('status') != 0, self.get_torrent_trackers(torrent_hash)))
@@ -460,6 +465,7 @@ class QBittorrentClient:
             self._action_history[action_name] = []
         if len(set(self._action_history[action_name]) & set(hashes_list)) > 0:
             self._reset_rid()
+            self._action_history.clear()
             logger.warning('Duplicate operation detected: {} {}, rebuild data.', action_name, hashes)
             return False
         else:
