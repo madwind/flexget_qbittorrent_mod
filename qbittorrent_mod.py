@@ -421,7 +421,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
 
         for entry in entries:
             logger.info(
-                '{}, size: {:.2f} GB, seeding_time: {:.2f} h, share_ratio: {:.2f}, last_activity: {}, site: {}',
+                '{}, size: {:.2f} GiB, seeding_time: {:.2f} h, share_ratio: {:.2f}, last_activity: {}, site: {}',
                 entry['title'],
                 entry['qbittorrent_completed'] / (1024 * 1024 * 1024),
                 entry['qbittorrent_seeding_time'] / (60 * 60),
