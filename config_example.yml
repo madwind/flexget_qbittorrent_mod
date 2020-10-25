@@ -379,8 +379,9 @@ tasks:
       action:
         add:
           skip_checking: yes
-          dl_speed: no
-          dl_limit: no
+          reject_on:
+            dl_speed: no
+            dl_limit: no
     template:
       - qbittorrent_base_template
       - qbittorrent_add_template
