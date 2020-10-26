@@ -9,7 +9,7 @@ COPY root/ /
 # RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && \
 RUN apk add --no-cache ca-certificates nodejs build-base libffi-dev openssl-dev unzip bash tzdata zlib-dev jpeg-dev && \
     pip install --no-cache-dir -U pip && \
-    pip install --no-cache-dir -U flexget==3.1.72 python-telegram-bot==12.8 transmissionrpc brotli baidu-aip pillow pandas matplotlib && \
+    pip install --no-cache-dir -U flexget==3.1.72 python-telegram-bot==12.8 brotli baidu-aip pillow pandas matplotlib && \
 	cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
   	echo "Asia/Shanghai" >  /etc/timezone && \
     chmod +x /usr/bin/entrypoint.sh && \
