@@ -12,13 +12,14 @@ class PluginHtmlRss():
         }
     }
 
+    @plugin.priority(plugin.PRIORITY_LAST)
     def on_task_output(self, task, config):
         state = config.get('state')
-        if not config:
-            return
-        for entry in getattr(task, state):
+        attribute = config.get('attribute')
+        entries = getattr(task, state)
+        for entry in entries:
             for key, value in entry.items():
-                if isinstance(config, list) and key not in config:
+                if isinstance(attribute, list) and key not in attribute:
                     continue
                 logger.info('key: {}, value: {}', key, value)
 

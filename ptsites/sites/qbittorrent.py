@@ -31,11 +31,11 @@ class MainClass:
     def build_sign_in(entry, config):
         site_config = entry['site_config']
         entry['title'] = '{} {}'.format(site_config.get('name'), datetime.now().date())
-        entry['site_name'] = site_config.get('name')
         entry['do_not_count'] = True
 
     def sign_in(self, entry, config):
         site_config = self.prepare_config(entry['site_config'])
+        entry['site_name'] = site_config.get('name')
         try:
             if not self.client:
                 self.client = self.create_client(site_config)

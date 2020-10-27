@@ -9,7 +9,7 @@ from loguru import logger
 from requests import RequestException, Session
 
 logger = logger.bind(name='qbittorrent_client')
-__version__ = 'v0.7.9'
+__version__ = 'v0.7.10'
 
 
 def singleton(cls):
@@ -384,9 +384,10 @@ class QBittorrentClient:
             torrent['save_path_with_name'] = save_path_with_name
             entry = Entry(
                 title=name,
-                url='',
+                url=torrent['magnet_uri'],
+                path=save_path,
                 torrent_info_hash=torrent_hash,
-                content_size=torrent['size'],
+                content_size=torrent['size']
             )
             self._update_addition(entry)
             self._entry_dict[torrent_hash] = entry

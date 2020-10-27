@@ -70,7 +70,7 @@ class PluginQBittorrentModInput(QBittorrentModBase):
         if server_state:
             entry = Entry(
                 title='qBittorrent Server State' if isinstance(server_state, bool) else server_state,
-                url=''
+                url=config.get('host')
             )
             entry['time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             entry['server_state'] = {}
