@@ -33,7 +33,8 @@ class MainClass(SiteBase):
                     'regex': 'Uploaded.+?([\\d.]+ [ZEPTGMK]?B)'
                 },
                 'share_ratio': {
-                    'regex': 'Ratio.+?([\\d.]+)'
+                    'regex': 'Ratio.+?(inf\\.|[\\d.]+)',
+                    'handle': self.handle_share_ratio
                 },
                 'points': {
                     'regex': 'TL Points.+?([\\d,.]+)'
@@ -47,3 +48,9 @@ class MainClass(SiteBase):
 
     def get_torrentleech_message(self, entry, config, messages_url='/messages.php'):
         entry['result'] += '(TODO: Message)'
+
+    def handle_share_ratio(self, value):
+        if value == 'inf.':
+            return '0'
+        else:
+            return value
