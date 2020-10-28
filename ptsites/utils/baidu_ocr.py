@@ -15,6 +15,36 @@ except ImportError:
 
 
 class BaiduOcr:
+
+    @staticmethod
+    def get_web_image(img, entry, config):
+        app_id = config['aipocr'].get('app_id')
+        api_key = config['aipocr'].get('api_key')
+        secret_key = config['aipocr'].get('secret_key')
+
+        if not (AipOcr and Image):
+            entry.fail_with_prefix('Dependency does not exist: [baidu-aip, pillow]')
+            return None, None
+        if not (app_id and api_key and secret_key):
+            entry.fail_with_prefix('AipOcr not set')
+            return None, None
+
+        client = AipOcr(app_id, api_key, secret_key)
+        img_byte_arr = BytesIO()
+
+        if img.mode == "P":
+            img = img.convert('RGB')
+
+        img.save(img_byte_arr, format='JPEG')
+
+        result = client.webImage(img_byte_arr.getvalue())
+        logger.info(result)
+        text = ''
+        for bb in result.get('words_result'):
+            if 'VALID' not in bb.get('words') and 'BEFORE' not in bb.get('words') and 'CST' not in bb.get('words'):
+                text = text + bb.get('words')
+        return re.sub('[a-zA-Z]|\\d| ', '', text)
+
     @staticmethod
     def get_ocr_code(img, entry, config):
         app_id = config['aipocr'].get('app_id')
