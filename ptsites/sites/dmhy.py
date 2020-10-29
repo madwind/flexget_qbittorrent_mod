@@ -87,7 +87,7 @@ class MainClass(NexusPHP):
         code_file = Path('dmhy.png')
         code_file.write_bytes(img_response.content)
         img = Image.open(BytesIO(img_response.content))
-        web_image_text = BaiduOcr.get_jap_ocr(img, entry, config)
+        web_image_text = BaiduOcr.get_web_image(img, entry, config)
         logger.info('web_image: {}', web_image_text)
         webimage_text = BaiduOcr.get_jap_ocr(img, entry, config)
         logger.info('jap_ocr: {}', webimage_text)
