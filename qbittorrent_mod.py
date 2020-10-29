@@ -517,22 +517,22 @@ class PluginQBittorrentMod(QBittorrentModBase):
         for entry in task.accepted:
             tags = entry.get('qbittorrent_tags')
             torrent_trackers = entry.get('qbittorrent_trackers')
-            add_tag = False
             for tracker in torrent_trackers:
                 if tag_by_tracker:
                     site_name = self._get_site_name(tracker.get('url'))
-                    if not add_tag and site_name and site_name not in tags:
+                    if site_name and site_name not in tags:
                         self.client.add_torrent_tags(entry['torrent_info_hash'], site_name)
+                        tags.append(site_name)
                         logger.info('{} add tag {}', entry.get('title'), site_name)
                 if replace_trackers:
                     for orig_url, new_url in replace_trackers.items():
                         if tracker.get('url') == orig_url:
                             if new_url:
-                                self.client.edit_trackers(entry.get('torrent_info_hash'), orig_url, new_url)
                                 logger.info('{} update tracker {}', entry.get('title'), new_url)
+                                self.client.edit_trackers(entry.get('torrent_info_hash'), orig_url, new_url)
                             else:
-                                self.client.remove_trackers(entry.get('torrent_info_hash'), orig_url)
                                 logger.info('{} remove tracker {}', entry.get('title'), orig_url)
+                                self.client.remove_trackers(entry.get('torrent_info_hash'), orig_url)
 
     def manage_conn_entries(self, task, manage_conn_options):
         min_conn = manage_conn_options.get('min')
