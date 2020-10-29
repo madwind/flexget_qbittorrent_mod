@@ -522,7 +522,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                     site_name = self._get_site_name(tracker.get('url'))
                     if site_name and site_name not in tags:
                         self.client.add_torrent_tags(entry['torrent_info_hash'], site_name)
-                        tags.append(site_name)
+                        tags += ', {}'.format(site_name)
                         logger.info('{} add tag {}', entry.get('title'), site_name)
                 if replace_trackers:
                     for orig_url, new_url in replace_trackers.items():
