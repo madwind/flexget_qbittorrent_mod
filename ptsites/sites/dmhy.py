@@ -35,6 +35,10 @@ DATA = {
 #    username: 'xxxxx'
 #    cookie: 'xxxxxxxx'
 #    comment: 'xxxxxx'
+#    ocr_config:
+#      retry: 10
+#      char_count: 2
+#      score: 10
 
 
 class MainClass(NexusPHP):
@@ -74,35 +78,43 @@ class MainClass(NexusPHP):
         })
         return selector
 
-    def build_data(self, entry, base_content, config):
+    def build_data(self, entry, base_content, config, retry, char_count, score):
         img_url = re.search(IMG_REGEX, base_content).group()
         img_response = self._request(entry, 'get', urljoin(BASE_URL, img_url))
+        img_net_state = self.check_net_state(entry, img_response, urljoin(BASE_URL, urljoin(BASE_URL, img_url)))
+        if img_net_state:
+            return None
         code_file = Path('dmhy.png')
         code_file.write_bytes(img_response.content)
         img = Image.open(BytesIO(img_response.content))
-        webimage_text = BaiduOcr.get_web_image(img, entry, config)
-        logger.info('webimage_text: {}', webimage_text)
+        web_image_text = BaiduOcr.get_jap_ocr(img, entry, config)
+        logger.info('web_image: {}', web_image_text)
+        webimage_text = BaiduOcr.get_jap_ocr(img, entry, config)
+        logger.info('jap_ocr: {}', webimage_text)
         data = {}
         found = False
-        if webimage_text and len(webimage_text) > 4:
+        if webimage_text and len(webimage_text) > char_count:
             for key, regex in entry.get('data', {}).items():
                 if key == 'regex_keys':
-                    captcha_dict = {}
                     for regex_key in regex:
                         regex_key_search = re.findall(regex_key, base_content, re.DOTALL)
+                        select = {}
+                        ratio_score = 0
                         if regex_key_search:
                             for captcha, value in regex_key_search:
-                                captcha_dict[value] = captcha
-                                logger.info('value: {}, ratio: {}', value.replace('\n', '\\'),
-                                            fuzz.partial_ratio(webimage_text, value))
+                                split_value, partial_ratio = process.extractOne(webimage_text, value.split('\n'),
+                                                                                scorer=fuzz.partial_ratio)
+                                if partial_ratio > ratio_score:
+                                    select = (captcha, value)
+                                    ratio_score = partial_ratio
+                                logger.info('value: {}, ratio: {}', value.replace('\n', '\\'), partial_ratio)
                         else:
                             entry.fail_with_prefix('Cannot find regex_key: {}, url: {}'.format(regex_key, entry['url']))
                             return None
-                        value, score = process.extractOne(webimage_text, captcha_dict.keys(), scorer=fuzz.partial_ratio)
-                        if score and score > 10:
-                            data[captcha_dict[value]] = value
+                        if ratio_score and ratio_score > score:
+                            captcha, value = select
+                            data[captcha] = value
                             found = True
-
                 else:
                     value_search = re.search(regex, base_content, re.DOTALL)
                     if value_search:
@@ -111,15 +123,15 @@ class MainClass(NexusPHP):
                         entry.fail_with_prefix('Cannot find key: {}, url: {}'.format(key, entry['url']))
                         return
 
-        if not found and self.times < 10:
+        if not found and self.times < retry:
             self.times += 1
             reload_url = re.search(RELOAD_REGEX, base_content).group()
-            response = self._request(entry, 'get', urljoin(BASE_URL, reload_url))
-            img_net_state = self.check_net_state(entry, response, urljoin(BASE_URL, reload_url))
-            if img_net_state:
+            reload_response = self._request(entry, 'get', urljoin(BASE_URL, reload_url))
+            reload__net_state = self.check_net_state(entry, reload_response, urljoin(BASE_URL, reload_url))
+            if reload__net_state:
                 return None
-            content = self._decode(response)
-            return self.build_data(entry, content, config)
+            reload_content = self._decode(reload_response)
+            return self.build_data(entry, reload_content, config, retry, char_count, score)
         site_config = entry['site_config']
         data['message'] = site_config.get('comment')
         return data
@@ -129,8 +141,15 @@ class MainClass(NexusPHP):
         sign_in_state, base_content = self.check_sign_in_state(entry, base_response, entry['url'])
         if sign_in_state != SignState.NO_SIGN_IN:
             return
-
-        data = self.build_data(entry, base_content, config)
+        ocr_config = entry['site_config'].get('ocr_config')
+        retry = 10
+        char_count = 2
+        score = 10
+        if ocr_config:
+            retry = ocr_config.get('retry', 10)
+            char_count = ocr_config.get('char_count', 2)
+            score = ocr_config.get('score', 10)
+        data = self.build_data(entry, base_content, config, retry, char_count, score)
         if not data:
             entry.fail_with_prefix('Cannot build_data')
             return
