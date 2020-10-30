@@ -1,4 +1,6 @@
+import itertools
 import re
+import time
 from io import BytesIO
 from pathlib import Path
 from urllib.parse import urljoin
@@ -9,6 +11,7 @@ from loguru import logger
 from ..schema.nexusphp import NexusPHP
 from ..schema.site_base import SignState
 from ..utils.baidu_ocr import BaiduOcr
+from ..utils.u2_image import U2Image
 
 try:
     from PIL import Image
@@ -78,19 +81,67 @@ class MainClass(NexusPHP):
         })
         return selector
 
+    def get_image(self, entry, img_url, config, char_count):
+        image_list = []
+        checked_list = []
+        images_sort_match = None
+        image_last = None
+        new_image = self.get_new_image(entry, img_url)
+        if not U2Image.check_analysis(new_image):
+            logger.info('can not analyzed!')
+            return None
+        webimage_text1 = BaiduOcr.get_jap_ocr(new_image, entry, config)
+        logger.info('original_ocr: {}', webimage_text1)
+        if len(webimage_text1) < char_count:
+            return None
+        image_list.append(new_image)
+        while not images_sort_match and len(image_list) < 8:
+            new_image = self.get_new_image(entry, img_url)
+            if not new_image:
+                return None
+            image_list.append(new_image)
+            for images in list(itertools.combinations(image_list, 2)):
+                if images not in checked_list:
+                    checked_list.append(images)
+                    if U2Image.compare_images_sort(images):
+                        images_sort_match = images
+                        break
+        if images_sort_match:
+            image_a, image_b = images_sort_match
+            image_a.save('image_a.png')
+            image_b.save('image_b.png')
+            image_a_sub_1, image_a_sub_2 = U2Image.split_image(image_a)
+            image_b_sub_1, image_b_sub_2 = U2Image.split_image(image_b)
+            image_last = U2Image.compare_images(image_a_sub_1, image_b_sub_1)
+            if not image_last:
+                image_last = U2Image.compare_images(image_a_sub_2, image_b_sub_2)
+
+        return image_last
+
+    def get_new_image(self, entry, img_url):
+        logger.info('get_new_image: {}', img_url)
+        logger.info('time sleep 1 seconds..')
+        time.sleep(1)
+        base_img_response = self._request(entry, 'get', urljoin(BASE_URL, img_url))
+        base_img_net_state = self.check_net_state(entry, base_img_response,
+                                                  urljoin(BASE_URL, urljoin(BASE_URL, img_url)))
+        if base_img_net_state:
+            return None
+        return Image.open(BytesIO(base_img_response.content))
+
     def build_data(self, entry, base_content, config, retry, char_count, score):
         img_url = re.search(IMG_REGEX, base_content).group()
-        img_response = self._request(entry, 'get', urljoin(BASE_URL, img_url))
-        img_net_state = self.check_net_state(entry, img_response, urljoin(BASE_URL, urljoin(BASE_URL, img_url)))
-        if img_net_state:
-            return None
-        code_file = Path('dmhy.png')
-        code_file.write_bytes(img_response.content)
-        img = Image.open(BytesIO(img_response.content))
-        web_image_text = BaiduOcr.get_web_image(img, entry, config)
-        logger.info('web_image: {}', web_image_text)
-        webimage_text = BaiduOcr.get_jap_ocr(img, entry, config)
-        logger.info('jap_ocr: {}', webimage_text)
+        webimage_text1 = ''
+        webimage_text2 = ''
+        if images := self.get_image(entry, img_url, config, char_count):
+            image1, image2 = images
+            image1.save('image1.png')
+            image2.save('image2.png')
+            webimage_text1 = BaiduOcr.get_jap_ocr(image1, entry, config)
+            logger.info('jap_ocr1: {}', webimage_text1)
+            webimage_text2 = BaiduOcr.get_jap_ocr(image2, entry, config)
+            logger.info('jap_ocr2: {}', webimage_text2)
+        webimage_text = webimage_text1 if len(webimage_text1) > len(webimage_text2) else webimage_text2
         data = {}
         found = False
         if webimage_text and len(webimage_text) > char_count:
@@ -112,6 +163,7 @@ class MainClass(NexusPHP):
                             entry.fail_with_prefix('Cannot find regex_key: {}, url: {}'.format(regex_key, entry['url']))
                             return None
                         if ratio_score and ratio_score > score:
+                            logger.info('score: {}', score)
                             captcha, value = select
                             data[captcha] = value
                             found = True
@@ -141,14 +193,14 @@ class MainClass(NexusPHP):
         sign_in_state, base_content = self.check_sign_in_state(entry, base_response, entry['url'])
         if sign_in_state != SignState.NO_SIGN_IN:
             return
-        ocr_config = entry['site_config'].get('ocr_config')
+        ocr_config = entry['site_config'].get('ocr_config', {})
         retry = 10
         char_count = 2
         score = 10
-        if ocr_config:
+        if ocr_config is not None:
             retry = ocr_config.get('retry', 10)
             char_count = ocr_config.get('char_count', 2)
-            score = ocr_config.get('score', 10)
+            score = ocr_config.get('score', 40)
         data = self.build_data(entry, base_content, config, retry, char_count, score)
         if not data:
             entry.fail_with_prefix('Cannot build_data')
