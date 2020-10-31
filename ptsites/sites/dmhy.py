@@ -209,12 +209,12 @@ class MainClass(NexusPHP):
             entry.fail_with_prefix('Cannot build_data')
             return
         logger.info(data)
-        # post_answer_response = self._request(entry, 'post', entry['url'], data=data)
-        # post_answer_net_state = self.check_net_state(entry, post_answer_response, entry['url'])
-        # if post_answer_net_state:
-        #     return
-        # response = self._request(entry, 'get', entry['url'])
-        # self.final_check(entry, response, entry['url'])
+        post_answer_response = self._request(entry, 'post', entry['url'], data=data)
+        post_answer_net_state = self.check_net_state(entry, post_answer_response, entry['url'])
+        if post_answer_net_state:
+            return
+        response = self._request(entry, 'get', entry['url'])
+        self.final_check(entry, response, entry['url'])
 
     def check_sign_in_state(self, entry, response, original_url, regex=None):
         net_state = self.check_net_state(entry, response, original_url)
