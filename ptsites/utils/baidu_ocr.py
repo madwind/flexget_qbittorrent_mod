@@ -15,50 +15,26 @@ except ImportError:
 
 
 class BaiduOcr:
-
     @staticmethod
-    def get_web_image(img, entry, config):
+    def get_client(entry, config):
         app_id = config['aipocr'].get('app_id')
         api_key = config['aipocr'].get('api_key')
         secret_key = config['aipocr'].get('secret_key')
 
         if not (AipOcr and Image):
             entry.fail_with_prefix('Dependency does not exist: [baidu-aip, pillow]')
-            return None, None
+            return None
         if not (app_id and api_key and secret_key):
             entry.fail_with_prefix('AipOcr not set')
-            return None, None
+            return None
 
-        client = AipOcr(app_id, api_key, secret_key)
-        img_byte_arr = BytesIO()
-
-        if img.mode == "P":
-            img = img.convert('RGB')
-
-        img.save(img_byte_arr, format='JPEG')
-
-        result = client.webImage(img_byte_arr.getvalue())
-        logger.info(result)
-        text = ''
-        for bb in result.get('words_result'):
-            if 'VALID' not in bb.get('words') and 'BEFORE' not in bb.get('words') and 'CST' not in bb.get('words'):
-                text = text + bb.get('words')
-        return re.sub('[a-zA-Z]|\\d| ', '', text)
+        return AipOcr(app_id, api_key, secret_key)
 
     @staticmethod
     def get_jap_ocr(img, entry, config):
-        app_id = config['aipocr'].get('app_id')
-        api_key = config['aipocr'].get('api_key')
-        secret_key = config['aipocr'].get('secret_key')
-
-        if not (AipOcr and Image):
-            entry.fail_with_prefix('Dependency does not exist: [baidu-aip, pillow]')
-            return None, None
-        if not (app_id and api_key and secret_key):
-            entry.fail_with_prefix('AipOcr not set')
-            return None, None
-
-        client = AipOcr(app_id, api_key, secret_key)
+        client = BaiduOcr.get_client(entry, config)
+        if not client:
+            return None
         img_byte_arr = BytesIO()
 
         if img.mode == "P":
@@ -72,24 +48,14 @@ class BaiduOcr:
         logger.info(result)
         text = ''
         for bb in result.get('words_result'):
-            if 'VALID' not in bb.get('words') and 'BEFORE' not in bb.get('words') and 'CST' not in bb.get('words'):
-                text = text + bb.get('words')
+            text = text + bb.get('words')
         return re.sub('[a-zA-Z]|\\d| ', '', text)
 
     @staticmethod
     def get_ocr_code(img, entry, config):
-        app_id = config['aipocr'].get('app_id')
-        api_key = config['aipocr'].get('api_key')
-        secret_key = config['aipocr'].get('secret_key')
-
-        if not (AipOcr and Image):
-            entry.fail_with_prefix('Dependency does not exist: [baidu-aip, pillow]')
+        client = BaiduOcr.get_client(entry, config)
+        if not client:
             return None, None
-        if not (app_id and api_key and secret_key):
-            entry.fail_with_prefix('AipOcr not set')
-            return None, None
-
-        client = AipOcr(app_id, api_key, secret_key)
 
         width = img.size[0]
         height = img.size[1]
@@ -100,13 +66,13 @@ class BaiduOcr:
                     img.putpixel((i, j), (255, 255, 255))
         img_byte_arr = BytesIO()
         img.save(img_byte_arr, format='png')
-        response = client.basicAccurate(img_byte_arr.getvalue(), {"language_type": "ENG"})
-        logger.info(response)
-        if response.get('error_msg'):
-            entry.fail_with_prefix(response.get('error_msg'))
+        result = client.basicAccurate(img_byte_arr.getvalue(), {"language_type": "ENG"})
+        logger.info(result)
+        if result.get('error_msg'):
+            entry.fail_with_prefix(result.get('error_msg'))
             return None, None
 
-        code = re.sub('\\W', '', response['words_result'][0]['words'])
+        code = re.sub('\\W', '', result['words_result'][0]['words'])
         code = code.upper()
         return code, img_byte_arr.getvalue()
 

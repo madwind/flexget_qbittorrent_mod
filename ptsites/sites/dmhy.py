@@ -2,7 +2,6 @@ import itertools
 import re
 import time
 from io import BytesIO
-from pathlib import Path
 from urllib.parse import urljoin
 
 from fuzzywuzzy import fuzz, process
@@ -90,9 +89,9 @@ class MainClass(NexusPHP):
         if not U2Image.check_analysis(new_image):
             logger.info('can not analyzed!')
             return None
-        webimage_text1 = BaiduOcr.get_jap_ocr(new_image, entry, config)
-        logger.info('original_ocr: {}', webimage_text1)
-        if len(webimage_text1) < char_count:
+        original_text = BaiduOcr.get_jap_ocr(new_image, entry, config)
+        logger.info('original_ocr: {}', original_text)
+        if len(original_text) < char_count:
             return None
         image_list.append(new_image)
         while not images_sort_match and len(image_list) < 8:
@@ -108,13 +107,15 @@ class MainClass(NexusPHP):
                         break
         if images_sort_match:
             image_a, image_b = images_sort_match
-            image_a.save('image_a.png')
-            image_b.save('image_b.png')
-            image_a_sub_1, image_a_sub_2 = U2Image.split_image(image_a)
-            image_b_sub_1, image_b_sub_2 = U2Image.split_image(image_b)
-            image_last = U2Image.compare_images(image_a_sub_1, image_b_sub_1)
+            image_a_split_1, image_a_split_2 = U2Image.split_image(image_a)
+            image_a_split_1.save('a_split_1.png')
+            image_a_split_2.save('a_split_2.png')
+            image_b_split_1, image_b_split_2 = U2Image.split_image(image_b)
+            image_b_split_1.save('b_split_1.png')
+            image_b_split_2.save('b_split_2.png')
+            image_last = U2Image.compare_images(image_a_split_1, image_b_split_1)
             if not image_last:
-                image_last = U2Image.compare_images(image_a_sub_2, image_b_sub_2)
+                image_last = U2Image.compare_images(image_a_split_2, image_b_split_2)
 
         return image_last
 
@@ -127,24 +128,26 @@ class MainClass(NexusPHP):
                                                   urljoin(BASE_URL, urljoin(BASE_URL, img_url)))
         if base_img_net_state:
             return None
-        return Image.open(BytesIO(base_img_response.content))
+        new_image = Image.open(BytesIO(base_img_response.content))
+        U2Image.remove_date(new_image)
+        return new_image
 
     def build_data(self, entry, base_content, config, retry, char_count, score):
         img_url = re.search(IMG_REGEX, base_content).group()
-        webimage_text1 = ''
-        webimage_text2 = ''
+        ocr_text1 = ''
+        ocr_text2 = ''
         if images := self.get_image(entry, img_url, config, char_count):
             image1, image2 = images
-            image1.save('image1.png')
-            image2.save('image2.png')
-            webimage_text1 = BaiduOcr.get_jap_ocr(image1, entry, config)
-            logger.info('jap_ocr1: {}', webimage_text1)
-            webimage_text2 = BaiduOcr.get_jap_ocr(image2, entry, config)
-            logger.info('jap_ocr2: {}', webimage_text2)
-        webimage_text = webimage_text1 if len(webimage_text1) > len(webimage_text2) else webimage_text2
+            image1.save('a_last.png')
+            image2.save('b_last.png')
+            ocr_text1 = BaiduOcr.get_jap_ocr(image1, entry, config)
+            logger.info('jap_ocr1: {}', ocr_text1)
+            ocr_text2 = BaiduOcr.get_jap_ocr(image2, entry, config)
+            logger.info('jap_ocr2: {}', ocr_text2)
+        oct_text = ocr_text1 if len(ocr_text1) > len(ocr_text2) else ocr_text2
         data = {}
         found = False
-        if webimage_text and len(webimage_text) > char_count:
+        if oct_text and len(oct_text) > char_count:
             for key, regex in entry.get('data', {}).items():
                 if key == 'regex_keys':
                     for regex_key in regex:
@@ -153,7 +156,7 @@ class MainClass(NexusPHP):
                         ratio_score = 0
                         if regex_key_search:
                             for captcha, value in regex_key_search:
-                                split_value, partial_ratio = process.extractOne(webimage_text, value.split('\n'),
+                                split_value, partial_ratio = process.extractOne(oct_text, value.split('\n'),
                                                                                 scorer=fuzz.partial_ratio)
                                 if partial_ratio > ratio_score:
                                     select = (captcha, value)
@@ -206,12 +209,12 @@ class MainClass(NexusPHP):
             entry.fail_with_prefix('Cannot build_data')
             return
         logger.info(data)
-        post_answer_response = self._request(entry, 'post', entry['url'], data=data)
-        post_answer_net_state = self.check_net_state(entry, post_answer_response, entry['url'])
-        if post_answer_net_state:
-            return
-        response = self._request(entry, 'get', entry['url'])
-        self.final_check(entry, response, entry['url'])
+        # post_answer_response = self._request(entry, 'post', entry['url'], data=data)
+        # post_answer_net_state = self.check_net_state(entry, post_answer_response, entry['url'])
+        # if post_answer_net_state:
+        #     return
+        # response = self._request(entry, 'get', entry['url'])
+        # self.final_check(entry, response, entry['url'])
 
     def check_sign_in_state(self, entry, response, original_url, regex=None):
         net_state = self.check_net_state(entry, response, original_url)
