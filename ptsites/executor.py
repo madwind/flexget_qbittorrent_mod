@@ -18,7 +18,8 @@ class Executor:
     @staticmethod
     def build_sign_in_entry(entry, config):
         try:
-            site_module = getattr(sites, entry['site_name'].lower())
+            class_name = entry.get('class_name') if entry.get('class_name') else entry['site_name']
+            site_module = getattr(sites, class_name.lower())
             site_class = getattr(site_module, 'MainClass')
             site_class.build_sign_in(entry, config)
         except AttributeError as e:
@@ -53,7 +54,8 @@ class Executor:
         #         return
         #     entry['headers']['cookie'] = cookie
         try:
-            site_module = getattr(sites, entry['site_name'].lower())
+            class_name = entry.get('class_name') if entry.get('class_name') else entry['site_name']
+            site_module = getattr(sites, class_name.lower())
             site_class = getattr(site_module, 'MainClass')
             site_object = site_class()
             entry['prefix'] = 'Sign_in'

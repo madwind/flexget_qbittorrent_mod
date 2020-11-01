@@ -35,7 +35,6 @@ class MainClass:
 
     def sign_in(self, entry, config):
         site_config = self.prepare_config(entry['site_config'])
-        entry['site_name'] = site_config.get('name')
         try:
             if not self.client:
                 self.client = self.create_client(site_config)

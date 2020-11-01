@@ -52,6 +52,7 @@ class PluginAutoSignIn:
             if isinstance(site_config, list):
                 for sub_site_config in site_config:
                     entry = self.build_sign_in_entry(site_name, sub_site_config, config)
+                    entry['class_name'] = site_name
                     entries.append(entry)
             else:
                 entry = self.build_sign_in_entry(site_name, site_config, config)
