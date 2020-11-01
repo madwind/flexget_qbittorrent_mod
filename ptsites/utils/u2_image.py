@@ -64,13 +64,13 @@ class U2Image:
         if blank_in_bottom_left:
             for w in range(1, width):
                 r, g, b = image.getpixel((w, height - 1))
-                if r > 5 or g > 5 or b > 5:
+                if r > 7 or g > 7 or b > 7:
                     x += w
                     break
         elif blank_in_top_right:
             for h in range(1, height):
                 r, g, b = image.getpixel((width - 1, h))
-                if r > 5 or g > 5 or b > 5:
+                if r > 7 or g > 7 or b > 7:
                     y += h
                     break
         if x > 100 or y > 100:
