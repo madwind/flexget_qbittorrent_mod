@@ -6,16 +6,14 @@ RGB_BLACK = (0, 0, 0)
 class U2Image:
 
     @staticmethod
-    def compare_images_sort(image_tuple: tuple):
-        image_a, image_b = image_tuple
-        if image_a.size != image_b.size:
+    def compare_images_sort(image1, image2):
+        if image1.size != image2.size:
             return False
 
-        point_a = U2Image.get_split_point(image_a)
-        point_b = U2Image.get_split_point(image_b)
-        image_a.save('a_original.png')
-        image_b.save('b_original.png')
-        if point_a and point_a == point_b:
+        point1 = U2Image.get_split_point(image1)
+        point2 = U2Image.get_split_point(image2)
+
+        if point1 and point1 == point2:
             return True
         return False
 
@@ -48,9 +46,7 @@ class U2Image:
         diff = ImageChops.difference(image_a_compare, image_b_compare)
         if diff.getbbox() is None:
             return None
-        diff.save('diff.jpg')
-        image_a_compare.save('a_diff.jpg')
-        image_b_compare.save('b_diff.jpg')
+        diff.save('dmhy/step3_diff.jpg')
         return image_a, image_b
 
     @staticmethod

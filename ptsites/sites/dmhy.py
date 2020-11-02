@@ -2,6 +2,7 @@ import itertools
 import re
 import time
 from io import BytesIO
+from pathlib import Path
 from urllib.parse import urljoin
 
 from fuzzywuzzy import fuzz, process
@@ -87,6 +88,7 @@ class MainClass(NexusPHP):
         image_last = None
         new_image = self.get_new_image(entry, img_url)
         if not U2Image.check_analysis(new_image):
+            new_image.save('dmhy/z_failed.png')
             logger.info('can not analyzed!')
             return None
         original_text = BaiduOcr.get_jap_ocr(new_image, entry, config)
@@ -102,17 +104,20 @@ class MainClass(NexusPHP):
             for images in list(itertools.combinations(image_list, 2)):
                 if images not in checked_list:
                     checked_list.append(images)
-                    if U2Image.compare_images_sort(images):
+                    image1, image2 = images
+                    image1.save('dmhy/step1_a_original.png')
+                    image2.save('dmhy/step1_b_original.png')
+                    if U2Image.compare_images_sort(image1, image2):
                         images_sort_match = images
                         break
         if images_sort_match:
-            image_a, image_b = images_sort_match
-            image_a_split_1, image_a_split_2 = U2Image.split_image(image_a)
-            image_a_split_1.save('a_split_1.png')
-            image_a_split_2.save('a_split_2.png')
-            image_b_split_1, image_b_split_2 = U2Image.split_image(image_b)
-            image_b_split_1.save('b_split_1.png')
-            image_b_split_2.save('b_split_2.png')
+            image1, image2 = images_sort_match
+            image_a_split_1, image_a_split_2 = U2Image.split_image(image1)
+            image_a_split_1.save('dmhy/step2_a_split_1.png')
+            image_a_split_2.save('dmhy/step2_a_split_2.png')
+            image_b_split_1, image_b_split_2 = U2Image.split_image(image2)
+            image_b_split_1.save('dmhy/step2_b_split_1.png')
+            image_b_split_2.save('dmhy/step2_b_split_2.png')
             image_last = U2Image.compare_images(image_a_split_1, image_b_split_1)
             if not image_last:
                 image_last = U2Image.compare_images(image_a_split_2, image_b_split_2)
@@ -120,9 +125,8 @@ class MainClass(NexusPHP):
         return image_last
 
     def get_new_image(self, entry, img_url):
-        logger.info('get_new_image: {}', img_url)
-        logger.info('time sleep 1 seconds..')
         time.sleep(1)
+        logger.info('request image...')
         base_img_response = self._request(entry, 'get', urljoin(BASE_URL, img_url))
         base_img_net_state = self.check_net_state(entry, base_img_response,
                                                   urljoin(BASE_URL, urljoin(BASE_URL, img_url)))
@@ -134,49 +138,47 @@ class MainClass(NexusPHP):
 
     def build_data(self, entry, base_content, config, retry, char_count, score):
         img_url = re.search(IMG_REGEX, base_content).group()
-        ocr_text1 = ''
-        ocr_text2 = ''
-        if images := self.get_image(entry, img_url, config, char_count):
-            image1, image2 = images
-            image1.save('a_last.png')
-            image2.save('b_last.png')
-            ocr_text1 = BaiduOcr.get_jap_ocr(image1, entry, config)
-            logger.info('jap_ocr1: {}', ocr_text1)
-            ocr_text2 = BaiduOcr.get_jap_ocr(image2, entry, config)
-            logger.info('jap_ocr2: {}', ocr_text2)
-        oct_text = ocr_text1 if len(ocr_text1) > len(ocr_text2) else ocr_text2
+        logger.info('attempts: {}, url: {}', self.times, urljoin(BASE_URL, img_url))
         data = {}
         found = False
-        if oct_text and len(oct_text) > char_count:
-            for key, regex in entry.get('data', {}).items():
-                if key == 'regex_keys':
-                    for regex_key in regex:
-                        regex_key_search = re.findall(regex_key, base_content, re.DOTALL)
-                        select = {}
-                        ratio_score = 0
-                        if regex_key_search:
-                            for captcha, value in regex_key_search:
-                                split_value, partial_ratio = process.extractOne(oct_text, value.split('\n'),
-                                                                                scorer=fuzz.partial_ratio)
-                                if partial_ratio > ratio_score:
-                                    select = (captcha, value)
-                                    ratio_score = partial_ratio
-                                logger.info('value: {}, ratio: {}', value.replace('\n', '\\'), partial_ratio)
-                        else:
-                            entry.fail_with_prefix('Cannot find regex_key: {}, url: {}'.format(regex_key, entry['url']))
-                            return None
-                        if ratio_score and ratio_score > score:
-                            logger.info('score: {}', score)
-                            captcha, value = select
-                            data[captcha] = value
-                            found = True
-                else:
-                    value_search = re.search(regex, base_content, re.DOTALL)
-                    if value_search:
-                        data[key] = value_search.group(1)
+        if images := self.get_image(entry, img_url, config, char_count):
+            image1, image2 = images
+            image1.save('dmhy/step3_a_diff.jpg')
+            image2.save('dmhy/step3_b_diff.jpg')
+            ocr_text1 = BaiduOcr.get_jap_ocr(image1, entry, config)
+            ocr_text2 = BaiduOcr.get_jap_ocr(image2, entry, config)
+            oct_text = ocr_text1 if len(ocr_text1) > len(ocr_text2) else ocr_text2
+            logger.info('jap_ocr: {}', oct_text)
+            if oct_text and len(oct_text) > char_count:
+                for key, regex in entry.get('data', {}).items():
+                    if key == 'regex_keys':
+                        for regex_key in regex:
+                            regex_key_search = re.findall(regex_key, base_content, re.DOTALL)
+                            select = {}
+                            ratio_score = 0
+                            if regex_key_search:
+                                for captcha, value in regex_key_search:
+                                    split_value, partial_ratio = process.extractOne(oct_text, value.split('\n'),
+                                                                                    scorer=fuzz.partial_ratio)
+                                    if partial_ratio > ratio_score:
+                                        select = (captcha, value)
+                                        ratio_score = partial_ratio
+                                    logger.info('value: {}, ratio: {}', value.replace('\n', '\\'), partial_ratio)
+                            else:
+                                entry.fail_with_prefix(
+                                    'Cannot find regex_key: {}, url: {}'.format(regex_key, entry['url']))
+                                return None
+                            if ratio_score and ratio_score > score:
+                                captcha, value = select
+                                data[captcha] = value
+                                found = True
                     else:
-                        entry.fail_with_prefix('Cannot find key: {}, url: {}'.format(key, entry['url']))
-                        return
+                        value_search = re.search(regex, base_content, re.DOTALL)
+                        if value_search:
+                            data[key] = value_search.group(1)
+                        else:
+                            entry.fail_with_prefix('Cannot find key: {}, url: {}'.format(key, entry['url']))
+                            return
 
         if not found and self.times < retry:
             self.times += 1
@@ -192,18 +194,16 @@ class MainClass(NexusPHP):
         return data
 
     def sign_in(self, entry, config):
+        if not Path('dmhy').is_dir():
+            Path('dmhy').mkdir()
         entry['base_response'] = base_response = self._request(entry, 'get', entry['url'])
         sign_in_state, base_content = self.check_sign_in_state(entry, base_response, entry['url'])
         if sign_in_state != SignState.NO_SIGN_IN:
             return
         ocr_config = entry['site_config'].get('ocr_config', {})
-        retry = 10
-        char_count = 2
-        score = 10
-        if ocr_config is not None:
-            retry = ocr_config.get('retry', 10)
-            char_count = ocr_config.get('char_count', 2)
-            score = ocr_config.get('score', 40)
+        retry = ocr_config.get('retry', 10)
+        char_count = ocr_config.get('char_count', 2)
+        score = ocr_config.get('score', 40)
         data = self.build_data(entry, base_content, config, retry, char_count, score)
         if not data:
             entry.fail_with_prefix('Cannot build_data')

@@ -49,7 +49,7 @@ class BaiduOcr:
         text = ''
         for bb in result.get('words_result'):
             text = text + bb.get('words')
-        return re.sub('[a-zA-Z]|\\d| ', '', text)
+        return re.sub('[^\\w]|[a-zA-Z\\d]', '', text)
 
     @staticmethod
     def get_ocr_code(img, entry, config):
