@@ -2,7 +2,7 @@ from ..schema.site_base import SiteBase
 
 # auto_sign_in
 URL = 'https://www.torrentleech.org/'
-SUCCEED_REGEX = '<span class="displayed-username">.+?</span>'
+SUCCEED_REGEX = '<span class="link" style="margin-right: 1em;white-space: nowrap;" onclick="window.location.href=\'.+?\'">.+?</span>'
 
 
 class MainClass(SiteBase):
