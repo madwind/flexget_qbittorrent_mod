@@ -158,8 +158,14 @@ class MainClass(NexusPHP):
                             ratio_score = 0
                             if regex_key_search:
                                 for captcha, value in regex_key_search:
-                                    split_value, partial_ratio = process.extractOne(oct_text, value.split('\n'),
-                                                                                    scorer=fuzz.partial_ratio)
+                                    answer_list = list(filter(lambda x2: len(x2) > 0,
+                                                              map(lambda x: re.sub('[^\\w]|[a-zA-Z\\d]', '', x),
+                                                                  value.split('\n'))))
+                                    if answer_list:
+                                        split_value, partial_ratio = process.extractOne(oct_text, answer_list,
+                                                                                        scorer=fuzz.partial_ratio)
+                                    else:
+                                        partial_ratio = 0
                                     if partial_ratio > ratio_score:
                                         select = (captcha, value)
                                         ratio_score = partial_ratio
