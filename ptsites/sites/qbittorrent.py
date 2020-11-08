@@ -31,6 +31,8 @@ class MainClass:
     def build_sign_in(entry, config):
         site_config = entry['site_config']
         entry['title'] = '{} {}'.format(site_config.get('name'), datetime.now().date())
+        site_config = entry['site_config']
+        entry['site_name'] = site_config.get('name')
         entry['do_not_count'] = True
 
     def sign_in(self, entry, config):
