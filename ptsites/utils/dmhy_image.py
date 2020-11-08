@@ -46,7 +46,7 @@ class U2Image:
         diff = ImageChops.difference(image_a_compare, image_b_compare)
         if diff.getbbox() is None:
             return None
-        diff.save('dmhy/step3_diff.jpg')
+        # diff.save('dmhy/step3_diff.jpg')
         return image_a, image_b
 
     @staticmethod
