@@ -53,7 +53,7 @@ class MainClass(NexusPHP):
         if download_url:
             entry['url'] = download_url
         else:
-            entry.reject()
+            entry.fail('can not found download url')
 
     def sign_in(self, entry, config):
         if not Image:
