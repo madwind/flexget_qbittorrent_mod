@@ -329,14 +329,7 @@ tasks:
           authkey: xxxxxxxxxxxxxxxxx
           torrent_pass: xxxxxxxxxxxxxxxxx
         discfan: xxxxxxxxxxxxxxxxx
-        dmhy:
-          cookie: xxxxxxxxxxxxxxxxx
-          username: xxxxxxxxxxxxxxxxx
-          comment: xxxxxxxxxxxxxxxxx
-          ocr_config:
-            retry: 10
-            char_count: 3
-            score: 50
+        dmhy: xxxxxxxxxxxxxxxxx
         eastgame: xxxxxxxxxxxxxxxxx
         et8: xxxxxxxxxxxxxxxxx
         filelist: xxxxxxxxxxxxxxxxx
@@ -354,7 +347,10 @@ tasks:
         hddolby: xxxxxxxxxxxxxxxxx
         hdfans: xxxxxxxxxxxxxxxxx
         hdhome: xxxxxxxxxxxxxxxxx
-        hdsky: xxxxxxxxxxxxxxxxx
+        hdsky:
+          headers:
+            cookie: xxxxxxxxxxxxxxxxx
+            user-agent: '{? headers.user_agent ?}'
         hdstreet: xxxxxxxxxxxxxxxxx
         hdtime: xxxxxxxxxxxxxxxxx
         hdupt: xxxxxxxxxxxxxxxxx
@@ -490,6 +486,10 @@ tasks:
           cookie: 'xxxxxxxxxxxxxxxxx'
           username: 'xxxxxxxxxxxxxxxxx'
           comment: 'xxxxxxxxxxxxxxxxx'
+          ocr_config:
+            retry: 10
+            char_count: 3
+            score: 50
         eastgame: 'xxxxxxxxxxxxxxxxx'
         et8: 'xxxxxxxxxxxxxxxxx'
         filelist: 'xxxxxxxxxxxxxxxxx'
