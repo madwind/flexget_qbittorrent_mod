@@ -235,9 +235,6 @@ class PluginQBittorrentMod(QBittorrentModBase):
                 reject_reason = 'dl_speed: {:.2F} MiB > reject_on_dl_speed: {:.2F} MiB'.format(
                     dl_info_speed / (1024 * 1024), reject_on_dl_speed / (1024 * 1024))
 
-        if reject_on is not None:
-            del add_options['reject_on']
-
         for entry in task.accepted:
             if reject_reason:
                 entry.reject(reason=reject_reason, remember=True)
@@ -275,6 +272,8 @@ class PluginQBittorrentMod(QBittorrentModBase):
             raise plugin.PluginError('Unknown action.')
 
     def add_entries(self, task, add_options):
+        if add_options.get('reject_on'):
+            del add_options['reject_on']
         for entry in task.accepted:
             add_options['autoTMM'] = entry.get('autoTMM', add_options.get('autoTMM'))
             add_options['category'] = entry.get('category', add_options.get('category'))
