@@ -1,3 +1,5 @@
+import json
+import time
 from datetime import timedelta, datetime
 
 import requests
@@ -6,7 +8,7 @@ from flexget.event import event
 from flexget.manager import Session
 from flexget.plugin import PluginError
 from loguru import logger
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, Boolean
 
 _PLUGIN_NAME = 'wechat_work'
 
@@ -53,16 +55,16 @@ class AccessTokenEntry(AccessTokenBase):
 class MessageEntry(MessageBase):
     __tablename__ = 'message'
 
-    id = Column(String, primary_key=True)
+    id = Column(Integer, primary_key=True)
     content = Column(String, index=True, nullable=True)
-    failure_time = Column(DateTime, index=True, nullable=True)
+    sent = Column(Boolean, index=True, nullable=True)
 
     def __str__(self):
         x = ['id={0}'.format(self.id)]
         if self.content:
             x.append('content={0}'.format(self.content))
-        if self.failure_time:
-            x.append('failure_time={0}'.format(self.failure_time))
+        if self.sent:
+            x.append('sent={0}'.format(self.sent))
         return ' '.join(x)
 
 
@@ -85,24 +87,25 @@ class WeChatWorkNotifier:
     }
 
     def notify(self, title, message, config):
+        self._parse_config(config)
         session = Session()
 
-        failure_message = self._get_failure_message(session, config)
+        self._save_message(message, session)
+        session.commit()
 
-        all_messages = failure_message + message
+        message_list = session.query(MessageEntry).filter(MessageEntry.sent == False).all()
 
         try:
-            if access_token := self._real_init(session, config):
-                self._send_msgs(all_messages, access_token)
+            if access_token := self._get_access_token(session, self._corp_id, self._corp_secret):
+                for message_entry in message_list:
+                    self._send_msgs(message_entry, access_token)
+                    time.sleep(1)
+                    if message_entry.sent:
+                        session.delete(message_entry)
+                        session.commit()
                 if self.image:
                     self._send_images(access_token)
         except Exception as e:
-            entry = MessageEntry(
-                content=all_messages,
-                failure_time=datetime.now()
-            )
-            session.add(entry)
-            session.commit()
             raise PluginError(str(e))
 
     def _parse_config(self, config):
@@ -112,18 +115,7 @@ class WeChatWorkNotifier:
         self._to_user = config.get(_TO_USER)
         self.image = config.get('image')
 
-    def _real_init(self, session, config):
-        self._parse_config(config)
-        access_token = self._get_access_token_n_update_db(session)
-        return access_token
-
-    def _request(self, method, url, **kwargs):
-        try:
-            return requests.request(method, url, **kwargs, timeout=60)
-        except Exception as e:
-            raise PluginError(str(e))
-
-    def _send_msgs(self, msg, access_token):
+    def _save_message(self, msg, session):
         msg_limit, msg_extend = self._get_msg_limit(msg)
 
         data = {
@@ -136,13 +128,28 @@ class WeChatWorkNotifier:
             'enable_duplicate_check': 0,
             'duplicate_check_interval': 1800
         }
-        response_json = self._request('post', _POST_MESSAGE_URL.format(access_token=access_token.access_token),
-                                      json=data).json()
-        if response_json.get('errcode') != 0:
-            logger.error(response_json)
+        message_entry = MessageEntry(
+            content=json.dumps(data),
+            sent=False
+        )
+        session.add(message_entry)
 
         if msg_extend:
-            self._send_msgs(msg_extend, access_token)
+            self._save_message(msg_extend, session)
+
+    def _request(self, method, url, **kwargs):
+        try:
+            return requests.request(method, url, **kwargs, timeout=60)
+        except Exception as e:
+            raise PluginError(str(e))
+
+    def _send_msgs(self, message_entry, access_token):
+        response_json = self._request('post', _POST_MESSAGE_URL.format(access_token=access_token.access_token),
+                                      json=json.loads(message_entry.content)).json()
+        if response_json.get('errcode') == 0:
+            message_entry.sent = True
+        else:
+            logger.error(response_json)
 
     def _get_msg_limit(self, msg):
         msg_encode = msg.encode()
@@ -161,11 +168,34 @@ class WeChatWorkNotifier:
             else:
                 return msg_encode[:msg_limit_len].decode(), msg_encode[msg_limit_len:].decode()
 
-    def _get_access_token_n_update_db(self, session):
-        corp_id = self._corp_id
-        corp_secret = self._corp_secret
+    def _get_access_token(self, session, corp_id, corp_secret):
+        logger.debug('loading cached access token')
+        access_token = self._get_cached_access_token(session, corp_id, corp_secret)
+        logger.debug('found cached access token: {0}'.format(access_token))
+        update = False
+        if access_token:
+            if access_token.gmt_modify > datetime.now() - timedelta(seconds=access_token.expires_in):
+                logger.debug('all access token found in cache')
+                return access_token
+            else:
+                update = True
+        logger.debug('loading new access token')
+        new_access_token = self._get_new_access_token(corp_id, corp_secret)
+        logger.debug('found new access token: {0}'.format(access_token))
 
-        access_token, has_new_access_token = self._get_access_token(session, corp_id, corp_secret)
+        if update:
+            logger.info('saving updated access_token to db')
+            access_token.access_token = new_access_token.access_token
+            access_token.expires_in = new_access_token.expires_in
+            access_token.gmt_modify = new_access_token.gmt_modify
+        else:
+            session.add(new_access_token)
+        session.commit()
+
+        return new_access_token
+
+    def _get_access_token_n_update_db(self, session):
+        access_token, has_new_access_token = self._get_access_token(session, self._corp_id, self._corp_secret)
         logger.debug('access_token={}', access_token)
 
         if not access_token:
@@ -174,32 +204,14 @@ class WeChatWorkNotifier:
             )
         else:
             if not access_token.access_token:
-                logger.warning('no access_token found for corp_id: {} and corp_secret: {}', corp_id, corp_secret)
+                logger.warning('no access_token found for corp_id: {} and corp_secret: {}', self._corp_id,
+                               self._corp_secret)
             if has_new_access_token:
                 self._update_db(session, access_token)
 
         return access_token
 
-    def _get_access_token(self, session, corp_id, corp_secret):
-        logger.debug('loading cached access token')
-        access_token = self._get_cached_access_token(session, corp_id, corp_secret)
-        logger.debug('found cached access token: {0}'.format(access_token))
-
-        if access_token:
-            if access_token.gmt_modify > datetime.now() - timedelta(seconds=access_token.expires_in):
-                logger.debug('all access token found in cache')
-                return access_token, False
-            else:
-                self._delete_db(session, access_token)
-
-        logger.debug('loading new access token')
-        new_access_token = self._get_new_access_token(corp_id, corp_secret)
-        logger.debug('found new access token: {0}'.format(access_token))
-
-        return new_access_token, bool(new_access_token)
-
-    @staticmethod
-    def _get_cached_access_token(session, corp_id, corp_secret):
+    def _get_cached_access_token(self, session, corp_id, corp_secret):
         access_token = session.query(AccessTokenEntry).filter(
             AccessTokenEntry.id == '{}{}'.format(corp_id, corp_secret)).one_or_none()
 
@@ -218,18 +230,6 @@ class WeChatWorkNotifier:
             gmt_modify=datetime.now()
         )
         return entry
-
-    def _update_db(self, session, access_token):
-        logger.info('saving updated access_token to db')
-
-        session.add(access_token)
-        session.commit()
-
-    def _delete_db(self, session, access_token):
-        logger.info('delete access_token from db')
-
-        session.delete(access_token)
-        session.commit()
 
     def _get_media_id(self, access_token):
         file = ('images', ('flexget.png', open(self.image, 'rb'), 'image/png')),
@@ -256,18 +256,6 @@ class WeChatWorkNotifier:
                                       json=data).json()
         if response_json.get('errcode') != 0:
             raise PluginError(response_json)
-
-    def _get_failure_message(self, session, config):
-        entries = session.query(MessageEntry).all()
-        failure_message = ''
-        for entry in entries:
-            failure_message += 'failure_time: {}\n{}\n'.format(entry.failure_time, entry.content)
-            session.delete(entry)
-        session.commit()
-        failure_message = failure_message.strip()
-        if failure_message:
-            failure_message += '\n'
-        return failure_message
 
 
 @event('plugin.register')
