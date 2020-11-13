@@ -4,7 +4,7 @@ from ..schema.unit3d import Unit3D
 # auto_sign_in
 
 URL = 'https://jptv.club/'
-SUCCEED_REGEX = '<title>JPTV.club - There is so much to watch!</title>'
+SUCCEED_REGEX = '<title>JPTVclub - JPTV for everyone!</title>'
 
 
 class MainClass(Unit3D):
