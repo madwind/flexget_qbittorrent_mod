@@ -1,12 +1,4 @@
-import itertools
-import json
-from pathlib import Path
-from urllib.parse import urljoin
-
-from flexget.utils.soup import get_soup
-from loguru import logger
-
-from .site_base import SiteBase, SignState
+from .site_base import SiteBase
 
 
 class Unit3D(SiteBase):
@@ -55,5 +47,5 @@ class Unit3D(SiteBase):
         }
         return selector
 
-    def get_unit3d_message(self, entry, config, messages_url='/messages.php'):
+    def get_unit3d_message(self, entry, config, messages_url='/mail/inbox'):
         entry['result'] += '(TODO: Message)'

@@ -11,7 +11,7 @@ from loguru import logger
 from ..schema.nexusphp import NexusPHP
 from ..schema.site_base import SignState
 from ..utils.baidu_ocr import BaiduOcr
-from ..utils.dmhy_image import U2Image
+from ..utils.dmhy_image import DmhyImage
 
 try:
     from PIL import Image
@@ -87,9 +87,9 @@ class MainClass(NexusPHP):
         images_sort_match = None
         image_last = None
         new_image = self.get_new_image(entry, img_url)
-        if not U2Image.check_analysis(new_image):
-            # new_image.save('dmhy/z_failed.png')
-            # logger.info('can not analyzed!')
+        if not DmhyImage.check_analysis(new_image):
+            self.save_iamge(new_image, 'dmhy/z_failed.png')
+            logger.info('can not analyzed!')
             return None
         original_text = BaiduOcr.get_jap_ocr(new_image, entry, config)
         logger.info('original_ocr: {}', original_text)
@@ -105,35 +105,35 @@ class MainClass(NexusPHP):
                 if images not in checked_list:
                     checked_list.append(images)
                     image1, image2 = images
-                    # image1.save('dmhy/step1_a_original.png')
-                    # image2.save('dmhy/step1_b_original.png')
-                    if U2Image.compare_images_sort(image1, image2):
+                    self.save_iamge(image1, 'dmhy/step1_a_original.png')
+                    self.save_iamge(image2, 'dmhy/step1_b_original.png')
+                    if DmhyImage.compare_images_sort(image1, image2):
                         images_sort_match = images
                         break
         if images_sort_match:
             image1, image2 = images_sort_match
-            image_a_split_1, image_a_split_2 = U2Image.split_image(image1)
-            # image_a_split_1.save('dmhy/step2_a_split_1.png')
-            # image_a_split_2.save('dmhy/step2_a_split_2.png')
-            image_b_split_1, image_b_split_2 = U2Image.split_image(image2)
-            # image_b_split_1.save('dmhy/step2_b_split_1.png')
-            # image_b_split_2.save('dmhy/step2_b_split_2.png')
-            image_last = U2Image.compare_images(image_a_split_1, image_b_split_1)
+            image_a_split_1, image_a_split_2 = DmhyImage.split_image(image1)
+            self.save_iamge(image_a_split_1, 'dmhy/step2_a_split_1.png')
+            self.save_iamge(image_a_split_2, 'dmhy/step2_a_split_2.png')
+            image_b_split_1, image_b_split_2 = DmhyImage.split_image(image2)
+            self.save_iamge(image_b_split_1, 'dmhy/step2_b_split_1.png')
+            self.save_iamge(image_b_split_2, 'dmhy/step2_b_split_2.png')
+            image_last = DmhyImage.compare_images(image_a_split_1, image_b_split_1)
             if not image_last:
-                image_last = U2Image.compare_images(image_a_split_2, image_b_split_2)
+                image_last = DmhyImage.compare_images(image_a_split_2, image_b_split_2)
 
         return image_last
 
     def get_new_image(self, entry, img_url):
         time.sleep(1)
-        # logger.info('request image...')
+        logger.debug('request image...')
         base_img_response = self._request(entry, 'get', urljoin(BASE_URL, img_url))
         base_img_net_state = self.check_net_state(entry, base_img_response,
                                                   urljoin(BASE_URL, urljoin(BASE_URL, img_url)))
         if base_img_net_state:
             return None
         new_image = Image.open(BytesIO(base_img_response.content))
-        U2Image.remove_date(new_image)
+        DmhyImage.remove_date(new_image)
         return new_image
 
     def build_data(self, entry, base_content, config, retry, char_count, score):
@@ -143,12 +143,12 @@ class MainClass(NexusPHP):
         found = False
         if images := self.get_image(entry, img_url, config, char_count):
             image1, image2 = images
-            # image1.save('dmhy/step3_a_diff.jpg')
-            # image2.save('dmhy/step3_b_diff.jpg')
+            self.save_iamge(image1, 'dmhy/step3_a_diff.jpg')
+            self.save_iamge(image2, 'dmhy/step3_b_diff.jpg')
             ocr_text1 = BaiduOcr.get_jap_ocr(image1, entry, config)
             ocr_text2 = BaiduOcr.get_jap_ocr(image2, entry, config)
             oct_text = ocr_text1 if len(ocr_text1) > len(ocr_text2) else ocr_text2
-            # logger.info('jap_ocr: {}', oct_text)
+            logger.debug('jap_ocr: {}', oct_text)
             if oct_text and len(oct_text) > char_count:
                 for key, regex in entry.get('data', {}).items():
                     if key == 'regex_keys':
@@ -169,7 +169,7 @@ class MainClass(NexusPHP):
                                     if partial_ratio > ratio_score:
                                         select = (captcha, value)
                                         ratio_score = partial_ratio
-                                    # logger.info('value: {}, ratio: {}', value.replace('\n', '\\'), partial_ratio)
+                                    logger.debug('value: {}, ratio: {}', value.replace('\n', '\\'), partial_ratio)
                             else:
                                 entry.fail_with_prefix(
                                     'Cannot find regex_key: {}, url: {}'.format(regex_key, entry['url']))
@@ -200,8 +200,6 @@ class MainClass(NexusPHP):
         return data
 
     def sign_in(self, entry, config):
-        # if not Path('dmhy').is_dir():
-        #     Path('dmhy').mkdir()
         entry['base_response'] = base_response = self._request(entry, 'get', entry['url'])
         sign_in_state, base_content = self.check_sign_in_state(entry, base_response, entry['url'])
         if sign_in_state != SignState.NO_SIGN_IN:
@@ -235,3 +233,9 @@ class MainClass(NexusPHP):
             entry['result'] = re.sub('<.*?>|&shy;', '', succeed_list[-1])
             return SignState.SUCCEED, content
         return SignState.NO_SIGN_IN, content
+
+    def save_iamge(self, new_image, path):
+        if not Path('dmhy').is_dir():
+            Path('dmhy').mkdir()
+        if new_image:
+            new_image.save(path)

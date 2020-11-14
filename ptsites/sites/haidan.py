@@ -28,7 +28,8 @@ class MainClass(NexusPHP):
             'detail_sources': {
                 'default': {
                     'elements': {
-                        'bar': '#head > div.userpanel > div.userinfo.medium'
+                        'bar': '#head > div.top-panel.special-border > div > div:nth-child(2)',
+                        'table': 'body > div.mainroute > div.mainpanel.special-border > table > tbody > tr > td > table'
                     }
                 }
             },

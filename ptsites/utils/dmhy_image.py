@@ -3,15 +3,15 @@ from PIL import ImageChops, Image
 RGB_BLACK = (0, 0, 0)
 
 
-class U2Image:
+class DmhyImage:
 
     @staticmethod
     def compare_images_sort(image1, image2):
         if image1.size != image2.size:
             return False
 
-        point1 = U2Image.get_split_point(image1)
-        point2 = U2Image.get_split_point(image2)
+        point1 = DmhyImage.get_split_point(image1)
+        point2 = DmhyImage.get_split_point(image2)
 
         if point1 and point1 == point2:
             return True
@@ -77,7 +77,7 @@ class U2Image:
     @staticmethod
     def split_image(image):
         width, height = image.size
-        x, y = U2Image.get_split_point(image)
+        x, y = DmhyImage.get_split_point(image)
         if x > 0:
             a1 = image.crop((0, 0, x, height))
             a2 = image.crop((x, 0, width, height))
