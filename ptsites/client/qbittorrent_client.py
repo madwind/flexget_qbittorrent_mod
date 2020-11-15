@@ -82,7 +82,7 @@ class QBittorrentClient:
     def _request(self, method, url, msg_on_fail=None, **kwargs):
         if not url.endswith(self.API_URL_LOGIN) and not self.connected:
             self.connected = False
-            self._reset_rid()
+            self.reset_rid()
             self.connect()
         try:
             response = self.session.request(method, url, timeout=60, **kwargs)
@@ -93,11 +93,11 @@ class QBittorrentClient:
                     else msg_on_fail
                 )
                 self.connected = False
-                self._reset_rid()
+                self.reset_rid()
             else:
                 return response
         except RequestException as e:
-            self._reset_rid()
+            self.reset_rid()
             msg = str(e)
         raise plugin.PluginError(
             'Error when trying to send request to qbittorrent: {}'.format(msg)
@@ -290,7 +290,7 @@ class QBittorrentClient:
             return main_data
         except JSONDecodeError as e:
             msg = str(e)
-            self._reset_rid()
+            self.reset_rid()
         raise plugin.PluginError(
             'get_main_data failed.{}'.format(msg)
         )
@@ -324,7 +324,7 @@ class QBittorrentClient:
                                                 'reseed_dict': copy.deepcopy(self._reseed_dict)}
         return self._task_dict.get(task_id)
 
-    def _reset_rid(self):
+    def reset_rid(self):
         self._rid = 0
 
     def _build_entry(self):
@@ -357,9 +357,6 @@ class QBittorrentClient:
             for torrent_hash in torrent_removed:
                 self._remove_torrent(torrent_hash)
 
-        # for save_path_with_name, reseed_entry_list in self._reseed_dict.items():
-        #     self._update_reseed_addition(reseed_entry_list)
-
         update_addition_flag = self._last_update_time < datetime.now() - timedelta(hours=1)
         if update_addition_flag:
             self._last_update_time = datetime.now()
@@ -375,7 +372,7 @@ class QBittorrentClient:
         if not entry:
             is_new_entry = True
             if len(torrent) != self._torrent_attr_len:
-                self._reset_rid()
+                self.reset_rid()
                 logger.warning('Sync error: torrent lose attr, rebuild data.')
                 return
             save_path = torrent['save_path']
@@ -397,7 +394,7 @@ class QBittorrentClient:
         time_changed = False
         for key, value in torrent.items():
             if not is_new_entry and key in ['save_path', 'name']:
-                self._reset_rid()
+                self.reset_rid()
             if key in ['added_on', 'completion_on', 'last_activity']:
                 time_changed = True
             if key in ['added_on', 'completion_on', 'last_activity', 'seen_complete']:
@@ -457,7 +454,7 @@ class QBittorrentClient:
                 self._reseed_dict[save_path_with_name] = torrent_list_removed
             del self._entry_dict[torrent_hash]
         else:
-            self._reset_rid()
+            self.reset_rid()
             logger.warning('Sync error, rebuild data')
 
     def _check_action(self, action_name, hashes):
@@ -465,7 +462,7 @@ class QBittorrentClient:
         if not self._action_history.get(action_name):
             self._action_history[action_name] = []
         if len(set(self._action_history[action_name]) & set(hashes_list)) > 0:
-            self._reset_rid()
+            self.reset_rid()
             self._action_history.clear()
             logger.warning('Duplicate operation detected: {} {}, rebuild data.', action_name, hashes)
             return False

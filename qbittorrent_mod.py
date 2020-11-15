@@ -357,7 +357,11 @@ class PluginQBittorrentMod(QBittorrentModBase):
         for entry_hash in accepted_entry_hashes:
             if entry_hash in delete_hashes:
                 continue
-            save_path_with_name = entry_dict.get(entry_hash).get('qbittorrent_save_path_with_name')
+            server_entry = entry_dict.get(entry_hash)
+            if not server_entry:
+                self.client.reset_rid()
+                logger.warning('Sync error, rebuild data')
+            save_path_with_name = server_entry.get('qbittorrent_save_path_with_name')
             reseed_entry_list = reseed_dict.get(save_path_with_name)
             check_hashes = []
             torrent_hashes = []
@@ -443,7 +447,12 @@ class PluginQBittorrentMod(QBittorrentModBase):
         for entry_hash in accepted_entry_hashes:
             if entry_hash in delete_hashes or entry_hash in delete_files_hashes:
                 continue
-            save_path_with_name = entry_dict.get(entry_hash).get('qbittorrent_save_path_with_name')
+            server_entry = entry_dict.get(entry_hash)
+            if not server_entry:
+                self.client.reset_rid()
+                logger.warning('Sync error, rebuild data')
+                continue
+            save_path_with_name = server_entry.get('qbittorrent_save_path_with_name')
             reseed_entry_list = reseed_dict.get(save_path_with_name)
             torrent_hashes = []
 
