@@ -272,19 +272,26 @@ class PluginQBittorrentMod(QBittorrentModBase):
             raise plugin.PluginError('Unknown action.')
 
     def add_entries(self, task, add_options):
-        if add_options.get('reject_on'):
-            del add_options['reject_on']
+        options = {}
         for entry in task.accepted:
-            add_options['autoTMM'] = entry.get('autoTMM', add_options.get('autoTMM'))
-            add_options['category'] = entry.get('category', add_options.get('category'))
-            add_options['savepath'] = entry.get('savepath', add_options.get('savepath'))
-            add_options['paused'] = entry.get('paused', add_options.get('paused'))
+            for attr_str in ['savepath',
+                             'cookie',
+                             'category',
+                             'skip_checking',
+                             'paused',
+                             'root_folder',
+                             'rename',
+                             'upLimit',
+                             'dlLimit',
+                             'autoTMM',
+                             'sequentialDownload',
+                             'firstLastPiecePrio']:
+                attr = entry.get(attr_str, add_options.get(attr_str))
+                if attr:
+                    options[attr_str] = attr
 
-            if add_options.get('autoTMM') and not add_options.get('category'):
-                del add_options['savepath']
-
-            if not add_options.get('paused'):
-                del add_options['paused']
+            if options.get('autoTMM') and options.get('category') and options.get('savepath'):
+                del options['savepath']
 
             is_magnet = entry['url'].startswith('magnet:')
 
@@ -298,9 +305,9 @@ class PluginQBittorrentMod(QBittorrentModBase):
                     logger.debug('temp: {}', ', '.join(os.listdir(tmp_path)))
                     entry.fail("Downloaded temp file '%s' doesn't exist!?" % entry['file'])
                     return
-                self.client.add_torrent_file(entry['file'], add_options)
+                self.client.add_torrent_file(entry['file'], options)
             else:
-                self.client.add_torrent_url(entry['url'], add_options)
+                self.client.add_torrent_url(entry['url'], options)
 
     def remove_entries(self, task, remove_options):
         (mode_name, option), = remove_options.items()
