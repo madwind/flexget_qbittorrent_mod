@@ -32,17 +32,13 @@ class MainClass(NexusPHP):
                 }
             },
             'details': {
-                'downloaded': {
-                    'regex': ('(下[载載]量|Downloaded).+?([\\d.]+ ?[ZEPTGMk]?i?B)', 2),
-                    'handle': self.handle_size
-                },
                 'uploaded': {
                     'regex': ('(上[传傳]量|Uploaded).+?([\\d.]+ ?[ZEPTGMk]?i?B)', 2),
                     'handle': self.handle_size
                 },
-                'share_ratio': {
-                    'regex': '分享率.*?(Inf\\.|[\\d.]+)',
-                    'handle': self.handle_share_ratio
+                'downloaded': {
+                    'regex': ('(下[载載]量|Downloaded).+?([\\d.]+ ?[ZEPTGMk]?i?B)', 2),
+                    'handle': self.handle_size
                 },
                 'points': {
                     'regex': '积分.*?([\\d,.]+)'
@@ -63,12 +59,6 @@ class MainClass(NexusPHP):
 
     def handle_size(self, size):
         return size.upper()
-
-    def handle_share_ratio(self, value):
-        if value == 'Inf.':
-            return '0'
-        else:
-            return value
 
     def handle_hr(self, hr):
         return str(15 - int(hr))

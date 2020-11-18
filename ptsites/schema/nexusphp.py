@@ -40,7 +40,7 @@ class NexusPHP(SiteBase):
                     'regex': ('(下[载載]量|Downloaded).+?([\\d.]+ ?[ZEPTGMK]?i?B)', 2)
                 },
                 'share_ratio': {
-                    'regex': '分享率.*?(无限|無限|[\\d.]+)',
+                    'regex': '分享率.*?(---|∞|Inf\\.|无限|無限|[\\d.]+)',
                     'handle': self.handle_share_ratio
                 },
                 'points': {
@@ -154,7 +154,7 @@ class NexusPHP(SiteBase):
         entry.fail_with_prefix(SignState.SIGN_IN_FAILED.value.format('No answer.'))
 
     def handle_share_ratio(self, value):
-        if value in ['无限', '無限', '∞']:
+        if value in ['---', '∞', 'Inf.', '无限', '無限']:
             return '0'
         else:
             return value
