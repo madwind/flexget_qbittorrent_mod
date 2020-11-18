@@ -10,7 +10,7 @@ from flexget.plugin import PluginError
 from loguru import logger
 from sqlalchemy import Column, Integer, String, DateTime, Boolean
 
-_PLUGIN_NAME = 'wechat_work'
+_PLUGIN_NAME = 'wecom'
 
 _CORP_ID = 'corp_id'
 _CORP_SECRET = 'corp_secret'
@@ -21,14 +21,14 @@ _POST_MESSAGE_URL = 'https://qyapi.weixin.qq.com/cgi-bin/message/send?access_tok
 _UPLOAD_IMAGE = 'https://qyapi.weixin.qq.com/cgi-bin/media/upload?access_token={access_token}&type=image'
 _TEXT_LIMIT = 1024
 
-AccessTokenBase = db_schema.versioned_base('wechat_work_access_token', 0)
+AccessTokenBase = db_schema.versioned_base('wecom_access_token', 0)
 MessageBase = db_schema.versioned_base('message', 0)
 
 logger = logger.bind(name=_PLUGIN_NAME)
 
 
 class AccessTokenEntry(AccessTokenBase):
-    __tablename__ = 'wechat_work_access_token'
+    __tablename__ = 'wecom_access_token'
 
     id = Column(String, primary_key=True)
     corp_id = Column(String, index=True, nullable=True)
@@ -68,7 +68,7 @@ class MessageEntry(MessageBase):
         return ' '.join(x)
 
 
-class WeChatWorkNotifier:
+class WeComWorkNotifier:
     _corp_id = None
     _corp_secret = None
     _agent_id = None
@@ -260,4 +260,4 @@ class WeChatWorkNotifier:
 
 @event('plugin.register')
 def register_plugin():
-    plugin.register(WeChatWorkNotifier, _PLUGIN_NAME, api_ver=2, interfaces=['notifiers'])
+    plugin.register(WeComWorkNotifier, _PLUGIN_NAME, api_ver=2, interfaces=['notifiers'])
