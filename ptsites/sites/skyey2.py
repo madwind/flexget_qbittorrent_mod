@@ -26,7 +26,7 @@ class MainClass(Discuz):
         if not login:
             entry.fail_with_prefix('Login data not found!')
             return
-        response = self._request(entry, 'get', URL)
+        response = self._request(entry, 'get', URL, verify=False)
         state = self.check_net_state(entry, response, URL)
         if state:
             return
@@ -41,5 +41,5 @@ class MainClass(Discuz):
             'password': login['password'],
             'loginsubmit': 'true'
         }
-        entry['base_response'] = response = self._request(entry, 'post', login_url, data=data)
+        entry['base_response'] = response = self._request(entry, 'post', login_url, data=data, verify=False)
         self.final_check(entry, response, login_url)
