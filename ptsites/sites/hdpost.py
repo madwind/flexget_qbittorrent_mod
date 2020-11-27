@@ -34,7 +34,7 @@ class MainClass(MeanTorrent):
                 entry['base_response'] = base_response = self._request(entry, 'put', URL)
                 self.final_check(entry, base_response, URL)
             else:
-                entry.fail_with_prefix_with_prefix('Login failed.')
+                entry.fail_with_prefix('Login failed.')
         else:
             entry.fail_with_prefix('Login data not found.')
 
