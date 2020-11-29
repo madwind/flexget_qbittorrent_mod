@@ -29,7 +29,7 @@ class MainClass(Gazelle):
         self.dict_merge(selector, {
             'detail_sources': {
                 'default': {
-                    'elements': {'table': '#content > div > div.sidebar > div.box.box_info.box_userinfo_stats > ul'}
+                    'elements': {'table': 'div.box.box_info.box_userinfo_stats > ul'}
                 },
                 'extend': {
                     'link': '/ajax.php?action=community_stats&userid={}'
