@@ -1,8 +1,14 @@
+import re
+from urllib.parse import urljoin
+
+from flexget.utils.soup import get_soup
+
 from ..schema.site_base import SiteBase
 
 # auto_sign_in
 URL = 'https://hd-torrents.org/'
 SUCCEED_REGEX = 'Welcome back, .+?!'
+MESSAGES_URL_REGEX = 'usercp\\.php\\?uid=\\d+&do=pm&action=list'
 
 
 class MainClass(SiteBase):
@@ -52,5 +58,39 @@ class MainClass(SiteBase):
         }
         return selector
 
-    def get_hdt_message(self, entry, config, messages_url='/messages.php'):
-        pass
+    def get_hdt_message(self, entry, config):
+        if messages_url_match := re.search(MESSAGES_URL_REGEX, self._decode(entry['base_response'])):
+            messages_url = messages_url_match.group()
+        else:
+            entry.fail_with_prefix('Can not found messages_url.')
+            return
+        messages_url = urljoin(entry['url'], messages_url)
+        message_box_response = self._request(entry, 'get', messages_url)
+        net_state = self.check_net_state(entry, message_box_response, messages_url)
+        if net_state:
+            entry.fail_with_prefix('Can not read message box! url:{}'.format(messages_url))
+            return
+
+        message_elements = get_soup(self._decode(message_box_response)).select(
+            'tr > td.lista:nth-child(1)')
+        unread_elements = filter(lambda elements: elements.get_text() == 'no', message_elements)
+        failed = False
+        for unread_element in unread_elements:
+            td = unread_element.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling
+            title = td.text
+            href = td.a.get('href')
+            messages_url = urljoin(messages_url, href)
+            message_response = self._request(entry, 'get', messages_url)
+            net_state = self.check_net_state(entry, message_response, messages_url)
+            if net_state:
+                message_body = 'Can not read message body!'
+                failed = True
+            else:
+                body_element = get_soup(self._decode(message_response)).select_one(
+                    '#PrivateMessageHideShowTR > td > table:nth-child(1) > tbody > tr:nth-child(2) > td')
+                if body_element:
+                    message_body = body_element.text.strip()
+            entry['messages'] = entry['messages'] + (
+                '\nTitle: {}\nLink: {}\n{}'.format(title, messages_url, message_body))
+        if failed:
+            entry.fail_with_prefix('Can not read message body!')
