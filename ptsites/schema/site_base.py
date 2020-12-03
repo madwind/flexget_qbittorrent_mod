@@ -171,6 +171,7 @@ class SiteBase:
                 details_text = details_text + detail_content
 
         if details_text:
+            logger.debug(details_text)
             details = {}
             for detail_name, detail_config in selector['details'].items():
                 detail_value = self.get_detail_value(details_text, detail_config)
