@@ -43,6 +43,10 @@ class SignState(Enum):
     SIGN_IN_FAILED = 'Sign in failed, {}'
 
 
+class NetworkErrorReason(Enum):
+    DDoS_protection_by_Cloudflare = 'DDoS protection by .+?Cloudflare'
+
+
 class SiteBase:
     def __init__(self):
         self.requests = None
@@ -188,7 +192,17 @@ class SiteBase:
 
     def check_net_state(self, entry, response, original_url):
         if not response:
-            entry.fail_with_prefix(SignState.NETWORK_ERROR.value.format(url=original_url, error='Response is None'))
+            if response is None:
+                entry.fail_with_prefix(SignState.NETWORK_ERROR.value.format(url=original_url, error='Response is None'))
+            else:
+                content = self._decode(response)
+                for reason in NetworkErrorReason:
+                    if re.search(reason.value, content):
+                        entry.fail_with_prefix(SignState.NETWORK_ERROR.value.format(url=original_url, error=reason.name))
+                        return SignState.NETWORK_ERROR
+                else:
+                    entry.fail_with_prefix(SignState.NETWORK_ERROR.value.format(url=original_url, error='Status code: {}'.format(response.status_code)))
+
             return SignState.NETWORK_ERROR
 
         if response.url != original_url:
