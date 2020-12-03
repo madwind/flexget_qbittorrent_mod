@@ -33,7 +33,7 @@ class MainClass(SiteBase):
                     'regex': 'Uploaded.+?([\\d.]+ [ZEPTGMK]?B)'
                 },
                 'share_ratio': {
-                    'regex': 'Ratio.+?(∞|inf\\.|[\\d.]+)',
+                    'regex': 'Ratio.+?(&inf|[\\d.]+)',
                     'handle': self.handle_share_ratio
                 },
                 'points': {
@@ -50,7 +50,7 @@ class MainClass(SiteBase):
         entry['result'] += '(TODO: Message)'
 
     def handle_share_ratio(self, value):
-        if value in ['∞', 'inf.']:
+        if value in ['&inf']:
             return '0'
         else:
             return value
