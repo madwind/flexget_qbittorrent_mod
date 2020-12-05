@@ -41,10 +41,11 @@ class BaiduOcr:
             img = img.convert('RGB')
 
         img.save(img_byte_arr, format='JPEG')
-
-        result = client.basicAccurate(img_byte_arr.getvalue(), {
-            'language_type': 'JAP'
-        })
+        try:
+            result = client.basicAccurate(img_byte_arr.getvalue(), {'language_type': 'JAP'})
+        except Exception as e:
+            entry.fail_with_prefix('baidu ocr error.')
+            return None, None
         logger.info(result)
         text = ''
         for bb in result.get('words_result'):
@@ -66,7 +67,11 @@ class BaiduOcr:
                     img.putpixel((i, j), (255, 255, 255))
         img_byte_arr = BytesIO()
         img.save(img_byte_arr, format='png')
-        result = client.basicAccurate(img_byte_arr.getvalue(), {"language_type": "ENG"})
+        try:
+            result = client.basicAccurate(img_byte_arr.getvalue(), {"language_type": "ENG"})
+        except Exception as e:
+            entry.fail_with_prefix('baidu ocr error.')
+            return None, None
         logger.info(result)
         if result.get('error_msg'):
             entry.fail_with_prefix(result.get('error_msg'))
