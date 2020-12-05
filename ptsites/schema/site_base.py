@@ -45,6 +45,7 @@ class SignState(Enum):
 
 class NetworkErrorReason(Enum):
     DDoS_protection_by_Cloudflare = 'DDoS protection by .+?Cloudflare'
+    Server_load_too_high = '<h3 align=center>服务器负载过高，正在重试，请稍后\\.\\.\\.</h3>'
 
 
 class SiteBase:
@@ -191,18 +192,8 @@ class SiteBase:
             entry.fail_with_prefix('details_text is None.')
 
     def check_net_state(self, entry, response, original_url):
-        if not response:
-            if response is None:
-                entry.fail_with_prefix(SignState.NETWORK_ERROR.value.format(url=original_url, error='Response is None'))
-            else:
-                content = self._decode(response)
-                for reason in NetworkErrorReason:
-                    if re.search(reason.value, content):
-                        entry.fail_with_prefix(SignState.NETWORK_ERROR.value.format(url=original_url, error=reason.name))
-                        return SignState.NETWORK_ERROR
-                else:
-                    entry.fail_with_prefix(SignState.NETWORK_ERROR.value.format(url=original_url, error='Status code: {}'.format(response.status_code)))
-
+        if response is None:
+            entry.fail_with_prefix(SignState.NETWORK_ERROR.value.format(url=original_url, error='Response is None'))
             return SignState.NETWORK_ERROR
 
         if response.url != original_url:
@@ -230,7 +221,13 @@ class SiteBase:
         if wrong_regex and re.search(wrong_regex, content):
             return SignState.WRONG_ANSWER, content
 
-        logger.debug(content)
+        for reason in NetworkErrorReason:
+            if re.search(reason.value, content):
+                entry.fail_with_prefix(
+                    SignState.NETWORK_ERROR.value.format(url=original_url, error=reason.name))
+                return SignState.NETWORK_ERROR, content
+
+        logger.debug('no sign in, content: {}'.format(content))
 
         return SignState.NO_SIGN_IN, content
 
