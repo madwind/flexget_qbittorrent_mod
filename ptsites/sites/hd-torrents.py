@@ -48,10 +48,10 @@ class MainClass(SiteBase):
                     'regex': 'Bonus Points:.+?([\\d,.]+)'
                 },
                 'seeding': {
-                    'regex': 'Seeding .+?(\\d+)'
+                    'regex': 'Seeding (\\d+)'
                 },
                 'leeching': {
-                    'regex': 'Leeching .+?(\\d+)'
+                    'regex': 'Leeching (\\d+)'
                 },
                 'hr': None
             }
