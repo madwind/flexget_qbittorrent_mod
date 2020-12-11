@@ -28,8 +28,8 @@ tg: <https://t.me/flexget_qbittorrent_mod>
 qq群: 1128215750
 
 目前实现的功能有：
-- 下载、修改、删除种子：<https://github.com/IvonWei/flexget_qbittorrent_mod/wiki/qbittorrent_mod>
+- 下载、修改、删除种子，动态调整连接数：<https://github.com/IvonWei/flexget_qbittorrent_mod/wiki/qbittorrent_mod>
 - 获取qbittorrent状态、种子列表: <https://github.com/IvonWei/flexget_qbittorrent_mod/wiki/from_qbittorrent>
 - 辅种：<https://github.com/IvonWei/flexget_qbittorrent_mod/wiki/iyuu_auto_reseed>
 - 自动签到、统计: <https://github.com/IvonWei/flexget_qbittorrent_mod/wiki/auto_sign_in>
-- 企业微信消息推送：<https://github.com/IvonWei/flexget_qbittorrent_mod/wiki/wechat_work>
+- 企业微信消息推送：<https://github.com/IvonWei/flexget_qbittorrent_mod/wiki/wecom>
