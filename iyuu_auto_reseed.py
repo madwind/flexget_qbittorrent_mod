@@ -6,6 +6,7 @@ from flexget import plugin
 from flexget.entry import Entry
 from flexget.event import event
 from flexget.utils import json
+from loguru import logger
 from requests import RequestException
 
 from .ptsites.executor import Executor
@@ -29,7 +30,7 @@ class PluginIYUUAutoReseed():
 
     def prepare_config(self, config):
         config.setdefault('iyuu', '')
-        config.setdefault('version', '1.10.6')
+        config.setdefault('version', '1.10.9')
         config.setdefault('passkeys', {})
         return config
 
@@ -40,37 +41,43 @@ class PluginIYUUAutoReseed():
 
         torrent_dict, torrents_hashes = self.get_torrents_data(task, config)
         try:
-            response_json = task.requests.post('http://api.iyuu.cn/?service=App.Api.Reseed',
-                                               json=torrents_hashes, timeout=60).json()
+            data = {
+                'sign': 'IYUU419Tada6a99f2a6591cc51e656ca4458317648931830',
+                'version': config['version']
+            }
+            sites_response = task.requests.get('http://api.iyuu.cn/index.php?s=App.Api.Sites', timeout=60,
+                                               params=data).json()
+            if sites_response.get('ret') != 200:
+                raise plugin.PluginError(
+                    'http://api.iyuu.cn/index.php?s=App.Api.Sites: {}'.format(sites_response)
+                )
+            sites_json = self.modify_sites(sites_response['data']['sites'])
+
+            reseed_response = task.requests.post('http://api.iyuu.cn/index.php?s=App.Api.Infohash',
+                                                 json=torrents_hashes,
+                                                 timeout=60).json()
+            if reseed_response.get('ret') != 200:
+                raise plugin.PluginError(
+                    'http://api.iyuu.cn/index.php?s=App.Api.Infohash Error: {}'.format(reseed_response)
+                )
+            reseed_json = reseed_response['data']
         except (RequestException, JSONDecodeError) as e:
             raise plugin.PluginError(
-                'Error when trying to send request to http://api.iyuu.cn/?service=App.Api.Reseed: {}'.format(e)
+                'Error when trying to send request to iyuu: {}'.format(e)
             )
-        if response_json.get('ret') != 200:
-            raise plugin.PluginError(
-                'http://api.iyuu.cn/?service=App.Api.Reseed Error: {}'.format(response_json)
-            )
-        reseed_json = response_json['data']['clients_0']
-        sites_json = response_json['data']['sites']
 
         entries = []
         site_limit = {}
-        if response_json and not isinstance(reseed_json, list):
+        if sites_json and reseed_json:
             for info_hash, seeds_data in reseed_json.items():
+                client_torrent = torrent_dict[info_hash]
                 for torrent in seeds_data['torrent']:
                     site = sites_json.get(str(torrent['sid']))
                     if not site:
                         continue
-                    client_torrent = torrent_dict[info_hash]
-                    base_url = site['base_url'] if site['base_url'] != 'pt.upxin.net' else 'pt.hdupt.com'
-
-                    site_name = ''
-                    passkey = ''
-                    for key, value in passkeys.items():
-                        if key in base_url:
-                            site_name = key
-                            passkey = value
-                            break
+                    base_url = site['base_url']
+                    site_name = self._get_site_name(base_url)
+                    passkey = passkeys.get('site_name')
                     if not passkey:
                         continue
                     if not site_limit.get(site_name):
@@ -79,7 +86,6 @@ class PluginIYUUAutoReseed():
                         if site_limit[site_name] >= limit:
                             continue
                         site_limit[site_name] = site_limit[site_name] + 1
-                    site['download_page'] = site['download_page'].replace('{}', '{torrent_id}')
                     torrent_id = str(torrent['torrent_id'])
 
                     entry = Entry(
@@ -107,18 +113,33 @@ class PluginIYUUAutoReseed():
                 hashes.append(entry['torrent_info_hash'])
 
         list.sort(hashes)
-        hashes_json = json.dumps(hashes)
+        hashes_json = json.dumps(hashes, separators=(',', ':'))
         sha1 = hashlib.sha1(hashes_json.encode("utf-8")).hexdigest()
 
-        torrents_hashes['hash'] = {}
-        torrents_hashes['hash']['clients_0'] = hashes_json
-        torrents_hashes['sha1'] = []
-        torrents_hashes['sha1'].append(sha1)
+        torrents_hashes['hash'] = hashes_json
+        torrents_hashes['sha1'] = sha1
+
         torrents_hashes['sign'] = config['iyuu']
-        torrents_hashes['version'] = config['version']
         torrents_hashes['timestamp'] = int(time.time())
+        torrents_hashes['version'] = config['version']
 
         return torrent_dict, torrents_hashes
+
+    def modify_sites(self, sites_json):
+        sites_dict = {}
+        for site in sites_json:
+            site['download_page'] = site['download_page'].replace('{}', '{torrent_id}')
+            if site['base_url'] == 'pt.upxin.net':
+                site['base_url'] = 'pt.hdupt.com'
+            sites_dict[str(site['id'])] = site
+        return sites_dict
+
+    def _get_site_name(self, base_url):
+        domain = base_url.split('.')
+        site_name = domain[-2]
+        if site_name == 'edu':
+            site_name = domain[-3]
+        return site_name
 
 
 @event('plugin.register')
