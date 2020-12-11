@@ -77,7 +77,7 @@ class PluginIYUUAutoReseed():
                         continue
                     base_url = site['base_url']
                     site_name = self._get_site_name(base_url)
-                    passkey = passkeys.get('site_name')
+                    passkey = passkeys.get(site_name)
                     if not passkey:
                         continue
                     if not site_limit.get(site_name):
