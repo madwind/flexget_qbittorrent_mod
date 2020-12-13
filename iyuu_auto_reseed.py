@@ -37,7 +37,7 @@ class PluginIYUUAutoReseed():
     def on_task_input(self, task, config):
         config = self.prepare_config(config)
         passkeys = config.get('passkeys')
-        limit = config.get('limit', 1)
+        limit = config.get('limit', 999)
 
         torrent_dict, torrents_hashes = self.get_torrents_data(task, config)
         try:
@@ -79,20 +79,25 @@ class PluginIYUUAutoReseed():
                     site_name = self._get_site_name(base_url)
                     passkey = passkeys.get(site_name)
                     if not passkey:
+                        logger.debug('no passkey, skip site: {}, title: {}'.format(site_name, client_torrent['title']))
                         continue
                     if not site_limit.get(site_name):
                         site_limit[site_name] = 1
                     else:
                         if site_limit[site_name] >= limit:
+                            logger.debug(
+                                'site_limit:{} >= limit: {}, skip site: {}, title: {}'.format(site_limit[site_name],
+                                                                                              limit,
+                                                                                              site_name,
+                                                                                              client_torrent['title']))
                             continue
                         site_limit[site_name] = site_limit[site_name] + 1
-                    torrent_id = str(torrent['torrent_id'])
 
+                    torrent_id = str(torrent['torrent_id'])
                     entry = Entry(
                         title=client_torrent['title'],
                         torrent_info_hash=torrent['info_hash']
                     )
-
                     entry['autoTMM'] = client_torrent['qbittorrent_auto_tmm']
                     entry['category'] = client_torrent['qbittorrent_category']
                     entry['savepath'] = client_torrent['qbittorrent_save_path']
