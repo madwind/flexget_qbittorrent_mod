@@ -33,11 +33,11 @@ class MainClass(SiteBase):
                     'regex': 'Uploaded.+?([\\d.]+ [ZEPTGMK]?B)'
                 },
                 'share_ratio': {
-                    'regex': 'Ratio.+?(&inf|[\\d.]+)',
+                    'regex': 'Ratio" class="div-menu-item".+?(&inf|[\\d.]+)',
                     'handle': self.handle_share_ratio
                 },
                 'points': {
-                    'regex': 'TL Points.+?([\\d,.]+)'
+                    'regex': 'total-TL-points.+?([\\d,.]+)'
                 },
                 'seeding': None,
                 'leeching': None,
