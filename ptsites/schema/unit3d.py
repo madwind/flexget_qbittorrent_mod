@@ -32,7 +32,8 @@ class Unit3D(SiteBase):
                     'regex': '分享率.+?([\\d.]+)'
                 },
                 'points': {
-                    'regex': '魔力.+?([\\d,.]+)'
+                    'regex': '魔力.+?(\\d[\\d,. ]+)',
+                    'handle': self.handle_points
                 },
                 'seeding': {
                     'regex': '做种.+?(\\d+)'
@@ -49,3 +50,6 @@ class Unit3D(SiteBase):
 
     def get_unit3d_message(self, entry, config, messages_url='/mail/inbox'):
         entry['result'] += '(TODO: Message)'
+
+    def handle_points(self, value):
+        return value.replace(' ', '')
