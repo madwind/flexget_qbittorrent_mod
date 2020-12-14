@@ -395,7 +395,7 @@ tasks:
         hitpt: 'xxxxxxxx'
         joyhd: 'xxxxxxxx'
         keepfrds: 'xxxxxxxx'
-        leaguehd: 'xxxxxxxx'
+        lemonhd: 'xxxxxxxx'
         msg: 'xxxxxxxx'
         m-team: 'xxxxxxxx'
         nicept: 'xxxxxxxx'
@@ -565,7 +565,7 @@ tasks:
         jptv: 'xxxxxxxx'
         keepfrds: 'xxxxxxxx'
         lbj007: 'xxxxxxxx'
-        leaguehd: 'xxxxxxxx'
+        lemonhd: 'xxxxxxxx'
         m-team:
           login:
             username: 'xxxxxxxx'
