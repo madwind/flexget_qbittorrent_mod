@@ -9,13 +9,13 @@ from ..schema.site_base import SiteBase
 # auto_sign_in
 BASE_URL = 'https://hdchina.org/'
 URL = 'https://hdchina.org/plugin_sign-in.php?cmd=signin'
-SUCCEED_REGEX = '<a class="label label-default" href="#">已签到</a>|{"state":"success","signindays":\\d+,"integral":\\d+}'
+SUCCEED_REGEX = '<a class="label label-default" href="#">已签到</a>|{"state":"success","signindays":\\d+,"integral":"\\d+"}'
 DATA = {
     'csrf': '(?<=x-csrf" content=").*?(?=")',
 }
 
 # iyuu_auto_reseed
-# hdsky:
+# hdchina:
 #   headers:
 #     cookie: '{ cookie }'
 #     user-agent: '{? headers.user_agent ?}'
@@ -35,15 +35,15 @@ class MainClass(NexusPHP):
         try:
             response = requests.get(torrent_url, headers=passkey['headers'], timeout=30)
             if response.status_code == 200:
-                re_search = re.search('https://hdchina\\.org/download\\.php\\?hash=.+?&uid=\\d+(?=")', response.text)
+                re_search = re.search('href="(download\\.php\\?hash=.+?&uid=\\d+)"', response.text)
                 if re_search:
                     download_url = re_search.group()
         except Exception as e:
             logger.warning(str(e.args))
         if download_url:
-            entry['url'] = download_url
+            entry['url'] = 'https://{}/{}'.format(base_url, download_url)
         else:
-            entry.reject()
+            entry.reject('download_url is None')
 
     def sign_in(self, entry, config):
         self.sign_in_by_post_data(entry, config)
