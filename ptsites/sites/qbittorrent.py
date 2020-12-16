@@ -29,10 +29,8 @@ class MainClass:
 
     @staticmethod
     def build_sign_in(entry, config):
-        site_config = entry['site_config']
-        entry['title'] = '{} {}'.format(site_config.get('name'), datetime.now().date())
-        site_config = entry['site_config']
-        entry['site_name'] = site_config.get('name')
+        entry['site_name'] = entry['site_config'].get('name')
+        entry['title'] = '{} {}'.format(entry['site_name'], datetime.now().date())
         entry['do_not_count'] = True
 
     def sign_in(self, entry, config):
@@ -63,7 +61,8 @@ class MainClass:
             'seeding': len(
                 list(filter(lambda torrent: 'up' in torrent['qbittorrent_state'].lower() and 'pause' not in torrent[
                     'qbittorrent_state'],
-                            torrents.values()))), 'hr': 0
+                            torrents.values()))),
+            'hr': 0
         }
         entry['details'] = details
         logger.info('site_name: {}, details: {}', entry['site_name'], entry['details'])

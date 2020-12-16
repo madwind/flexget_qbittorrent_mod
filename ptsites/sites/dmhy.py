@@ -5,7 +5,12 @@ from io import BytesIO
 from pathlib import Path
 from urllib.parse import urljoin
 
-from fuzzywuzzy import fuzz, process
+try:
+    from fuzzywuzzy import fuzz, process
+except ImportError:
+    fuzz = None
+    process = None
+
 from loguru import logger
 
 from ..schema.nexusphp import NexusPHP
@@ -62,6 +67,30 @@ class MainClass(NexusPHP):
         }
         entry['headers'] = headers
         entry['data'] = DATA
+
+    def sign_in(self, entry, config):
+        if not fuzz or not process:
+            entry.fail_with_prefix('Dependency does not exist: [fuzzywuzzy]')
+            return
+        entry['base_response'] = base_response = self._request(entry, 'get', entry['url'])
+        sign_in_state, base_content = self.check_sign_in_state(entry, base_response, entry['url'])
+        if sign_in_state != SignState.NO_SIGN_IN:
+            return
+        ocr_config = entry['site_config'].get('ocr_config', {})
+        retry = ocr_config.get('retry', 10)
+        char_count = ocr_config.get('char_count', 2)
+        score = ocr_config.get('score', 40)
+        data = self.build_data(entry, base_content, config, retry, char_count, score)
+        if not data:
+            entry.fail_with_prefix('Cannot build_data')
+            return
+        logger.info(data)
+        post_answer_response = self._request(entry, 'post', entry['url'], data=data)
+        post_answer_net_state = self.check_net_state(entry, post_answer_response, entry['url'])
+        if post_answer_net_state:
+            return
+        response = self._request(entry, 'get', entry['url'])
+        self.final_check(entry, response, entry['url'])
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
@@ -198,27 +227,6 @@ class MainClass(NexusPHP):
         site_config = entry['site_config']
         data['message'] = site_config.get('comment')
         return data
-
-    def sign_in(self, entry, config):
-        entry['base_response'] = base_response = self._request(entry, 'get', entry['url'])
-        sign_in_state, base_content = self.check_sign_in_state(entry, base_response, entry['url'])
-        if sign_in_state != SignState.NO_SIGN_IN:
-            return
-        ocr_config = entry['site_config'].get('ocr_config', {})
-        retry = ocr_config.get('retry', 10)
-        char_count = ocr_config.get('char_count', 2)
-        score = ocr_config.get('score', 40)
-        data = self.build_data(entry, base_content, config, retry, char_count, score)
-        if not data:
-            entry.fail_with_prefix('Cannot build_data')
-            return
-        logger.info(data)
-        post_answer_response = self._request(entry, 'post', entry['url'], data=data)
-        post_answer_net_state = self.check_net_state(entry, post_answer_response, entry['url'])
-        if post_answer_net_state:
-            return
-        response = self._request(entry, 'get', entry['url'])
-        self.final_check(entry, response, entry['url'])
 
     def check_sign_in_state(self, entry, response, original_url, regex=None):
         net_state = self.check_net_state(entry, response, original_url)

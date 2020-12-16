@@ -1,15 +1,13 @@
-import re
-
-import requests
-from loguru import logger
+from urllib.parse import urljoin
 
 from ..schema.nexusphp import NexusPHP
 from ..schema.site_base import SiteBase
 
 # auto_sign_in
+
 BASE_URL = 'https://hdchina.org/'
-URL = 'https://hdchina.org/plugin_sign-in.php?cmd=signin'
-SUCCEED_REGEX = '<a class="label label-default" href="#">已签到</a>|{"state":"success","signindays":\\d+,"integral":"\\d+"}'
+URL = urljoin(BASE_URL, '/plugin_sign-in.php?cmd=signin')
+SUCCEED_REGEX = '<a class="label label-default" href="#">已签到</a>|{"state":"success","signindays":\\d+,"integral":"?\\d+"?}'
 DATA = {
     'csrf': '(?<=x-csrf" content=").*?(?=")',
 }
@@ -19,7 +17,7 @@ DATA = {
 #   headers:
 #     cookie: '{ cookie }'
 #     user-agent: '{? headers.user_agent ?}'
-TORRENT_URL = 'https://hdchina.org/details.php?id={}&hit=1'
+TORRENT_PAGE_URL = urljoin(BASE_URL, '/details.php?id={}&hit=1')
 
 
 class MainClass(NexusPHP):
@@ -29,21 +27,9 @@ class MainClass(NexusPHP):
         entry['data'] = DATA
 
     @staticmethod
-    def build_reseed_entry(entry, base_url, site, passkey, torrent_id):
-        torrent_url = TORRENT_URL.format(torrent_id)
-        download_url = None
-        try:
-            response = requests.get(torrent_url, headers=passkey['headers'], timeout=30)
-            if response.status_code == 200:
-                re_search = re.search('href="(download\\.php\\?hash=.+?&uid=\\d+)"', response.text)
-                if re_search:
-                    download_url = re_search.group()
-        except Exception as e:
-            logger.warning(str(e.args))
-        if download_url:
-            entry['url'] = 'https://{}/{}'.format(base_url, download_url)
-        else:
-            entry.reject('download_url is None')
+    def build_reseed(entry, site, passkey, torrent_id):
+        SiteBase.build_reseed_from_page(entry, passkey, torrent_id, BASE_URL, TORRENT_PAGE_URL,
+                                        'download\\.php\\?hash=.+?uid=\\d+')
 
     def sign_in(self, entry, config):
         self.sign_in_by_post_data(entry, config)

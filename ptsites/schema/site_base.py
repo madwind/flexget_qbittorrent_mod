@@ -1,5 +1,4 @@
 import re
-import time
 from enum import Enum
 from urllib.parse import urljoin
 
@@ -10,27 +9,12 @@ from flexget.utils.soup import get_soup
 from loguru import logger
 from requests.adapters import HTTPAdapter
 
+from ..utils.url_recorder import UrlRecorder
+
 try:
     import brotli
 except ImportError:
     brotli = None
-
-try:
-    from selenium import webdriver
-    from selenium.webdriver import DesiredCapabilities
-except ImportError:
-    webdriver = None
-    DesiredCapabilities = None
-
-try:
-    from aip import AipOcr
-except ImportError:
-    AipOcr = None
-
-try:
-    from PIL import Image
-except ImportError:
-    Image = None
 
 
 class SignState(Enum):
@@ -72,9 +56,35 @@ class SiteBase:
         entry['headers'] = headers
 
     @staticmethod
-    def build_reseed_entry(entry, base_url, site, passkey, torrent_id):
+    def build_reseed(entry, site, passkey, torrent_id):
         download_page = site['download_page'].format(torrent_id=torrent_id, passkey=passkey)
-        entry['url'] = 'https://{}/{}'.format(base_url, download_page)
+        entry['url'] = 'https://{}/{}'.format(site['base_url'], download_page)
+
+    @staticmethod
+    def build_reseed(entry, site, passkey, torrent_id, ):
+        download_page = site['download_page'].format(torrent_id=torrent_id, passkey=passkey)
+        entry['url'] = 'https://{}/{}'.format(site['base_url'], download_page)
+
+    @staticmethod
+    def build_reseed_from_page(entry, passkey, torrent_id, base_url, torrent_page_url, url_regex):
+        record = UrlRecorder.load_record(entry['class_name'])
+        if download_url := record.get(torrent_id):
+            entry['url'] = download_url
+            return
+        try:
+            response = requests.get(torrent_page_url.format(torrent_id), headers=passkey['headers'], timeout=30)
+            if response.status_code == 200:
+                re_search = re.search(url_regex, response.text)
+                if re_search:
+                    download_url = re_search.group()
+        except Exception as e:
+            logger.warning(str(e.args))
+        if download_url:
+            entry['url'] = urljoin(base_url, download_url)
+            record[torrent_id] = entry['url']
+            UrlRecorder.save_record(entry['class_name'], record)
+        else:
+            entry.fail('can not found download url')
 
     def _request(self, entry, method, url, **kwargs):
         if not self.requests:
@@ -182,12 +192,11 @@ class SiteBase:
                 detail_value = self.get_detail_value(details_text, detail_config)
                 if not detail_value:
                     entry.fail_with_prefix('detail: {} not found.'.format(detail_name))
-                    logger.error('Details=> site: {}, regex: {}，details_text: {}', entry['site_name'],
+                    logger.debug('Details=> site: {}, regex: {}，details_text: {}', entry['site_name'],
                                  detail_config['regex'], details_text)
                     return
                 details[detail_name] = detail_value
             entry['details'] = details
-            logger.info('site_name: {}, details: {}', entry['site_name'], entry['details'])
         else:
             entry.fail_with_prefix('details_text is None.')
 
@@ -257,14 +266,6 @@ class SiteBase:
             else:
                 dict1[i] = dict2[i]
 
-    def is_url(self, instance):
-        regexp = (
-                '('
-                + '|'.join(['ftp', 'http', 'https', 'file', 'udp', 'socks5h?'])
-                + r'):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?'
-        )
-        return re.match(regexp, instance)
-
     def get_detail_value(self, content, detail_config):
         if detail_config is None:
             return '*'
@@ -283,27 +284,3 @@ class SiteBase:
         if handle:
             detail = handle(detail)
         return detail
-
-    def selenium_get_cookie(self, command_executor, headers):
-        options = webdriver.ChromeOptions()
-        options.add_argument('--headless')
-        options.add_argument('user-agent=' + headers['user-agent'])
-        driver = webdriver.Remote(command_executor=command_executor,
-                                  desired_capabilities=DesiredCapabilities.CHROME,
-                                  options=options)
-        driver.get(headers['referer'])
-        for i in headers['cookie'].split(';'):
-            key, value, = i.split('=')
-            key = key.strip()
-            if key not in ['__cfduid', 'cf_clearance']:
-                driver.add_cookie({'name': key.strip(), 'value': value.strip()})
-
-        time.sleep(5)
-
-        receive_cookie = ''
-        for c in driver.get_cookies():
-            receive_cookie += '{}={}; '.format(c['name'], c['value'])
-
-        driver.quit()
-
-        return receive_cookie.strip()

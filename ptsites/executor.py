@@ -16,55 +16,52 @@ Entry.fail_with_prefix = fail_with_prefix
 class Executor:
 
     @staticmethod
-    def build_sign_in_entry(entry, config):
+    def build_sign_in(entry, config):
         try:
-            class_name = entry.get('class_name') if entry.get('class_name') else entry['site_name']
-            site_module = getattr(sites, class_name.lower())
-            site_class = getattr(site_module, 'MainClass')
+            site_class = Executor.get_site_class(entry['class_name'])
             site_class.build_sign_in(entry, config)
         except AttributeError as e:
             raise plugin.PluginError('site: {}, error: {}'.format(entry['site_name'], str(e.args)))
-        entry['result'] = ''
-        entry['messages'] = ''
-
-    @staticmethod
-    def build_reseed_entry(entry, base_url, site, site_name, passkey, torrent_id):
-        try:
-            site_module = getattr(sites, site_name.lower())
-            site_class = getattr(site_module, 'MainClass')
-            site_class.build_reseed_entry(entry, base_url, site, passkey, torrent_id)
-        except AttributeError as e:
-            SiteBase.build_reseed_entry(entry, base_url, site, passkey, torrent_id)
 
     @staticmethod
     def sign_in(entry, config):
-        # command_executor = config.get('command_executor')
-        # cf = entry['site_config'].get('cf')
-        # if cf:
-        #     if command_executor and webdriver:
-        #         try:
-        #             cookie = self.selenium_get_cookie(command_executor, entry['headers'])
-        #         except Exception as e:
-        #             entry['result'] = str(e)
-        #             entry.fail(entry['result'])
-        #             return
-        #     else:
-        #         entry['result'] = 'command_executor or webdriver not existed'
-        #         entry.fail(entry['result'])
-        #         return
-        #     entry['headers']['cookie'] = cookie
         try:
-            class_name = entry.get('class_name') if entry.get('class_name') else entry['site_name']
-            site_module = getattr(sites, class_name.lower())
-            site_class = getattr(site_module, 'MainClass')
-            site_object = site_class()
-            entry['prefix'] = 'Sign_in'
-            site_object.sign_in(entry, config)
-            if not entry.failed:
-                logger.info('{} {}\n{}'.format(entry['title'], entry['result'], entry['messages']).strip())
-                entry['prefix'] = 'Details'
-                site_object.get_details(entry, config)
-                entry['prefix'] = 'Messages'
-                site_object.get_message(entry, config)
+            site_class = Executor.get_site_class(entry['class_name'])
         except AttributeError as e:
-            raise plugin.PluginError('site: {}, error: {}'.format(entry['site_name'], str(e.args)))
+            raise plugin.PluginError('site: {}, error: {}'.format(entry['class_name'], str(e.args)))
+
+        site_object = site_class()
+        entry['prefix'] = 'Sign_in'
+        site_object.sign_in(entry, config)
+        if entry.failed:
+            return
+        if entry['result']:
+            logger.info('{} {}'.format(entry['title'], entry['result']).strip())
+
+        entry['prefix'] = 'Messages'
+        site_object.get_message(entry, config)
+        if entry.failed:
+            return
+        if entry['messages']:
+            logger.info('site_name: {}, messages: {}', entry['site_name'], entry['messages'])
+
+        entry['prefix'] = 'Details'
+        site_object.get_details(entry, config)
+        if entry.failed:
+            return
+        if entry['details']:
+            logger.info('site_name: {}, details: {}', entry['site_name'], entry['details'])
+
+    @staticmethod
+    def build_reseed(entry, site, passkey, torrent_id):
+        try:
+            site_class = Executor.get_site_class(entry['class_name'])
+            site_class.build_reseed(entry, site, passkey, torrent_id)
+        except AttributeError:
+            SiteBase.build_reseed(entry, site, passkey, torrent_id)
+
+    @staticmethod
+    def get_site_class(class_name):
+        site_module = getattr(sites, class_name.lower())
+        site_class = getattr(site_module, 'MainClass')
+        return site_class

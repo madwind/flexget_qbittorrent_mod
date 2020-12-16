@@ -1,13 +1,13 @@
-import re
-
-import requests
-from loguru import logger
+from urllib.parse import urljoin
 
 from ..schema.nexusphp import NexusPHP
 from ..schema.site_base import SiteBase
 
 # auto_sign_in
-URL = 'https://hdcity.work/sign'
+
+BASE_URL = 'https://hdcity.work/'
+DOWNLOAD_BASE_RUL = 'https://assets.hdcity.work/'
+URL = urljoin(BASE_URL, '/sign')
 SUCCEED_REGEX = '本次签到获得魅力\\d+'
 
 # iyuu_auto_reseed
@@ -15,7 +15,7 @@ SUCCEED_REGEX = '本次签到获得魅力\\d+'
 #   headers:
 #     cookie: '{ cookie }'
 #     user-agent: '{? headers.user_agent ?}'
-TORRENT_URL = 'https://hdcity.work/t-{}'
+TORRENT_PAGE_URL = urljoin(BASE_URL, '/t-{}')
 
 
 class MainClass(NexusPHP):
@@ -24,21 +24,9 @@ class MainClass(NexusPHP):
         SiteBase.build_sign_in_entry(entry, config, URL, SUCCEED_REGEX)
 
     @staticmethod
-    def build_reseed_entry(entry, base_url, site, passkey, torrent_id):
-        torrent_url = TORRENT_URL.format(torrent_id)
-        download_url = None
-        try:
-            response = requests.get(torrent_url, headers=passkey['headers'], timeout=30)
-            if response.status_code == 200:
-                re_search = re.search('https://assets\\.hdcity\\.work/dl\\.php.*?(?=")', response.text)
-                if re_search:
-                    download_url = re_search.group()
-        except Exception as e:
-            logger.warning(str(e.args))
-        if download_url:
-            entry['url'] = download_url
-        else:
-            entry.reject()
+    def build_reseed(entry, site, passkey, torrent_id):
+        SiteBase.build_reseed_from_page(entry, passkey, torrent_id, DOWNLOAD_BASE_RUL, TORRENT_PAGE_URL,
+                                        '/dl\\.php.*?(?=")')
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()

@@ -48,14 +48,21 @@ class PluginAutoSignIn:
 
         entries = []
 
-        for site_name, site_config in sites.items():
-            if isinstance(site_config, list):
-                for sub_site_config in site_config:
-                    entry = self.build_sign_in_entry(site_name, sub_site_config, config)
-                    entry['class_name'] = site_name
-                    entries.append(entry)
-            else:
-                entry = self.build_sign_in_entry(site_name, site_config, config)
+        for site_name, site_configs in sites.items():
+            if not isinstance(site_configs, list):
+                site_configs = [site_configs]
+            for sub_site_config in site_configs:
+                entry = Entry(
+                    title='{} {}'.format(site_name, datetime.now().date()),
+                    url=''
+                )
+                entry['site_name'] = site_name
+                entry['class_name'] = site_name
+                entry['site_config'] = sub_site_config
+                entry['result'] = ''
+                entry['messages'] = ''
+                entry['details'] = ''
+                Executor.build_sign_in(entry, config)
                 entries.append(entry)
         return entries
 
@@ -73,16 +80,6 @@ class PluginAutoSignIn:
                 all_task = [t.submit(Executor.sign_in, entry, config) for entry in task.accepted]
                 wait(all_task, return_when=ALL_COMPLETED)
         DetailsReport().build(task)
-
-    def build_sign_in_entry(self, site_name, site_config, config):
-        entry = Entry(
-            title='{} {}'.format(site_name, datetime.now().date()),
-            url=''
-        )
-        entry['site_name'] = site_name
-        entry['site_config'] = site_config
-        Executor.build_sign_in_entry(entry, config)
-        return entry
 
 
 @event('plugin.register')

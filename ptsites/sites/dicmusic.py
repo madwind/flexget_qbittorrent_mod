@@ -1,9 +1,11 @@
+from urllib.parse import urljoin
+
 from ..schema.gazelle import Gazelle
 from ..schema.site_base import SiteBase
 
 # auto_sign_in
 
-URL = 'https://dicmusic.club/'
+BASE_URL = URL = 'https://dicmusic.club/'
 SUCCEED_REGEX = '积分 \\(.*?\\)'
 
 
@@ -18,11 +20,11 @@ class MainClass(Gazelle):
         SiteBase.build_sign_in_entry(entry, config, URL, SUCCEED_REGEX)
 
     @staticmethod
-    def build_reseed_entry(entry, base_url, site, passkey, torrent_id):
+    def build_reseed(entry, site, passkey, torrent_id):
         download_page = site['download_page'].format(torrent_id=torrent_id,
                                                      authkey=passkey['authkey'],
                                                      torrent_pass=passkey['torrent_pass'])
-        entry['url'] = 'https://{}/{}'.format(base_url, download_page)
+        entry['url'] = urljoin(BASE_URL, download_page)
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()

@@ -1,5 +1,7 @@
 from urllib.parse import urljoin
+
 from flexget.utils.soup import get_soup
+
 from .site_base import SiteBase
 
 
@@ -25,17 +27,17 @@ class Gazelle(SiteBase):
             },
             'details': {
                 'uploaded': {
-                    'regex': ('(Upload|上传量).+?([\\d.]+ ?[ZEPTGMK]?i?B)',2)
+                    'regex': ('(Upload|上传量).+?([\\d.]+ ?[ZEPTGMK]?i?B)', 2)
                 },
                 'downloaded': {
-                    'regex': ('(Download|下载量).+?([\\d.]+ ?[ZEPTGMK]?i?B)',2)
+                    'regex': ('(Download|下载量).+?([\\d.]+ ?[ZEPTGMK]?i?B)', 2)
                 },
                 'share_ratio': {
-                    'regex': ('(Ratio|分享率).*?(∞|[\\d.]+)',2),
+                    'regex': ('(Ratio|分享率).*?(∞|[\\d.]+)', 2),
                     'handle': self.handle_share_ratio
                 },
                 'points': {
-                    'regex': ('(Gold|积分).*?([\\d,.]+)',2)
+                    'regex': ('(Gold|积分).*?([\\d,.]+)', 2)
                 },
                 'seeding': {
                     'regex': '[Ss]eeding.+?([\\d,]+)'

@@ -40,11 +40,11 @@ class NexusPHP(SiteBase):
                     'regex': ('(下[载載]量|Downloaded).+?([\\d.]+ ?[ZEPTGMK]?i?B)', 2)
                 },
                 'share_ratio': {
-                    'regex': '分享率.*?(---|∞|Inf\\.|无限|無限|[\\d.]+)',
+                    'regex': ('(分享率|Ratio).*?(---|∞|Inf\\.|无限|無限|[\\d.]+)', 2),
                     'handle': self.handle_share_ratio
                 },
                 'points': {
-                    'regex': '魔力.*?([\\d,.]+)'
+                    'regex': ('(魔力|Bonus).*?([\\d,.]+)', 2)
                 },
                 'seeding': {
                     'regex': ('(当前活动|當前活動).*?(\\d+)', 2)

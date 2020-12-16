@@ -3,8 +3,6 @@ from io import BytesIO
 from pathlib import Path
 from urllib.parse import urljoin
 
-from loguru import logger
-
 from ..schema.nexusphp import NexusPHP
 from ..schema.site_base import SignState
 from ..schema.site_base import SiteBase
@@ -57,7 +55,6 @@ class MainClass(NexusPHP):
     def sign_in(self, entry, config):
         if not Image:
             entry.fail_with_prefix('Dependency does not exist: [PIL]')
-            logger.warning('Dependency does not exist: [PIL]')
             return
         entry['base_response'] = base_response = self._request(entry, 'get', BASE_URL)
         sign_in_state, base_content = self.check_sign_in_state(entry, base_response, BASE_URL)

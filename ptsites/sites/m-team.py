@@ -1,13 +1,15 @@
 import re
+from urllib.parse import urljoin
 
 from ..schema.nexusphp import NexusPHP
 from ..schema.site_base import SignState
 from ..utils.google_auth import GoogleAuth
 
 # auto_sign_in
-LOGIN_URL = 'https://pt.m-team.cc/takelogin.php'
-URL = 'https://pt.m-team.cc/index.php'
-VERIFY_URL = 'https://pt.m-team.cc/verify.php?returnto='
+BASE_URL = 'https://pt.m-team.cc/'
+LOGIN_URL = urljoin(BASE_URL, '/takelogin.php')
+URL = urljoin(BASE_URL, '/index.php')
+VERIFY_URL = urljoin(BASE_URL, '/verify.php?returnto=')
 SUCCEED_REGEX = '歡迎回來'
 SYSTEM_MESSAGE_URL = '/messages.php?action=viewmailbox&box=-2'
 
@@ -24,9 +26,9 @@ class MainClass(NexusPHP):
         entry['headers'] = headers
 
     @staticmethod
-    def build_reseed_entry(entry, base_url, site, passkey, torrent_id):
+    def build_reseed(entry, site, passkey, torrent_id):
         download_page = site['download_page'].format(torrent_id=torrent_id, passkey=passkey)
-        entry['url'] = 'https://{}/{}&https=1'.format(base_url, download_page)
+        entry['url'] = urljoin(BASE_URL, download_page + '&https=1')
 
     def get_message(self, entry, config):
         self.get_nexusphp_message(entry, config)

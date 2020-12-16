@@ -17,7 +17,7 @@ class PluginIYUUAutoReseed():
         'type': 'object',
         'properties': {
             'iyuu': {'type': 'string'},
-            'version': {'type': 'string'},
+            'show_detail': {'type': 'boolean'},
             'limit': {'type': 'integer'},
             'passkeys': {
                 'type': 'object',
@@ -31,13 +31,16 @@ class PluginIYUUAutoReseed():
     def prepare_config(self, config):
         config.setdefault('iyuu', '')
         config.setdefault('version', '1.10.9')
+        config.setdefault('limit', 999)
+        config.setdefault('show_detail', False)
         config.setdefault('passkeys', {})
         return config
 
     def on_task_input(self, task, config):
         config = self.prepare_config(config)
         passkeys = config.get('passkeys')
-        limit = config.get('limit', 999)
+        limit = config.get('limit')
+        show_detail = config.get('show_detail')
 
         torrent_dict, torrents_hashes = self.get_torrents_data(task, config)
         try:
@@ -75,24 +78,26 @@ class PluginIYUUAutoReseed():
                     site = sites_json.get(str(torrent['sid']))
                     if not site:
                         continue
-                    base_url = site['base_url']
-                    site_name = self._get_site_name(base_url)
+                    site_name = self._get_site_name(site['base_url'])
                     passkey = passkeys.get(site_name)
                     if not passkey:
-                        logger.debug('no passkey, skip site: {}, title: {}'.format(site_name, client_torrent['title']))
+                        if show_detail:
+                            logger.info(
+                                'no passkey, skip site: {}, title: {}'.format(site_name, client_torrent['title']))
                         continue
                     if not site_limit.get(site_name):
                         site_limit[site_name] = 1
                     else:
                         if site_limit[site_name] >= limit:
-                            logger.debug(
-                                'site_limit:{} >= limit: {}, skip site: {}, title: {}'.format(site_limit[site_name],
-                                                                                              limit,
-                                                                                              site_name,
-                                                                                              client_torrent['title']))
+                            logger.info(
+                                'site_limit:{} >= limit: {}, skip site: {}, title: {}'.format(
+                                    site_limit[site_name],
+                                    limit,
+                                    site_name,
+                                    client_torrent['title'])
+                            )
                             continue
                         site_limit[site_name] = site_limit[site_name] + 1
-
                     torrent_id = str(torrent['torrent_id'])
                     entry = Entry(
                         title=client_torrent['title'],
@@ -102,7 +107,12 @@ class PluginIYUUAutoReseed():
                     entry['category'] = client_torrent['qbittorrent_category']
                     entry['savepath'] = client_torrent['qbittorrent_save_path']
                     entry['paused'] = 'true'
-                    Executor.build_reseed_entry(entry, base_url, site, site_name, passkey, torrent_id)
+                    entry['class_name'] = site_name
+                    Executor.build_reseed(entry, site, passkey, torrent_id)
+                    if show_detail:
+                        logger.info(
+                            'accept site: {}, title: {}, url: {}'.format(site_name, client_torrent['title'],
+                                                                         entry.get('url', None)))
                     entries.append(entry)
         return entries
 
