@@ -380,6 +380,10 @@ tasks:
           headers:
             cookie: 'xxxxxxxx'
             user-agent: '{? headers.user_agent ?}'
+        hdchina:
+          headers:
+            cookie: 'xxxxxxxx'
+            user-agent: '{? headers.user_agent ?}'
         hddisk: 'xxxxxxxx'
         hddolby: 'xxxxxxxx'
         hdfans: 'xxxxxxxx'
@@ -546,6 +550,7 @@ tasks:
         hdarea: 'xxxxxxxx'
         hdatmos: 'xxxxxxxx'
         hdbd: 'xxxxxxxx'
+        hdchina: 'xxxxxxxx'
         hdcity: 'xxxxxxxx'
         hddolby: 'xxxxxxxx'
         hddisk: 'xxxxxxxx'
