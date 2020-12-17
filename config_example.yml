@@ -359,7 +359,6 @@ tasks:
         1ptba: 'xxxxxxxx'
         52pt: 'xxxxxxxx'
         beitai: 'xxxxxxxx'
-        brobits: 'xxxxxxxx'
         btschool: 'xxxxxxxx'
         ccfbits: 'xxxxxxxx'
         chdbits: 'xxxxxxxx'
@@ -521,7 +520,6 @@ tasks:
             use_ssl: yes
             username: admin
             password: xxxxxxxx
-        '1468': 'xxxxxxxx'
         1ptba: 'xxxxxxxx'
         52pt: 'xxxxxxxx'
         avgv: 'xxxxxxxx'
@@ -544,6 +542,7 @@ tasks:
         et8: 'xxxxxxxx'
         filelist: 'xxxxxxxx'
         gazellegames: 'xxxxxxxx'
+        hd: 'xxxxxxxx'
         haidan: 'xxxxxxxx'
         hd-torrents: 'xxxxxxxx'
         hd4fans: 'xxxxxxxx'
@@ -566,6 +565,7 @@ tasks:
         hdupt: 'xxxxxxxx'
         hdzone: 'xxxxxxxx'
         hitpt: 'xxxxxxxx'
+        htpt: 'xxxxxxxx'
         joyhd: 'xxxxxxxx'
         jptv: 'xxxxxxxx'
         keepfrds: 'xxxxxxxx'
