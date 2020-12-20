@@ -7,9 +7,9 @@ LABEL maintainer="madwind.cn@gmail.com" \
 COPY root/ /
 
 # RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && \
-RUN apk add --no-cache ca-certificates nodejs build-base libffi-dev openssl-dev unzip bash tzdata zlib-dev jpeg-dev && \
+RUN apk add --no-cache ca-certificates nodejs build-base libffi-dev openssl-dev unzip bash tzdata zlib-dev jpeg-dev libjpeg-devel freetype-devel libpng-devel && \
     pip install --no-cache-dir -U pip && \
-    pip install --no-cache-dir -U flexget==3.1.72 python-telegram-bot==12.8 brotli baidu-aip pillow pandas matplotlib fuzzywuzzy python-Levenshtein && \
+    pip install --no-cache-dir -U flexget==3.1.72 python-telegram-bot==12.8 brotli baidu-aip pillow pandas matplotlib fuzzywuzzy python-Levenshtein&& \
 	cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
   	echo "Asia/Shanghai" >  /etc/timezone && \
     chmod +x /usr/bin/entrypoint.sh && \
