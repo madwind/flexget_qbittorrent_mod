@@ -3,6 +3,10 @@ from ..schema.site_base import SiteBase, Work, SignState
 
 class MainClass(SiteBase):
     URL = 'https://hd-space.org/'
+    USER_CLASSES = {
+        'uploaded': [2199023255552],
+        'share_ratio': [4.25]
+    }
 
     @classmethod
     def build_workflow(cls):

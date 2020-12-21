@@ -44,11 +44,11 @@ class MainClass(SiteBase):
                 }
             },
             'details': {
-                'downloaded': {
-                    'regex': 'Downloaded.+?([\\d.]+ [ZEPTGMK]?B)'
-                },
                 'uploaded': {
                     'regex': 'Uploaded.+?([\\d.]+ [ZEPTGMK]?B)'
+                },
+                'downloaded': {
+                    'regex': 'Downloaded.+?([\\d.]+ [ZEPTGMK]?B)'
                 },
                 'share_ratio': {
                     'regex': 'ratio-details">(&inf|[\\d.]+)',
@@ -61,8 +61,12 @@ class MainClass(SiteBase):
                     'regex': 'Register date</td>.*?<td>(.*?)</td>',
                     'handle': self.handle_join_date
                 },
-                'seeding': None,
-                'leeching': None,
+                'seeding': {
+                    'regex': ('Uploaded.+?([\\d.]+ [ZEPTGMK]?B).*?\\((\\d+)\\)', 2)
+                },
+                'leeching': {
+                    'regex': ('Downloaded.+?([\\d.]+ [ZEPTGMK]?B).*?\\((\\d+)\\)', 2)
+                },
                 'hr': None
             }
         }

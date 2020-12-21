@@ -1,6 +1,7 @@
 import re
 from urllib.parse import urljoin
 
+from dateutil.parser import parse
 from flexget.utils.soup import get_soup
 
 from ..schema.site_base import SiteBase, Work, SignState, NetworkState
@@ -10,6 +11,11 @@ MESSAGES_URL_REGEX = 'usercp\\.php\\?uid=\\d+&do=pm&action=list'
 
 class MainClass(SiteBase):
     URL = 'https://hd-torrents.org/'
+    USER_CLASSES = {
+        'uploaded': [8796093022208],
+        'share_ratio': [5.5],
+        'days': [70]
+    }
 
     @classmethod
     def build_workflow(cls):
@@ -32,10 +38,13 @@ class MainClass(SiteBase):
 
     def build_selector(self):
         selector = {
+            'user_id': 'usercp.php\\?uid=(\\d+)',
             'detail_sources': {
                 'default': {
+                    'link': '/usercp.php?uid={}',
                     'elements': {
-                        'bar': 'body > div.mainmenu > table:nth-child(5)'
+                        'bar': 'body > div.mainmenu > table:nth-child(5)',
+                        'table': '#CurrentDetailsHideShowTR'
                     }
                 }
             },
@@ -51,6 +60,10 @@ class MainClass(SiteBase):
                 },
                 'points': {
                     'regex': 'Bonus Points:.+?([\\d,.]+)'
+                },
+                'join_date': {
+                    'regex': 'Joined on.*?(\\d{2}/\\d{2}/\\d{4})',
+                    'handle': self.handle_join_date
                 },
                 'seeding': {
                     'regex': 'Seeding (\\d+)'
@@ -99,3 +112,6 @@ class MainClass(SiteBase):
                 '\nTitle: {}\nLink: {}\n{}'.format(title, messages_url, message_body))
         if failed:
             entry.fail_with_prefix('Can not read message body!')
+
+    def handle_join_date(self, value):
+        return parse(value, dayfirst=True).date()

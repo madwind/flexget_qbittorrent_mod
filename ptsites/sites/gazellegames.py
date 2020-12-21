@@ -4,6 +4,9 @@ from ..schema.site_base import Work, SignState
 
 class MainClass(Gazelle):
     URL = 'https://gazellegames.net/'
+    USER_CLASSES = {
+        'points': [1200, 6000],
+    }
 
     @classmethod
     def build_workflow(cls):
@@ -23,15 +26,26 @@ class MainClass(Gazelle):
         self.dict_merge(selector, {
             'detail_sources': {
                 'default': {
+                    'do_not_strip': True,
                     'elements': {
                         'bar': '#community_stats > ul:nth-child(3)',
-                        'table': '#content > div > div.sidebar > div.box_main_info'
+                        'table': '#content > div > div.sidebar > div.box_main_info',
+                        'join_date': '.nobullet span.time'
+                    }
+                },
+                'achievements': {
+                    'link': '/user.php?action=achievements',
+                    'elements': {
+                        'total_point': '#content > div:nth-child(8)'
                     }
                 }
             },
             'details': {
+                'points': {
+                    'regex': 'Total Points: (\\d+)'
+                },
                 'hr': {
-                    'regex': 'Hit \'n\' Runs:.+?(\\d+)?'
+                    'regex': 'Hit \'n\' Runs">(\\d+)'
                 },
             }
         })

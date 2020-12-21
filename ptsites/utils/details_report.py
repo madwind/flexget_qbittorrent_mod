@@ -295,13 +295,14 @@ class DetailsReport:
                 site_details = self._get_user_details(session, site_name)
                 if data := self.build_user_classes_data(user_classes, site_details, colors):
                     bar_height = cell_content_height / len(data)
-                    font = self.calc_font(bar_height, font_path, 'fp')
                     j = 0
                     for name, value in data.items():
+                        font, height = self.calc_font(bar_height, cell_width, font_path, name)
                         draw.rectangle(((start_x, y + bar_height * j), (
                             start_x + (cell_width * value[0]),
                             y + bar_height * (j + 1) - 2)), fill=value[1])
-                        draw.text((start_x, y + bar_height * j), name, font=font, fill=(158, 158, 158, 127))
+                        draw.text((start_x, y + bar_height * j + (bar_height - height) / 2), name, font=font,
+                                  fill=(158, 158, 158, 127))
                         j += 1
         img = Image.alpha_composite(img, tmp)
         img = img.convert("RGB").quantize(colors=256)
@@ -391,13 +392,13 @@ class DetailsReport:
                     break
         return y, to_top + to_bottom
 
-    def calc_font(self, bar_height, font_path, test_str):
+    def calc_font(self, bar_height, cell_width, font_path, test_str):
         perfect_height = bar_height - 4
         font_size = 1
         font_tmp = ImageFont.truetype(font_path, font_size)
         width, height = font_tmp.getsize(test_str)
-        while height < perfect_height:
+        while height < perfect_height and width < cell_width - 10:
             font_size += 1
             font_tmp = ImageFont.truetype(font_path, font_size)
             width, height = font_tmp.getsize(test_str)
-        return font_tmp
+        return font_tmp, height

@@ -1,7 +1,6 @@
 from ..schema.nexusphp import AttendanceHR
 
 
-
 class MainClass(AttendanceHR):
     URL = 'https://www.hddolby.com/'
     USER_CLASSES = {
