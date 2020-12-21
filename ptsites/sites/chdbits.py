@@ -1,25 +1,11 @@
-from ..schema.site_base import SiteBase
-from ..schema.nexusphp import NexusPHP
-
-# auto_sign_in
-URL = 'https://chdbits.co/bakatest.php'
-SUCCEED_REGEX = '签到成功,获得\\d+点魔力值|连续\\d+天签到,获得\\d+点魔力值|今天已经签过到了\\(已连续\\d+天签到\\)'
-WRONG_REGEX = '回答错误,失去 1 魔力值,这道题还会再考一次'
+from ..schema.nexusphp import Bakatest
 
 
-class MainClass(NexusPHP):
-    @staticmethod
-    def build_sign_in(entry, config):
-        SiteBase.build_sign_in_entry(entry, config, URL, SUCCEED_REGEX, wrong_regex=WRONG_REGEX)
-
-    def sign_in(self, entry, config):
-        self.sign_in_by_question(entry, config)
-
-    def build_selector(self):
-        selector = super(MainClass, self).build_selector()
-        self.dict_merge(selector, {
-            'details': {
-                'hr': None
-            }
-        })
-        return selector
+class MainClass(Bakatest):
+    URL = 'https://chdbits.co/'
+    USER_CLASSES = {
+        'downloaded': [3298534883328,4398046511104],
+        'share_ratio': [8, 10],
+        'points': [3500000, 5000000],
+        'days': [280, 364]
+    }

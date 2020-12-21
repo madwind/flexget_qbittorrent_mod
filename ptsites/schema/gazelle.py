@@ -2,13 +2,10 @@ from urllib.parse import urljoin
 
 from flexget.utils.soup import get_soup
 
-from .site_base import SiteBase
+from .site_base import SiteBase, NetworkState
 
 
 class Gazelle(SiteBase):
-
-    def sign_in(self, entry, config):
-        self.sign_in_by_get(entry, config)
 
     def get_message(self, entry, config):
         self.get_gazelle_message(entry, config)
@@ -33,7 +30,7 @@ class Gazelle(SiteBase):
                     'regex': ('(Download|下载量).+?([\\d.]+ ?[ZEPTGMK]?i?B)', 2)
                 },
                 'share_ratio': {
-                    'regex': ('(Ratio|分享率).*?(∞|[\\d.]+)', 2),
+                    'regex': ('(Ratio|分享率).*?(∞|[\\d,.]+)', 2),
                     'handle': self.handle_share_ratio
                 },
                 'points': {
@@ -53,8 +50,8 @@ class Gazelle(SiteBase):
     def get_gazelle_message(self, entry, config):
         message_url = urljoin(entry['url'], '/inbox.php')
         message_box_response = self._request(entry, 'get', message_url)
-        net_state = self.check_net_state(entry, message_box_response, message_url)
-        if net_state:
+        network_state = self.check_network_state(entry, message_url, message_box_response)
+        if network_state != NetworkState.SUCCEED:
             return
         unread_elements = get_soup(self._decode(message_box_response)).select("tr.unreadpm > td > strong > a")
         failed = False
@@ -63,8 +60,8 @@ class Gazelle(SiteBase):
             href = unread_element.get('href')
             message_url = urljoin(message_url, href)
             message_response = self._request(entry, 'get', message_url)
-            net_state = self.check_net_state(entry, message_response, message_url)
-            if net_state:
+            network_state = self.check_network_state(entry, message_url, message_response)
+            if network_state != NetworkState.SUCCEED:
                 message_body = 'Can not read message body!'
                 failed = True
             else:

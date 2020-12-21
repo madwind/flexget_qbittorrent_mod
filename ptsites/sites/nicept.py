@@ -1,12 +1,11 @@
-from ..schema.site_base import SiteBase
-from ..schema.nexusphp import NexusPHP
-
-# auto_sign_in
-URL = 'https://www.nicept.net/attendance.php'
-SUCCEED_REGEX = '這是您的第 .* 次簽到，已連續簽到 .* 天，本次簽到獲得 .* 個魔力值。|您今天已經簽到過了，請勿重複刷新。'
+from ..schema.nexusphp import AttendanceHR
 
 
-class MainClass(NexusPHP):
-    @staticmethod
-    def build_sign_in(entry, config):
-        SiteBase.build_sign_in_entry(entry, config, URL, SUCCEED_REGEX)
+
+class MainClass(AttendanceHR):
+    URL = 'https://www.nicept.net/'
+    USER_CLASSES = {
+        'downloaded': [805306368000, 3298534883328],
+        'share_ratio': [3.05, 4.55],
+        'days': [280, 700]
+    }

@@ -1,16 +1,22 @@
 from ..schema.gazelle import Gazelle
-from ..schema.site_base import SiteBase
-
-# auto_sign_in
-
-URL = 'https://gazellegames.net/'
-SUCCEED_REGEX = 'Welcome, <a.+?</a>'
+from ..schema.site_base import Work, SignState
 
 
 class MainClass(Gazelle):
-    @staticmethod
-    def build_sign_in(entry, config):
-        SiteBase.build_sign_in_entry(entry, config, URL, SUCCEED_REGEX)
+    URL = 'https://gazellegames.net/'
+
+    @classmethod
+    def build_workflow(cls):
+        return [
+            Work(
+                url='/',
+                method='get',
+                succeed_regex='Welcome, <a.+?</a>',
+                fail_regex=None,
+                check_state=('final', SignState.SUCCEED),
+                is_base_content=True
+            )
+        ]
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()

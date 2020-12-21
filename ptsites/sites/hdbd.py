@@ -1,21 +1,11 @@
-from ..schema.site_base import SiteBase
-from ..schema.nexusphp import NexusPHP
-
-# auto_sign_in
-URL = 'https://pt.hdbd.us/'
-SUCCEED_REGEX = '伊甸园 PT Torrents'
+from ..schema.nexusphp import Visit
 
 
-class MainClass(NexusPHP):
-    @staticmethod
-    def build_sign_in(entry, config):
-        SiteBase.build_sign_in_entry(entry, config, URL, SUCCEED_REGEX)
-
-    def build_selector(self):
-        selector = super(MainClass, self).build_selector()
-        self.dict_merge(selector, {
-            'details': {
-                'hr': None
-            }
-        })
-        return selector
+class MainClass(Visit):
+    URL = 'https://pt.hdbd.us/'
+    SUCCEED_REGEX = '伊甸园 PT Torrents'
+    USER_CLASSES = {
+        'downloaded': [3298534883328, 32985348833280],
+        'share_ratio': [4, 16],
+        'days': [336, 1274]
+    }

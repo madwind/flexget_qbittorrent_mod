@@ -1,21 +1,10 @@
-from ..schema.site_base import SiteBase
-from ..schema.nexusphp import NexusPHP
-
-# auto_sign_in
-URL = 'https://pt.msg.vg/'
-SUCCEED_REGEX = '欢迎回来'
+from ..schema.nexusphp import Visit
 
 
-class MainClass(NexusPHP):
-    @staticmethod
-    def build_sign_in(entry, config):
-        SiteBase.build_sign_in_entry(entry, config, URL, SUCCEED_REGEX)
-
-    def build_selector(self):
-        selector = super(MainClass, self).build_selector()
-        self.dict_merge(selector, {
-            'details': {
-                'hr': None
-            }
-        })
-        return selector
+class MainClass(Visit):
+    URL = 'https://pt.msg.vg/'
+    USER_CLASSES = {
+        'downloaded': [1099511627776, 3298534883328],
+        'share_ratio': [3.55, 4.55],
+        'days': [420, 700]
+    }

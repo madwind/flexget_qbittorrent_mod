@@ -1,10 +1,7 @@
-from ..schema.nexusphp import NexusPHP
+from ..schema.nexusphp import AttendanceHR
 
-# auto_sign_in
-LOGIN_URL = 'https://ourbits.club/takelogin.php'
-LOGIN_SUCCEED_URL = 'https://ourbits.club/index.php'
-URL = 'https://ourbits.club/attendance.php'
-SUCCEED_REGEX = '这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。|您今天已经签到过了，请勿重复刷新。'
+
+from ..schema.site_base import Work, NetworkState
 
 
 # site_config
@@ -12,18 +9,26 @@ SUCCEED_REGEX = '这是您的第 .* 次签到，已连续签到 .* 天，本次�
 #    username: 'xxxxx'
 #    password: 'xxxxxxxx'
 
-class MainClass(NexusPHP):
-    @staticmethod
-    def build_sign_in(entry, config):
-        entry['url'] = URL
-        entry['succeed_regex'] = SUCCEED_REGEX
-        headers = {
-            'user-agent': config.get('user-agent'),
-            'referer': URL
-        }
-        entry['headers'] = headers
+class MainClass(AttendanceHR):
+    URL = 'https://ourbits.club/'
+    USER_CLASSES = {
+        'downloaded': [2199023255552, 8796093022208],
+        'share_ratio': [4, 5.5],
+        'days': [175, 364]
+    }
 
-    def sign_in(self, entry, config):
+    @classmethod
+    def build_workflow(cls):
+        return [
+                   Work(
+                       url='/takelogin.php',
+                       method='login',
+                       check_state=('network', NetworkState.SUCCEED),
+                       response_urls=['/index.php'],
+                   )
+               ] + AttendanceHR.build_workflow()
+
+    def sign_in_by_login(self, entry, config, work, last_content=None):
         login = entry['site_config'].get('login')
         if not login:
             entry.fail_with_prefix('Login data not found!')
@@ -36,9 +41,4 @@ class MainClass(NexusPHP):
             'password': login['password'],
         }
 
-        login_response = self._request(entry, 'post', LOGIN_URL, data=data)
-        login_state = self.check_net_state(entry, login_response, LOGIN_SUCCEED_URL)
-        if login_state:
-            entry.fail_with_prefix('Login failed!')
-        else:
-            self.sign_in_by_get(entry, config)
+        return self._request(entry, 'post', work.url, data=data)

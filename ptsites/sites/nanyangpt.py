@@ -1,15 +1,14 @@
-from ..schema.site_base import SiteBase
-from ..schema.nexusphp import NexusPHP
-
-# auto_sign_in
-URL = 'https://nanyangpt.com/'
-SUCCEED_REGEX = '魔力豆 \\(.*?\\)'
+from ..schema.nexusphp import Visit
 
 
-class MainClass(NexusPHP):
-    @staticmethod
-    def build_sign_in(entry, config):
-        SiteBase.build_sign_in_entry(entry, config, URL, SUCCEED_REGEX)
+class MainClass(Visit):
+    URL = 'https://nanyangpt.com/'
+    SUCCEED_REGEX = '魔力豆 \\(.*?\\)'
+    USER_CLASSES = {
+        'downloaded': [536870912000, 1099511627776],
+        'share_ratio': [5.5, 8.5],
+        'days': [140, 350]
+    }
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
@@ -20,9 +19,6 @@ class MainClass(NexusPHP):
                         'bar': '#userlink > ul > div:nth-child(3)'
                     }
                 }
-            },
-            'details': {
-                'hr': None
             }
         })
         return selector

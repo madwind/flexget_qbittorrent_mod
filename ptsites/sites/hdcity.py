@@ -1,31 +1,42 @@
 from urllib.parse import urljoin
 
 from ..schema.nexusphp import NexusPHP
-from ..schema.site_base import SiteBase
+from ..schema.site_base import SiteBase, Work, SignState
 
-# auto_sign_in
-
-BASE_URL = 'https://hdcity.work/'
-DOWNLOAD_BASE_RUL = 'https://assets.hdcity.work/'
-URL = urljoin(BASE_URL, '/sign')
-SUCCEED_REGEX = '本次签到获得魅力\\d+'
 
 # iyuu_auto_reseed
 # hdcity:
 #   headers:
 #     cookie: '{ cookie }'
 #     user-agent: '{? headers.user_agent ?}'
-TORRENT_PAGE_URL = urljoin(BASE_URL, '/t-{}')
 
 
 class MainClass(NexusPHP):
-    @staticmethod
-    def build_sign_in(entry, config):
-        SiteBase.build_sign_in_entry(entry, config, URL, SUCCEED_REGEX)
+    URL = 'https://hdcity.work/'
+    TORRENT_PAGE_URL = urljoin(URL, '/t-{}')
+    DOWNLOAD_BASE_RUL = 'https://assets.hdcity.work/'
+    USER_CLASSES = {
+        'downloaded': [5497558138880, 43980465111040],
+        'share_ratio': [2.5, 4],
+        'days': [168, 700]
+    }
 
-    @staticmethod
-    def build_reseed(entry, site, passkey, torrent_id):
-        SiteBase.build_reseed_from_page(entry, passkey, torrent_id, DOWNLOAD_BASE_RUL, TORRENT_PAGE_URL,
+    @classmethod
+    def build_workflow(cls):
+        return [
+            Work(
+                url='/sign',
+                method='get',
+                succeed_regex='本次签到获得魅力\\d+',
+                fail_regex=None,
+                check_state=('final', SignState.SUCCEED),
+                is_base_content=True
+            )
+        ]
+
+    @classmethod
+    def build_reseed(cls, entry, site, passkey, torrent_id):
+        SiteBase.build_reseed_from_page(entry, passkey, torrent_id, cls.DOWNLOAD_BASE_RUL, cls.TORRENT_PAGE_URL,
                                         '/dl\\.php.*?(?=")')
 
     def build_selector(self):
@@ -34,10 +45,10 @@ class MainClass(NexusPHP):
             'user_id': None,
             'detail_sources': {
                 'default': {
-                    'link': None,
+                    'link': 'https://hdcity.work/userdetails',
                     'elements': {
                         'bar': '#bottomnav > div.button-group',
-                        'table': None
+                        'table': '.text_alt > table > tbody > tr > td:nth-child(2)'
                     }
                 }
             },

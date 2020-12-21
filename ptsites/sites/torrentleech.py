@@ -1,18 +1,28 @@
-from ..schema.site_base import SiteBase
+from dateutil.parser import parse
 
-# auto_sign_in
-URL = 'https://www.torrentleech.org/'
-SUCCEED_REGEX = '<span class="link" style="margin-right: 1em;white-space: nowrap;" onclick="window.location.href=\'.+?\'">.+?</span>'
+from ..schema.site_base import SiteBase, Work, SignState
 
 
 class MainClass(SiteBase):
-    @staticmethod
-    def build_sign_in(entry, config):
-        SiteBase.build_sign_in_entry(entry, config, URL + 'none.torrent', SUCCEED_REGEX)
+    URL = 'https://www.torrentleech.org/none.torrent'
+    USER_CLASSES = {
+        'uploaded': [54975581388800],
+        'share_ratio': [8],
+        'days': [364]
+    }
 
-    def sign_in(self, entry, config):
-        entry['url'] = URL
-        self.sign_in_by_get(entry, config)
+    @classmethod
+    def build_workflow(cls):
+        return [
+            Work(
+                url='/',
+                method='get',
+                succeed_regex='<span class="link" style="margin-right: 1em;white-space: nowrap;" onclick="window.location.href=\'.+?\'">.+?</span>',
+                fail_regex=None,
+                check_state=('final', SignState.SUCCEED),
+                is_base_content=True
+            )
+        ]
 
     def get_message(self, entry, config):
         self.get_torrentleech_message(entry, config)
@@ -21,9 +31,17 @@ class MainClass(SiteBase):
         self.get_details_base(entry, config, self.build_selector())
 
     def build_selector(self):
-        selector = {
+        return {
+            'user_id': '/profile/(.*)?/view',
             'detail_sources': {
-                'default': {}
+                'default': {
+                    'do_not_strip': True,
+                    'link': '/profile/{}/view',
+                    'elements': {
+                        'bar': '.row',
+                        'table': '.profileViewTable'
+                    }
+                }
             },
             'details': {
                 'downloaded': {
@@ -33,18 +51,21 @@ class MainClass(SiteBase):
                     'regex': 'Uploaded.+?([\\d.]+ [ZEPTGMK]?B)'
                 },
                 'share_ratio': {
-                    'regex': 'Ratio" class="div-menu-item".+?(&inf|[\\d.]+)',
+                    'regex': 'ratio-details">(&inf|[\\d.]+)',
                     'handle': self.handle_share_ratio
                 },
                 'points': {
                     'regex': 'total-TL-points.+?([\\d,.]+)'
+                },
+                'join_date': {
+                    'regex': 'Register date</td>.*?<td>(.*?)</td>',
+                    'handle': self.handle_join_date
                 },
                 'seeding': None,
                 'leeching': None,
                 'hr': None
             }
         }
-        return selector
 
     def get_torrentleech_message(self, entry, config, messages_url='/messages.php'):
         entry['result'] += '(TODO: Message)'
@@ -54,3 +75,6 @@ class MainClass(SiteBase):
             return '0'
         else:
             return value
+
+    def handle_join_date(self, value):
+        return parse(value).date()

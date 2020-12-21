@@ -3,21 +3,26 @@ from urllib.parse import urljoin
 
 from flexget.utils.soup import get_soup
 
-from ..schema.site_base import SiteBase
+from ..schema.site_base import SiteBase, Work, SignState, NetworkState
 
-# auto_sign_in
-URL = 'https://hd-torrents.org/'
-SUCCEED_REGEX = 'Welcome back, .+?!'
 MESSAGES_URL_REGEX = 'usercp\\.php\\?uid=\\d+&do=pm&action=list'
 
 
 class MainClass(SiteBase):
-    @staticmethod
-    def build_sign_in(entry, config):
-        SiteBase.build_sign_in_entry(entry, config, URL, SUCCEED_REGEX)
+    URL = 'https://hd-torrents.org/'
 
-    def sign_in(self, entry, config):
-        self.sign_in_by_get(entry, config)
+    @classmethod
+    def build_workflow(cls):
+        return [
+            Work(
+                url='/',
+                method='get',
+                succeed_regex='Welcome back, .+?!',
+                fail_regex=None,
+                check_state=('final', SignState.SUCCEED),
+                is_base_content=True
+            )
+        ]
 
     def get_message(self, entry, config):
         self.get_hdt_message(entry, config)
@@ -59,15 +64,15 @@ class MainClass(SiteBase):
         return selector
 
     def get_hdt_message(self, entry, config):
-        if messages_url_match := re.search(MESSAGES_URL_REGEX, self._decode(entry['base_response'])):
+        if messages_url_match := re.search(MESSAGES_URL_REGEX, entry['base_content']):
             messages_url = messages_url_match.group()
         else:
             entry.fail_with_prefix('Can not found messages_url.')
             return
         messages_url = urljoin(entry['url'], messages_url)
         message_box_response = self._request(entry, 'get', messages_url)
-        net_state = self.check_net_state(entry, message_box_response, messages_url)
-        if net_state:
+        network_state = self.check_network_state(entry, messages_url, message_box_response)
+        if network_state != NetworkState.SUCCEED:
             entry.fail_with_prefix('Can not read message box! url:{}'.format(messages_url))
             return
 
@@ -81,8 +86,8 @@ class MainClass(SiteBase):
             href = td.a.get('href')
             messages_url = urljoin(messages_url, href)
             message_response = self._request(entry, 'get', messages_url)
-            net_state = self.check_net_state(entry, message_response, messages_url)
-            if net_state:
+            network_state = self.check_network_state(entry, [messages_url], message_response)
+            if network_state != NetworkState.SUCCEED:
                 message_body = 'Can not read message body!'
                 failed = True
             else:

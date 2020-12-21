@@ -1,15 +1,14 @@
-from ..schema.site_base import SiteBase
-from ..schema.nexusphp import NexusPHP
-
-# auto_sign_in
-URL = 'https://pt.sjtu.edu.cn/'
-SUCCEED_REGEX = '魔力值 \\(\\d+\\)'
+from ..schema.nexusphp import Visit
 
 
-class MainClass(NexusPHP):
-    @staticmethod
-    def build_sign_in(entry, config):
-        SiteBase.build_sign_in_entry(entry, config, URL, SUCCEED_REGEX)
+class MainClass(Visit):
+    URL = 'https://pt.sjtu.edu.cn/'
+    SUCCEED_REGEX = '魔力值 \\(\\d+\\)'
+    USER_CLASSES = {
+        'downloaded': [805306368000, 3298534883328],
+        'share_ratio': [3.05, 4.55],
+        'days': [280, 700]
+    }
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
@@ -28,10 +27,6 @@ class MainClass(NexusPHP):
                     },
                     'do_not_strip': True
                 }
-            },
-            'details': {
-                'hr': None
             }
-
         })
         return selector

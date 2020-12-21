@@ -1,26 +1,35 @@
 from ..schema.nexusphp import NexusPHP
-from ..schema.site_base import SignState
-from ..schema.site_base import SiteBase
-
-# auto_sign_in
-BASE_URL = 'https://www.haidan.video/index.php'
-URL = 'https://www.haidan.video/signin.php'
-SUCCEED_REGEX = '(?<=value=")已经打卡(?=")'
+from ..schema.site_base import SignState, Work
 
 
 class MainClass(NexusPHP):
-    @staticmethod
-    def build_sign_in(entry, config):
-        SiteBase.build_sign_in_entry(entry, config, URL, SUCCEED_REGEX, base_url=BASE_URL)
+    URL = 'https://www.haidan.video/'
+    USER_CLASSES = {
+        'downloaded': [2199023255552, 8796093022208],
+        'share_ratio': [4, 5.5],
+        'days': [175, 364]
+    }
 
-    def check_net_state(self, entry, response, original_url):
-        if not response:
-            entry.fail_with_prefix(SignState.NETWORK_ERROR.value.format(url=original_url, error='Response is None'))
-            return SignState.NETWORK_ERROR
-
-        if response.url not in [BASE_URL, URL, original_url]:
-            entry.fail_with_prefix(SignState.URL_REDIRECT.value.format(original_url, response.url))
-            return SignState.URL_REDIRECT
+    @classmethod
+    def build_workflow(cls):
+        return [
+            Work(
+                url='/index.php',
+                method='get',
+                succeed_regex='(?<=value=")已经打卡(?=")',
+                fail_regex=None,
+                check_state=('sign_in', SignState.NO_SIGN_IN),
+                is_base_content=True
+            ),
+            Work(
+                url='/signin.php',
+                method='get',
+                succeed_regex='(?<=value=")已经打卡(?=")',
+                fail_regex=None,
+                response_urls=['/signin.php', '/index.php'],
+                check_state=('final', SignState.SUCCEED)
+            )
+        ]
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()

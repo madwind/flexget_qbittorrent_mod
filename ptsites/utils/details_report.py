@@ -1,10 +1,13 @@
 import re
 from datetime import datetime
 
+from PIL import Image, ImageDraw, ImageFont
+from dateutil.parser import parse
 from flexget import db_schema
 from flexget.manager import Session
 from loguru import logger
-from sqlalchemy import Column, String, Integer, Float
+from matplotlib.font_manager import findfont, FontProperties
+from sqlalchemy import Column, String, Integer, Float, Date
 
 try:
     import matplotlib.pyplot as plt
@@ -28,13 +31,14 @@ class UserDetailsEntry(UserDetailsBase):
     __tablename__ = 'user_details'
 
     site = Column(String, primary_key=True)
-    uploaded = Column(Integer, index=True, nullable=True)
-    downloaded = Column(Integer, index=True, nullable=True)
-    share_ratio = Column(Float, index=True, nullable=True)
-    points = Column(Float, index=True, nullable=True)
-    seeding = Column(Integer, index=True, nullable=True)
-    leeching = Column(Integer, index=True, nullable=True)
-    hr = Column(Integer, index=True, nullable=True)
+    uploaded = Column(Integer, nullable=True)
+    downloaded = Column(Integer, nullable=True)
+    share_ratio = Column(Float, nullable=True)
+    join_date = Column(Date, nullable=True)
+    points = Column(Float, nullable=True)
+    seeding = Column(Integer, nullable=True)
+    leeching = Column(Integer, nullable=True)
+    hr = Column(Integer, nullable=True)
 
     def __str__(self):
         x = ['site={0}'.format(self.site)]
@@ -44,6 +48,8 @@ class UserDetailsEntry(UserDetailsBase):
             x.append('downloaded={0}'.format(self.downloaded))
         if self.share_ratio:
             x.append('share_ratio={0}'.format(self.share_ratio))
+        if self.join_date:
+            x.append('join_date={0}'.format(self.join_date))
         if self.points:
             x.append('points={0}'.format(self.points))
         if self.seeding:
@@ -83,6 +89,8 @@ class DetailsReport:
 
         total_changed = {}
 
+        user_classes_dict = {}
+
         for column in columns:
             data[column] = []
             total_details[column] = 0
@@ -91,6 +99,10 @@ class DetailsReport:
         order = len(task.all_entries)
 
         for entry in task.all_entries:
+            user_classes_dict[entry['site_name']] = entry.get('user_classes')
+            if entry.get('do_not_draw'):
+                continue
+
             data['default_order'].append(order)
             order = order - 1
             user_details_db = self._get_user_details(session, entry['site_name'])
@@ -100,6 +112,7 @@ class DetailsReport:
                     uploaded=0,
                     downloaded=0,
                     share_ratio=0,
+                    join_date=datetime.now().date(),
                     points=0,
                     seeding=0,
                     leeching=0,
@@ -130,7 +143,7 @@ class DetailsReport:
             # changed
             details_changed = {}
             for key, value_now in details_now.items():
-                if value_now != '*':
+                if value_now != '*' and key not in ['join_date']:
                     details_changed[key] = value_now - getattr(user_details_db, key)
                 else:
                     details_changed[key] = '*'
@@ -157,6 +170,8 @@ class DetailsReport:
 
             # update db
             for key, value in details_now.items():
+                if key == 'join_date':
+                    value = parse(value)
                 if value != '*':
                     setattr(user_details_db, key, value)
             session.commit()
@@ -197,6 +212,7 @@ class DetailsReport:
         fig.tight_layout()
         plt.title(datetime.now().replace(microsecond=0))
         plt.savefig('details_report.png', bbox_inches='tight', dpi=300)
+        self.draw_user_classes(user_classes_dict, session, df)
 
     def _get_user_details(self, session, site):
         user_details = session.query(UserDetailsEntry).filter(
@@ -250,7 +266,7 @@ class DetailsReport:
             return '{:g}'.format(value)
 
     def transfer_data(self, key, value):
-        if value == '*':
+        if value == '*' or key in ['join_date']:
             return value
         if key in ['uploaded', 'downloaded']:
             return float(self.convert_suffix(value))
@@ -259,3 +275,129 @@ class DetailsReport:
     def count(self, count_dict, key, value):
         if key not in ['share_ratio', 'points']:
             count_dict[key] = count_dict[key] + value
+
+    def draw_user_classes(self, user_classes_dict, session, df):
+        img = Image.open('details_report.png')
+        img = img.convert("RGBA")
+        tmp = Image.new('RGBA', img.size, (0, 0, 0, 0))
+        draw = ImageDraw.Draw(tmp)
+        start_x = 32
+        start_y, cell_height = self.find_start_y(img, start_x)
+        cell_width = 342
+        start_y = start_y + cell_height
+        colors = [(63, 81, 181, 127), (103, 58, 183, 127), (255, 87, 34, 127)]
+        font_path = findfont(FontProperties(family=['sans-serif']))
+        for i in range(len(df.values)):
+            site_name = re.sub('\\*', '', df.values[i][0])
+            mid_y = start_y + i * cell_height
+            y, cell_content_height = self.get_cell_position(img, start_x, mid_y)
+            if user_classes := user_classes_dict.get(site_name):
+                site_details = self._get_user_details(session, site_name)
+                if data := self.build_user_classes_data(user_classes, site_details, colors):
+                    bar_height = cell_content_height / len(data)
+                    font = self.calc_font(bar_height, font_path, 'fp')
+                    j = 0
+                    for name, value in data.items():
+                        draw.rectangle(((start_x, y + bar_height * j), (
+                            start_x + (cell_width * value[0]),
+                            y + bar_height * (j + 1) - 2)), fill=value[1])
+                        draw.text((start_x, y + bar_height * j), name, font=font, fill=(158, 158, 158, 127))
+                        j += 1
+        img = Image.alpha_composite(img, tmp)
+        img = img.convert("RGB").quantize(colors=256)
+        img.save('details_report.png')
+
+    def build_user_classes_data(self, user_classes, site_details, colors):
+        data = {}
+        if (downloaded_class := user_classes.get('downloaded')) and (
+                share_ratio_class := user_classes.get('share_ratio')) and not user_classes.get(
+            'uploaded'):
+            uploaded = []
+            for i in range(len(downloaded_class)):
+                uploaded.append(downloaded_class[i] * share_ratio_class[i])
+            uploaded_classes = {'uploaded': uploaded}
+            uploaded_classes.update(user_classes)
+            user_classes = uploaded_classes
+
+        for name, value in user_classes.items():
+            if name == 'days':
+                db_value = (datetime.now().date() - site_details.join_date).days
+            else:
+                db_value = getattr(site_details, name, None)
+            if db_value is None:
+                logger.error(f'get data: {name} error')
+                return
+            data[name] = self.build_single_data(value, db_value, colors)
+        return data
+
+    def set_default_data(self, data, length):
+        if not data:
+            default_data = []
+            for i in range(length):
+                default_data.append(0)
+            return default_data
+        else:
+            return data
+
+    def build_single_data(self, value_tuple, value, colors):
+        if (max_value := value_tuple[-1]) == 0:
+            percent = 1
+        else:
+            percent = value / max_value
+        if percent > 1:
+            percent = 1
+        i = 0
+        for v in value_tuple:
+            if value > v:
+                i += 1
+        if len(value_tuple) == 1:
+            i = -i
+        return (percent, colors[i])
+
+    def find_start_y(self, img, start_x):
+        start_y = 0
+        pass_black = True
+        cell_height = 0
+        for i in range(img.size[1]):
+            pixel = img.getpixel((start_x, i))
+            if not start_y:
+                if pixel[0] == 0 and pixel[1] == 0 and pixel[2] == 0:
+                    start_y = i
+            elif pass_black:
+                if pixel[0] != 0 or pixel[1] != 0 or pixel[2] != 0:
+                    pass_black = False
+            elif pixel[0] == 0 and pixel[1] == 0 and pixel[2] == 0:
+                cell_height = i - start_y
+                break
+        return start_y + (cell_height / 2), cell_height
+
+    def get_cell_position(self, img, start_x, start_y):
+        y = 0
+        to_top = 0
+        to_bottom = 0
+        for i in range(img.size[1]):
+            if start_y - i > 0:
+                pixel = img.getpixel((start_x, start_y - i))
+                if pixel[0] == 0 and pixel[1] == 0 and pixel[2] == 0:
+                    y = start_y - i + 1
+                    to_top = i
+                    break
+
+        for i in range(img.size[1]):
+            if start_y + i < img.size[1]:
+                pixel = img.getpixel((start_x, start_y + i))
+                if pixel[0] == 0 and pixel[1] == 0 and pixel[2] == 0:
+                    to_bottom = i
+                    break
+        return y, to_top + to_bottom
+
+    def calc_font(self, bar_height, font_path, test_str):
+        perfect_height = bar_height - 4
+        font_size = 1
+        font_tmp = ImageFont.truetype(font_path, font_size)
+        width, height = font_tmp.getsize(test_str)
+        while height < perfect_height:
+            font_size += 1
+            font_tmp = ImageFont.truetype(font_path, font_size)
+            width, height = font_tmp.getsize(test_str)
+        return font_tmp

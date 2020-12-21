@@ -1,12 +1,11 @@
-from ..schema.site_base import SiteBase
-from ..schema.nexusphp import NexusPHP
-
-# auto_sign_in
-URL = 'http://hdzone.me/attendance.php'
-SUCCEED_REGEX = '这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。|您今天已经签到过了，请勿重复刷新。'
+from ..schema.nexusphp import AttendanceHR
 
 
-class MainClass(NexusPHP):
-    @staticmethod
-    def build_sign_in(entry, config):
-        SiteBase.build_sign_in_entry(entry, config, URL, SUCCEED_REGEX)
+
+class MainClass(AttendanceHR):
+    URL = 'http://hdzone.me/'
+    USER_CLASSES = {
+        'downloaded': [8796093022208],
+        'share_ratio': [5.5],
+        'days': [70]
+    }

@@ -1,12 +1,7 @@
 from ..schema.meantorrent import MeanTorrent
 
 # auto_sign_in
-from ..schema.site_base import SignState
-
-BASE_URL = 'https://hdpost.top/'
-LOGIN_URL = 'https://hdpost.top/api/auth/signin'
-URL = 'https://hdpost.top/api/check'
-SUCCEED_REGEX = '"keepDays":\\d+|YOU_ALREADY_CHECK_IN'
+from ..schema.site_base import SignState, Work, NetworkState
 
 
 # site_config
@@ -16,36 +11,36 @@ SUCCEED_REGEX = '"keepDays":\\d+|YOU_ALREADY_CHECK_IN'
 
 
 class MainClass(MeanTorrent):
-    @staticmethod
-    def build_sign_in(entry, config):
-        entry['url'] = URL
-        entry['succeed_regex'] = SUCCEED_REGEX
-        headers = {
-            'user-agent': config.get('user-agent'),
-            'referer': BASE_URL,
-        }
-        entry['headers'] = headers
+    URL = 'https://hdpost.top/'
 
-    def sign_in(self, entry, config):
+    @classmethod
+    def build_workflow(cls):
+        return [
+            Work(
+                url='/api/auth/signin',
+                method='login',
+                check_state=('network', NetworkState.SUCCEED)
+            ),
+            Work(
+                url='/api/check',
+                method='get',
+                succeed_regex='"keepDays":\\d+|YOU_ALREADY_CHECK_IN',
+                check_state=('final', SignState.SUCCEED),
+                is_base_content=True
+            )
+        ]
+
+    def sign_in_by_login(self, entry, config, work, last_content=None):
         login = entry['site_config'].get('login')
-        if login:
-            login_response = self._request(entry, 'post', LOGIN_URL, data=login)
-            if login_response and login_response.status_code == 200:
-                entry['base_response'] = base_response = self._request(entry, 'put', URL)
-                self.final_check(entry, base_response, URL)
-            else:
-                entry.fail_with_prefix('Login failed.')
-        else:
-            entry.fail_with_prefix('Login data not found.')
-
-    def check_net_state(self, entry, response, original_url):
-        if not response and response.status_code != 422:
-            entry.fail_with_prefix(SignState.NETWORK_ERROR.value.format(url=original_url, error='Response is None'))
-            return SignState.NETWORK_ERROR
-
-        if response.url != original_url:
-            entry.fail_with_prefix(SignState.URL_REDIRECT.value.format(original_url, response.url))
-            return SignState.URL_REDIRECT
+        if not login:
+            entry.fail_with_prefix('Login data not found!')
+            return
+        return self._request(entry, 'post', work.url, data=login)
+        # if login_response and login_response.status_code == 200:
+        #     entry['base_response'] = base_response = self._request(entry, 'put', URL)
+        #     self.final_check(entry, base_response, URL)
+        # else:
+        #     entry.fail_with_prefix('Login failed.')
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()

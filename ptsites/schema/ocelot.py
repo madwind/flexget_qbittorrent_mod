@@ -3,9 +3,6 @@ from .site_base import SiteBase
 
 class Ocelot(SiteBase):
 
-    def sign_in(self, entry, config):
-        self.sign_in_by_get(entry, config)
-
     def get_message(self, entry, config):
         self.get_ocelot_message(entry, config)
 
@@ -14,12 +11,13 @@ class Ocelot(SiteBase):
 
     def build_selector(self):
         selector = {
-            'user_id': None,
+            'user_id': 'userdetails.php\\?id=(\\d+)',
             'detail_sources': {
                 'default': {
-                    'link': None,
+                    'link': '/userdetails.php?id={}',
                     'elements': {
                         'bar': '#wrapper > div.mainheader > div > div.statusbar > div:nth-child(2)',
+                        'table': '.cblock-content'
                     }
                 }
             },
@@ -36,7 +34,12 @@ class Ocelot(SiteBase):
                 'points': {
                     'regex': ('Hello.+?(\\d+).*?([\\d.]+)', 2)
                 },
-                'seeding': None,
+                'join_date': {
+                    'regex': 'Join.date.*?(\\d{4}-\\d{2}-\\d{2})',
+                },
+                'seeding': {
+                    'regex': 'Seeding (\\d)+'
+                },
                 'leeching': None,
                 'hr': None
             }

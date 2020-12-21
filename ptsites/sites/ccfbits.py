@@ -1,15 +1,19 @@
-from ..schema.nexusphp import NexusPHP
-from ..schema.site_base import SiteBase
-
-# auto_sign_in
-URL = 'https://ccfbits.org/'
-SUCCEED_REGEX = '欢迎回到CCFBits'
+from ..schema.nexusphp import VisitHR
 
 
-class MainClass(NexusPHP):
-    @staticmethod
-    def build_sign_in(entry, config):
-        SiteBase.build_sign_in_entry(entry, config, URL, SUCCEED_REGEX)
+class MainClass(VisitHR):
+    URL = 'https://ccfbits.org/'
+    SUCCEED_REGEX = '欢迎回到CCFBits'
+    USER_CLASSES = {
+        'downloaded': [322122547200],
+        'uploaded': [5497558138880],
+        'share_ratio': [2],
+        'days': [224]
+    }
+
+    def get_nexusphp_message(self, entry, config):
+        super(MainClass, self).get_nexusphp_message(entry, config,
+                                                    unread_elements_selector='tr:nth-child(4) > td > img[alt*="未读"]')
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()

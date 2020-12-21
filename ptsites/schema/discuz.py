@@ -3,9 +3,6 @@ from .site_base import SiteBase
 
 class Discuz(SiteBase):
 
-    def sign_in(self, entry, config):
-        self.sign_in_by_get(entry, config)
-
     def get_message(self, entry, config):
         self.get_discuz_message(entry, config)
 
@@ -34,7 +31,10 @@ class Discuz(SiteBase):
                     'regex': '分享率.*?([\\d.,]+)'
                 },
                 'points': {
-                    'regex': '金币([\\d.,]+)'
+                    'regex': '积分([\\d.,]+)金币'
+                },
+                'join_date': {
+                    'regex': '注册时间(\\d{4}-\\d{2}-\\d{2})',
                 },
                 'seeding': {
                     'regex': '做种数(\\d+)'

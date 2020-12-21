@@ -14,7 +14,7 @@ except ImportError:
 from loguru import logger
 
 from ..schema.nexusphp import NexusPHP
-from ..schema.site_base import SignState
+from ..schema.site_base import SignState, Work, NetworkState
 from ..utils.baidu_ocr import BaiduOcr
 from ..utils.dmhy_image import DmhyImage
 
@@ -25,19 +25,6 @@ except ImportError:
 
 # auto_sign_in
 
-BASE_URL = 'https://u2.dmhy.org/'
-URL = 'https://u2.dmhy.org/showup.php?action=show'
-USERNAME_REGEX = '<bdo dir=\'ltr\'>{username}</bdo>'
-SUCCEED_REGEX = '.{0,500}奖励UCoin: <b>\\d+|<a href="showup.php">已签到</a>'
-IMG_REGEX = 'image\\.php\\?action=adbc2&req=.+?(?=&imagehash)'
-RELOAD_REGEX = 'image\\.php\\?action=reload_adbc2&div=showup&rand=\\d+'
-DATA = {
-    'regex_keys': ['<input type="submit" name="(captcha_.*?)" value="(.*?)" />'],
-    'req': '<input type="hidden" name="req" value="(.*?)" />',
-    'hash': '<input type="hidden" name="hash" value="(.*?)" />',
-    'form': '<input type="hidden" name="form" value="(.*?)" />'
-}
-
 
 # site_config
 #    username: 'xxxxx'
@@ -47,139 +34,108 @@ DATA = {
 #      retry: 10
 #      char_count: 2
 #      score: 10
+_RETRY = 20
+_CHAR_COUNT = 4
+_SCORE = 40
 
 
 class MainClass(NexusPHP):
+    URL = 'https://u2.dmhy.org/'
+    USERNAME_REGEX = '<bdo dir=\'ltr\'>{username}</bdo>'
+    SUCCEED_REGEX = '.{0,500}奖励UCoin: <b>\\d+'
+    USER_CLASSES = {
+        'downloaded': [3298534883328],
+        'share_ratio': [4.55],
+        'days': [700]
+    }
+
+    DATA = {
+        'regex_keys': ['<input type="submit" name="(captcha_.*?)" value="(.*?)" />'],
+        'req': '<input type="hidden" name="req" value="(.*?)" />',
+        'hash': '<input type="hidden" name="hash" value="(.*?)" />',
+        'form': '<input type="hidden" name="form" value="(.*?)" />'
+    }
+
     def __init__(self):
         super(NexusPHP, self).__init__()
         self.times = 0
 
-    @staticmethod
-    def build_sign_in(entry, config):
+    @classmethod
+    def build_sign_in(cls, entry, config):
         site_config = entry['site_config']
-        entry['url'] = URL
-        entry['succeed_regex'] = USERNAME_REGEX.format(username=site_config.get('username')) + SUCCEED_REGEX
-        entry['base_url'] = BASE_URL
-        headers = {
+        succeed_regex = [cls.USERNAME_REGEX.format(username=site_config.get('username')) + cls.SUCCEED_REGEX,
+                         '<a href="showup.php">已签到</a>']
+        entry['url'] = cls.URL
+        entry['workflow'] = cls.build_workflow(succeed_regex)
+        entry['user_classes'] = cls.USER_CLASSES
+        site_config.setdefault('ocr_config', {})
+        ocr_config = site_config.get('ocr_config')
+        ocr_config.setdefault('retry', _RETRY)
+        ocr_config.setdefault('char_count', _CHAR_COUNT)
+        ocr_config.setdefault('score', _SCORE)
+
+        entry['headers'] = {
             'cookie': site_config.get('cookie'),
             'user-agent': config.get('user-agent'),
-            'referer': BASE_URL
+            'referer': entry['url']
         }
-        entry['headers'] = headers
-        entry['data'] = DATA
 
-    def sign_in(self, entry, config):
+    @classmethod
+    def build_workflow(cls, succeed_regex):
+        return [
+            Work(
+                url='/showup.php?action=show',
+                method='get',
+                succeed_regex=succeed_regex,
+                check_state=('sign_in', SignState.NO_SIGN_IN),
+                is_base_content=True
+            ),
+            Work(
+                url='/showup.php?action=show',
+                method='anime',
+                data=cls.DATA,
+                check_state=('network', NetworkState.SUCCEED),
+
+                img_regex='image\\.php\\?action=adbc2&req=.+?(?=&imagehash)',
+                reload_regex='image\\.php\\?action=reload_adbc2&div=showup&rand=\\d+'
+            ),
+            Work(
+                url='/showup.php?action=show',
+                method='get',
+                succeed_regex=succeed_regex,
+                check_state=('final', SignState.SUCCEED),
+            ),
+
+        ]
+
+    def sign_in_by_anime(self, entry, config, work, last_content):
         if not fuzz or not process:
             entry.fail_with_prefix('Dependency does not exist: [fuzzywuzzy]')
             return
-        entry['base_response'] = base_response = self._request(entry, 'get', entry['url'])
-        sign_in_state, base_content = self.check_sign_in_state(entry, base_response, entry['url'])
-        if sign_in_state != SignState.NO_SIGN_IN:
-            return
-        ocr_config = entry['site_config'].get('ocr_config', {})
-        retry = ocr_config.get('retry', 10)
-        char_count = ocr_config.get('char_count', 2)
-        score = ocr_config.get('score', 40)
-        data = self.build_data(entry, base_content, config, retry, char_count, score)
+
+        ocr_config = entry['site_config'].get('ocr_config')
+        data = self.build_data(entry, config, work, last_content, ocr_config)
         if not data:
             entry.fail_with_prefix('Cannot build_data')
             return
         logger.info(data)
-        post_answer_response = self._request(entry, 'post', entry['url'], data=data)
-        post_answer_net_state = self.check_net_state(entry, post_answer_response, entry['url'])
-        if post_answer_net_state:
-            return
-        response = self._request(entry, 'get', entry['url'])
-        self.final_check(entry, response, entry['url'])
+        return self._request(entry, 'post', work.url, data=data)
 
-    def build_selector(self):
-        selector = super(MainClass, self).build_selector()
-        self.dict_merge(selector, {
-            'details': {
-                'points': {
-                    'regex': ('UCoin.*?([\\d,.]+)\\(([\\d,.]+)\\)', 2)
-                },
-                'seeding': {
-                    'regex': ('客户端.*?(\\d+).*?(\\d+).*?(\\d+)', 2)
-                },
-                'leeching': {
-                    'regex': ('客户端.*?(\\d+).*?(\\d+).*?(\\d+)', 3)
-                },
-                'hr': None
-            }
-        })
-        return selector
-
-    def get_image(self, entry, img_url, config, char_count):
-        image_list = []
-        checked_list = []
-        images_sort_match = None
-        image_last = None
-        new_image = self.get_new_image(entry, img_url)
-        if not DmhyImage.check_analysis(new_image):
-            self.save_iamge(new_image, 'dmhy/z_failed.png')
-            logger.info('can not analyzed!')
-            return None
-        original_text = BaiduOcr.get_jap_ocr(new_image, entry, config)
-        logger.info('original_ocr: {}', original_text)
-        if len(original_text) < char_count:
-            return None
-        image_list.append(new_image)
-        while not images_sort_match and len(image_list) < 8:
-            new_image = self.get_new_image(entry, img_url)
-            if not new_image:
-                return None
-            image_list.append(new_image)
-            for images in list(itertools.combinations(image_list, 2)):
-                if images not in checked_list:
-                    checked_list.append(images)
-                    image1, image2 = images
-                    self.save_iamge(image1, 'dmhy/step1_a_original.png')
-                    self.save_iamge(image2, 'dmhy/step1_b_original.png')
-                    if DmhyImage.compare_images_sort(image1, image2):
-                        images_sort_match = images
-                        break
-        if images_sort_match:
-            image1, image2 = images_sort_match
-            image_a_split_1, image_a_split_2 = DmhyImage.split_image(image1)
-            self.save_iamge(image_a_split_1, 'dmhy/step2_a_split_1.png')
-            self.save_iamge(image_a_split_2, 'dmhy/step2_a_split_2.png')
-            image_b_split_1, image_b_split_2 = DmhyImage.split_image(image2)
-            self.save_iamge(image_b_split_1, 'dmhy/step2_b_split_1.png')
-            self.save_iamge(image_b_split_2, 'dmhy/step2_b_split_2.png')
-            image_last = DmhyImage.compare_images(image_a_split_1, image_b_split_1)
-            if not image_last:
-                image_last = DmhyImage.compare_images(image_a_split_2, image_b_split_2)
-
-        return image_last
-
-    def get_new_image(self, entry, img_url):
-        time.sleep(1)
-        logger.debug('request image...')
-        base_img_response = self._request(entry, 'get', urljoin(BASE_URL, img_url))
-        base_img_net_state = self.check_net_state(entry, base_img_response,
-                                                  urljoin(BASE_URL, urljoin(BASE_URL, img_url)))
-        if base_img_net_state:
-            return None
-        new_image = Image.open(BytesIO(base_img_response.content))
-        DmhyImage.remove_date(new_image)
-        return new_image
-
-    def build_data(self, entry, base_content, config, retry, char_count, score):
-        img_url = re.search(IMG_REGEX, base_content).group()
-        logger.info('attempts: {}, url: {}', self.times, urljoin(BASE_URL, img_url))
+    def build_data(self, entry, config, work, base_content, ocr_config):
+        img_url = re.search(work.img_regex, base_content).group()
+        logger.info('attempts: {} / {}, url: {}', self.times, ocr_config.get('retry'), urljoin(entry['url'], img_url))
         data = {}
         found = False
-        if images := self.get_image(entry, img_url, config, char_count):
+        if images := self.get_image(entry, config, img_url, ocr_config.get('char_count')):
             image1, image2 = images
-            self.save_iamge(image1, 'dmhy/step3_a_diff.jpg')
-            self.save_iamge(image2, 'dmhy/step3_b_diff.jpg')
+            self.save_iamge(image1, 'step3_a_diff.jpg')
+            self.save_iamge(image2, 'step3_b_diff.jpg')
             ocr_text1 = BaiduOcr.get_jap_ocr(image1, entry, config)
             ocr_text2 = BaiduOcr.get_jap_ocr(image2, entry, config)
             oct_text = ocr_text1 if len(ocr_text1) > len(ocr_text2) else ocr_text2
             logger.debug('jap_ocr: {}', oct_text)
-            if oct_text and len(oct_text) > char_count:
-                for key, regex in entry.get('data', {}).items():
+            if oct_text and len(oct_text) > ocr_config.get('char_count'):
+                for key, regex in work.data.items():
                     if key == 'regex_keys':
                         for regex_key in regex:
                             regex_key_search = re.findall(regex_key, base_content, re.DOTALL)
@@ -201,9 +157,9 @@ class MainClass(NexusPHP):
                                     logger.debug('value: {}, ratio: {}', value.replace('\n', '\\'), partial_ratio)
                             else:
                                 entry.fail_with_prefix(
-                                    'Cannot find regex_key: {}, url: {}'.format(regex_key, entry['url']))
+                                    'Cannot find regex_key: {}, url: {}'.format(regex_key, work.url))
                                 return None
-                            if ratio_score and ratio_score > score:
+                            if ratio_score and ratio_score > ocr_config.get('score'):
                                 captcha, value = select
                                 data[captcha] = value
                                 found = True
@@ -212,38 +168,101 @@ class MainClass(NexusPHP):
                         if value_search:
                             data[key] = value_search.group(1)
                         else:
-                            entry.fail_with_prefix('Cannot find key: {}, url: {}'.format(key, entry['url']))
+                            entry.fail_with_prefix('Cannot find key: {}, url: {}'.format(key, work.url))
                             return
 
-        if not found and self.times < retry:
-            self.times += 1
-            reload_url = re.search(RELOAD_REGEX, base_content).group()
-            reload_response = self._request(entry, 'get', urljoin(BASE_URL, reload_url))
-            reload__net_state = self.check_net_state(entry, reload_response, urljoin(BASE_URL, reload_url))
-            if reload__net_state:
+        if not found:
+            if self.times < ocr_config.get('retry'):
+                self.times += 1
+                reload_url = re.search(work.reload_regex, base_content).group()
+                real_reload_url = urljoin(entry['url'], reload_url)
+                reload_response = self._request(entry, 'get', real_reload_url)
+                reload__net_state = self.check_network_state(entry, real_reload_url, reload_response)
+                if reload__net_state != NetworkState.SUCCEED:
+                    return None
+                reload_content = self._decode(reload_response)
+                return self.build_data(entry, config, work, reload_content, ocr_config)
+            else:
                 return None
-            reload_content = self._decode(reload_response)
-            return self.build_data(entry, reload_content, config, retry, char_count, score)
         site_config = entry['site_config']
         data['message'] = site_config.get('comment')
         return data
 
-    def check_sign_in_state(self, entry, response, original_url, regex=None):
-        net_state = self.check_net_state(entry, response, original_url)
-        if net_state:
-            return net_state, None
+    def get_image(self, entry, config, img_url, char_count):
+        image_list = []
+        checked_list = []
+        images_sort_match = None
+        image_last = None
+        new_image = self.get_new_image(entry, img_url)
+        if not DmhyImage.check_analysis(new_image):
+            self.save_iamge(new_image, 'z_failed.png')
+            logger.info('can not analyzed!')
+            return None
+        original_text = BaiduOcr.get_jap_ocr(new_image, entry, config)
+        logger.info('original_ocr: {}', original_text)
+        if len(original_text) < char_count:
+            return None
+        image_list.append(new_image)
+        while not images_sort_match and len(image_list) < 8:
+            new_image = self.get_new_image(entry, img_url)
+            if not new_image:
+                return None
+            image_list.append(new_image)
+            for images in list(itertools.combinations(image_list, 2)):
+                if images not in checked_list:
+                    checked_list.append(images)
+                    image1, image2 = images
+                    self.save_iamge(image1, 'step1_a_original.png')
+                    self.save_iamge(image2, 'step1_b_original.png')
+                    if DmhyImage.compare_images_sort(image1, image2):
+                        images_sort_match = images
+                        break
+        if images_sort_match:
+            image1, image2 = images_sort_match
+            image_a_split_1, image_a_split_2 = DmhyImage.split_image(image1)
+            self.save_iamge(image_a_split_1, 'step2_a_split_1.png')
+            self.save_iamge(image_a_split_2, 'step2_a_split_2.png')
+            image_b_split_1, image_b_split_2 = DmhyImage.split_image(image2)
+            self.save_iamge(image_b_split_1, 'step2_b_split_1.png')
+            self.save_iamge(image_b_split_2, 'step2_b_split_2.png')
+            image_last = DmhyImage.compare_images(image_a_split_1, image_b_split_1)
+            if not image_last:
+                image_last = DmhyImage.compare_images(image_a_split_2, image_b_split_2)
 
-        content = self._decode(response)
-        succeed_regex = regex if regex else entry.get('succeed_regex')
+        return image_last
 
-        succeed_list = re.findall(succeed_regex, content, re.DOTALL)
-        if succeed_list:
-            entry['result'] = re.sub('<.*?>|&shy;', '', succeed_list[-1])
-            return SignState.SUCCEED, content
-        return SignState.NO_SIGN_IN, content
+    def get_new_image(self, entry, img_url):
+        time.sleep(1)
+        logger.debug('request image...')
+        real_img_url = urljoin(entry['url'], img_url)
+        base_img_response = self._request(entry, 'get', real_img_url)
+        base_img_network_state = self.check_network_state(entry, real_img_url, base_img_response)
+        if base_img_network_state != NetworkState.SUCCEED:
+            return None
+        new_image = Image.open(BytesIO(base_img_response.content))
+        DmhyImage.remove_date_string(new_image)
+        return new_image
 
     def save_iamge(self, new_image, path):
         if not Path('dmhy').is_dir():
-            Path('dmhy').mkdir()
+            return
         if new_image:
-            new_image.save(path)
+            new_image.save('dmhy/' + path)
+
+    def build_selector(self):
+        selector = super(MainClass, self).build_selector()
+        self.dict_merge(selector, {
+            'details': {
+                'points': {
+                    'regex': ('UCoin.*?([\\d,.]+)\\(([\\d,.]+)\\)', 2)
+                },
+                'seeding': {
+                    'regex': ('客户端.*?(\\d+).*?(\\d+).*?(\\d+)', 2)
+                },
+                'leeching': {
+                    'regex': ('客户端.*?(\\d+).*?(\\d+).*?(\\d+)', 3)
+                },
+                'hr': None
+            }
+        })
+        return selector

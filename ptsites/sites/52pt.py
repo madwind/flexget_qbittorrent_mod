@@ -1,16 +1,11 @@
-from ..schema.nexusphp import NexusPHP
-from ..schema.site_base import SiteBase
-
-# auto_sign_in
-URL = 'https://52pt.site/bakatest.php'
-SUCCEED_REGEX = '连续.*天签到,获得.*点魔力值|今天已经签过到了\\(已连续.*天签到\\)'
-WRONG_REGEX = '回答错误,失去 1 魔力值,这道题还会再考一次'
+from ..schema.nexusphp import BakatestHR
 
 
-class MainClass(NexusPHP):
-    @staticmethod
-    def build_sign_in(entry, config):
-        SiteBase.build_sign_in_entry(entry, config, URL, SUCCEED_REGEX, wrong_regex=WRONG_REGEX)
+class MainClass(BakatestHR):
+    URL = 'https://52pt.site/'
+    USER_CLASSES = {
+        'downloaded': [2748779069440, 6047313952768],
+        'share_ratio': [3.05, 4.55],
+        'days': [280, 700]
 
-    def sign_in(self, entry, config):
-        self.sign_in_by_question(entry, config)
+    }

@@ -1,24 +1,39 @@
-from ..schema.site_base import SiteBase
 from ..schema.nexusphp import NexusPHP
-
-# auto_sign_in
-BASE_URL = 'https://totheglory.im/'
-URL = 'https://totheglory.im/signed.php'
-SUCCEED_REGEX = '<b style="color:green;">已签到</b>|您已连续签到\\d+天，奖励\\d+积分，明天继续签到将获得\\d+积分奖励。'
-DATA = {
-    'signed_timestamp': '(?<=signed_timestamp: ")\\d{10}',
-    'signed_token': '(?<=signed_token: ").*(?=")'
-}
+from ..schema.site_base import SignState, Work
 
 
 class MainClass(NexusPHP):
-    @staticmethod
-    def build_sign_in(entry, config):
-        SiteBase.build_sign_in_entry(entry, config, URL, SUCCEED_REGEX, base_url=BASE_URL)
-        entry['data'] = DATA
+    URL = 'https://totheglory.im/'
+    USER_CLASSES = {
+        'uploaded': [769658139444, 109951162777600],
+        'downloaded': [3848290697216, 10995116277760],
+        'share_ratio': [5, 6],
+        'days': [224,336]
+    }
 
-    def sign_in(self, entry, config):
-        self.sign_in_by_post_data(entry, config)
+    DATA = {
+        'signed_timestamp': '(?<=signed_timestamp: ")\\d{10}',
+        'signed_token': '(?<=signed_token: ").*(?=")'
+    }
+
+    @classmethod
+    def build_workflow(cls):
+        return [
+            Work(
+                url='/',
+                method='get',
+                succeed_regex='<b style="color:green;">已签到</b>',
+                check_state=('sign_in', SignState.NO_SIGN_IN),
+                is_base_content=True
+            ),
+            Work(
+                url='/signed.php',
+                method='post',
+                data=cls.DATA,
+                succeed_regex='您已连续签到\\d+天，奖励\\d+积分，明天继续签到将获得\\d+积分奖励。',
+                check_state=('final', SignState.SUCCEED),
+            )
+        ]
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()

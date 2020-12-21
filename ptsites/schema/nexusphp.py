@@ -6,13 +6,10 @@ from urllib.parse import urljoin
 from flexget.utils.soup import get_soup
 from loguru import logger
 
-from .site_base import SiteBase, SignState
+from ..schema.site_base import SiteBase, SignState, NetworkState, Work
 
 
 class NexusPHP(SiteBase):
-
-    def sign_in(self, entry, config):
-        self.sign_in_by_get(entry, config)
 
     def get_message(self, entry, config):
         self.get_nexusphp_message(entry, config)
@@ -46,6 +43,9 @@ class NexusPHP(SiteBase):
                 'points': {
                     'regex': ('(魔力|Bonus).*?([\\d,.]+)', 2)
                 },
+                'join_date': {
+                    'regex': ('(加入日期|注册日期|Join.date).*?(\\d{4}-\\d{2}-\\d{2})', 2),
+                },
                 'seeding': {
                     'regex': ('(当前活动|當前活動).*?(\\d+)', 2)
                 },
@@ -59,16 +59,17 @@ class NexusPHP(SiteBase):
         }
         return selector
 
-    def get_nexusphp_message(self, entry, config, messages_url='/messages.php'):
+    def get_nexusphp_message(self, entry, config, messages_url='/messages.php',
+                             unread_elements_selector='td > img[alt*="Unread"]'):
         message_url = urljoin(entry['url'], messages_url)
         message_box_response = self._request(entry, 'get', message_url)
-        net_state = self.check_net_state(entry, message_box_response, message_url)
-        if net_state:
+        message_box_network_state = self.check_network_state(entry, message_url, message_box_response)
+        if message_box_network_state != NetworkState.SUCCEED:
             entry.fail_with_prefix('Can not read message box! url:{}'.format(message_url))
             return
 
         unread_elements = get_soup(self._decode(message_box_response)).select(
-            'td > img[alt*="Unread"]')
+            unread_elements_selector)
         failed = False
         for unread_element in unread_elements:
             td = unread_element.parent.nextSibling.nextSibling
@@ -76,8 +77,8 @@ class NexusPHP(SiteBase):
             href = td.a.get('href')
             message_url = urljoin(message_url, href)
             message_response = self._request(entry, 'get', message_url)
-            net_state = self.check_net_state(entry, message_response, message_url)
-            if net_state:
+            message_network_state = self.check_network_state(entry, message_url, message_response)
+            if message_network_state != NetworkState.SUCCEED:
                 message_body = 'Can not read message body!'
                 failed = True
             else:
@@ -89,13 +90,8 @@ class NexusPHP(SiteBase):
         if failed:
             entry.fail_with_prefix('Can not read message body!')
 
-    def sign_in_by_question(self, entry, config):
-        entry['base_response'] = base_response = self._request(entry, 'get', entry['url'])
-        sign_in_state, base_content = self.check_sign_in_state(entry, base_response, entry['url'])
-        if sign_in_state != SignState.NO_SIGN_IN:
-            return
-
-        question_element = get_soup(base_content).select_one('input[name="questionid"]')
+    def sign_in_by_question(self, entry, config, work, last_content=None):
+        question_element = get_soup(last_content).select_one('input[name="questionid"]')
         if question_element:
             question_id = question_element.get('value')
 
@@ -119,7 +115,7 @@ class NexusPHP(SiteBase):
             else:
                 question_json[entry['url']] = {}
 
-            choice_elements = get_soup(base_content).select('input[name="choice[]"]')
+            choice_elements = get_soup(last_content).select('input[name="choice[]"]')
             choices = []
             for choice_element in choice_elements:
                 choices.append(choice_element.get('value', ''))
@@ -141,11 +137,10 @@ class NexusPHP(SiteBase):
             times = 0
             for answer in answer_list:
                 data = {'questionid': question_id, 'choice[]': answer, 'usercomment': '此刻心情:无', 'submit': '提交'}
-                response = self._request(entry, 'post', entry['url'], data=data)
-                state, content = self.check_sign_in_state(entry, response, entry['url'])
+                response = self._request(entry, 'post', work.url, data=data)
+                state = self.check_sign_in_state(entry, work, response, self._decode(response))
                 if state == SignState.SUCCEED:
                     entry['result'] = '{} ( {} attempts.)'.format(entry['result'], times)
-
                     question_json[entry['url']][question_id] = answer
                     question_file.write_text(json.dumps(question_json))
                     logger.info('{}, correct answer: {}', entry['title'], data)
@@ -158,3 +153,99 @@ class NexusPHP(SiteBase):
             return '0'
         else:
             return value
+
+
+class AttendanceHR(NexusPHP):
+    URL = ''
+
+    @classmethod
+    def build_workflow(cls):
+        return [
+            Work(
+                url='/attendance.php',
+                method='get',
+                succeed_regex=[
+                    '这是您的第 .* 次签到，已连续签到 .* 天，本次签到获得 .* 个魔力值。|這是您的第 .* 次簽到，已連續簽到 .* 天，本次簽到獲得 .* 個魔力值。',
+                    '[签簽]到已得\\d+',
+                    '您今天已经签到过了，请勿重复刷新。|您今天已經簽到過了，請勿重複刷新。'],
+                fail_regex=None,
+                check_state=('final', SignState.SUCCEED),
+                is_base_content=True
+            )
+        ]
+
+
+class Attendance(AttendanceHR):
+    def build_selector(self):
+        selector = super(Attendance, self).build_selector()
+        self.dict_merge(selector, {
+            'details': {
+                'hr': None
+            }
+        })
+        return selector
+
+
+class BakatestHR(NexusPHP):
+    URL = ''
+
+    @classmethod
+    def build_workflow(cls):
+        return [
+            Work(
+                url='/bakatest.php',
+                method='get',
+                succeed_regex='今天已经签过到了\\(已连续.*天签到\\)',
+                fail_regex=None,
+                check_state=('sign_in', SignState.NO_SIGN_IN),
+                is_base_content=True
+            ),
+            Work(
+                url='/bakatest.php',
+                method='question',
+                succeed_regex='连续.*天签到,获得.*点魔力值|今天已经签过到了\\(已连续.*天签到\\)',
+                fail_regex='回答错误,失去 1 魔力值,这道题还会再考一次',
+            )
+        ]
+
+
+class Bakatest(BakatestHR):
+
+    def build_selector(self):
+        selector = super(Bakatest, self).build_selector()
+        self.dict_merge(selector, {
+            'details': {
+                'hr': None
+            }
+        })
+        return selector
+
+
+class VisitHR(NexusPHP):
+    URL = ''
+    SUCCEED_REGEX = '[欢歡]迎回[来來家]'
+
+    @classmethod
+    def build_workflow(cls):
+        return [
+            Work(
+                url='/',
+                method='get',
+                succeed_regex=cls.SUCCEED_REGEX,
+                fail_regex=None,
+                check_state=('final', SignState.SUCCEED),
+                is_base_content=True
+            )
+        ]
+
+
+class Visit(VisitHR):
+
+    def build_selector(self):
+        selector = super(Visit, self).build_selector()
+        self.dict_merge(selector, {
+            'details': {
+                'hr': None
+            }
+        })
+        return selector

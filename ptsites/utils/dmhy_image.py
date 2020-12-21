@@ -31,7 +31,7 @@ class DmhyImage:
         return False
 
     @staticmethod
-    def remove_date(image: Image):
+    def remove_date_string(image: Image):
         width, height = image.size
         p = Image.new('RGB', (276, 15), (0, 0, 0))
         image.paste(p, (2, height - 32))

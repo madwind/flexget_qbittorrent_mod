@@ -1,15 +1,15 @@
-from ..schema.site_base import SiteBase
-from ..schema.nexusphp import NexusPHP
-
-# auto_sign_in
-URL = 'https://springsunday.net/'
-SUCCEED_REGEX = '欢迎回来'
+from ..schema.nexusphp import Visit
 
 
-class MainClass(NexusPHP):
-    @staticmethod
-    def build_sign_in(entry, config):
-        SiteBase.build_sign_in_entry(entry, config, URL, SUCCEED_REGEX)
+class MainClass(Visit):
+    URL = 'https://springsunday.net/'
+    USER_CLASSES = {
+        'uploaded': [1832519379627, 109951162777600],
+        'downloaded': [2199023255552, 109951162777600],
+        'share_ratio': [1.2, 2],
+        'points': [400000, 2000000],
+        'days': [35, 35]
+    }
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
@@ -22,7 +22,9 @@ class MainClass(NexusPHP):
                 }
             },
             'details': {
-                'hr': None
+                'points': {
+                    'regex': '做种积分: ([\\d.,]+)',
+                }
             }
         })
         return selector

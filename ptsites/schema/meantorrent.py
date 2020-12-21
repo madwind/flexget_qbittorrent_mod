@@ -1,14 +1,7 @@
-from urllib.parse import urljoin
-
-from flexget.utils.soup import get_soup
-
 from .site_base import SiteBase
 
 
 class MeanTorrent(SiteBase):
-
-    def sign_in(self, entry, config):
-        self.sign_in_by_get(entry, config)
 
     def get_message(self, entry, config):
         self.get_meantorrent_message(entry, config)
@@ -35,6 +28,9 @@ class MeanTorrent(SiteBase):
                 'share_ratio': None,
                 'points': {
                     'regex': 'score.*?([\\d.,]+)'
+                },
+                'join_date': {
+                    'regex': '"created":"(\\d{4}-\\d{2}-\\d{2})'
                 },
                 'seeding': {
                     'regex': 'seeded.*?(\\d+)'

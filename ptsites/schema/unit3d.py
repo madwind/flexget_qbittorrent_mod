@@ -1,10 +1,9 @@
+from dateutil.parser import parse
+
 from .site_base import SiteBase
 
 
 class Unit3D(SiteBase):
-
-    def sign_in(self, entry, config):
-        self.sign_in_by_get(entry, config)
 
     def get_message(self, entry, config):
         self.get_unit3d_message(entry, config)
@@ -14,10 +13,13 @@ class Unit3D(SiteBase):
 
     def build_selector(self):
         selector = {
+            'user_id': '/users/(.*?)"',
             'detail_sources': {
                 'default': {
+                    'link': '/users/{}',
                     'elements': {
                         'bar': '#main-content > div.ratio-bar > div > ul',
+                        'date_table': '.gradient'
                     }
                 }
             },
@@ -34,6 +36,10 @@ class Unit3D(SiteBase):
                 'points': {
                     'regex': '魔力.+?(\\d[\\d,. ]+)',
                     'handle': self.handle_points
+                },
+                'join_date': {
+                    'regex': '注册日期 (.*?\\d{4})',
+                    'handle': self.handle_join_date
                 },
                 'seeding': {
                     'regex': '做种.+?(\\d+)'
@@ -53,3 +59,6 @@ class Unit3D(SiteBase):
 
     def handle_points(self, value):
         return value.replace(' ', '')
+
+    def handle_join_date(self, value):
+        return parse(value).date()

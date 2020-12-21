@@ -2,37 +2,45 @@ import re
 from urllib.parse import urljoin
 
 from ..schema.discuz import Discuz
-
-# auto_sign_in
-URL = 'https://www.skyey2.com/login.php'
-LOGIN_URL_REGEX = '(?<=action=").*?(?=")'
-FORMHASH_REGEX = '(?<="formhash" value=").*(?=")'
-SUCCEED_REGEX = '欢迎您回来，.*?(?=，)'
+from ..schema.site_base import Work, NetworkState, SignState
 
 
 class MainClass(Discuz):
-    @staticmethod
-    def build_sign_in(entry, config):
-        entry['url'] = URL
-        entry['succeed_regex'] = SUCCEED_REGEX
-        headers = {
-            'user-agent': config.get('user-agent'),
-            'referer': URL
-        }
-        entry['headers'] = headers
+    URL = 'https://www.skyey2.com/'
+    USER_CLASSES = {
+        'points': [1000000]
+    }
 
-    def sign_in(self, entry, config):
+    @classmethod
+    def build_workflow(cls):
+        return [
+            Work(
+                url='/login.php',
+                method='get',
+                check_state=('network', NetworkState.SUCCEED),
+            ),
+            Work(
+                url='/login.php',
+                method='login',
+                succeed_regex='欢迎您回来，.*?(?=，)',
+                check_state=('final', SignState.SUCCEED),
+                is_base_content=True,
+
+                login_url_regex='(?<=action=").*?(?=")',
+                formhash_regex='(?<="formhash" value=").*(?=")'
+
+            )
+        ]
+
+    def sign_in_by_login(self, entry, config, work, last_content):
         login = entry['site_config'].get('login')
         if not login:
             entry.fail_with_prefix('Login data not found!')
             return
-        response = self._request(entry, 'get', URL, verify=False)
-        state = self.check_net_state(entry, response, URL)
-        if state:
-            return
-        content = self._decode(response)
-        login_url = urljoin(URL, re.search(LOGIN_URL_REGEX, content).group())
-        formhash = re.search(FORMHASH_REGEX, content).group()
+
+        login_url = urljoin(entry['url'], re.search(work.login_url_regex, last_content).group())
+        work.response_urls = [login_url]
+        formhash = re.search(work.formhash_regex, last_content).group()
         data = {
             'formhash': formhash,
             'referer': '/',
@@ -41,5 +49,4 @@ class MainClass(Discuz):
             'password': login['password'],
             'loginsubmit': 'true'
         }
-        entry['base_response'] = response = self._request(entry, 'post', login_url, data=data, verify=False)
-        self.final_check(entry, response, login_url)
+        return self._request(entry, 'post', login_url, data=data, verify=False)

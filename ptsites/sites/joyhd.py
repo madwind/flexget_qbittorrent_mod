@@ -1,15 +1,13 @@
-from ..schema.site_base import SiteBase
-from ..schema.nexusphp import NexusPHP
-
-# auto_sign_in
-URL = 'https://www.joyhd.net/'
-SUCCEED_REGEX = '欢迎回家'
+from ..schema.nexusphp import Visit
 
 
-class MainClass(NexusPHP):
-    @staticmethod
-    def build_sign_in(entry, config):
-        SiteBase.build_sign_in_entry(entry, config, URL, SUCCEED_REGEX)
+class MainClass(Visit):
+    URL = 'https://www.joyhd.net/'
+    USER_CLASSES = {
+        'downloaded': [644245094400, 5368709120000],
+        'share_ratio': [4.5, 6],
+        'days': [175, 350]
+    }
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
@@ -17,8 +15,7 @@ class MainClass(NexusPHP):
             'details': {
                 'points': {
                     'regex': '银元.*?([\\d,.]+)'
-                },
-                'hr': None
+                }
             }
         })
         return selector
