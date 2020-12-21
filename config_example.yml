@@ -421,7 +421,7 @@ tasks:
     no_entries_ok: yes
     seen:
       fields:
-        - url
+        - torrent_info_hash
     qbittorrent_mod:
       action:
         add:
