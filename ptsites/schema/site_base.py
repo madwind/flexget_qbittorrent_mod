@@ -112,6 +112,7 @@ class SiteBase:
             if parse(torrent['expire']) > now - expire:
                 entry['url'] = torrent['url']
             return
+        download_url = ''
         try:
             torrent_page_url = urljoin(base_url, torrent_page_url.format(torrent_id))
             response = requests.get(torrent_page_url, headers=passkey['headers'], timeout=30)
@@ -119,12 +120,10 @@ class SiteBase:
                 re_search = re.search(url_regex, response.text)
                 if re_search:
                     download_url = urljoin(base_url, re_search.group())
-                else:
-                    download_url = 'Error'
-                    entry.fail(
-                        'site:{} can not found download url from {}'.format(entry['class_name'], torrent_page_url))
         except Exception as e:
             logger.warning(str(e.args))
+        if not download_url:
+            entry.fail(f"site:{entry['class_name']} can not found download url from {torrent_page_url}")
         entry['url'] = download_url
         record[torrent_id] = {'url': download_url, 'expire': (now + expire).strftime('%Y-%m-%d')}
         UrlRecorder.save_record(entry['class_name'], record)
