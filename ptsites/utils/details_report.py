@@ -296,8 +296,8 @@ class DetailsReport:
                 if data := self.build_user_classes_data(user_classes, site_details, colors):
                     bar_height = cell_content_height / len(data)
                     j = 0
+                    font, height = self.get_perfect_font(bar_height, cell_width, font_path, data.keys())
                     for name, value in data.items():
-                        font, height = self.calc_font(bar_height, cell_width, font_path, name)
                         draw.rectangle(((start_x, y + bar_height * j), (
                             start_x + (cell_width * value[0]),
                             y + bar_height * (j + 1) - 2)), fill=value[1])
@@ -392,13 +392,28 @@ class DetailsReport:
                     break
         return y, to_top + to_bottom
 
-    def calc_font(self, bar_height, cell_width, font_path, test_str):
+    def get_perfect_font(self, bar_height, cell_width, font_path, keys):
+        font_size = float('inf')
+        font_height = 0
+        for key in keys:
+            calc_font_size, calc_height = self.calc_font(bar_height, cell_width, font_path, key, font_size)
+            if font_size > calc_font_size:
+                font_size = calc_font_size
+                font_height = calc_height
+        return ImageFont.truetype(font_path, font_size), font_height
+
+    def calc_font(self, bar_height, cell_width, font_path, test_str, font_size_start):
+        if font_size_start == float('inf'):
+            font_size_start = 0
+            step = 1
+        else:
+            step = 1
         perfect_height = bar_height - 4
-        font_size = 1
+        font_size = font_size_start
         font_tmp = ImageFont.truetype(font_path, font_size)
         width, height = font_tmp.getsize(test_str)
-        while height < perfect_height and width < cell_width - 10:
-            font_size += 1
+        while height < perfect_height and width < cell_width - 20:
+            font_size += step
             font_tmp = ImageFont.truetype(font_path, font_size)
             width, height = font_tmp.getsize(test_str)
-        return font_tmp, height
+        return font_size, height
