@@ -217,9 +217,9 @@ class SiteBase:
             for detail_name, detail_config in selector['details'].items():
                 detail_value = self.get_detail_value(details_text, detail_config)
                 if not detail_value:
-                    entry.fail_with_prefix('detail: {} not found.'.format(detail_name))
-                    logger.debug('Details=> site: {}, regex: {}，details_text: {}', entry['site_name'],
-                                 detail_config['regex'], details_text)
+                    entry.fail_with_prefix(f'detail: {detail_name} not found.')
+                    logger.debug(
+                        f"Details=> site: {entry['site_name']}, regex: {detail_config['regex']}，details_text: {details_text}")
                     return
                 details[detail_name] = detail_value
             entry['details'] = details
@@ -230,7 +230,7 @@ class SiteBase:
         if entry.failed:
             return False
         check_type, check_result = work.check_state
-        if check := getattr(self, 'check_{}_state'.format(check_type), None):
+        if check := getattr(self, f"check_{check_type}_state", None):
             if check(entry, work, response, content) != check_result:
                 return False
             else:
