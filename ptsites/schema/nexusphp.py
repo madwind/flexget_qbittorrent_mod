@@ -140,10 +140,10 @@ class NexusPHP(SiteBase):
                 response = self._request(entry, 'post', work.url, data=data)
                 state = self.check_sign_in_state(entry, work, response, self._decode(response))
                 if state == SignState.SUCCEED:
-                    entry['result'] = '{} ( {} attempts.)'.format(entry['result'], times)
+                    entry['result'] = f"{entry['result']} ( {times} attempts.)"
                     question_json[entry['url']][question_id] = answer
                     question_file.write_text(json.dumps(question_json))
-                    logger.info('{}, correct answer: {}', entry['title'], data)
+                    logger.info(f"{entry['title']}, correct answer: {data}")
                     return
                 times += 1
         entry.fail_with_prefix(SignState.SIGN_IN_FAILED.value.format('No answer.'))

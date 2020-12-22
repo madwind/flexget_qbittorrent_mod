@@ -1,6 +1,5 @@
 import datetime
 import re
-
 from enum import Enum
 from urllib.parse import urljoin
 
@@ -39,8 +38,8 @@ class NetworkErrorReason(Enum):
 
 
 class Work:
-    def __init__(self, url='/', method='get', data=None, succeed_regex=None, fail_regex=None,
-                 check_state=('network', NetworkState.SUCCEED), response_urls=None, is_base_content=False, **kwargs):
+    def __init__(self, url=None, method=None, data=None, succeed_regex=None, fail_regex=None,
+                 check_state=None, response_urls=None, is_base_content=False, **kwargs):
         self.url = url
         self.method = method
         self.data = data
@@ -78,16 +77,15 @@ class SiteBase:
 
     def sign_in(self, entry, config):
         if not entry['url'] or not entry['workflow']:
-            entry.fail_with_prefix('site: {} url or workflow is empty'.format(entry['site_name']))
+            entry.fail_with_prefix(f"site: {entry['site_name']} url or workflow is empty")
             return
         last_content = None
         for work in entry['workflow']:
             self.work_urljoin(work, entry['url'])
-            method_name = 'sign_in_by_{}'.format(work.method)
+            method_name = f"sign_in_by_{work.method}"
             if method := getattr(self, method_name, None):
                 last_response = method(entry, config, work, last_content)
-                last_content = self._decode(last_response)
-                if work.is_base_content:
+                if (last_content := self._decode(last_response)) and work.is_base_content:
                     entry['base_content'] = last_content
                 if work.check_state:
                     if not self.check_state(entry, work, last_response, last_content):
