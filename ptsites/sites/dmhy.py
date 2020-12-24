@@ -95,7 +95,6 @@ class MainClass(NexusPHP):
                 method='anime',
                 data=cls.DATA,
                 check_state=('network', NetworkState.SUCCEED),
-
                 img_regex='image\\.php\\?action=adbc2&req=.+?(?=&imagehash)',
                 reload_regex='image\\.php\\?action=reload_adbc2&div=showup&rand=\\d+'
             ),
@@ -103,7 +102,8 @@ class MainClass(NexusPHP):
                 url='/showup.php?action=show',
                 method='get',
                 succeed_regex=succeed_regex,
-                check_state=('final', SignState.SUCCEED),
+                fail_regex='这是一个杯具。<br />验证码已过期。',
+                check_state=('final', SignState.SUCCEED)
             ),
 
         ]
@@ -128,8 +128,8 @@ class MainClass(NexusPHP):
         found = False
         if images := self.get_image(entry, config, img_url, ocr_config.get('char_count')):
             image1, image2 = images
-            self.save_iamge(image1, 'step3_a_diff.jpg')
-            self.save_iamge(image2, 'step3_b_diff.jpg')
+            self.save_iamge(image1, 'step3_a_diff.png')
+            self.save_iamge(image2, 'step3_b_diff.png')
             ocr_text1 = BaiduOcr.get_jap_ocr(image1, entry, config)
             ocr_text2 = BaiduOcr.get_jap_ocr(image2, entry, config)
             oct_text = ocr_text1 if len(ocr_text1) > len(ocr_text2) else ocr_text2
@@ -192,7 +192,6 @@ class MainClass(NexusPHP):
         image_list = []
         checked_list = []
         images_sort_match = None
-        image_last = None
         new_image = self.get_new_image(entry, img_url)
         if not DmhyImage.check_analysis(new_image):
             self.save_iamge(new_image, 'z_failed.png')
@@ -226,10 +225,32 @@ class MainClass(NexusPHP):
             self.save_iamge(image_b_split_1, 'step2_b_split_1.png')
             self.save_iamge(image_b_split_2, 'step2_b_split_2.png')
             image_last = DmhyImage.compare_images(image_a_split_1, image_b_split_1)
-            if not image_last:
-                image_last = DmhyImage.compare_images(image_a_split_2, image_b_split_2)
-
-        return image_last
+            image_last2 = DmhyImage.compare_images(image_a_split_2, image_b_split_2)
+            if image_last and not image_last2:
+                self.save_iamge(image_last[0], 'step3_a_split_1_diff.png')
+                self.save_iamge(image_last[1], 'step3_b_split_1_diff.png')
+                self.save_iamge(image_last[2], 'step4_split_1_diff.png')
+                question_image = (image_last[0], image_last[1])
+            elif image_last2 and not image_last:
+                self.save_iamge(image_last2[0], 'step3_a_split_2_diff.png')
+                self.save_iamge(image_last2[1], 'step3_b_split_2_diff.png')
+                self.save_iamge(image_last2[2], 'step4_split_2_diff.png')
+                question_image = (image_last2[0], image_last2[1])
+            elif image_last:
+                logger.info('compare_images: Two identical are returned')
+                self.save_iamge(image1, 'identical.png')
+                self.save_iamge(image2, 'identical.png')
+                self.save_iamge(image_last[0], 'identical_a_split_1_diff.png')
+                self.save_iamge(image_last[1], 'identical_b_split_1_diff.png')
+                self.save_iamge(image_last[2], 'identical_split_1_diff.png')
+                self.save_iamge(image_last2[0], 'identical_a_split_2_diff.png')
+                self.save_iamge(image_last2[1], 'identical_b_split_2_diff.png')
+                self.save_iamge(image_last2[2], 'identical_split_2_diff.png')
+                return None
+            else:
+                logger.info('compare_images: no Content')
+                return None
+            return question_image
 
     def get_new_image(self, entry, img_url):
         time.sleep(1)

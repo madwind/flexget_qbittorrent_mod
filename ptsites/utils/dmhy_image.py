@@ -46,8 +46,7 @@ class DmhyImage:
         diff = ImageChops.difference(image_a_compare, image_b_compare)
         if diff.getbbox() is None:
             return None
-        # diff.save('dmhy/step3_diff.jpg')
-        return image_a, image_b
+        return image_a, image_b, diff
 
     @staticmethod
     def get_split_point(image: Image):
