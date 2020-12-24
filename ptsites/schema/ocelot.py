@@ -23,10 +23,10 @@ class Ocelot(SiteBase):
             },
             'details': {
                 'uploaded': {
-                    'regex': 'Uploaded.+?([\\d.]+ ?[ZEPTGMK]?B)'
+                    'regex': 'Uploaded.+?([\\d.]+ ?[ZEPTGMk]?B)'
                 },
                 'downloaded': {
-                    'regex': 'Downloaded.+?([\\d.]+ ?[ZEPTGMK]?B)'
+                    'regex': 'Downloaded.+?([\\d.]+ ?[ZEPTGMk]?B)'
                 },
                 'share_ratio': {
                     'regex': 'Ratio.+?([\\d.]+)',
