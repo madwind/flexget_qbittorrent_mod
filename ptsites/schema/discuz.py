@@ -34,7 +34,7 @@ class Discuz(SiteBase):
                     'regex': '积分([\\d.,]+)金币'
                 },
                 'join_date': {
-                    'regex': '注册时间(\\d{4}-\\d{2}-\\d{2})',
+                    'regex': '注册时间(\\d{4}-\\d{1,2}-\\d{1,2})',
                 },
                 'seeding': {
                     'regex': '做种数(\\d+)'
