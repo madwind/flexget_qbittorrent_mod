@@ -3,6 +3,7 @@ from ..schema.site_base import Work, SignState
 
 
 class MainClass(NexusPHP):
+    CLOUDFLARE = True
     URL = 'https://www.hdarea.co/'
     USER_CLASSES = {
         'downloaded': [1099511627776, 10995116277760],
@@ -21,9 +22,9 @@ class MainClass(NexusPHP):
     def build_workflow(cls):
         return [
             Work(
-                url='/torrents.php',
+                url='/',
                 method='get',
-                succeed_regex='<span id="checkedin">\\[签到成功\\]</span>',
+                succeed_regex='<font color="green">\\[已签到\\]</font>',
                 fail_regex=None,
                 check_state=('sign_in', SignState.NO_SIGN_IN),
                 is_base_content=True
