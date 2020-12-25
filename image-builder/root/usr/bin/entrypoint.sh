@@ -35,4 +35,7 @@ chmod 775 \
 	/downloads \
   /home/docker
 
+
+su dockr -c "python -c \"import os;from pyppeteer import chromium_downloader;folder=f'{chromium_downloader.DOWNLOADS_FOLDER}/{chromium_downloader.REVISION}/chrome-linux';os.makedirs(folder);os.symlink('/usr/bin/chromium-browser',f'{chromium_downloader.DOWNLOADS_FOLDER}/{chromium_downloader.REVISION}/chrome-linux/chrome')\""
+
 su docker -c "flexget -c /config/config.yml -L ${FG_LOG_LEVEL:-info} daemon start --autoreload-config"
