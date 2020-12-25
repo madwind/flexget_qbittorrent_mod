@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import re
 from enum import Enum
@@ -9,13 +10,19 @@ from dateutil.parser import parse
 from flexget.utils.soup import get_soup
 from loguru import logger
 from requests.adapters import HTTPAdapter
-
 from ..utils.url_recorder import UrlRecorder
 
 try:
     import brotli
 except ImportError:
     brotli = None
+
+try:
+    from pyppeteer import launch
+    from pyppeteer_stealth import stealth
+except ImportError:
+    launch = None
+    stealth = None
 
 
 class SignState(Enum):
@@ -35,6 +42,7 @@ class NetworkState(Enum):
 class NetworkErrorReason(Enum):
     DDoS_protection_by_Cloudflare = 'DDoS protection by .+?Cloudflare'
     Server_load_too_high = '<h3 align=center>服务器负载过高，正在重试，请稍后\\.\\.\\.</h3>'
+    Connection_timed_out = '<h2 class="text-gray-600 leading-1\\.3 text-3xl font-light">Connection timed out</h2>'
 
 
 class Work:
@@ -53,6 +61,8 @@ class Work:
 
 
 class SiteBase:
+    CLOUDFLARE = False
+    URL = ''
 
     def __init__(self):
         self.requests = None
@@ -67,13 +77,20 @@ class SiteBase:
             'user-agent': config.get('user-agent'),
             'referer': entry['url']
         }
+        cookie = None
         if isinstance(site_config, str):
             cookie = site_config
         elif isinstance(site_config, dict):
             cookie = site_config.get('cookie')
+        if cls.CLOUDFLARE:
+            cookie = asyncio.run(SiteBase.get_cf_cookie(entry, entry['url'], config.get('user-agent'), cookie))
         if cookie:
             headers['cookie'] = cookie
         entry['headers'] = headers
+
+    @classmethod
+    def build_workflow(cls):
+        pass
 
     def sign_in(self, entry, config):
         if not entry['url'] or not entry['workflow']:
@@ -326,3 +343,23 @@ class SiteBase:
         if handle:
             detail = handle(detail)
         return str(detail)
+
+    @staticmethod
+    async def get_cf_cookie(entry, url, user_agent, cookie):
+        if not (launch and stealth):
+            entry.fail_with_prefix('Dependency does not exist: [pyppeteer, pyppeteer_stealth]')
+            return cookie
+        browser = await launch(headless=True)
+        page = await browser.newPage()
+        await stealth(page)
+        await page.setUserAgent(user_agent)
+        cookie_remove_cf = ';'.join(
+            list(filter(lambda x: not re.search('__cfduid|cf_clearance|__cf_bm', x), cookie.split(';'))))
+        await page.setExtraHTTPHeaders({'cookie': cookie_remove_cf})
+        await page.goto(url)
+        await asyncio.sleep(10)
+        page_cookie = await page.cookies()
+        cf_cookie = cookie_remove_cf + ';' + ';'.join(
+            list(map(lambda c: f"{c['name']}={c['value']}", page_cookie)))
+        await browser.close()
+        return cf_cookie

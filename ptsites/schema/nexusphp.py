@@ -82,11 +82,9 @@ class NexusPHP(SiteBase):
                 message_body = 'Can not read message body!'
                 failed = True
             else:
-                body_element = get_soup(self._decode(message_response)).select_one('td[colspan*="2"]')
-                if body_element:
+                if body_element := get_soup(self._decode(message_response)).select_one('td[colspan*="2"]'):
                     message_body = body_element.text.strip()
-            entry['messages'] = entry['messages'] + (
-                '\nTitle: {}\nLink: {}\n{}'.format(title, message_url, message_body))
+            entry['messages'] = entry['messages'] + (f'\nTitle: {title}\nLink: {message_url}\n{message_body}')
         if failed:
             entry.fail_with_prefix('Can not read message body!')
 
@@ -156,8 +154,6 @@ class NexusPHP(SiteBase):
 
 
 class AttendanceHR(NexusPHP):
-    URL = ''
-
     @classmethod
     def build_workflow(cls):
         return [
@@ -187,8 +183,6 @@ class Attendance(AttendanceHR):
 
 
 class BakatestHR(NexusPHP):
-    URL = ''
-
     @classmethod
     def build_workflow(cls):
         return [
@@ -222,7 +216,6 @@ class Bakatest(BakatestHR):
 
 
 class VisitHR(NexusPHP):
-    URL = ''
     SUCCEED_REGEX = '[欢歡]迎回[来來家]'
 
     @classmethod
