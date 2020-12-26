@@ -18,7 +18,7 @@ except ImportError:
     brotli = None
 
 try:
-    from pyppeteer import launch
+    from pyppeteer import launch, chromium_downloader
     from pyppeteer_stealth import stealth
 except ImportError:
     launch = None
@@ -280,7 +280,7 @@ class SiteBase:
 
         for regex in succeed_regex:
             if succeed_msg := re.search(regex, content):
-                entry['result'] = re.sub('<.*?>|&shy;', '', succeed_msg.group())
+                entry['result'] = re.sub('<.*?>|&shy;|&nbsp;', '', succeed_msg.group())
                 return SignState.SUCCEED
 
         if fail_regex := work.fail_regex:
@@ -308,9 +308,6 @@ class SiteBase:
         if response is None:
             return None
         content = response.content
-        content_encoding = response.headers.get('content-encoding')
-        if content_encoding == 'br':
-            content = brotli.decompress(content)
         charset_encoding = chardet.detect(content).get('encoding')
         if charset_encoding == 'ascii':
             charset_encoding = 'unicode_escape'
@@ -349,7 +346,8 @@ class SiteBase:
         if not (launch and stealth):
             entry.fail_with_prefix('Dependency does not exist: [pyppeteer, pyppeteer_stealth]')
             return cookie
-        browser = await launch(headless=True)
+        browser = await launch(headless=True, handleSIGINT=False, handleSIGTERM=False, handleSIGHUP=False,
+                               args=['--no-sandbox'])
         page = await browser.newPage()
         await stealth(page)
         await page.setUserAgent(user_agent)
