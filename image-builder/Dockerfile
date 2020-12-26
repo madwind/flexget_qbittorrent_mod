@@ -22,7 +22,7 @@ RUN \
 	ca-certificates \
 	tzdata && \
  pip install --no-cache-dir -U pip && \
- pip install --no-cache-dir -U flexget python-telegram-bot==12.8 brotli baidu-aip pillow pandas==1.0.5 matplotlib fuzzywuzzy python-Levenshtein pyppeteer pyppeteer_stealth
+ pip install --no-cache-dir -U flexget python-telegram-bot==12.8 brotli baidu-aip pillow pandas matplotlib fuzzywuzzy python-Levenshtein pyppeteer pyppeteer_stealth
 
 ADD link_chromium.py .
 
