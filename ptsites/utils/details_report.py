@@ -405,15 +405,19 @@ class DetailsReport:
     def calc_font(self, bar_height, cell_width, font_path, test_str, font_size_start):
         if font_size_start == float('inf'):
             font_size_start = 0
-            step = 1
-        else:
-            step = 1
         perfect_height = bar_height - 4
         font_size = font_size_start
         font_tmp = ImageFont.truetype(font_path, font_size)
         width, height = font_tmp.getsize(test_str)
-        while height < perfect_height and width < cell_width - 20:
-            font_size += step
-            font_tmp = ImageFont.truetype(font_path, font_size)
-            width, height = font_tmp.getsize(test_str)
+        if height > perfect_height or width > cell_width - 20:
+            while height > perfect_height or width > cell_width - 20:
+                font_size += -1
+                font_tmp = ImageFont.truetype(font_path, font_size)
+                width, height = font_tmp.getsize(test_str)
+        else:
+            while height < perfect_height and width < cell_width - 20:
+                font_size += 1
+                font_tmp = ImageFont.truetype(font_path, font_size)
+                width, height = font_tmp.getsize(test_str)
+
         return font_size, height
