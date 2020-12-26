@@ -257,8 +257,7 @@ class MainClass(NexusPHP):
         logger.debug('request image...')
         real_img_url = urljoin(entry['url'], img_url)
         base_img_response = self._request(entry, 'get', real_img_url)
-        base_img_network_state = self.check_network_state(entry, real_img_url, base_img_response)
-        if base_img_network_state != NetworkState.SUCCEED:
+        if base_img_response is None or base_img_response.url == urljoin(entry['url'], '/pic/trans.gif?debug=NIM'):
             return None
         new_image = Image.open(BytesIO(base_img_response.content))
         DmhyImage.remove_date_string(new_image)
