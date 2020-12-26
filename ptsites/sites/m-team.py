@@ -65,7 +65,7 @@ class MainClass(NexusPHP):
     @classmethod
     def build_reseed(cls, entry, site, passkey, torrent_id):
         download_page = site['download_page'].format(torrent_id=torrent_id, passkey=passkey)
-        entry['url'] = urljoin(cls.URLL, download_page + '&https=1')
+        entry['url'] = urljoin(cls.URL, download_page + '&https=1')
 
     def get_message(self, entry, config):
         self.get_nexusphp_message(entry, config)
