@@ -8,11 +8,6 @@ from flexget.utils.soup import get_soup
 from loguru import logger
 from requests import RequestException
 
-try:
-    import brotli
-except ImportError:
-    brotli = None
-
 
 class PluginHtmlRss():
     schema = {
@@ -108,13 +103,14 @@ class PluginHtmlRss():
         return entries
 
     def _decode(self, response):
+        if response is None:
+            return None
         content = response.content
-        content_encoding = response.headers.get('content-encoding')
-        if content_encoding == 'br':
-            content = brotli.decompress(content)
         charset_encoding = chardet.detect(content).get('encoding')
         if charset_encoding == 'ascii':
             charset_encoding = 'unicode_escape'
+        elif charset_encoding == 'Windows-1254':
+            charset_encoding = 'utf-8'
         return content.decode(charset_encoding if charset_encoding else 'utf-8', 'ignore')
 
 
