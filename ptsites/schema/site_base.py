@@ -293,7 +293,7 @@ class SiteBase:
                     NetworkState.NETWORK_ERROR.value.format(url=work.url, error=reason.name))
                 return NetworkState.NETWORK_ERROR
 
-        logger.debug('no sign in, content: {}'.format(content))
+        logger.warning('no sign in, content: {}'.format(content))
 
         return SignState.NO_SIGN_IN
 
