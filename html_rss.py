@@ -8,6 +8,11 @@ from flexget.utils.soup import get_soup
 from loguru import logger
 from requests import RequestException
 
+try:
+    import brotli
+except ImportError:
+    brotli = None
+
 
 class PluginHtmlRss():
     schema = {
