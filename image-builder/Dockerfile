@@ -1,21 +1,50 @@
-FROM python:3.8.6-alpine3.12
+FROM python:3.9.1-alpine3.12
 
 LABEL maintainer="madwind.cn@gmail.com" \
       org.label-schema.name="flexget"
 
-# copy local files
+RUN \
+ sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && \
+ pip config set global.index-url https://mirrors.aliyun.com/pypi/simple && \
+ echo "**** install build packages ****" && \
+ apk add --no-cache --virtual=build-dependencies \
+	build-base \
+  libffi-dev \
+  openssl-dev \
+ 	zlib-dev \
+  jpeg-dev \
+  freetype-dev \
+  libpng-dev  && \
+ echo "**** install runtime packages ****" && \
+ apk add --no-cache \
+	shadow \
+  chromium \
+	ca-certificates \
+	tzdata && \
+ echo "**** create abc user and make our folders ****" && \
+ groupmod -g 1000 flexget && \
+ useradd -u 911 -U -d /home/flexget -s /bin/false flexget && \
+ usermod -G flexget flexget && \
+ pip install --no-cache-dir -U pip && \
+ pip install --no-cache-dir -U flexget python-telegram-bot==12.8 brotli baidu-aip pillow pandas==1.0.5 matplotlib fuzzywuzzy python-Levenshtein pyppeteer pyppeteer_stealth
+
+ADD link_chromium.py .
+
+# add local files
 COPY root/ /
 
-# RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && \
-RUN apk add --no-cache ca-certificates nodejs build-base libffi-dev openssl-dev unzip bash tzdata zlib-dev jpeg-dev freetype-dev libpng-dev chromium && \
-    pip install --no-cache-dir -U pip && \
-    pip install --no-cache-dir -U flexget==3.1.72 python-telegram-bot==12.8 brotli baidu-aip pillow pandas matplotlib fuzzywuzzy python-Levenshtein pyppeteer pyppeteer_stealth && \
-	cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
-  	echo "Asia/Shanghai" >  /etc/timezone && \
-    chmod +x /usr/bin/entrypoint.sh && \
-    rm -rf /var/cache/apk/* \
-           /tmp/* \
-	       /root/.cache
+RUN \
+ usermod -s /bin/sh flexget && \
+ chmod +x /usr/bin/entrypoint.sh && \
+ python link_chromium.py && \
+ echo "**** cleanup ****" && \
+ rm link_chromium.py && \
+ apk del --purge \
+ build-dependencies && \
+ rm -rf \
+  /var/cache/apk/* \
+  /tmp/* \
+	/root/.cache
 
 # add default volumes
 VOLUME /config /downloads
