@@ -4,8 +4,8 @@ LABEL maintainer="madwind.cn@gmail.com" \
       org.label-schema.name="flexget"
 
 RUN \
- sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && \
- pip config set global.index-url https://mirrors.aliyun.com/pypi/simple && \
+ #sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && \
+ #pip config set global.index-url https://mirrors.aliyun.com/pypi/simple && \
  echo "**** install build packages ****" && \
  apk add --no-cache --virtual=build-dependencies \
 	build-base \
@@ -21,10 +21,6 @@ RUN \
   chromium \
 	ca-certificates \
 	tzdata && \
- echo "**** create abc user and make our folders ****" && \
- groupmod -g 1000 flexget && \
- useradd -u 911 -U -d /home/flexget -s /bin/false flexget && \
- usermod -G flexget flexget && \
  pip install --no-cache-dir -U pip && \
  pip install --no-cache-dir -U flexget python-telegram-bot==12.8 brotli baidu-aip pillow pandas==1.0.5 matplotlib fuzzywuzzy python-Levenshtein pyppeteer pyppeteer_stealth
 
@@ -34,9 +30,13 @@ ADD link_chromium.py .
 COPY root/ /
 
 RUN \
- usermod -s /bin/sh flexget && \
- chmod +x /usr/bin/entrypoint.sh && \
  python link_chromium.py && \
+ echo "**** create abc user and make our folders ****" && \
+ groupmod -g 1000 users && \
+ useradd -u 911 -U -d /home/flexget -s /bin/sh flexget && \
+ usermod -G users flexget && \
+ chown -R flexget:flexget /home/flexget && \
+ chmod +x /usr/bin/entrypoint.sh && \
  echo "**** cleanup ****" && \
  rm link_chromium.py && \
  apk del --purge \

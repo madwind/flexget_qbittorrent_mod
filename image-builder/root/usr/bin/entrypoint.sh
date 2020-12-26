@@ -30,11 +30,8 @@ if [ ! -z "${FG_WEBUI_PASSWD}" ]; then
   echo "Oops, something went wrong"
 fi
 
-
 # permissions
 chown -R flexget:flexget /config
 chown -R flexget:flexget /downloads
-chown -R flexget:flexget /home/flexget
-
 
 su flexget -c "/usr/local/bin/flexget -c /config/config.yml -L ${FG_LOG_LEVEL:-info} daemon start --autoreload-config"
