@@ -38,13 +38,13 @@ COPY root/ /
 
 RUN \
  echo "**** create abc user and make our folders ****" && \
+ python link_chromium.py && \
+ rm link_chromium.py && \
  groupmod -g 1000 users && \
- useradd -u 911 -U -d /home/flexget -s /bin/sh flexget && \
+ useradd -u 911 -U -m -d /home/flexget -s /bin/sh flexget && \
  usermod -G users flexget && \
  chown -R flexget:flexget /home/flexget && \
  chmod +x /usr/bin/entrypoint.sh && \
- python link_chromium.py && \
- rm link_chromium.py && \
 
 # add default volumes
 VOLUME /config /downloads
