@@ -6,7 +6,7 @@ PUID=${PUID:-911}
 PGID=${PGID:-911}
 
 groupmod -o -g "$PGID" flexget
-usermod -o -u "$PUID" flexget
+usermod -o -u "$PUID" -s /bin/sh flexget
 
 # remove config-lock
 if [ -f "/config/.config-lock" ]; then
