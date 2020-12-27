@@ -82,8 +82,6 @@ class SiteBase:
             cookie = site_config
         elif isinstance(site_config, dict):
             cookie = site_config.get('cookie')
-        if cls.CLOUDFLARE:
-            cookie = asyncio.run(SiteBase.get_cf_cookie(entry, entry['url'], config.get('user-agent'), cookie))
         if cookie:
             headers['cookie'] = cookie
         entry['headers'] = headers
@@ -151,6 +149,10 @@ class SiteBase:
             if headers := entry.get('headers'):
                 if brotli:
                     headers['accept-encoding'] = 'gzip, deflate, br'
+                if entry.get('cf'):
+                    cookie = asyncio.run(
+                        SiteBase.get_cf_cookie(entry, headers))
+                    headers['cookie'] = cookie
                 self.requests.headers.update(headers)
             self.requests.mount('http://', HTTPAdapter(max_retries=2))
             self.requests.mount('https://', HTTPAdapter(max_retries=2))
@@ -342,19 +344,19 @@ class SiteBase:
         return str(detail)
 
     @staticmethod
-    async def get_cf_cookie(entry, url, user_agent, cookie):
+    async def get_cf_cookie(entry, headers):
         if not (launch and stealth):
             entry.fail_with_prefix('Dependency does not exist: [pyppeteer, pyppeteer_stealth]')
-            return cookie
+            return headers
         browser = await launch(headless=True, handleSIGINT=False, handleSIGTERM=False, handleSIGHUP=False,
                                args=['--no-sandbox'])
         page = await browser.newPage()
         await stealth(page)
-        await page.setUserAgent(user_agent)
+        await page.setUserAgent(headers.get('user_agent'))
         cookie_remove_cf = ';'.join(
-            list(filter(lambda x: not re.search('__cfduid|cf_clearance|__cf_bm', x), cookie.split(';'))))
+            list(filter(lambda x: not re.search('__cfduid|cf_clearance|__cf_bm', x), headers.get('cookie').split(';'))))
         await page.setExtraHTTPHeaders({'cookie': cookie_remove_cf})
-        await page.goto(url)
+        await page.goto(entry['url'])
         await asyncio.sleep(10)
         page_cookie = await page.cookies()
         cf_cookie = cookie_remove_cf + ';' + ';'.join(

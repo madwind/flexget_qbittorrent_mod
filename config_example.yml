@@ -373,7 +373,9 @@ tasks:
         hd: 'xxxxxxxx'
         hd-torrents: 'xxxxxxxx'
         hd4fans: 'xxxxxxxx'
-        hdarea: 'xxxxxxxx'
+        hdarea:
+          cookie: 'xxxxxxxx'
+          cf: yes
         hdbd: 'xxxxxxxx'
         hdcity:
           headers:

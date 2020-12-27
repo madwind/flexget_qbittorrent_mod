@@ -3,7 +3,6 @@ from ..schema.site_base import Work, SignState
 
 
 class MainClass(NexusPHP):
-    CLOUDFLARE = True
     URL = 'https://www.hdarea.co/'
     USER_CLASSES = {
         'downloaded': [1099511627776, 10995116277760],
