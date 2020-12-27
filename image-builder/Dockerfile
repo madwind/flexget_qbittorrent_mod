@@ -41,10 +41,10 @@ RUN \
  python link_chromium.py && \
  rm link_chromium.py && \
  groupmod -g 1000 users && \
- useradd -u 911 -U -d /home/flexget -s /bin/false flexget && \
+ useradd -u 911 -U -d /home/flexget -s /bin/sh flexget && \
  usermod -G users flexget && \
  chown -R flexget:flexget /home/flexget && \
- chmod +x /usr/bin/entrypoint.sh && \
+ chmod +x /usr/bin/entrypoint.sh
 
 # add default volumes
 VOLUME /config /downloads

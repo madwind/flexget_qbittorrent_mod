@@ -6,7 +6,7 @@ PUID=${PUID:-911}
 PGID=${PGID:-911}
 
 groupmod -o -g "$PGID" flexget
-usermod -o -u "$PUID" -s /bin/sh flexget
+usermod -o -u "$PUID" flexget
 
 # remove config-lock
 if [ -f "/config/.config-lock" ]; then
@@ -25,9 +25,9 @@ fi
 # set FG_WEBUI_PASSWD
 if [ ! -z "${FG_WEBUI_PASSWD}" ]; then
   echo "Setting flexget web password to '${FG_WEBUI_PASSWD}'"
-  flexget -c /config/config.yml web passwd "${FG_WEBUI_PASSWD}" | grep 'Updated password' >/dev/null 2>&1 && \
-  echo "Updated password" || \
-  echo "Oops, something went wrong"
+  flexget -c /config/config.yml web passwd "${FG_WEBUI_PASSWD}" | grep 'Updated password' >/dev/null 2>&1 &&
+    echo "Updated password" ||
+    echo "Oops, something went wrong"
 fi
 
 # permissions
