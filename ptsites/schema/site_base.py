@@ -82,6 +82,8 @@ class SiteBase:
             cookie = site_config
         elif isinstance(site_config, dict):
             cookie = site_config.get('cookie')
+            if cf := site_config.get('cf'):
+                entry['cf'] = cf
         if cookie:
             headers['cookie'] = cookie
         entry['headers'] = headers
