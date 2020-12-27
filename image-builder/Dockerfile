@@ -22,7 +22,14 @@ RUN \
 	ca-certificates \
 	tzdata && \
  pip install --no-cache-dir -U pip && \
- pip install --no-cache-dir -U flexget python-telegram-bot==12.8 brotli baidu-aip pillow pandas matplotlib fuzzywuzzy python-Levenshtein pyppeteer pyppeteer_stealth
+ pip install --no-cache-dir -U flexget python-telegram-bot==12.8 brotli baidu-aip pillow pandas matplotlib fuzzywuzzy python-Levenshtein pyppeteer pyppeteer_stealth && \
+ echo "**** cleanup ****" && \
+ apk del --purge \
+ build-dependencies && \
+ rm -rf \
+  /var/cache/apk/* \
+  /tmp/* \
+	/root/.cache
 
 ADD link_chromium.py .
 
@@ -30,21 +37,14 @@ ADD link_chromium.py .
 COPY root/ /
 
 RUN \
- python link_chromium.py && \
  echo "**** create abc user and make our folders ****" && \
  groupmod -g 1000 users && \
  useradd -u 911 -U -d /home/flexget -s /bin/sh flexget && \
  usermod -G users flexget && \
  chown -R flexget:flexget /home/flexget && \
  chmod +x /usr/bin/entrypoint.sh && \
- echo "**** cleanup ****" && \
+ python link_chromium.py && \
  rm link_chromium.py && \
- apk del --purge \
- build-dependencies && \
- rm -rf \
-  /var/cache/apk/* \
-  /tmp/* \
-	/root/.cache
 
 # add default volumes
 VOLUME /config /downloads
