@@ -148,14 +148,14 @@ class SiteBase:
     def _request(self, entry, method, url, **kwargs):
         if not self.requests:
             self.requests = requests.Session()
-            if headers := entry.get('headers'):
+            if entry_headers := entry.get('headers'):
                 if brotli:
-                    headers['accept-encoding'] = 'gzip, deflate, br'
+                    entry_headers['accept-encoding'] = 'gzip, deflate, br'
                 if entry.get('cf'):
                     cookie = asyncio.run(
-                        SiteBase.get_cf_cookie(entry, headers))
-                    headers['cookie'] = cookie
-                self.requests.headers.update(headers)
+                        SiteBase.get_cf_cookie(entry, entry_headers))
+                    entry_headers['cookie'] = cookie
+                self.requests.headers.update(entry_headers)
             self.requests.mount('http://', HTTPAdapter(max_retries=2))
             self.requests.mount('https://', HTTPAdapter(max_retries=2))
         try:
@@ -297,7 +297,8 @@ class SiteBase:
                     NetworkState.NETWORK_ERROR.value.format(url=work.url, error=reason.name))
                 return NetworkState.NETWORK_ERROR
 
-        logger.warning('no sign in, content: {}'.format(content))
+        if work.check_state[1] != SignState.NO_SIGN_IN:
+            logger.warning('no sign in, content: {}'.format(content))
 
         return SignState.NO_SIGN_IN
 
@@ -354,7 +355,7 @@ class SiteBase:
                                args=['--no-sandbox'])
         page = await browser.newPage()
         await stealth(page)
-        await page.setUserAgent(headers.get('user_agent'))
+        await page.setUserAgent(headers.get('user-agent'))
         cookie_remove_cf = ';'.join(
             list(filter(lambda x: not re.search('__cfduid|cf_clearance|__cf_bm', x), headers.get('cookie').split(';'))))
         await page.setExtraHTTPHeaders({'cookie': cookie_remove_cf})
