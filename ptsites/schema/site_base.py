@@ -348,6 +348,7 @@ class SiteBase:
 
     @staticmethod
     async def get_cf_cookie(entry, headers):
+        logger.info(f"{entry['site_name']} get_cf_cookie")
         if not (launch and stealth):
             entry.fail_with_prefix('Dependency does not exist: [pyppeteer, pyppeteer_stealth]')
             return headers
