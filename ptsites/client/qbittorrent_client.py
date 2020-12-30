@@ -362,6 +362,7 @@ class QBittorrentClient:
             self._last_update_time = datetime.now()
             for torrent_hash, entry in self._entry_dict.items():
                 self._update_addition(entry)
+                self._update_entry_trackers(torrent_hash)
 
         if is_new_data:
             logger.info('build_entry: build completion')
