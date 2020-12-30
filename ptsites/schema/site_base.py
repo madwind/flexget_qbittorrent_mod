@@ -43,6 +43,7 @@ class NetworkErrorReason(Enum):
     DDoS_protection_by_Cloudflare = 'DDoS protection by .+?Cloudflare'
     Server_load_too_high = '<h3 align=center>服务器负载过高，正在重试，请稍后\\.\\.\\.</h3>'
     Connection_timed_out = '<h2 class="text-gray-600 leading-1\\.3 text-3xl font-light">Connection timed out</h2>'
+    The_web_server_reported_a_bad_gateway_error = '<p>The web server reported a bad gateway error\\.</p>'
 
 
 class Work:
