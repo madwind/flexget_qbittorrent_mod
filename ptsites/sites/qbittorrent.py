@@ -2,7 +2,7 @@ from datetime import datetime
 
 from loguru import logger
 
-from ..client.qbittorrent_client import QBittorrentClientFactory
+from ..client.qbittorrent_client import QBittorrentClient
 
 '''
 sign_in:
@@ -34,6 +34,7 @@ class MainClass:
         entry['do_not_count'] = True
 
     def sign_in(self, entry, config):
+        QBittorrentClient(config)
         site_config = self.prepare_config(entry['site_config'])
         try:
             if not self.client:
@@ -76,5 +77,5 @@ class MainClass:
         return site_config
 
     def create_client(self, config):
-        client = QBittorrentClientFactory().get_client(config)
+        client = QBittorrentClient(config)
         return client
