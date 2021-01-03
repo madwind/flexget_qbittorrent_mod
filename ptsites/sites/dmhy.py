@@ -122,6 +122,8 @@ class MainClass(NexusPHP):
         return self._request(entry, 'post', work.url, data=data)
 
     def build_data(self, entry, config, work, base_content, ocr_config):
+        if entry.failed:
+            return None
         img_url = re.search(work.img_regex, base_content).group()
         logger.info('attempts: {} / {}, url: {}', self.times, ocr_config.get('retry'), urljoin(entry['url'], img_url))
         data = {}
@@ -169,7 +171,7 @@ class MainClass(NexusPHP):
                             data[key] = value_search.group(1)
                         else:
                             entry.fail_with_prefix('Cannot find key: {}, url: {}'.format(key, work.url))
-                            return
+                            return None
 
         if not found:
             if self.times < ocr_config.get('retry'):

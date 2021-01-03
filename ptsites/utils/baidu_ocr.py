@@ -44,8 +44,8 @@ class BaiduOcr:
         try:
             result = client.basicAccurate(img_byte_arr.getvalue(), {'language_type': 'JAP'})
         except Exception as e:
-            entry.fail_with_prefix('baidu ocr error.')
-            return None, None
+            entry.fail_with_prefix(f'baidu ocr error: {e}')
+            return None
         logger.info(result)
         text = ''
         for bb in result.get('words_result'):
