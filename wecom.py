@@ -68,7 +68,7 @@ class MessageEntry(MessageBase):
         return ' '.join(x)
 
 
-class WeComWorkNotifier:
+class WeComNotifier:
     _corp_id = None
     _corp_secret = None
     _agent_id = None
@@ -118,18 +118,8 @@ class WeComWorkNotifier:
     def _save_message(self, msg, session):
         msg_limit, msg_extend = self._get_msg_limit(msg)
 
-        data = {
-            'touser': self._to_user,
-            'msgtype': 'text',
-            'agentid': self._agent_id,
-            'text': {'content': msg_limit},
-            'safe': 0,
-            'enable_id_trans': 0,
-            'enable_duplicate_check': 0,
-            'duplicate_check_interval': 1800
-        }
         message_entry = MessageEntry(
-            content=json.dumps(data),
+            content=msg_limit,
             sent=False
         )
         session.add(message_entry)
@@ -144,12 +134,22 @@ class WeComWorkNotifier:
             raise PluginError(str(e))
 
     def _send_msgs(self, message_entry, access_token):
+        data = {
+            'touser': self._to_user,
+            'msgtype': 'text',
+            'agentid': self._agent_id,
+            'text': {'content': message_entry.content},
+            'safe': 0,
+            'enable_id_trans': 0,
+            'enable_duplicate_check': 0,
+            'duplicate_check_interval': 1800
+        }
         response_json = self._request('post', _POST_MESSAGE_URL.format(access_token=access_token.access_token),
-                                      json=json.loads(message_entry.content)).json()
+                                      json=data).json()
         if response_json.get('errcode') == 0:
             message_entry.sent = True
         else:
-            logger.error(response_json)
+            logger.error(f'request_data: {data}, response_json: {response_json}')
 
     def _get_msg_limit(self, msg):
         msg_encode = msg.encode()
@@ -260,4 +260,4 @@ class WeComWorkNotifier:
 
 @event('plugin.register')
 def register_plugin():
-    plugin.register(WeComWorkNotifier, _PLUGIN_NAME, api_ver=2, interfaces=['notifiers'])
+    plugin.register(WeComNotifier, _PLUGIN_NAME, api_ver=2, interfaces=['notifiers'])
