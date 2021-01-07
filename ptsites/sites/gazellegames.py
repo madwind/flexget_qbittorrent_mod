@@ -36,7 +36,7 @@ class MainClass(Gazelle):
                 'achievements': {
                     'link': '/user.php?action=achievements',
                     'elements': {
-                        'total_point': '#content > div:nth-child(8)'
+                        'total_point': '#content > div[class=linkbox]'
                     }
                 }
             },
