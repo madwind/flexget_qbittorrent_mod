@@ -1,4 +1,3 @@
-import re
 from distutils.version import LooseVersion
 
 from flexget import db_schema, plugin
@@ -86,7 +85,7 @@ class TelegramNotifierMod:
         message: {{title}}
         entries:
           via:
-            telegram:
+            telegram_mod:
               bot_token: token
               use_markdown: no
               disable_previews: yes
@@ -337,7 +336,7 @@ class TelegramNotifierMod:
     def _send_photo(self, image, chat_ids):
         for chat_id in (x.id for x in chat_ids):
             try:
-                self._bot.sendPhoto(chat_id=chat_id, photo=open(image, 'rb'))
+                self._bot.sendDocument(chat_id=chat_id, document=open(image, 'rb'))
             except TelegramError as e:
                 raise PluginWarning(e.message)
 
