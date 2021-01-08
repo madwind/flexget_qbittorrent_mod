@@ -38,19 +38,21 @@ class Executor:
         if entry['result']:
             logger.info('{} {}'.format(entry['title'], entry['result']).strip())
 
-        entry['prefix'] = 'Messages'
-        site_object.get_message(entry, config)
-        if entry.failed:
-            return
-        if entry['messages']:
-            logger.info('site_name: {}, messages: {}', entry['site_name'], entry['messages'])
+        if config.get('get_messages', True):
+            entry['prefix'] = 'Messages'
+            site_object.get_message(entry, config)
+            if entry.failed:
+                return
+            if entry['messages']:
+                logger.info('site_name: {}, messages: {}', entry['site_name'], entry['messages'])
 
-        entry['prefix'] = 'Details'
-        site_object.get_details(entry, config)
-        if entry.failed:
-            return
-        if entry['details']:
-            logger.info('site_name: {}, details: {}', entry['site_name'], entry['details'])
+        if config.get('get_details', True):
+            entry['prefix'] = 'Details'
+            site_object.get_details(entry, config)
+            if entry.failed:
+                return
+            if entry['details']:
+                logger.info('site_name: {}, details: {}', entry['site_name'], entry['details'])
 
     @staticmethod
     def build_reseed(entry, site, passkey, torrent_id):
