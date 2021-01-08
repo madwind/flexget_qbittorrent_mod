@@ -79,7 +79,8 @@ class PluginAutoSignIn:
             with ThreadPoolExecutor(max_workers=max_workers) as t:
                 all_task = [t.submit(Executor.sign_in, entry, config) for entry in task.accepted]
                 wait(all_task, return_when=ALL_COMPLETED)
-        DetailsReport().build(task)
+        if config.get('get_details', True):
+            DetailsReport().build(task)
 
 
 @event('plugin.register')
