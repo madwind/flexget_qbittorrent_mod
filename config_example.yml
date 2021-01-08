@@ -542,7 +542,10 @@ tasks:
             score: 40
         eastgame: 'xxxxxxxx'
         et8: 'xxxxxxxx'
-        filelist: 'xxxxxxxx'
+        filelist:
+          login:
+            username: 'xxxxxxxx'
+            password: 'xxxxxxxx'
         gazellegames: 'xxxxxxxx'
         hd: 'xxxxxxxx'
         haidan: 'xxxxxxxx'

@@ -1,5 +1,8 @@
+import re
+from urllib.parse import urljoin
+
 from ..schema.ocelot import Ocelot
-from ..schema.site_base import Work, SignState
+from ..schema.site_base import Work, SignState, NetworkState
 
 
 class MainClass(Ocelot):
@@ -14,14 +17,34 @@ class MainClass(Ocelot):
     def build_workflow(cls):
         return [
             Work(
-                url='/',
+                url='/login.php',
                 method='get',
+                check_state=('network', NetworkState.SUCCEED),
+            ),
+            Work(
+                url='/takelogin.php',
+                method='login',
                 succeed_regex='Hello, <a .+?</a>',
-                fail_regex=None,
+                response_urls=['/my.php'],
                 check_state=('final', SignState.SUCCEED),
-                is_base_content=True
+                is_base_content=True,
+                validator_regex="(?<='validator' value=').*(?=')"
             )
         ]
+
+    def sign_in_by_login(self, entry, config, work, last_content):
+        login = entry['site_config'].get('login')
+        if not login:
+            entry.fail_with_prefix('Login data not found!')
+            return
+        validator = re.search(work.validator_regex, last_content).group()
+        data = {
+            'validator': validator,
+            'username': login['username'],
+            'password': login['password'],
+            'unlock': 1
+        }
+        return self._request(entry, 'post', work.url, data=data)
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
