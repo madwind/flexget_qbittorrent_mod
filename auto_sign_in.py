@@ -16,6 +16,8 @@ class PluginAutoSignIn:
             'user-agent': {'type': 'string'},
             'command_executor': {'type': 'string'},
             'max_workers': {'type': 'integer'},
+            'get_messages': {'type': 'boolean', 'default': True},
+            'get_details': {'type': 'boolean', 'default': True},
             'aipocr': {
                 'type': 'object',
                 'properties': {
