@@ -129,7 +129,7 @@ class SiteBase:
         if torrent := record.get(torrent_id):
             if parse(torrent['expire']) > now - expire:
                 entry['url'] = torrent['url']
-            return
+                return
         download_url = ''
         try:
             torrent_page_url = urljoin(base_url, torrent_page_url.format(torrent_id))
