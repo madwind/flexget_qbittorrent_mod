@@ -370,7 +370,10 @@ tasks:
         eastgame: 'xxxxxxxx'
         et8: 'xxxxxxxx'
         haidan: 'xxxxxxxx'
-        hd: 'xxxxxxxx'
+        hd:
+          headers:
+            cookie: 'xxxxxxxx'
+            user-agent: '{? headers.user_agent ?}'
         hd-torrents: 'xxxxxxxx'
         hd4fans: 'xxxxxxxx'
         hdarea:
