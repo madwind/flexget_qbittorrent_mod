@@ -4,12 +4,13 @@ import re
 from enum import Enum
 from urllib.parse import urljoin
 
-import chardet
 import requests
 from dateutil.parser import parse
 from flexget.utils.soup import get_soup
 from loguru import logger
 from requests.adapters import HTTPAdapter
+
+from ..utils.net_utils import NetUtils
 from ..utils.url_recorder import UrlRecorder
 
 try:
@@ -83,10 +84,8 @@ class SiteBase:
             cookie = site_config
         elif isinstance(site_config, dict):
             cookie = site_config.get('cookie')
-            if cf := site_config.get('cf'):
-                entry['cf'] = cf
         if cookie:
-            headers['cookie'] = cookie
+            entry['cookie'] = cookie
         entry['headers'] = headers
 
     @classmethod
@@ -103,7 +102,7 @@ class SiteBase:
             method_name = f"sign_in_by_{work.method}"
             if method := getattr(self, method_name, None):
                 last_response = method(entry, config, work, last_content)
-                if (last_content := self._decode(last_response)) and work.is_base_content:
+                if (last_content := NetUtils.decode(last_response)) and work.is_base_content:
                     entry['base_content'] = last_content
                 if work.check_state:
                     if not self.check_state(entry, work, last_response, last_content):
@@ -117,12 +116,12 @@ class SiteBase:
                 setattr(work, work_key, list(map(lambda path: urljoin(url, path), work_value)))
 
     @staticmethod
-    def build_reseed(entry, site, passkey, torrent_id):
+    def build_reseed(entry, config, site, passkey, torrent_id):
         download_page = site['download_page'].format(torrent_id=torrent_id, passkey=passkey)
         entry['url'] = 'https://{}/{}'.format(site['base_url'], download_page)
 
     @staticmethod
-    def build_reseed_from_page(entry, passkey, torrent_id, base_url, torrent_page_url, url_regex):
+    def build_reseed_from_page(entry, config, passkey, torrent_id, base_url, torrent_page_url, url_regex):
         record = UrlRecorder.load_record(entry['class_name'])
         now = datetime.datetime.now()
         expire = datetime.timedelta(days=7)
@@ -133,7 +132,22 @@ class SiteBase:
         download_url = ''
         try:
             torrent_page_url = urljoin(base_url, torrent_page_url.format(torrent_id))
-            response = requests.get(torrent_page_url, headers=passkey['headers'], timeout=30)
+            session = requests.Session()
+            headers = {
+                'user-agent': config.get('user-agent'),
+                'referer': base_url
+            }
+            cookie = passkey.get('cookie')
+            session.headers.update(headers)
+            session.cookies.update(NetUtils.cookie_str_to_dict(cookie))
+            response = session.get(torrent_page_url, timeout=30)
+            if response is not None and response.content:
+                if re.search(NetworkErrorReason.DDoS_protection_by_Cloudflare.value, NetUtils.decode(response)):
+                    entry['headers'] = headers
+                    entry['cookie'] = cookie
+                    cf_cookie = asyncio.run(SiteBase.get_cf_cookie(entry))
+                    session.cookies.update(NetUtils.cookie_str_to_dict(cf_cookie))
+                    response = session.get(torrent_page_url, timeout=30)
             if response.status_code == 200:
                 re_search = re.search(url_regex, response.text)
                 if re_search:
@@ -152,18 +166,18 @@ class SiteBase:
             if entry_headers := entry.get('headers'):
                 if brotli:
                     entry_headers['accept-encoding'] = 'gzip, deflate, br'
-                if entry.get('cf'):
-                    cookie = asyncio.run(
-                        SiteBase.get_cf_cookie(entry, entry_headers))
-                    entry_headers['cookie'] = cookie
                 self.requests.headers.update(entry_headers)
+            if entry_cookie := entry.get('cookie'):
+                self.requests.cookies.update(NetUtils.cookie_str_to_dict(entry_cookie))
             self.requests.mount('http://', HTTPAdapter(max_retries=2))
             self.requests.mount('https://', HTTPAdapter(max_retries=2))
         try:
-            response = self.requests.request(method, url, allow_redirects=False, timeout=60, **kwargs)
-            if response.status_code == 302:
-                redirect_url = urljoin(url, response.headers['Location'])
-                response = self._request(entry, 'get', redirect_url, **kwargs)
+            response = self.requests.request(method, url, timeout=60, **kwargs)
+            if response is not None and response.content:
+                if re.search(NetworkErrorReason.DDoS_protection_by_Cloudflare.value, NetUtils.decode(response)):
+                    cf_cookie = asyncio.run(SiteBase.get_cf_cookie(entry))
+                    self.requests.cookies.update(NetUtils.cookie_str_to_dict(cf_cookie))
+                    response = self.requests.request(method, url, timeout=60, **kwargs)
             return response
         except Exception as e:
             entry.fail_with_prefix(NetworkState.NETWORK_ERROR.value.format(url=url, error=str(e.args)))
@@ -176,7 +190,7 @@ class SiteBase:
         data = {}
         for key, regex in work.data.items():
             if key == 'fixed':
-                self.dict_merge(data, regex)
+                NetUtils.dict_merge(data, regex)
             else:
                 value_search = re.search(regex, last_content)
                 if value_search:
@@ -209,7 +223,7 @@ class SiteBase:
                 network_state = self.check_network_state(entry, detail_source['link'], detail_response)
                 if network_state != NetworkState.SUCCEED:
                     return
-                detail_content = self._decode(detail_response)
+                detail_content = NetUtils.decode(detail_response)
             else:
                 detail_content = base_content
             do_not_strip = detail_source.get('do_not_strip')
@@ -310,24 +324,6 @@ class SiteBase:
             return SignState.SIGN_IN_FAILED
         return sign_in_state
 
-    def _decode(self, response):
-        if response is None:
-            return None
-        content = response.content
-        charset_encoding = chardet.detect(content).get('encoding')
-        if charset_encoding == 'ascii':
-            charset_encoding = 'unicode_escape'
-        elif charset_encoding == 'Windows-1254':
-            charset_encoding = 'utf-8'
-        return content.decode(charset_encoding if charset_encoding else 'utf-8', 'ignore')
-
-    def dict_merge(self, dict1, dict2):
-        for i in dict2:
-            if isinstance(dict1.get(i), dict) and isinstance(dict2.get(i), dict):
-                self.dict_merge(dict1[i], dict2[i])
-            else:
-                dict1[i] = dict2[i]
-
     def get_detail_value(self, content, detail_config):
         if detail_config is None:
             return '*'
@@ -348,23 +344,30 @@ class SiteBase:
         return str(detail)
 
     @staticmethod
-    async def get_cf_cookie(entry, headers):
+    async def get_cf_cookie(entry):
         logger.info(f"{entry['site_name']} get_cf_cookie")
+        entry_headers = entry.get('headers')
+        entry_cookie = entry.get('cookie')
         if not (launch and stealth):
             entry.fail_with_prefix('Dependency does not exist: [pyppeteer, pyppeteer_stealth]')
-            return headers
+            return
         browser = await launch(headless=True, handleSIGINT=False, handleSIGTERM=False, handleSIGHUP=False,
                                args=['--no-sandbox'])
         page = await browser.newPage()
         await stealth(page)
-        await page.setUserAgent(headers.get('user-agent'))
-        cookie_remove_cf = ';'.join(
-            list(filter(lambda x: not re.search('__cfduid|cf_clearance|__cf_bm', x), headers.get('cookie').split(';'))))
+        await page.setUserAgent(entry_headers.get('user-agent'))
+        cookie_remove_cf = ''
+        if entry_cookie:
+            cookie_remove_cf = ';'.join(
+                list(filter(lambda x: not re.search('__cfduid|cf_clearance|__cf_bm', x),
+                            entry_cookie.split(';'))))
         await page.setExtraHTTPHeaders({'cookie': cookie_remove_cf})
         await page.goto(entry['url'])
         await asyncio.sleep(10)
         page_cookie = await page.cookies()
-        cf_cookie = cookie_remove_cf + ';' + ';'.join(
+        if cookie_remove_cf:
+            cookie_remove_cf += ';'
+        cf_cookie = cookie_remove_cf + ';'.join(
             list(map(lambda c: f"{c['name']}={c['value']}", page_cookie)))
         await browser.close()
         return cf_cookie
