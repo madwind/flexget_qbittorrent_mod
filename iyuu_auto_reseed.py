@@ -17,6 +17,7 @@ class PluginIYUUAutoReseed():
         'type': 'object',
         'properties': {
             'iyuu': {'type': 'string'},
+            'user-agent': {'type': 'string'},
             'show_detail': {'type': 'boolean'},
             'limit': {'type': 'integer'},
             'passkeys': {
@@ -108,7 +109,7 @@ class PluginIYUUAutoReseed():
                     entry['savepath'] = client_torrent['qbittorrent_save_path']
                     entry['paused'] = 'true'
                     entry['class_name'] = site_name
-                    Executor.build_reseed(entry, site, passkey, torrent_id)
+                    Executor.build_reseed(entry, config, site, passkey, torrent_id)
                     if show_detail:
                         logger.info(
                             'accept site: {}, title: {}, url: {}'.format(site_name, client_torrent['title'],
