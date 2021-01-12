@@ -1,5 +1,6 @@
 from distutils.version import LooseVersion
 
+from PIL import Image
 from flexget import db_schema, plugin
 from flexget.event import event
 from flexget.manager import Session
@@ -336,7 +337,13 @@ class TelegramNotifierMod:
     def _send_photo(self, image, chat_ids):
         for chat_id in (x.id for x in chat_ids):
             try:
-                self._bot.sendDocument(chat_id=chat_id, document=open(image, 'rb'))
+                photo = Image.open(image)
+                width = photo.width
+                height = photo.height
+                if width + height > 10000 or width / height > 20:
+                    self._bot.sendDocument(chat_id=chat_id, document=open(image, 'rb'))
+                else:
+                    self._bot.sendPhoto(chat_id=chat_id, photo=open(image, 'rb'))
             except TelegramError as e:
                 raise PluginWarning(e.message)
 
