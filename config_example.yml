@@ -355,6 +355,7 @@ tasks:
       iyuu_auto_reseed: 240
     iyuu_auto_reseed:
       iyuu: 'xxxxxxxx'
+      user-agent: '{? headers.user_agent ?}'
       passkeys:
         1ptba: 'xxxxxxxx'
         52pt: 'xxxxxxxx'
@@ -371,31 +372,22 @@ tasks:
         et8: 'xxxxxxxx'
         haidan: 'xxxxxxxx'
         hd:
-          headers:
-            cookie: 'xxxxxxxx'
-            user-agent: '{? headers.user_agent ?}'
+          cookie: 'xxxxxxxx'
         hd-torrents: 'xxxxxxxx'
         hd4fans: 'xxxxxxxx'
         hdarea:
           cookie: 'xxxxxxxx'
-          cf: yes
         hdbd: 'xxxxxxxx'
         hdcity:
-          headers:
-            cookie: 'xxxxxxxx'
-            user-agent: '{? headers.user_agent ?}'
+          cookie: 'xxxxxxxx'
         hdchina:
-          headers:
-            cookie: 'xxxxxxxx'
-            user-agent: '{? headers.user_agent ?}'
+          cookie: 'xxxxxxxx'
         hddisk: 'xxxxxxxx'
         hddolby: 'xxxxxxxx'
         hdfans: 'xxxxxxxx'
         hdhome: 'xxxxxxxx'
         hdsky:
-          headers:
-            cookie: 'xxxxxxxx'
-            user-agent: '{? headers.user_agent ?}'
+          cookie: 'xxxxxxxx'
         hdstreet: 'xxxxxxxx'
         hdtime: 'xxxxxxxx'
         hdupt: 'xxxxxxxx'
