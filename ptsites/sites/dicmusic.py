@@ -4,6 +4,7 @@ from urllib.parse import urljoin
 
 from ..schema.gazelle import Gazelle
 from ..schema.site_base import Work, SignState
+from ..utils.net_utils import NetUtils
 
 
 # iyuu_auto_reseed
@@ -34,7 +35,7 @@ class MainClass(Gazelle):
         ]
 
     @staticmethod
-    def build_reseed(entry, site, passkey, torrent_id):
+    def build_reseed(entry, config, site, passkey, torrent_id):
         download_page = site['download_page'].format(torrent_id=torrent_id,
                                                      authkey=passkey['authkey'],
                                                      torrent_pass=passkey['torrent_pass'])
@@ -42,7 +43,7 @@ class MainClass(Gazelle):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        self.dict_merge(selector, {
+        NetUtils.dict_merge(selector, {
             'detail_sources': {
                 'default': {
                     'elements': {'table': 'div.box.box_info.box_userinfo_stats > ul'}

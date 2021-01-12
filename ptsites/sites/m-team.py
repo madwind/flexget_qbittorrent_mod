@@ -1,6 +1,7 @@
 import re
 from urllib.parse import urljoin
 
+from ..utils.net_utils import NetUtils
 from ..schema.nexusphp import NexusPHP
 from ..schema.site_base import Work, NetworkState, SignState
 from ..utils.google_auth import GoogleAuth
@@ -46,7 +47,7 @@ class MainClass(NexusPHP):
             return
 
         if login_response.url.startswith(urljoin(entry['url'], work.verify_url)):
-            content = self._decode(login_response)
+            content = NetUtils.decode(login_response)
             attempts = re.search('您還有(\\d+)次嘗試機會，否則該IP將被禁止訪問。', content)
             if attempts:
                 times = attempts.group(1)
@@ -63,7 +64,7 @@ class MainClass(NexusPHP):
         return login_response
 
     @classmethod
-    def build_reseed(cls, entry, site, passkey, torrent_id):
+    def build_reseed(cls, entry, config, site, passkey, torrent_id):
         download_page = site['download_page'].format(torrent_id=torrent_id, passkey=passkey)
         entry['url'] = urljoin(cls.URL, download_page + '&https=1')
 
@@ -74,7 +75,7 @@ class MainClass(NexusPHP):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        self.dict_merge(selector, {
+        NetUtils.dict_merge(selector, {
             'details': {
                 'hr': None
             }

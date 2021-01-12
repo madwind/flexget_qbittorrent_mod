@@ -7,6 +7,7 @@ from flexget.utils.soup import get_soup
 from loguru import logger
 
 from ..schema.site_base import SiteBase, SignState, NetworkState, Work
+from ..utils.net_utils import NetUtils
 
 
 class NexusPHP(SiteBase):
@@ -68,7 +69,7 @@ class NexusPHP(SiteBase):
             entry.fail_with_prefix('Can not read message box! url:{}'.format(message_url))
             return
 
-        unread_elements = get_soup(self._decode(message_box_response)).select(
+        unread_elements = get_soup(NetUtils.decode(message_box_response)).select(
             unread_elements_selector)
         failed = False
         for unread_element in unread_elements:
@@ -82,7 +83,7 @@ class NexusPHP(SiteBase):
                 message_body = 'Can not read message body!'
                 failed = True
             else:
-                if body_element := get_soup(self._decode(message_response)).select_one('td[colspan*="2"]'):
+                if body_element := get_soup(NetUtils.decode(message_response)).select_one('td[colspan*="2"]'):
                     message_body = body_element.text.strip()
             entry['messages'] = entry['messages'] + (f'\nTitle: {title}\nLink: {message_url}\n{message_body}')
         if failed:
@@ -103,7 +104,7 @@ class NexusPHP(SiteBase):
             question_extend_file = Path(__file__).with_name('nexusphp_question.json')
             if question_extend_file.is_file():
                 question_extend_json = json.loads(question_extend_file.read_text())
-                self.dict_merge(question_json, question_extend_json)
+                NetUtils.dict_merge(question_json, question_extend_json)
                 question_file.write_text(json.dumps(question_json))
                 question_extend_file.unlink()
 
@@ -136,7 +137,7 @@ class NexusPHP(SiteBase):
             for answer in answer_list:
                 data = {'questionid': question_id, 'choice[]': answer, 'usercomment': '此刻心情:无', 'submit': '提交'}
                 response = self._request(entry, 'post', work.url, data=data)
-                state = self.check_sign_in_state(entry, work, response, self._decode(response))
+                state = self.check_sign_in_state(entry, work, response, NetUtils.decode(response))
                 if state == SignState.SUCCEED:
                     entry['result'] = f"{entry['result']} ( {times} attempts.)"
                     question_json[entry['url']][question_id] = answer
@@ -174,7 +175,7 @@ class AttendanceHR(NexusPHP):
 class Attendance(AttendanceHR):
     def build_selector(self):
         selector = super(Attendance, self).build_selector()
-        self.dict_merge(selector, {
+        NetUtils.dict_merge(selector, {
             'details': {
                 'hr': None
             }
@@ -207,7 +208,7 @@ class Bakatest(BakatestHR):
 
     def build_selector(self):
         selector = super(Bakatest, self).build_selector()
-        self.dict_merge(selector, {
+        NetUtils.dict_merge(selector, {
             'details': {
                 'hr': None
             }
@@ -236,7 +237,7 @@ class Visit(VisitHR):
 
     def build_selector(self):
         selector = super(Visit, self).build_selector()
-        self.dict_merge(selector, {
+        NetUtils.dict_merge(selector, {
             'details': {
                 'hr': None
             }

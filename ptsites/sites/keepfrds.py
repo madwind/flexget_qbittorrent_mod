@@ -1,5 +1,5 @@
 from ..schema.nexusphp import Visit
-
+from ..utils.net_utils import NetUtils
 
 class MainClass(Visit):
     URL = 'https://pt.keepfrds.com/'
@@ -12,7 +12,7 @@ class MainClass(Visit):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        self.dict_merge(selector, {
+        NetUtils.dict_merge(selector, {
             'detail_sources': {
                 'default': {
                     'elements': {

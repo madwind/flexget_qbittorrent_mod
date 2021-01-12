@@ -1,6 +1,5 @@
 from ..schema.nexusphp import AttendanceHR
 
-
 from ..schema.site_base import Work, NetworkState
 
 
@@ -33,12 +32,10 @@ class MainClass(AttendanceHR):
         if not login:
             entry.fail_with_prefix('Login data not found!')
             return
-
         data = {
             '2fa_code': '',
             'trackerssl': 'yes',
             'username': login['username'],
             'password': login['password'],
         }
-
         return self._request(entry, 'post', work.url, data=data)

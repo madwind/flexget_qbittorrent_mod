@@ -1,6 +1,6 @@
 from ..schema.nexusphp import NexusPHP
 from ..schema.site_base import Work, SignState
-
+from ..utils.net_utils import NetUtils
 
 class MainClass(NexusPHP):
     URL = 'https://www.hdarea.co/'
@@ -40,7 +40,7 @@ class MainClass(NexusPHP):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        self.dict_merge(selector, {
+        NetUtils.dict_merge(selector, {
             'details': {
                 'hr': None
             }

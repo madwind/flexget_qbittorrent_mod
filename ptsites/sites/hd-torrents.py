@@ -4,6 +4,7 @@ from urllib.parse import urljoin
 from dateutil.parser import parse
 from flexget.utils.soup import get_soup
 
+from ..utils.net_utils import NetUtils
 from ..schema.site_base import SiteBase, Work, SignState, NetworkState
 
 MESSAGES_URL_REGEX = 'usercp\\.php\\?uid=\\d+&do=pm&action=list'
@@ -89,7 +90,7 @@ class MainClass(SiteBase):
             entry.fail_with_prefix('Can not read message box! url:{}'.format(messages_url))
             return
 
-        message_elements = get_soup(self._decode(message_box_response)).select(
+        message_elements = get_soup(NetUtils.decode(message_box_response)).select(
             'tr > td.lista:nth-child(1)')
         unread_elements = filter(lambda elements: elements.get_text() == 'no', message_elements)
         failed = False
@@ -104,7 +105,7 @@ class MainClass(SiteBase):
                 message_body = 'Can not read message body!'
                 failed = True
             else:
-                body_element = get_soup(self._decode(message_response)).select_one(
+                body_element = get_soup(NetUtils.decode(message_response)).select_one(
                     '#PrivateMessageHideShowTR > td > table:nth-child(1) > tbody > tr:nth-child(2) > td')
                 if body_element:
                     message_body = body_element.text.strip()

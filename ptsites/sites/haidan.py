@@ -1,5 +1,6 @@
 from ..schema.nexusphp import NexusPHP
 from ..schema.site_base import SignState, Work
+from ..utils.net_utils import NetUtils
 
 
 class MainClass(NexusPHP):
@@ -33,7 +34,7 @@ class MainClass(NexusPHP):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        self.dict_merge(selector, {
+        NetUtils.dict_merge(selector, {
             'detail_sources': {
                 'default': {
                     'elements': {

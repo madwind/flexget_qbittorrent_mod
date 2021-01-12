@@ -6,6 +6,7 @@ from ..schema.nexusphp import NexusPHP
 from ..schema.site_base import SignState, Work, NetworkState
 from ..schema.site_base import SiteBase
 from ..utils.baidu_ocr import BaiduOcr
+from ..utils.net_utils import NetUtils
 
 try:
     from PIL import Image
@@ -55,8 +56,8 @@ class MainClass(NexusPHP):
         ]
 
     @classmethod
-    def build_reseed(cls, entry, site, passkey, torrent_id):
-        SiteBase.build_reseed_from_page(entry, passkey, torrent_id, cls.URL, cls.TORRENT_PAGE_URL,
+    def build_reseed(cls, entry, config, site, passkey, torrent_id):
+        SiteBase.build_reseed_from_page(entry, config, passkey, torrent_id, cls.URL, cls.TORRENT_PAGE_URL,
                                         '/download\\.php\\?id=\\d+&passkey=.+?(?=")')
 
     def sign_in_by_ocr(self, entry, config, work, last_content):
@@ -68,7 +69,7 @@ class MainClass(NexusPHP):
         image_hash_network_state = self.check_network_state(entry, image_hash_url, image_hash_response)
         if image_hash_network_state != NetworkState.SUCCEED:
             return
-        content = self._decode(image_hash_response)
+        content = NetUtils.decode(image_hash_response)
         image_hash = json.loads(content)['code']
 
         if image_hash:
@@ -94,7 +95,7 @@ class MainClass(NexusPHP):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        self.dict_merge(selector, {
+        NetUtils.dict_merge(selector, {
             'details': {
                 'hr': None
             }

@@ -5,6 +5,8 @@ from io import BytesIO
 from pathlib import Path
 from urllib.parse import urljoin
 
+from ..utils.net_utils import NetUtils
+
 try:
     from fuzzywuzzy import fuzz, process
 except ImportError:
@@ -182,7 +184,7 @@ class MainClass(NexusPHP):
                 reload__net_state = self.check_network_state(entry, real_reload_url, reload_response)
                 if reload__net_state != NetworkState.SUCCEED:
                     return None
-                reload_content = self._decode(reload_response)
+                reload_content = NetUtils.decode(reload_response)
                 return self.build_data(entry, config, work, reload_content, ocr_config)
             else:
                 return None
@@ -274,7 +276,7 @@ class MainClass(NexusPHP):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        self.dict_merge(selector, {
+        NetUtils.dict_merge(selector, {
             'details': {
                 'points': {
                     'regex': ('UCoin.*?([\\d,.]+)\\(([\\d,.]+)\\)', 2)

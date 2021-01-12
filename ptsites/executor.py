@@ -55,12 +55,12 @@ class Executor:
                 logger.info('site_name: {}, details: {}', entry['site_name'], entry['details'])
 
     @staticmethod
-    def build_reseed(entry, site, passkey, torrent_id):
+    def build_reseed(entry, config, site, passkey, torrent_id):
         try:
             site_class = Executor.get_site_class(entry['class_name'])
-            site_class.build_reseed(entry, site, passkey, torrent_id)
+            site_class.build_reseed(entry, config, site, passkey, torrent_id)
         except AttributeError:
-            SiteBase.build_reseed(entry, site, passkey, torrent_id)
+            SiteBase.build_reseed(entry, config, site, passkey, torrent_id)
 
     @staticmethod
     def get_site_class(class_name):

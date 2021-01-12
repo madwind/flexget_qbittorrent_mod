@@ -3,6 +3,7 @@ from urllib.parse import urljoin
 from flexget.utils.soup import get_soup
 
 from .site_base import SiteBase, NetworkState
+from ..utils.net_utils import NetUtils
 
 
 class Gazelle(SiteBase):
@@ -53,7 +54,7 @@ class Gazelle(SiteBase):
         network_state = self.check_network_state(entry, message_url, message_box_response)
         if network_state != NetworkState.SUCCEED:
             return
-        unread_elements = get_soup(self._decode(message_box_response)).select("tr.unreadpm > td > strong > a")
+        unread_elements = get_soup(NetUtils.decode(message_box_response)).select("tr.unreadpm > td > strong > a")
         failed = False
         for unread_element in unread_elements:
             title = unread_element.text
@@ -66,7 +67,7 @@ class Gazelle(SiteBase):
                 failed = True
             else:
                 body_element = get_soup(
-                    self._decode(message_response)).select_one('div[id*="message"]')
+                    NetUtils.decode(message_response)).select_one('div[id*="message"]')
                 if body_element:
                     message_body = body_element.text.strip()
             entry['messages'] = entry['messages'] + (
