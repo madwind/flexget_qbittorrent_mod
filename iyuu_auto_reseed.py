@@ -114,7 +114,8 @@ class PluginIYUUAutoReseed():
                         logger.info(
                             'accept site: {}, title: {}, url: {}'.format(site_name, client_torrent['title'],
                                                                          entry.get('url', None)))
-                    entries.append(entry)
+                    if entry.get('url'):
+                        entries.append(entry)
         return entries
 
     def get_torrents_data(self, task, config):
