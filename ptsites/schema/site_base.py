@@ -102,6 +102,8 @@ class SiteBase:
             method_name = f"sign_in_by_{work.method}"
             if method := getattr(self, method_name, None):
                 last_response = method(entry, config, work, last_content)
+                if last_response == 'skip':
+                    continue
                 if (last_content := NetUtils.decode(last_response)) and work.is_base_content:
                     entry['base_content'] = last_content
                 if work.check_state:

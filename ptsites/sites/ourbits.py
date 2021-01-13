@@ -28,6 +28,8 @@ class MainClass(AttendanceHR):
                ] + AttendanceHR.build_workflow()
 
     def sign_in_by_login(self, entry, config, work, last_content=None):
+        if entry['site_config'].get('cookie'):
+            return 'skip'
         login = entry['site_config'].get('login')
         if not login:
             entry.fail_with_prefix('Login data not found!')

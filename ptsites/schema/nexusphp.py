@@ -89,6 +89,62 @@ class NexusPHP(SiteBase):
         if failed:
             entry.fail_with_prefix('Can not read message body!')
 
+    def handle_share_ratio(self, value):
+        if value in ['---', '∞', 'Inf.', '无限', '無限']:
+            return '0'
+        else:
+            return value
+
+
+class AttendanceHR(NexusPHP):
+    @classmethod
+    def build_workflow(cls):
+        return [
+            Work(
+                url='/attendance.php',
+                method='get',
+                succeed_regex=[
+                    '这是您的第.*?次签到，已连续签到.*?天，本次签到获得.*?魔力值。|這是您的第.*次簽到，已連續簽到.*?天，本次簽到獲得.*?魔力值。',
+                    '[签簽]到已得\\d+',
+                    '您今天已经签到过了，请勿重复刷新。|您今天已經簽到過了，請勿重複刷新。'],
+                fail_regex=None,
+                check_state=('final', SignState.SUCCEED),
+                is_base_content=True
+            )
+        ]
+
+
+class Attendance(AttendanceHR):
+    def build_selector(self):
+        selector = super(Attendance, self).build_selector()
+        NetUtils.dict_merge(selector, {
+            'details': {
+                'hr': None
+            }
+        })
+        return selector
+
+
+class BakatestHR(NexusPHP):
+    @classmethod
+    def build_workflow(cls):
+        return [
+            Work(
+                url='/bakatest.php',
+                method='get',
+                succeed_regex='今天已经签过到了\\(已连续.*天签到\\)',
+                fail_regex=None,
+                check_state=('sign_in', SignState.NO_SIGN_IN),
+                is_base_content=True
+            ),
+            Work(
+                url='/bakatest.php',
+                method='question',
+                succeed_regex='连续.*天签到,获得.*点魔力值|今天已经签过到了\\(已连续.*天签到\\)',
+                fail_regex='回答错误,失去 1 魔力值,这道题还会再考一次',
+            )
+        ]
+
     def sign_in_by_question(self, entry, config, work, last_content=None):
         question_element = get_soup(last_content).select_one('input[name="questionid"]')
         if question_element:
@@ -146,62 +202,6 @@ class NexusPHP(SiteBase):
                     return
                 times += 1
         entry.fail_with_prefix(SignState.SIGN_IN_FAILED.value.format('No answer.'))
-
-    def handle_share_ratio(self, value):
-        if value in ['---', '∞', 'Inf.', '无限', '無限']:
-            return '0'
-        else:
-            return value
-
-
-class AttendanceHR(NexusPHP):
-    @classmethod
-    def build_workflow(cls):
-        return [
-            Work(
-                url='/attendance.php',
-                method='get',
-                succeed_regex=[
-                    '这是您的第.*?次签到，已连续签到.*?天，本次签到获得.*?魔力值。|這是您的第.*次簽到，已連續簽到.*?天，本次簽到獲得.*?魔力值。',
-                    '[签簽]到已得\\d+',
-                    '您今天已经签到过了，请勿重复刷新。|您今天已經簽到過了，請勿重複刷新。'],
-                fail_regex=None,
-                check_state=('final', SignState.SUCCEED),
-                is_base_content=True
-            )
-        ]
-
-
-class Attendance(AttendanceHR):
-    def build_selector(self):
-        selector = super(Attendance, self).build_selector()
-        NetUtils.dict_merge(selector, {
-            'details': {
-                'hr': None
-            }
-        })
-        return selector
-
-
-class BakatestHR(NexusPHP):
-    @classmethod
-    def build_workflow(cls):
-        return [
-            Work(
-                url='/bakatest.php',
-                method='get',
-                succeed_regex='今天已经签过到了\\(已连续.*天签到\\)',
-                fail_regex=None,
-                check_state=('sign_in', SignState.NO_SIGN_IN),
-                is_base_content=True
-            ),
-            Work(
-                url='/bakatest.php',
-                method='question',
-                succeed_regex='连续.*天签到,获得.*点魔力值|今天已经签过到了\\(已连续.*天签到\\)',
-                fail_regex='回答错误,失去 1 魔力值,这道题还会再考一次',
-            )
-        ]
 
 
 class Bakatest(BakatestHR):

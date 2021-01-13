@@ -582,6 +582,7 @@ tasks:
         open: 'xxxxxxxx'
         oshen: 'xxxxxxxx'
         ourbits:
+          cookie: 'xxxxxxxx'
           login:
             username: 'xxxxxxxx'
             password: 'xxxxxxxx'
