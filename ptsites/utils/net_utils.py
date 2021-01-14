@@ -18,8 +18,9 @@ class NetUtils:
     def cookie_str_to_dict(cookie_str):
         cookie_dict = {}
         for line in cookie_str.split(';'):
-            i = line.index('=')
-            cookie_dict[line[0:i]] = line[i + 1:]
+            if '=' in line:
+                i = line.index('=')
+                cookie_dict[line[0:i]] = line[i + 1:]
         return cookie_dict
 
     @staticmethod
