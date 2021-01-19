@@ -563,8 +563,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
             max_connect = application_preferences.get('max_connec')
             if max_connect == -1:
                 max_connect = float('inf')
-            if (step > 0 and max_connect <= server_total_peer_connections) or (
-                    step < 0 and max_connect >= server_total_peer_connections):
+            if (step > 0 and max_connect <= server_total_peer_connections) or step < 0:
                 max_connect_changed = server_total_peer_connections + step
                 if max_connect_changed < min_conn:
                     max_connect_changed = min_conn
