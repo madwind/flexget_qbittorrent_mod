@@ -180,6 +180,8 @@ class SiteBase:
                     cf_cookie = asyncio.run(SiteBase.get_cf_cookie(entry))
                     self.requests.cookies.update(NetUtils.cookie_str_to_dict(cf_cookie))
                     response = self.requests.request(method, url, timeout=60, **kwargs)
+            if response is not None and response.status_code != 200:
+                entry.fail_with_prefix(f'response.status_code={response.status_code}')
             return response
         except Exception as e:
             entry.fail_with_prefix(NetworkState.NETWORK_ERROR.value.format(url=url, error=str(e.args)))
