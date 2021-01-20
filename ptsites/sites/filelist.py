@@ -45,7 +45,3 @@ class MainClass(Ocelot):
             'unlock': 1
         }
         return self._request(entry, 'post', work.url, data=data)
-
-    def build_selector(self):
-        selector = super(MainClass, self).build_selector()
-        return selector

@@ -32,7 +32,7 @@ class Ocelot(SiteBase):
                     'regex': 'Ratio.+?([\\d.]+)',
                 },
                 'points': {
-                    'regex': ('Hello.+?(\\d+).*?([\\d.]+)', 2)
+                    'regex': ('Hello.+?(\\d+).*?(Inf\\.|[\\d.]+)', 2)
                 },
                 'join_date': {
                     'regex': 'Join.date.*?(\\d{4}-\\d{2}-\\d{2})',
