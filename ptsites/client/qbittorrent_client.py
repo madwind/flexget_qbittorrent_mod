@@ -9,7 +9,6 @@ from loguru import logger
 from requests import RequestException, Session
 
 logger = logger.bind(name='qbittorrent_client')
-__version__ = 'v0.8.4'
 
 
 def singleton(cls):
@@ -29,7 +28,6 @@ class QBittorrentClientFactory:
 
     def __init__(self):
         self.client_map = {}
-        logger.info('flexget_qbittorrent_mod {}', __version__)
 
     def get_client(self, config):
         client_key = '{}{}'.format(config.get('host'), config.get('port'))
@@ -326,6 +324,7 @@ class QBittorrentClient:
 
     def reset_rid(self):
         self._rid = 0
+        logger.warning('Sync error, reset rid')
 
     def _build_entry(self):
         self._building = True
@@ -444,11 +443,14 @@ class QBittorrentClient:
                 entry['qbittorrent_last_activity'] = entry['qbittorrent_added_on']
 
     def _remove_torrent(self, torrent_hash):
-        save_path_with_name = self._entry_dict.get(torrent_hash).get('qbittorrent_save_path_with_name')
+        torrent = self._entry_dict.get(torrent_hash)
+        if not torrent:
+            self.reset_rid()
+        save_path_with_name = torrent.get('qbittorrent_save_path_with_name')
         torrent_list = self._reseed_dict.get(save_path_with_name)
         if torrent_list and (torrent_hash in self._entry_dict.keys()):
             torrent_list_removed = list(
-                filter(lambda torrent: torrent['torrent_info_hash'] != torrent_hash, torrent_list))
+                filter(lambda t: t['torrent_info_hash'] != torrent_hash, torrent_list))
             if len(torrent_list_removed) == 0:
                 del self._reseed_dict[save_path_with_name]
             else:
@@ -456,7 +458,6 @@ class QBittorrentClient:
             del self._entry_dict[torrent_hash]
         else:
             self.reset_rid()
-            logger.warning('Sync error, rebuild data')
 
     def _check_action(self, action_name, hashes):
         hashes_list = hashes.split('|')

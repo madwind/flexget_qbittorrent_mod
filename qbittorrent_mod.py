@@ -367,7 +367,6 @@ class PluginQBittorrentMod(QBittorrentModBase):
             server_entry = entry_dict.get(entry_hash)
             if not server_entry:
                 self.client.reset_rid()
-                logger.warning('Sync error, rebuild data')
             save_path_with_name = server_entry.get('qbittorrent_save_path_with_name')
             reseed_entry_list = reseed_dict.get(save_path_with_name)
             check_hashes = []
@@ -457,7 +456,6 @@ class PluginQBittorrentMod(QBittorrentModBase):
             server_entry = entry_dict.get(entry_hash)
             if not server_entry:
                 self.client.reset_rid()
-                logger.warning('Sync error, rebuild data')
                 continue
             save_path_with_name = server_entry.get('qbittorrent_save_path_with_name')
             reseed_entry_list = reseed_dict.get(save_path_with_name)
