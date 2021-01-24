@@ -535,7 +535,7 @@ class TelegramNotifierMod:
             if chat.type == 'private':
                 usernames[chat.username] = chat
                 fullnames[(chat.first_name, chat.last_name)] = chat
-            elif chat.type in ('group', 'supergroup' or 'channel'):
+            elif chat.type in ('group', 'supergroup', 'channel'):
                 groups[chat.title] = chat
             else:
                 logger.warning('unknown chat type: {}}}', type(chat))
