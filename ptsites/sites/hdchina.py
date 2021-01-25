@@ -67,10 +67,10 @@ class MainClass(NexusPHP):
             },
             'details': {
                 'seeding': {
-                    'regex': '\\( (\\d+)　 (\\d+) \\)'
+                    'regex': '\\( (\\d+)　 (\\d+).+?\\)'
                 },
                 'leeching': {
-                    'regex': ('\\( (\\d+)　 (\\d+) \\)', 2)
+                    'regex': ('\\( (\\d+)　 (\\d+).+?\\)', 2)
                 },
                 'hr': None
             }
