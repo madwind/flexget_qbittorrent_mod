@@ -261,7 +261,7 @@ class MainClass(NexusPHP):
         logger.debug('request image...')
         real_img_url = urljoin(entry['url'], img_url)
         base_img_response = self._request(entry, 'get', real_img_url)
-        if base_img_response.status_code != 200 or base_img_response is None or base_img_response.url == urljoin(
+        if base_img_response is None or base_img_response.status_code != 200 or base_img_response.url == urljoin(
                 entry['url'], '/pic/trans.gif?debug=NIM'):
             return None
         new_image = Image.open(BytesIO(base_img_response.content))
