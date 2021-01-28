@@ -1,5 +1,4 @@
 import re
-from urllib.parse import urljoin
 
 from ..schema.ocelot import Ocelot
 from ..schema.site_base import Work, SignState, NetworkState

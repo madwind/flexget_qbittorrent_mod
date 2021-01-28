@@ -60,7 +60,7 @@ class NexusPHP(SiteBase):
         }
         return selector
 
-    def get_nexusphp_message(self, entry, config, messages_url='/messages.php',
+    def get_nexusphp_message(self, entry, config, messages_url='/messages.php?action=viewmailbox&box=1&unread=yes',
                              unread_elements_selector='td > img[alt*="Unread"]'):
         message_url = urljoin(entry['url'], messages_url)
         message_box_response = self._request(entry, 'get', message_url)
