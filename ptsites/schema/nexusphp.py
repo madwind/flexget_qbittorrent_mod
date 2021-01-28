@@ -141,6 +141,7 @@ class BakatestHR(NexusPHP):
                 url='/bakatest.php',
                 method='question',
                 succeed_regex='连续.*天签到,获得.*点魔力值|今天已经签过到了\\(已连续.*天签到\\)',
+                check_state=('final', SignState.SUCCEED),
                 fail_regex='回答错误,失去 1 魔力值,这道题还会再考一次',
             )
         ]
