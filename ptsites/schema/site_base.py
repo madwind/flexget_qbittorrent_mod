@@ -316,8 +316,9 @@ class SiteBase:
                     NetworkState.NETWORK_ERROR.value.format(url=work.url, error=reason.name))
                 return NetworkState.NETWORK_ERROR
 
-        if work.check_state[1] != SignState.NO_SIGN_IN:
-            logger.warning('no sign in, content: {}'.format(content))
+        if check_state := work.check_state:
+            if check_state[1] != SignState.NO_SIGN_IN:
+                logger.warning('no sign in, content: {}'.format(content))
 
         return SignState.NO_SIGN_IN
 

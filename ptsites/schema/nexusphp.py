@@ -107,7 +107,6 @@ class AttendanceHR(NexusPHP):
                     '这是您的第.*?次签到，已连续签到.*?天，本次签到获得.*?魔力值。|這是您的第.*次簽到，已連續簽到.*?天，本次簽到獲得.*?魔力值。',
                     '[签簽]到已得\\d+',
                     '您今天已经签到过了，请勿重复刷新。|您今天已經簽到過了，請勿重複刷新。'],
-                fail_regex=None,
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
             )
@@ -133,7 +132,6 @@ class BakatestHR(NexusPHP):
                 url='/bakatest.php',
                 method='get',
                 succeed_regex='今天已经签过到了\\(已连续.*天签到\\)',
-                fail_regex=None,
                 check_state=('sign_in', SignState.NO_SIGN_IN),
                 is_base_content=True
             ),
@@ -141,7 +139,6 @@ class BakatestHR(NexusPHP):
                 url='/bakatest.php',
                 method='question',
                 succeed_regex='连续.*天签到,获得.*点魔力值|今天已经签过到了\\(已连续.*天签到\\)',
-                check_state=None,
                 fail_regex='回答错误,失去 1 魔力值,这道题还会再考一次',
             )
         ]
@@ -227,7 +224,6 @@ class VisitHR(NexusPHP):
                 url='/',
                 method='get',
                 succeed_regex=cls.SUCCEED_REGEX,
-                fail_regex=None,
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
             )
