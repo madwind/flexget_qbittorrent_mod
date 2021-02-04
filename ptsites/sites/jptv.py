@@ -15,7 +15,7 @@ class MainClass(Unit3D):
             Work(
                 url='/',
                 method='get',
-                succeed_regex='<title>JPTVclub - JPTV for everyone!</title>',
+                succeed_regex='<title>JPTV\\.club - JPTV for everyone!</title>',
                 fail_regex=None,
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
