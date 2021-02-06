@@ -203,7 +203,7 @@ class MainClass(NexusPHP):
             return None
         original_text = BaiduOcr.get_jap_ocr(new_image, entry, config)
         logger.info('original_ocr: {}', original_text)
-        if len(original_text) < char_count:
+        if original_text is None or len(original_text) < char_count:
             return None
         image_list.append(new_image)
         while not images_sort_match and len(image_list) < 8:
