@@ -93,7 +93,7 @@ class SiteBase:
         pass
 
     def sign_in(self, entry, config):
-        if not entry['url'] or not entry['workflow']:
+        if not entry.get('url') or not entry.get('workflow'):
             entry.fail_with_prefix(f"site: {entry['site_name']} url or workflow is empty")
             return
         last_content = None
