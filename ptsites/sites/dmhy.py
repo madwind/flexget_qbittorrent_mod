@@ -66,7 +66,7 @@ class MainClass(NexusPHP):
     def build_sign_in(cls, entry, config):
         site_config = entry['site_config']
         succeed_regex = [cls.USERNAME_REGEX.format(username=site_config.get('username')) + cls.SUCCEED_REGEX,
-                         '<a href="showup.php">已签到</a>']
+                         '<a href="showup.php">已[签簽]到</a>']
         entry['url'] = cls.URL
         entry['workflow'] = cls.build_workflow(succeed_regex)
         entry['user_classes'] = cls.USER_CLASSES
@@ -118,7 +118,7 @@ class MainClass(NexusPHP):
         ocr_config = entry['site_config'].get('ocr_config')
         data = self.build_data(entry, config, work, last_content, ocr_config)
         if not data:
-            entry.fail_with_prefix('Cannot build_data')
+            entry.fail_with_prefix('Can not build_data')
             return
         logger.info(data)
         return self._request(entry, 'post', work.url, data=data)
@@ -126,7 +126,11 @@ class MainClass(NexusPHP):
     def build_data(self, entry, config, work, base_content, ocr_config):
         if entry.failed:
             return None
-        img_url = re.search(work.img_regex, base_content).group()
+        img_url_match = re.search(work.img_regex, base_content)
+        if not img_url_match:
+            entry.fail_with_prefix('Can not found img_url')
+            return None
+        img_url = img_url_match.group()
         logger.info('attempts: {} / {}, url: {}', self.times, ocr_config.get('retry'), urljoin(entry['url'], img_url))
         data = {}
         found = False
