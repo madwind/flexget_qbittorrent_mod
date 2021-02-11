@@ -383,9 +383,11 @@ tasks:
         hdchina:
           cookie: 'xxxxxxxx'
         hddisk: 'xxxxxxxx'
-        hddolby: 'xxxxxxxx'
+        hddolby:
+          cookie: 'xxxxxxxx'
         hdfans: 'xxxxxxxx'
-        hdhome: 'xxxxxxxx'
+        hdhome:
+          cookie: 'xxxxxxxx'
         hdsky:
           cookie: 'xxxxxxxx'
         hdstreet: 'xxxxxxxx'
@@ -404,7 +406,8 @@ tasks:
         oshen: 'xxxxxxxx'
         ourbits: 'xxxxxxxx'
         pterclub: 'xxxxxxxx'
-        pthome: 'xxxxxxxx'
+        pthome:
+          cookie: 'xxxxxxxx'
         ptsbao: 'xxxxxxxx'
         pttime: 'xxxxxxxx'
         skyeysnow: 'xxxxxxxx'
