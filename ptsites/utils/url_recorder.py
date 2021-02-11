@@ -1,11 +1,13 @@
 import json
 from pathlib import Path
 
+RECORD_FILE_PATH = 'reseed'
+
 
 class UrlRecorder:
     @staticmethod
     def load_record(site_name):
-        record_file = Path('url-record/{}.json'.format(site_name))
+        record_file = Path(f'{RECORD_FILE_PATH}/{site_name}.json')
         if record_file.is_file():
             return json.loads(record_file.read_text())
         else:
@@ -13,7 +15,7 @@ class UrlRecorder:
 
     @staticmethod
     def save_record(site_name, record):
-        Path('url-record').mkdir(exist_ok=True)
-        record_file = Path('url-record/{}.json'.format(site_name))
+        Path(RECORD_FILE_PATH).mkdir(exist_ok=True)
+        record_file = Path(f'{RECORD_FILE_PATH}/{site_name}.json')
         record_file.touch(exist_ok=True)
         record_file.write_text(json.dumps(record))
