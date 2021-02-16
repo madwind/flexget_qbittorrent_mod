@@ -511,7 +511,6 @@ tasks:
       - qbittorrent_added_on > now - timedelta(minutes=5): accept
     from_qbittorrent_mod:
       force_update: yes
-    accept_all: yes
     template:
       - from_qbittorrent_template
       - qbittorrent_base_template
