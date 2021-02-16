@@ -53,6 +53,7 @@ class PluginQBittorrentModInput(QBittorrentModBase):
             'password': {'type': 'string'},
             'verify_cert': {'type': 'boolean'},
             'server_state': {'oneOf': [{'type': 'boolean'}, {'type': 'string'}]},
+            'force_update': {'type': 'boolean'},
             'enabled': {'type': 'boolean'},
         },
         'additionalProperties': False
@@ -83,7 +84,9 @@ class PluginQBittorrentModInput(QBittorrentModBase):
             return [entry]
         else:
             self.client = self.create_client(config)
-            return list(self.client.get_main_data_snapshot(id(task)).get('entry_dict').values())
+            force_update = config.get('force_update', False)
+            return list(
+                self.client.get_main_data_snapshot(id(task), force_update=force_update).get('entry_dict').values())
 
 
 class PluginQBittorrentMod(QBittorrentModBase):
@@ -180,6 +183,13 @@ class PluginQBittorrentMod(QBittorrentModBase):
                         'properties': {
                             'min': {'type': 'integer'},
                             'max': {'type': 'integer'}
+                        }
+                    },
+                    'limit_upload_by_tracker': {
+                        'type': 'object',
+                        'properties': {
+                            'working': {'type': 'integer'},
+                            'not_working': {'type': 'integer'}
                         }
                     }
                 },
@@ -571,6 +581,39 @@ class PluginQBittorrentMod(QBittorrentModBase):
                 self.client.set_application_preferences('{{"max_connec": {}}}'.format(max_connect_changed))
                 logger.info('queued_io_jobs: {} , total_peer_connections: {}, set max_connec to {}',
                             server_queued_io_jobs, server_total_peer_connections, max_connect_changed)
+
+    def limit_upload_by_tracker_entries(self, task, limit_when_not_working_options):
+        working_speed = limit_when_not_working_options.get('working')
+        not_working_speed = limit_when_not_working_options.get('not_working')
+        working_hashes = []
+        not_working_hashes = []
+        for entry in task.accepted:
+            torrent_trackers = entry.get('qbittorrent_trackers')
+            is_working = False
+            updating = False
+            for tracker in torrent_trackers:
+                status = tracker.get('status')
+                if status == 2:
+                    is_working = True
+                elif status == 3:
+                    updating = True
+            if updating:
+                continue
+            up_limit = 0 if entry['qbittorrent_up_limit'] == -1 else entry['qbittorrent_up_limit']
+            if is_working:
+                if up_limit != working_speed:
+                    working_hashes.append(entry['torrent_info_hash'])
+                    logger.info(
+                        f'{entry["title"]} site: {entry["qbittorrent_tags"]} tracker is working, set torrent upload limit to {working_speed} B/s')
+            else:
+                if up_limit != not_working_speed:
+                    not_working_hashes.append(entry['torrent_info_hash'])
+                    logger.info(
+                        f'{entry["title"]} site: {entry["qbittorrent_tags"]} tracker is not working, set torrent upload limit to {not_working_speed} B/s')
+        if working_hashes:
+            self.client.set_torrent_upload_limit(str.join('|', working_hashes), working_speed)
+        if not_working_hashes:
+            self.client.set_torrent_upload_limit(str.join('|', not_working_hashes), not_working_speed)
 
     def _get_site_name(self, tracker_url):
         re_object = re.search('(?<=//).*?(?=/)', tracker_url)

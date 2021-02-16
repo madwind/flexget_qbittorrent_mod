@@ -46,6 +46,7 @@ class QBittorrentClient:
     API_URL_ADD_TORRENT_TAGS = '/api/v2/torrents/addTags'
 
     API_URL_SET_APPLICATION_PREFERENCES = '/api/v2/app/setPreferences'
+    API_URL_SET_TORRENT_UPLOAD_LIMIT = '/api/v2/torrents/setUploadLimit'
     API_URL_RESUME = '/api/v2/torrents/resume'
     API_URL_PAUSE = '/api/v2/torrents/pause'
     API_URL_RECHECK_TORRENTS = '/api/v2/torrents/recheck'
@@ -311,11 +312,21 @@ class QBittorrentClient:
             verify=self._verify,
         )
 
-    def get_main_data_snapshot(self, task_id):
+    def set_torrent_upload_limit(self, hashes, limit):
+        data = {'hashes': hashes, 'limit': limit}
+        self._request(
+            'post',
+            self.url + self.API_URL_SET_TORRENT_UPLOAD_LIMIT,
+            data=data,
+            msg_on_fail='set_torrent_upload_limit failed.',
+            verify=self._verify,
+        )
+
+    def get_main_data_snapshot(self, task_id, force_update=False):
         if not self._task_dict.get(task_id):
             with self.build_entry_lock:
                 if not self._task_dict.get(task_id):
-                    self._build_entry()
+                    self._build_entry(force_update)
                     self._task_dict.clear()
                     self._task_dict[task_id] = {'server_state': copy.deepcopy(self._server_state),
                                                 'entry_dict': copy.deepcopy(self._entry_dict),
@@ -326,7 +337,7 @@ class QBittorrentClient:
         self._rid = 0
         logger.warning('Sync error, reset rid')
 
-    def _build_entry(self):
+    def _build_entry(self, force_update):
         self._building = True
         main_data = self.get_main_data()
         self._rid = main_data.get('rid')
@@ -357,12 +368,11 @@ class QBittorrentClient:
                 self._remove_torrent(torrent_hash)
 
         update_addition_flag = self._last_update_time < datetime.now() - timedelta(hours=1)
-        if update_addition_flag:
+        if update_addition_flag or force_update:
             self._last_update_time = datetime.now()
             for torrent_hash, entry in self._entry_dict.items():
                 self._update_addition(entry)
                 self._update_entry_trackers(torrent_hash)
-
         if is_new_data:
             logger.info('build_entry: build completion')
 

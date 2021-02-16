@@ -75,6 +75,13 @@ templates:
           min: 100
           max: 2000
 
+  qbittorrent_limit_upload_by_tracker_template:
+    qbittorrent_mod:
+      action:
+        limit_upload_by_tracker:
+          working: 0
+          not_working: 1
+
   qbittorrent_delete_keeper_template:
     qbittorrent_mod:
       action:
@@ -497,6 +504,18 @@ tasks:
       - from_qbittorrent_template
       - qbittorrent_base_template
       - qbittorrent_manage_conn_template
+
+  limit_upload_by_tracker:
+    disable: [seen, seen_info_hash, retry_failed]
+    if:
+      - qbittorrent_added_on > now - timedelta(minutes=5): accept
+    from_qbittorrent_mod:
+      force_update: yes
+    accept_all: yes
+    template:
+      - from_qbittorrent_template
+      - qbittorrent_base_template
+      - qbittorrent_limit_upload_by_tracker_template
 
   sign_in:
     auto_sign_in:
