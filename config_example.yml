@@ -3,7 +3,7 @@ web_server:
   port: 3539
 
 schedules:
-  - tasks: [ pterclub, totheglory, rss_download, manage_conn ]
+  - tasks: [ pterclub, totheglory, rss_download, manage_conn ,limit_upload_by_tracker ]
     interval:
       minutes: 1
 
@@ -506,7 +506,7 @@ tasks:
       - qbittorrent_manage_conn_template
 
   limit_upload_by_tracker:
-    disable: [seen, seen_info_hash, retry_failed]
+    disable: [ seen, seen_info_hash, retry_failed ]
     if:
       - qbittorrent_added_on > now - timedelta(minutes=5): accept
     from_qbittorrent_mod:
