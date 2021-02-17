@@ -509,6 +509,9 @@ tasks:
     disable: [ seen, seen_info_hash, retry_failed ]
     if:
       - "'paused' not in qbittorrent_state and qbittorrent_added_on < now - timedelta(minutes=5)": accept
+      - "'keepfrds' in qbittorrent_tags":
+          set:
+            working: 13107200
     from_qbittorrent_mod:
       force_update: yes
     template:
