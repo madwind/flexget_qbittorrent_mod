@@ -508,7 +508,7 @@ tasks:
   limit_upload_by_tracker:
     disable: [ seen, seen_info_hash, retry_failed ]
     if:
-      - qbittorrent_added_on > now - timedelta(minutes=5): accept
+      - "'paused' not in qbittorrent_state and qbittorrent_added_on < now - timedelta(minutes=5)": accept
     from_qbittorrent_mod:
       force_update: yes
     template:
