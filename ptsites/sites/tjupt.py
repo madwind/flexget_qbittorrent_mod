@@ -14,7 +14,9 @@ class MainClass(VisitHR):
         selector = super(VisitHR, self).build_selector()
         NetUtils.dict_merge(selector, {
             'details': {
-                'hr': 'HnR积分.*?(\\d+)'
+                'hr': {
+                    'regex': 'HnR.*?(\\d+)'
+                }
             }
         })
         return selector
