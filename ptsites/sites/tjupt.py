@@ -15,8 +15,12 @@ class MainClass(VisitHR):
         NetUtils.dict_merge(selector, {
             'details': {
                 'hr': {
-                    'regex': 'HnR.*?(\\d+)'
+                    'regex': 'HnR.*?(\\d+)',
+                    'handle': self.handle_hr
                 }
             }
         })
         return selector
+
+    def handle_hr(self, hr):
+        return str(100 - int(hr))
