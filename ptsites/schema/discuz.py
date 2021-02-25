@@ -28,7 +28,7 @@ class Discuz(SiteBase):
                     'regex': '下载量.*?([\\d.]+ ?[ZEPTGMK]?i?B)'
                 },
                 'share_ratio': {
-                    'regex': '分享率.*?([\\d.,]+)'
+                    'regex': '保种率.*?([\\d.,]+)'
                 },
                 'points': {
                     'regex': '积分([\\d.,]+)金币'
