@@ -6,8 +6,8 @@ class MainClass(VisitHR):
     URL = 'https://ccfbits.org/'
     SUCCEED_REGEX = '欢迎回到CCFBits'
     USER_CLASSES = {
-        'downloaded': [322122547200],
         'uploaded': [5497558138880],
+        'downloaded': [322122547200],
         'share_ratio': [2],
         'days': [224]
     }
