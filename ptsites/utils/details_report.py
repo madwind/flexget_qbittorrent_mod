@@ -349,7 +349,7 @@ class DetailsReport:
             percent = 1
         i = 0
         for v in value_tuple:
-            if value > v:
+            if value >= v:
                 i += 1
         if len(value_tuple) == 1:
             i = -i
