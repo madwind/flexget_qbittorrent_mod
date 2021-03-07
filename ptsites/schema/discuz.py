@@ -16,7 +16,8 @@ class Discuz(SiteBase):
                 'default': {
                     'link': 'home.php?mod=space&amp;uid={}',
                     'elements': {
-                        'table': '#ct > div > div.bm > div > div.bm_c.u_profile'
+                        'table': '#ct > div > div.bm > div > div.bm_c.u_profile',
+                        'ptconnect_menu': '#ptconnect_menu'
                     }
                 }
             },
@@ -37,9 +38,11 @@ class Discuz(SiteBase):
                     'regex': '注册时间(\\d{4}-\\d{1,2}-\\d{1,2})',
                 },
                 'seeding': {
-                    'regex': '做种数(\\d+)'
+                    'regex': '当前做种数 : (\\d+)'
                 },
-                'leeching': None,
+                'leeching': {
+                    'regex': '当前下载数 : (\\d+)'
+                },
                 'hr': None,
             }
         }
