@@ -607,12 +607,12 @@ class PluginQBittorrentMod(QBittorrentModBase):
                         self.client.set_torrent_upload_limit(entry['torrent_info_hash'], entry_working)
                     else:
                         working_hashes.append(entry['torrent_info_hash'])
-                    logger.info(
+                    logger.debug(
                         f'{entry["title"]} site: {entry["qbittorrent_tags"]} tracker is working, set torrent upload limit to {entry_working} B/s')
             else:
                 if up_limit != not_working_speed:
                     not_working_hashes.append(entry['torrent_info_hash'])
-                    logger.info(
+                    logger.debug(
                         f'{entry["title"]} site: {entry["qbittorrent_tags"]} tracker is not working, set torrent upload limit to {not_working_speed} B/s')
         if working_hashes:
             self.client.set_torrent_upload_limit(str.join('|', working_hashes), working_speed)
