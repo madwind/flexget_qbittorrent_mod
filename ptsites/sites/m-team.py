@@ -8,7 +8,7 @@ from ..utils.google_auth import GoogleAuth
 
 
 class MainClass(NexusPHP):
-    URL = 'https://pt.m-team.cc/'
+    URL = 'https://kp.m-team.cc/'
     USER_CLASSES = {
         'downloaded': [2147483648000, 3221225472000],
         'share_ratio': [7, 9],
