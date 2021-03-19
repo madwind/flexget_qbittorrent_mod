@@ -1,8 +1,8 @@
 import re
 from urllib.parse import urljoin
 
-from ptsites.schema.site_base import Work, SignState
 from ..schema.nexusphp import AttendanceHR
+from ..schema.site_base import Work, SignState
 
 
 class MainClass(AttendanceHR):
