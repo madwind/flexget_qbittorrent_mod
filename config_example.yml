@@ -482,6 +482,8 @@ tasks:
         - '[Tt]orrent not registered with this tracker'
         - 'Torrent banned'
         - 'Unregistered torrent'
+        - '006-种子尚未上传或者已经被删除'
+        - 'Torrent is not authorized for use on this tracker.'
       from: qbittorrent_tracker_msg
     template:
       - from_qbittorrent_template
