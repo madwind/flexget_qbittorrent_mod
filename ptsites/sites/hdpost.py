@@ -15,7 +15,7 @@ class MainClass(Unit3D):
             Work(
                 url='/',
                 method='get',
-                succeed_regex='<title>HDPOST - 欢迎来到好大屁</title>',
+                succeed_regex='<title>HDPOST - 欢迎来到普斯特</title>',
                 fail_regex=None,
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
