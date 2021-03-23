@@ -579,7 +579,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                     max_connect_changed = max_conn
 
                 self.client.set_application_preferences('{{"max_connec": {}}}'.format(max_connect_changed))
-                logger.info('queued_io_jobs: {} , total_peer_connections: {}, set max_connec to {}',
+                logger.debug('queued_io_jobs: {} , total_peer_connections: {}, set max_connec to {}',
                             server_queued_io_jobs, server_total_peer_connections, max_connect_changed)
 
     def limit_upload_by_tracker_entries(self, task, limit_when_not_working_options):
