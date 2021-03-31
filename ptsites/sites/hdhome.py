@@ -8,7 +8,7 @@ class MainClass(AttendanceHR):
     USER_CLASSES = {
         'downloaded': [8796093022208],
         'share_ratio': [5.5],
-        'ponits': [1000000],
+        'points': [1000000],
         'days': [70]
     }
 
