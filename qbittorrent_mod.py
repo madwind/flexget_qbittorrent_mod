@@ -53,7 +53,7 @@ class PluginQBittorrentModInput(QBittorrentModBase):
             'password': {'type': 'string'},
             'verify_cert': {'type': 'boolean'},
             'server_state': {'oneOf': [{'type': 'boolean'}, {'type': 'string'}]},
-            'force_update': {'type': 'boolean'},
+            'force_update': {'oneOf': [{'type': 'boolean'}, {'type': 'string'}]},
             'enabled': {'type': 'boolean'},
         },
         'additionalProperties': False
@@ -580,7 +580,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
 
                 self.client.set_application_preferences('{{"max_connec": {}}}'.format(max_connect_changed))
                 logger.debug('queued_io_jobs: {} , total_peer_connections: {}, set max_connec to {}',
-                            server_queued_io_jobs, server_total_peer_connections, max_connect_changed)
+                             server_queued_io_jobs, server_total_peer_connections, max_connect_changed)
 
     def limit_upload_by_tracker_entries(self, task, limit_when_not_working_options):
         working_speed = limit_when_not_working_options.get('working')
