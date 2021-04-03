@@ -30,10 +30,11 @@ class MainClass(AttendanceHR):
 
     def sign_in_by_param(self, entry, config, work, last_content=None):
         response = self._request(entry, 'get', work.url)
-        location_match = re.search('window\\.location="(.*?);</script>', response.text)
-        if location_match:
-            uri = re.sub('["|+| ]', '', location_match.group(1))
-            work.url = urljoin(work.url, uri)
-            return self.sign_in_by_get(entry, config, work, last_content)
-        else:
-            return response
+        if response:
+            location_match = re.search('window\\.location="(.*?);</script>', response.text)
+            if location_match:
+                uri = re.sub('["|+| ]', '', location_match.group(1))
+                work.url = urljoin(work.url, uri)
+                return self.sign_in_by_get(entry, config, work, last_content)
+            else:
+                return response
