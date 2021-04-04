@@ -16,6 +16,7 @@ class MainClass(AttendanceHR):
                 'default': {
                     'elements': {
                         'bar': '#info_block',
+                        'table': '#outer table.main:last-child'
                     }
                 }
             }
