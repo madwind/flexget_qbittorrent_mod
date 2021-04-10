@@ -1,6 +1,7 @@
 from ..schema.nexusphp import AttendanceHR
 from ..utils.net_utils import NetUtils
 
+
 class MainClass(AttendanceHR):
     URL = 'https://www.pttime.org/'
     USER_CLASSES = {
