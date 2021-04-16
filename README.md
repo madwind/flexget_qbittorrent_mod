@@ -18,14 +18,8 @@ PS：提问前
 - 了解 yaml 语法
 - 了解 flexget rss订阅 基础用法
 - 清楚自己需要的功能
-- 看完wiki <https://github.com/IvonWei/flexget_qbittorrent_mod/wiki/home>
+- 看完wiki <https://github.com/IvonWei/flexget_qbittorrent_mod/wiki>
 - 关于上述4个推荐项目，我懂的并不比你多，所以请不要问我
-
-口令: 115599
-
-tg: <https://t.me/flexget_qbittorrent_mod>
-
-qq群: 1128215750
 
 目前实现的功能有：
 - 下载、修改、删除种子，动态调整连接数：<https://github.com/IvonWei/flexget_qbittorrent_mod/wiki/qbittorrent_mod>
