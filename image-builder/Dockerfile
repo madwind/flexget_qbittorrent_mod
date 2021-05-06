@@ -1,4 +1,4 @@
-FROM python:3.9.1-alpine3.12
+FROM docker.io/python:3-alpine
 
 LABEL maintainer="madwind.cn@gmail.com" \
       org.label-schema.name="flexget"
@@ -8,19 +8,19 @@ RUN \
  #pip config set global.index-url https://mirrors.aliyun.com/pypi/simple && \
  echo "**** install build packages ****" && \
  apk add --no-cache --virtual=build-dependencies \
-	build-base \
+  build-base \
   libffi-dev \
   openssl-dev \
- 	zlib-dev \
+  zlib-dev \
   jpeg-dev \
   freetype-dev \
   libpng-dev  && \
  echo "**** install runtime packages ****" && \
  apk add --no-cache \
-	shadow \
+  shadow \
   chromium \
-	ca-certificates \
-	tzdata && \
+  ca-certificates \
+  tzdata && \
  pip install --no-cache-dir -U pip && \
  pip install --no-cache-dir -U flexget python-telegram-bot==12.8 brotli baidu-aip pillow pandas matplotlib fuzzywuzzy python-Levenshtein pyppeteer pyppeteer_stealth && \
  echo "**** cleanup ****" && \
@@ -29,7 +29,7 @@ RUN \
  rm -rf \
   /var/cache/apk/* \
   /tmp/* \
-	/root/.cache
+  /root/.cache
 
 ADD link_chromium .
 
