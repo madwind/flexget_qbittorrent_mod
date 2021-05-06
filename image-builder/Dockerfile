@@ -14,7 +14,8 @@ RUN \
   zlib-dev \
   jpeg-dev \
   freetype-dev \
-  libpng-dev  && \
+  libpng-dev \
+  rust && \
  echo "**** install runtime packages ****" && \
  apk add --no-cache \
   shadow \
