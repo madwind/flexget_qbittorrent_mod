@@ -9,11 +9,12 @@ from flexget.plugin import PluginWarning
 
 try:
     import telegram
-    from telegram.error import TelegramError
+    from telegram.error import ChatMigrated, TelegramError
     from telegram.utils.request import NetworkError
 except ImportError:
     telegram = None
     TelegramError = None
+    ChatMigrated = None
 
 _IMAGE_ATTR = 'image'
 _TEXT_LIMIT = 4096
@@ -37,16 +38,14 @@ class TelegramNotifierMod(TelegramNotifier):
     })
 
     def notify(self, title, message, config):
-        """
-        Send a Telegram notification
-        """
+        session = Session()
         chat_ids = self._real_init(Session(), config)
 
         if not chat_ids:
             return
         msg_limits = self._get_msg_limits(message)
         for msg_limit in msg_limits:
-            self._send_msgs(msg_limit, chat_ids)
+            self._send_msgs(msg_limit, chat_ids, session)
         if self._image:
             self._send_photo(self._image, chat_ids)
 
@@ -64,16 +63,31 @@ class TelegramNotifierMod(TelegramNotifier):
                 msg_limits.append('')
             msg_limits[-1] = msg_limits[-1] + line
 
-    def _send_photo(self, image, chat_ids):
+    def _send_photo(self, image, chat_ids, session):
         for chat_id in (x.id for x in chat_ids):
             try:
                 photo = Image.open(image)
                 width = photo.width
                 height = photo.height
                 if width + height > 10000 or width / height > 20:
-                    self._bot.sendDocument(chat_id=chat_id, document=open(image, 'rb'))
+                    try:
+                        self._bot.sendDocument(chat_id=chat_id, document=open(image, 'rb'))
+                    except ChatMigrated as e:
+                        try:
+                            self._bot.sendDocument(chat_id=e.new_chat_id, document=open(image, 'rb'))
+                            self._replace_chat_id(chat_id, e.new_chat_id, session)
+                        except TelegramError as e:
+                            raise PluginWarning(e.message)
                 else:
-                    self._bot.sendPhoto(chat_id=chat_id, photo=open(image, 'rb'))
+                    try:
+                        self._bot.sendPhoto(chat_id=chat_id, photo=open(image, 'rb'))
+                    except ChatMigrated as e:
+                        try:
+                            self._bot.sendPhoto(chat_id=e.new_chat_id, photo=open(image, 'rb'))
+                            self._replace_chat_id(chat_id, e.new_chat_id, session)
+                        except TelegramError as e:
+                            raise PluginWarning(e.message)
+
             except TelegramError as e:
                 raise PluginWarning(e.message)
 
