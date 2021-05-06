@@ -45,6 +45,7 @@ class NetworkErrorReason(Enum):
     Server_load_too_high = '<h3 align=center>服务器负载过高，正在重试，请稍后\\.\\.\\.</h3>'
     Connection_timed_out = '<h2 class="text-gray-600 leading-1\\.3 text-3xl font-light">Connection timed out</h2>'
     The_web_server_reported_a_bad_gateway_error = '<p>The web server reported a bad gateway error\\.</p>'
+    Web_server_is_down = '站点关闭维护中，请稍后再访问...谢谢|站點關閉維護中，請稍後再訪問...謝謝|Web server is down'
 
 
 class Work:
