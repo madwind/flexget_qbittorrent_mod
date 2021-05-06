@@ -108,6 +108,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                             'savepath': {'type': 'string'},
                             'cookie': {'type': 'string'},
                             'category': {'type': 'string'},
+                            'tags': {'type': 'string'},
                             'skip_checking': {'type': 'boolean'},
                             'paused': {'type': 'string'},
                             'root_folder': {'type': 'string'},
@@ -128,7 +129,8 @@ class PluginQBittorrentMod(QBittorrentModBase):
                                             {'type': 'number', 'minimum': 0.1, 'maximum': 0.9},
                                         ]
                                     },
-                                    'dl_limit': {'oneOf': [{'type': 'boolean'}, {'type': 'integer'}]}
+                                    'dl_limit': {'oneOf': [{'type': 'boolean'}, {'type': 'integer'}]},
+                                    'all': {'type': 'boolean'}
                                 }
                             }
                         }
@@ -227,16 +229,18 @@ class PluginQBittorrentMod(QBittorrentModBase):
         bandwidth_limit = reject_on.get('bandwidth_limit')
         reject_on_dl_speed = reject_on.get('dl_speed')
         reject_on_dl_limit = reject_on.get('dl_limit')
+        reject_on_all = reject_on.get('all')
         reject_reason = ''
 
         dl_rate_limit = server_state.get('dl_rate_limit')
 
-        if reject_on_dl_limit:
+        if reject_on_all:
+            reject_reason = 'reject on all'
+        elif reject_on_dl_limit:
             if dl_rate_limit and dl_rate_limit < reject_on_dl_limit:
                 reject_reason = 'dl_limit: {:.2F} MiB < reject_on_dl_limit: {:.2F} MiB'.format(
                     dl_rate_limit / (1024 * 1024), reject_on_dl_limit / (1024 * 1024))
-
-        if reject_on_dl_speed:
+        elif reject_on_dl_speed:
             if isinstance(reject_on_dl_speed, float):
                 dl_rate_limit = dl_rate_limit if dl_rate_limit else bandwidth_limit
                 reject_on_dl_speed = int(dl_rate_limit * reject_on_dl_speed)
@@ -287,6 +291,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
             for attr_str in ['savepath',
                              'cookie',
                              'category',
+                             'tags',
                              'skip_checking',
                              'paused',
                              'root_folder',
