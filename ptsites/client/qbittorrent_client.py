@@ -375,6 +375,10 @@ class QBittorrentClient:
                     if entry['qbittorrent_dlspeed'] or entry['qbittorrent_upspeed'] or entry[
                         'qbittorrent_up_limit'] == 1:
                         self._update_entry_trackers(torrent_hash)
+            elif force_update == 'uploading':
+                for torrent_hash, entry in self._entry_dict.items():
+                    if entry['qbittorrent_upspeed'] or entry['qbittorrent_up_limit'] == 1:
+                        self._update_entry_trackers(torrent_hash)
             else:
                 self._last_update_time = datetime.now()
                 for torrent_hash, entry in self._entry_dict.items():
