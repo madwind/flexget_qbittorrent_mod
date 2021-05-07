@@ -54,6 +54,7 @@ templates:
             bandwidth_limit: 13107200
             dl_speed: 0.6
             dl_limit: 8388608
+            all: no
           category: Rss
           autoTMM: yes
 
@@ -283,45 +284,6 @@ tasks:
       - qbittorrent_add_template
       #- show_entry_template
 
-  gazellegames:
-    html_rss:
-      url: https://gazellegames.net/torrents.php?order_way=desc&order_by=leechers&artistname=&action=advanced&groupname=&year=&remastertitle=&remasteryear=&releasetitle=&releasegroup=&filelist=&sizesmall=&sizelarge=&userrating=&metarating=&ignrating=&gsrating=&encoding=&format=&region=&language=&rating=&miscellaneous=&scene=&dupable=&freetorrent=1&gamedox=&gamedoxvers=&taglist=&tags_type=1&empty_groups=both
-      headers:
-        cookie: 'xxxxxxxx'
-        user-agent: '{? headers.user_agent ?}'
-      root_element_selector: 'tr[class*=edition_]'
-      fields:
-        title:
-          element_selector: 'span[title]'
-          attribute: textContent
-        url:
-          element_selector: 'a[title="Download"]'
-          attribute: href
-        promotion:
-          element_selector: '.freeleech_label'
-          attribute: textContent
-        seeders:
-          element_selector: 'td:nth-child(6)'
-          attribute: textContent
-        leechers:
-          element_selector: 'td:nth-child(7)'
-          attribute: textContent
-        progress:
-          element_selector: '.progress_completed'
-          attribute: class
-    no_entries_ok: yes
-    limit_new: 1
-    if:
-      - promotion in ['Freeleech!'] and leechers|int > 10 and seeders|int >0: accept
-    qbittorrent_mod:
-      action:
-        add:
-          reject_on:
-            dl_speed: 0.8
-    template:
-      - qbittorrent_base_template
-      - qbittorrent_add_template
-
   rss_download:
     inputs:
       - rss:
@@ -432,10 +394,12 @@ tasks:
     qbittorrent_mod:
       action:
         add:
+          tags: reseed
           skip_checking: yes
           reject_on:
             dl_speed: no
             dl_limit: no
+            all: no
     template:
       - qbittorrent_base_template
       - qbittorrent_add_template
@@ -445,7 +409,7 @@ tasks:
     priority: 2
     disable: [ seen, seen_info_hash, retry_failed ]
     if:
-      - qbittorrent_state == 'pausedUP' and qbittorrent_downloaded == 0 and qbittorrent_added_on > now - timedelta(hours=1): accept
+      - qbittorrent_state == 'pausedUP' and 'reseed' in qbittorrent_tags and qbittorrent_added_on > now - timedelta(hours=1): accept
     template:
       - from_qbittorrent_template
       - qbittorrent_base_template
@@ -453,7 +417,7 @@ tasks:
 
   delete:
     priority: 3
-    disable: [seen, seen_info_hash, retry_failed]
+    disable: [ seen, seen_info_hash, retry_failed ]
     if:
       - qbittorrent_category in ['Rss'] and qbittorrent_last_activity < now - timedelta(hours=6): accept
       - qbittorrent_state == 'missingFiles' or (qbittorrent_state in ['pausedDL'] and qbittorrent_completed == 0): accept
@@ -469,7 +433,7 @@ tasks:
 
   modify:
     priority: 4
-    disable: [seen, seen_info_hash, retry_failed]
+    disable: [ seen, seen_info_hash, retry_failed ]
     accept_all: yes
     template:
       - from_qbittorrent_template
@@ -478,9 +442,9 @@ tasks:
 
   clean:
     priority: 5
-    disable: [seen, seen_info_hash, retry_failed]
+    disable: [ seen, seen_info_hash, retry_failed ]
     if:
-      - (qbittorrent_state == 'missingFiles' or (qbittorrent_state in ['pausedDL'] and qbittorrent_completed == 0)) and qbittorrent_added_on > now - timedelta(minutes=5): accept
+      - "'reseed' in qbittorrent_tags and not qbittorrent_completed == qbittorrent_total_size and 'checking' not in qbittorrent_state": accept
     regexp:
       accept:
         - '[Tt]orrent not registered with this tracker'
@@ -624,6 +588,7 @@ tasks:
           login:
             username: 'xxxxxxxx'
             password: 'xxxxxxxx'
+        snakepop: 'xxxxxxxx'
         soulvoice: 'xxxxxxxx'
         springsunday: 'xxxxxxxx'
         sjtu: 'xxxxxxxx'
@@ -671,13 +636,14 @@ tasks:
               agent_id: 'xxxxxxxx'
               to_user: 'xxxxxxxx'
               image: 'details_report.png'
-          - telegram:
+          - telegram_mod:
               bot_token: 'xxxxxxxx'
+              image: 'details_report.png'
               recipients:
                 - username: 'xxxxxxxx'
 
   warner:
-    disable: [ seen, seen_info_hash, retry_failed ]
+    disable: [seen, seen_info_hash, retry_failed]
     from_qbittorrent_mod:
       server_state: yes
     if:
@@ -698,5 +664,40 @@ tasks:
           dl_info_speed: {{(server_state['dl_info_speed']/1024/1024)|int}} MiB
           up_info_speed: {{(server_state['up_info_speed']/1024/1024)|int}} MiB
           free_space_on_disk: {{(server_state['free_space_on_disk']/1024/1024/1024)|int}} GiB
+          queued_io_jobs: {{server_state['queued_io_jobs']}}
+          total_peer_connections: {{server_state['total_peer_connections']}}
           {% endif %}
         via: *via_setting
+
+  transfer:
+    disable: [ seen, seen_info_hash, retry_failed ]
+    show_entry:
+      state: accepted
+      attribute:
+        - url
+    regexp:
+      accept:
+        - gazellegames:
+            set:
+              url: 'file:/BT_backup/{{torrent_info_hash}}.torrent'
+              category: '{{qbittorrent_category}}'
+      from: qbittorrent_category
+    qbittorrent_mod:
+      host: qbittorrent1.example.com
+      port: 443
+      use_ssl: yes
+      username: xxxxxxxx
+      password: xxxxxxxx
+      action:
+        add:
+          skip_checking: yes
+          reject_on:
+            dl_speed: no
+            dl_limit: no
+            all: no
+    from_qbittorrent_mod:
+      host: qbittorrent2.example.com
+      port: 443
+      use_ssl: yes
+      username: xxxxxxxx
+      password: xxxxxxxx
