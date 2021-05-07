@@ -1,5 +1,5 @@
 from loguru import logger
 
-__version__ = 'v0.8.6_dev'
+__version__ = 'v0.8.6'
 
 logger.info('flexget_qbittorrent_mod {}', __version__)
