@@ -483,7 +483,7 @@ tasks:
           set:
             working: 13107200
     from_qbittorrent_mod:
-      force_update: active
+      force_update: uploading
     template:
       - from_qbittorrent_template
       - qbittorrent_base_template
