@@ -53,7 +53,7 @@ class PluginQBittorrentModInput(QBittorrentModBase):
             'password': {'type': 'string'},
             'verify_cert': {'type': 'boolean'},
             'server_state': {'oneOf': [{'type': 'boolean'}, {'type': 'string'}]},
-            'force_update': {'oneOf': [{'type': 'boolean'}, {'type': 'string'}]},
+            'force_update': {'type': 'string', 'enum': ['uploading', 'active', 'all']},
             'enabled': {'type': 'boolean'},
         },
         'additionalProperties': False
