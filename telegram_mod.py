@@ -27,11 +27,11 @@ def dict_merge(dict1, dict2):
             dict_merge(dict1[i], dict2[i])
         else:
             dict1[i] = dict2[i]
+    return dict1
 
 
 class TelegramNotifierMod(TelegramNotifier):
-    schema = copy.deepcopy(TelegramNotifier.schema)
-    dict_merge(schema, {
+    schema = dict_merge(copy.deepcopy(TelegramNotifier.schema), {
         'properties': {
             _IMAGE_ATTR: {'type': 'string'}
         }
@@ -47,10 +47,11 @@ class TelegramNotifierMod(TelegramNotifier):
         for msg_limit in msg_limits:
             self._send_msgs(msg_limit, chat_ids, session)
         if self._image:
-            self._send_photo(self._image, chat_ids)
+            self._send_photo(self._image, chat_ids, session)
 
     def _parse_config(self, config):
         super(TelegramNotifierMod, self)._parse_config(config)
+
         self._image = config.get(_IMAGE_ATTR)
 
     def _get_msg_limits(self, msg):
