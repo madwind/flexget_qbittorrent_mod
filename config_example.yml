@@ -379,7 +379,7 @@ tasks:
           cookie: 'xxxxxxxx'
         ptsbao: 'xxxxxxxx'
         pttime: 'xxxxxxxx'
-        skyeysnow: 'xxxxxxxx'
+        skyey2: 'xxxxxxxx'
         soulvoice: 'xxxxxxxx'
         springsunday: 'xxxxxxxx'
         sjtu: 'xxxxxxxx'
@@ -546,20 +546,20 @@ tasks:
         hdchina: 'xxxxxxxx'
         hdcity: 'xxxxxxxx'
         hddolby: 'xxxxxxxx'
-        hddisk: 'xxxxxxxx'
         hdfans: 'xxxxxxxx'
         hdhome: 'xxxxxxxx'
+        hdmayi: 'xxxxxxxx'
         hdpost:
           login:
             usernameOrEmail: 'xxxxxxxx'
             password: 'xxxxxxxx'
         hdsky: 'xxxxxxxx'
-        #hdstreet: 'xxxxxxxx'
         hdtime: 'xxxxxxxx'
         hdupt: 'xxxxxxxx'
         hdzone: 'xxxxxxxx'
         hitpt: 'xxxxxxxx'
         htpt: 'xxxxxxxx'
+        huijvtt: 'xxxxxxxx'
         joyhd: 'xxxxxxxx'
         jptv: 'xxxxxxxx'
         keepfrds: 'xxxxxxxx'
@@ -595,8 +595,7 @@ tasks:
         torrentleech: 'xxxxxxxx'
         totheglory: 'xxxxxxxx'
         tjupt: 'xxxxxxxx'
-        wenyuan: 'xxxxxxxx'
-        yingk: 'xxxxxxxx'
+        ultrahd: 'xxxxxxxx'
     accept_all: yes
     seen:
       fields:
