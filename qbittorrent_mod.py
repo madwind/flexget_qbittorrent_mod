@@ -236,10 +236,9 @@ class PluginQBittorrentMod(QBittorrentModBase):
 
         if reject_on_all:
             reject_reason = 'reject on all'
-        elif reject_on_dl_limit:
-            if dl_rate_limit and dl_rate_limit < reject_on_dl_limit:
-                reject_reason = 'dl_limit: {:.2F} MiB < reject_on_dl_limit: {:.2F} MiB'.format(
-                    dl_rate_limit / (1024 * 1024), reject_on_dl_limit / (1024 * 1024))
+        elif reject_on_dl_limit and dl_rate_limit and dl_rate_limit < reject_on_dl_limit:
+            reject_reason = 'dl_limit: {:.2F} MiB < reject_on_dl_limit: {:.2F} MiB'.format(
+                dl_rate_limit / (1024 * 1024), reject_on_dl_limit / (1024 * 1024))
         elif reject_on_dl_speed:
             if isinstance(reject_on_dl_speed, float):
                 dl_rate_limit = dl_rate_limit if dl_rate_limit else bandwidth_limit
