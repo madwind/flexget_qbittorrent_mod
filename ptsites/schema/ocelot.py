@@ -29,7 +29,7 @@ class Ocelot(SiteBase):
                     'regex': 'Downloaded.+?([\\d.]+ ?[ZEPTGMk]?B)'
                 },
                 'share_ratio': {
-                    'regex': 'Ratio.+?([\\d.]+)',
+                    'regex': 'Ratio.+?(Inf\\.|[\\d.]+)',
                 },
                 'points': {
                     'regex': ('Hello.+?(\\d+).*?(Inf\\.|[\\d.]+)', 2)
