@@ -543,14 +543,13 @@ class PluginQBittorrentMod(QBittorrentModBase):
         replace_trackers = modify_options.get('replace_trackers')
         for entry in task.accepted:
             tags = entry.get('qbittorrent_tags')
+            tags_modified = []
             torrent_trackers = entry.get('qbittorrent_trackers')
             for tracker in torrent_trackers:
                 if tag_by_tracker:
                     site_name = self._get_site_name(tracker.get('url'))
                     if site_name and site_name not in tags:
-                        self.client.add_torrent_tags(entry['torrent_info_hash'], site_name)
-                        tags += ', {}'.format(site_name)
-                        logger.info('{} add tag {}', entry.get('title'), site_name)
+                        tags_modified.append(site_name)
                 if replace_trackers:
                     for orig_url, new_url in replace_trackers.items():
                         if tracker.get('url') == orig_url:
@@ -560,6 +559,9 @@ class PluginQBittorrentMod(QBittorrentModBase):
                             else:
                                 logger.info('{} remove tracker {}', entry.get('title'), orig_url)
                                 self.client.remove_trackers(entry.get('torrent_info_hash'), orig_url)
+            if tags_modified:
+                self.client.add_torrent_tags(entry['torrent_info_hash'], str.join(',', tags_modified))
+                logger.info(f"{entry.get('title')} add tags {tags_modified}")
 
     def manage_conn_entries(self, task, manage_conn_options):
         min_conn = manage_conn_options.get('min')
