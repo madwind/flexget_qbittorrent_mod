@@ -17,7 +17,7 @@
 - 辅种: [ledccn/IYUUAutoReseed](https://github.com/ledccn/IYUUAutoReseed)
 - 删种: [jerrymakesjelly/autoremove-torrents](https://github.com/jerrymakesjelly/autoremove-torrents)
 - 筛选免费种子: [Juszoe/flexget-nexusphp](https://github.com/Juszoe/flexget-nexusphp)
-- qiandao(签到)
+- 自动签到: [binux/qiandao](https://github.com/binux/qiandao)
 
 ## 功能
 
@@ -29,21 +29,21 @@
 
 ## 提问须知
 
->  对插件使用有任何疑问以及建议，或者汇报本程序的任何Bug 欢迎使用以下联系方式和我们交流
+> 对插件使用有任何疑问以及建议，或者汇报本程序的任何Bug 欢迎使用以下联系方式和我们交流
 
 <details>
   <summary>联系方式</summary>
-  
-  - [Telegram群聊](https://t.me/flexget_qbittorrent_mod)
-  - QQ群: 1128215750, 口令: 115599
+
+- [Telegram群聊](https://t.me/flexget_qbittorrent_mod)
+- QQ群: 1128215750
+
+口令: 115599
 </details>
 
 
 但是 在提问前你需要了解以下知识
 
-- 基础的` yaml`语法知识
+- 基础的 [yaml](https://www.runoob.com/w3cnote/yaml-intro.html) 语法知识
 - 了解FlexGet订阅的基础用法
 - 清楚自己需要什么功能
-- 已经完整阅读[Wiki](https://github.com/IvonWei/flexget_qbittorrent_mod/wiki)
-
-<detail></detail>
+- 已经完整阅读 [Wiki](https://github.com/IvonWei/flexget_qbittorrent_mod/wiki)
