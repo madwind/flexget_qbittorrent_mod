@@ -407,7 +407,7 @@ tasks:
 
   resume:
     priority: 2
-    disable: [ seen, seen_info_hash, retry_failed ]
+    disable: [ seen, seen_info_hash, retry_failed, history ]
     if:
       - qbittorrent_state == 'pausedUP' and 'reseed' in qbittorrent_tags and qbittorrent_added_on > now - timedelta(hours=1): accept
     template:
@@ -417,7 +417,7 @@ tasks:
 
   delete:
     priority: 3
-    disable: [ seen, seen_info_hash, retry_failed ]
+    disable: [ seen, seen_info_hash, retry_failed, history ]
     if:
       - qbittorrent_category in ['Rss'] and qbittorrent_last_activity < now - timedelta(hours=6): accept
       - qbittorrent_state == 'missingFiles' or (qbittorrent_state in ['pausedDL'] and qbittorrent_completed == 0): accept
@@ -433,7 +433,7 @@ tasks:
 
   modify:
     priority: 4
-    disable: [ seen, seen_info_hash, retry_failed ]
+    disable: [ seen, seen_info_hash, retry_failed, history ]
     accept_all: yes
     template:
       - from_qbittorrent_template
@@ -442,7 +442,7 @@ tasks:
 
   clean:
     priority: 5
-    disable: [ seen, seen_info_hash, retry_failed ]
+    disable: [ seen, seen_info_hash, retry_failed, history ]
     if:
       - "'reseed' in qbittorrent_tags and not qbittorrent_completed == qbittorrent_total_size and 'checking' not in qbittorrent_state": accept
     regexp:
@@ -459,7 +459,7 @@ tasks:
       - qbittorrent_delete_cleaner_template
 
   manage_conn:
-    disable: [ seen, seen_info_hash, retry_failed ]
+    disable: [ seen, seen_info_hash, retry_failed, history ]
     from_qbittorrent_mod:
       server_state: yes
     accept_all: yes
@@ -476,7 +476,7 @@ tasks:
       - qbittorrent_manage_conn_template
 
   limit_upload_by_tracker:
-    disable: [ seen, seen_info_hash, retry_failed ]
+    disable: [ seen, seen_info_hash, retry_failed, history ]
     if:
       - "'paused' not in qbittorrent_state and qbittorrent_added_on < now - timedelta(minutes=5)": accept
       - "'keepfrds' in qbittorrent_tags":
@@ -514,10 +514,12 @@ tasks:
         1ptba: 'xxxxxxxx'
         52pt: 'xxxxxxxx'
         avgv: 'xxxxxxxx'
+        avistaz: 'xxxxxxxx'
         beitai: 'xxxxxxxx'
         btschool: 'xxxxxxxx'
         ccfbits: 'xxxxxxxx'
         chdbits: 'xxxxxxxx'
+        cinemaz: 'xxxxxxxx'
         dhcmusic: 'xxxxxxxx'
         dicmusic: 'xxxxxxxx'
         discfan: 'xxxxxxxx'
@@ -531,6 +533,7 @@ tasks:
             score: 40
         eastgame: 'xxxxxxxx'
         et8: 'xxxxxxxx'
+        exoticaz: 'xxxxxxxx'
         filelist:
           login:
             username: 'xxxxxxxx'
@@ -669,7 +672,7 @@ tasks:
         via: *via_setting
 
   transfer:
-    disable: [ seen, seen_info_hash, retry_failed ]
+    disable: [ seen, seen_info_hash, retry_failed, history ]
     show_entry:
       state: accepted
       attribute:
