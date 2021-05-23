@@ -1,3 +1,5 @@
+import asyncio
+import re
 from urllib.parse import urljoin
 
 from flexget import plugin
@@ -9,24 +11,14 @@ from requests import RequestException
 
 from .ptsites.utils.net_utils import NetUtils
 
-try:
-    import brotli
-except ImportError:
-    brotli = None
-
 
 class PluginHtmlRss():
     schema = {
         'type': 'object',
         'properties': {
             'url': {'type': 'string', 'format': 'url'},
-            'headers': {
-                'type': 'object',
-                'properties': {
-                    'cookie': {'type': 'string'},
-                    'user-agent': {'type': 'string'},
-                }
-            },
+            'user-agent': {'type': 'string'},
+            'cookie': {'type': 'string'},
             'params': {'type': 'string'},
             "root_element_selector": {'type': 'string'},
             'fields': {
@@ -50,13 +42,14 @@ class PluginHtmlRss():
                 'required': ['title', 'url'],
             }
         },
-        'required': ['url'],
+        'required': ['url', 'root_element_selector'],
         'additionalProperties': False
     }
 
     def prepare_config(self, config):
         config.setdefault('url', '')
-        config.setdefault('headers', {})
+        config.setdefault('user-agent', '')
+        config.setdefault('cookie', '')
         config.setdefault('params', '')
         config.setdefault('root_element_selector', '')
         config.setdefault('fields', {})
@@ -65,25 +58,35 @@ class PluginHtmlRss():
     def on_task_input(self, task, config):
         config = self.prepare_config(config)
         url = config.get('url')
+        user_agent = config.get('user-agent')
+        cookie = config.get('cookie')
         root_element_selector = config.get('root_element_selector')
         fields = config.get('fields')
         params = config.get('params')
+        headers = {
+            'accept-encoding': 'gzip, deflate, br',
+            'user-agent': user_agent
+        }
 
         entries = []
-        elements = []
-        if url and root_element_selector:
-            try:
-                if brotli:
-                    config.get('headers')['accept-encoding'] = 'gzip, deflate, br'
-                response = task.requests.get(url, headers=config.get('headers'), timeout=60)
-                content = NetUtils.decode(response)
-            except RequestException as e:
-                raise plugin.PluginError(
-                    'Unable to download the Html for task {} ({}): {}'.format(task.name, url, e)
-                )
-            elements = get_soup(content).select(root_element_selector)
-            if len(elements) == 0:
-                return entries
+
+        try:
+            task.requests.headers.update(headers)
+            task.requests.cookies.update(NetUtils.cookie_str_to_dict(cookie))
+            response = task.requests.get(url, timeout=60)
+            if response is not None and response.content:
+                if re.search(NetUtils.DDoS_protection_by_Cloudflare, NetUtils.decode(response)):
+                    cf_cookie = asyncio.run(NetUtils.get_cf_cookie(task.name, url, user_agent, cookie))
+                    task.requests.cookies.update(NetUtils.cookie_str_to_dict(cf_cookie))
+                    response = task.requests.get(url, timeout=60)
+            content = NetUtils.decode(response)
+        except RequestException as e:
+            raise plugin.PluginError(
+                'Unable to download the Html for task {} ({}): {}'.format(task.name, url, e)
+            )
+        elements = get_soup(content).select(root_element_selector)
+        if len(elements) == 0:
+            return entries
 
         for element in elements:
             logger.debug('element in element_selector: {}', element)
