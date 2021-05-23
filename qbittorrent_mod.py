@@ -548,7 +548,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
             for tracker in torrent_trackers:
                 if tag_by_tracker:
                     site_name = self._get_site_name(tracker.get('url'))
-                    if site_name and site_name not in tags:
+                    if site_name and site_name not in tags and site_name not in tags_modified:
                         tags_modified.append(site_name)
                 if replace_trackers:
                     for orig_url, new_url in replace_trackers.items():
