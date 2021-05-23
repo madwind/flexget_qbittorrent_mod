@@ -22,8 +22,7 @@ class MainClass(NexusPHP):
         'days': [168, 700]
     }
 
-    @classmethod
-    def build_workflow(cls):
+    def build_workflow(self, entry, config):
         return [
             Work(
                 url='/sign',

@@ -28,8 +28,7 @@ class MainClass(NexusPHP):
         'days': [350]
     }
 
-    @classmethod
-    def build_workflow(cls):
+    def build_workflow(self, entry, config):
         return [
             Work(
                 url='/torrents.php',
@@ -42,7 +41,7 @@ class MainClass(NexusPHP):
             Work(
                 url='/plugin_sign-in.php?cmd=signin',
                 method='post',
-                data=cls.DATA,
+                data=self.DATA,
                 succeed_regex='{"state":"success","signindays":\\d+,"integral":"?\\d+"?}',
                 fail_regex=None,
                 check_state=('final', SignState.SUCCEED)

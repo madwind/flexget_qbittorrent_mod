@@ -28,10 +28,9 @@ class MainClass:
         self.client = None
 
     @staticmethod
-    def build_sign_in(entry, config):
+    def build_sign_in_entry(entry, config):
         entry['site_name'] = entry['site_config'].get('name')
-        entry['title'] = '{} {}'.format(entry['site_name'], datetime.now().date())
-        entry['do_not_count'] = True
+        entry['title'] = f"{entry['site_name']} {datetime.now().date()}"
 
     def sign_in(self, entry, config):
         site_config = self.prepare_config(entry['site_config'])
@@ -47,6 +46,8 @@ class MainClass:
         pass
 
     def get_details(self, entry, config):
+        entry['do_not_count'] = True
+
         server_state = entry['main_data_snapshot']['server_state']
         torrents = entry['main_data_snapshot']['entry_dict']
         details = {

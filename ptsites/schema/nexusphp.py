@@ -12,6 +12,7 @@ from ..utils.net_utils import NetUtils
 
 class NexusPHP(SiteBase):
     TORRENT_PAGE_URL = '/details.php?id={}&hit=1'
+
     def get_message(self, entry, config):
         self.get_nexusphp_message(entry, config)
 
@@ -97,8 +98,7 @@ class NexusPHP(SiteBase):
 
 
 class AttendanceHR(NexusPHP):
-    @classmethod
-    def build_workflow(cls):
+    def build_workflow(self, entry, config):
         return [
             Work(
                 url='/attendance.php',
@@ -125,8 +125,7 @@ class Attendance(AttendanceHR):
 
 
 class BakatestHR(NexusPHP):
-    @classmethod
-    def build_workflow(cls):
+    def build_workflow(self, entry, config):
         return [
             Work(
                 url='/bakatest.php',
@@ -217,13 +216,12 @@ class Bakatest(BakatestHR):
 class VisitHR(NexusPHP):
     SUCCEED_REGEX = '[欢歡]迎回[来來家]'
 
-    @classmethod
-    def build_workflow(cls):
+    def build_workflow(self, entry, config):
         return [
             Work(
                 url='/',
                 method='get',
-                succeed_regex=cls.SUCCEED_REGEX,
+                succeed_regex=self.SUCCEED_REGEX,
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
             )

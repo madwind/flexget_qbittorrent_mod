@@ -14,11 +14,6 @@ from ..utils.net_utils import NetUtils
 from ..utils.url_recorder import UrlRecorder
 
 try:
-    import brotli
-except ImportError:
-    brotli = None
-
-try:
     from pyppeteer import launch, chromium_downloader
     from pyppeteer_stealth import stealth
 except ImportError:
@@ -64,18 +59,17 @@ class Work:
 
 
 class SiteBase:
-    CLOUDFLARE = False
-    URL = ''
+    URL = None
+    USER_CLASSES = None
 
     def __init__(self):
+        self.workflow = None
         self.requests = None
 
     @classmethod
-    def build_sign_in(cls, entry, config):
-        site_config = entry['site_config']
+    def build_sign_in_entry(cls, entry, config):
         entry['url'] = cls.URL
-        entry['workflow'] = cls.build_workflow()
-        entry['user_classes'] = getattr(cls, 'USER_CLASSES', None)
+        site_config = entry['site_config']
         headers = {
             'user-agent': config.get('user-agent'),
             'referer': entry['url']
@@ -89,16 +83,16 @@ class SiteBase:
             entry['cookie'] = cookie
         entry['headers'] = headers
 
-    @classmethod
-    def build_workflow(cls):
-        pass
-
     def sign_in(self, entry, config):
-        if not entry.get('url') or not entry.get('workflow'):
+        self.workflow = []
+        self.workflow.extend(self.build_login_work(entry, config))
+        self.workflow.extend(self.build_workflow(entry, config))
+
+        if not entry.get('url') or not self.workflow:
             entry.fail_with_prefix(f"site: {entry['site_name']} url or workflow is empty")
             return
         last_content = None
-        for work in entry['workflow']:
+        for work in self.workflow:
             self.work_urljoin(work, entry['url'])
             method_name = f"sign_in_by_{work.method}"
             if method := getattr(self, method_name, None):
@@ -110,6 +104,12 @@ class SiteBase:
                 if work.check_state:
                     if not self.check_state(entry, work, last_response, last_content):
                         return
+
+    def build_login_work(self, entry, config):
+        return []
+
+    def build_workflow(self, entry, config):
+        return []
 
     def work_urljoin(self, work, url):
         for work_key, work_value in work.__dict__.items():
@@ -167,8 +167,7 @@ class SiteBase:
         if not self.requests:
             self.requests = requests.Session()
             if entry_headers := entry.get('headers'):
-                if brotli:
-                    entry_headers['accept-encoding'] = 'gzip, deflate, br'
+                entry_headers['accept-encoding'] = 'gzip, deflate, br'
                 self.requests.headers.update(entry_headers)
             if entry_cookie := entry.get('cookie'):
                 self.requests.cookies.update(NetUtils.cookie_str_to_dict(entry_cookie))
@@ -206,6 +205,8 @@ class SiteBase:
         return self._request(entry, 'post', work.url, data=data)
 
     def get_details_base(self, entry, config, selector):
+        entry['user_classes'] = getattr(self, 'USER_CLASSES', None)
+
         if not (base_content := entry.get('base_content')):
             entry.fail_with_prefix('base_content is None.')
             return

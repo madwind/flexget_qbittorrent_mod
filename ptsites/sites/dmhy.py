@@ -62,28 +62,10 @@ class MainClass(NexusPHP):
         super(NexusPHP, self).__init__()
         self.times = 0
 
-    @classmethod
-    def build_sign_in(cls, entry, config):
+    def build_workflow(self, entry, config):
         site_config = entry['site_config']
-        succeed_regex = [cls.USERNAME_REGEX.format(username=site_config.get('username')) + cls.SUCCEED_REGEX,
+        succeed_regex = [self.USERNAME_REGEX.format(username=site_config.get('username')) + self.SUCCEED_REGEX,
                          '<a href="showup.php">已[签簽]到</a>']
-        entry['url'] = cls.URL
-        entry['workflow'] = cls.build_workflow(succeed_regex)
-        entry['user_classes'] = cls.USER_CLASSES
-        site_config.setdefault('ocr_config', {})
-        ocr_config = site_config.get('ocr_config')
-        ocr_config.setdefault('retry', _RETRY)
-        ocr_config.setdefault('char_count', _CHAR_COUNT)
-        ocr_config.setdefault('score', _SCORE)
-
-        entry['headers'] = {
-            'cookie': site_config.get('cookie'),
-            'user-agent': config.get('user-agent'),
-            'referer': entry['url']
-        }
-
-    @classmethod
-    def build_workflow(cls, succeed_regex):
         return [
             Work(
                 url='/showup.php?action=show',
@@ -95,7 +77,7 @@ class MainClass(NexusPHP):
             Work(
                 url='/showup.php?action=show',
                 method='anime',
-                data=cls.DATA,
+                data=self.DATA,
                 check_state=('network', NetworkState.SUCCEED),
                 img_regex='image\\.php\\?action=adbc2&req=.+?(?=&imagehash)',
                 reload_regex='image\\.php\\?action=reload_adbc2&div=showup&rand=\\d+'
@@ -106,8 +88,7 @@ class MainClass(NexusPHP):
                 succeed_regex=succeed_regex,
                 fail_regex='这是一个杯具。<br />验证码已过期。',
                 check_state=('final', SignState.SUCCEED)
-            ),
-
+            )
         ]
 
     def sign_in_by_anime(self, entry, config, work, last_content):
@@ -115,7 +96,11 @@ class MainClass(NexusPHP):
             entry.fail_with_prefix('Dependency does not exist: [fuzzywuzzy]')
             return
 
-        ocr_config = entry['site_config'].get('ocr_config')
+        ocr_config = entry['site_config'].get('ocr_config', {})
+        ocr_config.setdefault('retry', _RETRY)
+        ocr_config.setdefault('char_count', _CHAR_COUNT)
+        ocr_config.setdefault('score', _SCORE)
+
         data = self.build_data(entry, config, work, last_content, ocr_config)
         if not data:
             entry.fail_with_prefix('Can not build_data')

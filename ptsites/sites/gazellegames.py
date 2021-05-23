@@ -9,8 +9,7 @@ class MainClass(Gazelle):
         'points': [1200, 6000],
     }
 
-    @classmethod
-    def build_workflow(cls):
+    def build_workflow(self, entry, config):
         return [
             Work(
                 url='/',

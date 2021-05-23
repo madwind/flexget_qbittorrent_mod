@@ -17,8 +17,7 @@ class MainClass(NexusPHP):
         'signed_token': '(?<=signed_token: ").*(?=")'
     }
 
-    @classmethod
-    def build_workflow(cls):
+    def build_workflow(self, entry, config):
         return [
             Work(
                 url='/',
@@ -30,7 +29,7 @@ class MainClass(NexusPHP):
             Work(
                 url='/signed.php',
                 method='post',
-                data=cls.DATA,
+                data=self.DATA,
                 succeed_regex='您已连续签到\\d+天，奖励\\d+积分，明天继续签到将获得\\d+积分奖励。',
                 check_state=('final', SignState.SUCCEED),
             )

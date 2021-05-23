@@ -16,16 +16,15 @@ class MainClass(AttendanceHR):
         'days': [175, 364]
     }
 
-    @classmethod
-    def build_workflow(cls):
+    def build_login_work(self, entry, config):
         return [
-                   Work(
-                       url='/takelogin.php',
-                       method='login',
-                       check_state=('network', NetworkState.SUCCEED),
-                       response_urls=['/index.php'],
-                   )
-               ] + AttendanceHR.build_workflow()
+            Work(
+                url='/takelogin.php',
+                method='login',
+                check_state=('network', NetworkState.SUCCEED),
+                response_urls=['/index.php']
+            )
+        ]
 
     def sign_in_by_login(self, entry, config, work, last_content=None):
         if entry['site_config'].get('cookie'):

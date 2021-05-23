@@ -10,9 +10,6 @@ class MainClass(XBTIT):
         'share_ratio': [4.25]
     }
 
-    def __init__(self):
-        super().__init__()
-
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
         NetUtils.dict_merge(selector, {

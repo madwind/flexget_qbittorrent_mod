@@ -33,8 +33,7 @@ class MainClass(NexusPHP):
         'days': [315, 455]
     }
 
-    @classmethod
-    def build_workflow(cls):
+    def build_workflow(self, entry, config):
         return [
             Work(
                 url='/',

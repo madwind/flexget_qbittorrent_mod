@@ -7,7 +7,7 @@ from .schema.site_base import SiteBase
 
 
 def fail_with_prefix(self, reason):
-    self.fail('{}=> {}'.format(self.get('prefix'), reason))
+    self.fail(f"{self.get('prefix')}=> {reason}")
 
 
 Entry.fail_with_prefix = fail_with_prefix
@@ -16,19 +16,19 @@ Entry.fail_with_prefix = fail_with_prefix
 class Executor:
 
     @staticmethod
-    def build_sign_in(entry, config):
+    def build_sign_in_entry(entry, config):
         try:
             site_class = Executor.get_site_class(entry['class_name'])
-            site_class.build_sign_in(entry, config)
+            site_class.build_sign_in_entry(entry, config)
         except AttributeError as e:
-            raise plugin.PluginError('site: {}, error: {}'.format(entry['site_name'], str(e.args)))
+            raise plugin.PluginError(f"site: {entry['site_name']}, error: {str(e.args)}")
 
     @staticmethod
     def sign_in(entry, config):
         try:
             site_class = Executor.get_site_class(entry['class_name'])
         except AttributeError as e:
-            raise plugin.PluginError('site: {}, error: {}'.format(entry['class_name'], str(e.args)))
+            raise plugin.PluginError(f"site: {entry['class_name']}, error: {str(e.args)}")
 
         site_object = site_class()
         entry['prefix'] = 'Sign_in'
@@ -36,7 +36,7 @@ class Executor:
         if entry.failed:
             return
         if entry['result']:
-            logger.info('{} {}'.format(entry['title'], entry['result']).strip())
+            logger.info(f"{entry['title']} {entry['result']}".strip())
 
         if config.get('get_messages', True):
             entry['prefix'] = 'Messages'
@@ -44,7 +44,7 @@ class Executor:
             if entry.failed:
                 return
             if entry['messages']:
-                logger.info('site_name: {}, messages: {}', entry['site_name'], entry['messages'])
+                logger.info(f"site_name: {entry['site_name']}, messages: {entry['messages']}")
 
         if config.get('get_details', True):
             entry['prefix'] = 'Details'
@@ -52,7 +52,14 @@ class Executor:
             if entry.failed:
                 return
             if entry['details']:
-                logger.info('site_name: {}, details: {}', entry['site_name'], entry['details'])
+                logger.info(f"site_name: {entry['site_name']}, details: {entry['details']}")
+        Executor.clean_entry_attr(entry, config)
+
+    @staticmethod
+    def clean_entry_attr(entry, config):
+        for attr in ['base_content', 'prefix']:
+            if hasattr(entry, attr):
+                del entry[attr]
 
     @staticmethod
     def build_reseed(entry, config, site, passkey, torrent_id):

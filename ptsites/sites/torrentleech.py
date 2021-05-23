@@ -11,8 +11,7 @@ class MainClass(SiteBase):
         'days': [364]
     }
 
-    @classmethod
-    def build_workflow(cls):
+    def build_workflow(self, entry, config):
         return [
             Work(
                 url='/',

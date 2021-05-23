@@ -9,8 +9,7 @@ from ..utils.net_utils import NetUtils
 class MainClass(Gazelle):
     URL = 'https://snakepop.art/'
 
-    @classmethod
-    def build_workflow(cls):
+    def build_workflow(self, entry, config):
         return [
             Work(
                 url='/',
@@ -57,5 +56,4 @@ class MainClass(Gazelle):
             month = int(month_match.group(1))
         if week_match := re.search(week_regex, value):
             week = int(week_match.group(1))
-        print(year, month, week)
         return (datetime.datetime.now() - datetime.timedelta(days=year * 365 + month * 31 + week * 7)).date()

@@ -2,6 +2,7 @@ from ..schema.nexusphp import NexusPHP
 from ..schema.site_base import SignState, Work
 from ..utils.net_utils import NetUtils
 
+
 class MainClass(NexusPHP):
     URL = 'https://pt.hdupt.com/'
     USER_CLASSES = {
@@ -15,8 +16,7 @@ class MainClass(NexusPHP):
         }
     }
 
-    @classmethod
-    def build_workflow(cls):
+    def build_workflow(self, entry, config):
         return [
             Work(
                 url='/',
@@ -28,7 +28,7 @@ class MainClass(NexusPHP):
             Work(
                 url='/added.php',
                 method='post',
-                data=cls.DATA,
+                data=self.DATA,
                 succeed_regex='\\d+',
                 check_state=('final', SignState.SUCCEED),
             )

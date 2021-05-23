@@ -11,8 +11,7 @@ class MainClass(Discuz):
         'points': [1000000]
     }
 
-    @classmethod
-    def build_workflow(cls):
+    def build_workflow(self, entry, config):
         return [
             Work(
                 url='/login.php',
@@ -25,7 +24,6 @@ class MainClass(Discuz):
                 succeed_regex='欢迎您回来，.*?(?=，)',
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
-
                 login_url_regex='(?<=action=").*?(?=")',
                 formhash_regex='(?<="formhash" value=").*(?=")'
 

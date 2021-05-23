@@ -17,8 +17,7 @@ class MainClass(NexusPHP):
         }
     }
 
-    @classmethod
-    def build_workflow(cls):
+    def build_workflow(self, entry, config):
         return [
             Work(
                 url='/',
@@ -31,7 +30,7 @@ class MainClass(NexusPHP):
             Work(
                 url='/checkin.php',
                 method='post',
-                data=cls.DATA,
+                data=self.DATA,
                 succeed_regex=None,
                 fail_regex=None,
                 check_state=('network', NetworkState.SUCCEED)

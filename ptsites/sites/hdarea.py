@@ -2,6 +2,7 @@ from ..schema.nexusphp import NexusPHP
 from ..schema.site_base import Work, SignState
 from ..utils.net_utils import NetUtils
 
+
 class MainClass(NexusPHP):
     URL = 'https://www.hdarea.co/'
     USER_CLASSES = {
@@ -17,8 +18,7 @@ class MainClass(NexusPHP):
         }
     }
 
-    @classmethod
-    def build_workflow(cls):
+    def build_workflow(self, entry, config):
         return [
             Work(
                 url='/',
@@ -31,7 +31,7 @@ class MainClass(NexusPHP):
             Work(
                 url='/sign_in.php?action=sign_in',
                 method='post',
-                data=cls.DATA,
+                data=self.DATA,
                 succeed_regex='已连续签到.*天，此次签到您获得了.*魔力值奖励!|请不要重复签到哦！',
                 fail_regex=None,
                 check_state=('final', SignState.SUCCEED)

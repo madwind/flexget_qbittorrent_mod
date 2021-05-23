@@ -63,7 +63,7 @@ class PluginAutoSignIn:
                 entry['result'] = ''
                 entry['messages'] = ''
                 entry['details'] = ''
-                Executor.build_sign_in(entry, config)
+                Executor.build_sign_in_entry(entry, config)
                 entries.append(entry)
         return entries
 

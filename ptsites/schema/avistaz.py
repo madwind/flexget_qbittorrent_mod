@@ -60,13 +60,12 @@ class AvistaZ(SiteBase):
     def handle_join_date(self, value):
         return parse(value).date()
 
-    @classmethod
-    def build_workflow(cls):
+    def build_workflow(self, entry, config):
         return [
             Work(
                 url='/',
                 method='get',
-                succeed_regex=cls.SUCCEED_REGEX,
+                succeed_regex=self.SUCCEED_REGEX,
                 fail_regex=None,
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
