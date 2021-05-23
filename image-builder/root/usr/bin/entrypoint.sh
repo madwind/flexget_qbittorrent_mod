@@ -23,11 +23,15 @@ else
 fi
 
 # set FG_WEBUI_PASSWD
-if [ ! -z "${FG_WEBUI_PASSWD}" ]; then
-  echo "Setting flexget web password to '${FG_WEBUI_PASSWD}'"
-  flexget -c /config/config.yml web passwd "${FG_WEBUI_PASSWD}" | grep 'Updated password' >/dev/null 2>&1 &&
-    echo "Updated password" ||
-    echo "Oops, something went wrong"
+if [ -n "${FG_WEBUI_PASSWD}" ]; then
+  if grep "${FG_WEBUI_PASSWD}" /fg_webui_passwd; then
+    echo "Using existing password ${FG_WEBUI_PASSWD}"
+  else
+    echo "Setting flexget web password to '${FG_WEBUI_PASSWD}'"
+    flexget -c /config/config.yml web passwd "${FG_WEBUI_PASSWD}" | grep 'Updated password' >/dev/null 2>&1 &&
+      echo "Updated password" && echo "${FG_WEBUI_PASSWD}" >/fg_webui_passwd ||
+      echo "Oops, something went wrong"
+  fi
 fi
 
 # permissions
