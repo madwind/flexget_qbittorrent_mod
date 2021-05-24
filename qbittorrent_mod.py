@@ -1,3 +1,4 @@
+import copy
 import math
 import os
 import re
@@ -9,6 +10,7 @@ from flexget.event import event
 from loguru import logger
 
 from .ptsites.client.qbittorrent_client import QBittorrentClientFactory
+from .ptsites.utils.net_utils import NetUtils
 
 
 class QBittorrentModBase:
@@ -248,16 +250,25 @@ class PluginQBittorrentMod(QBittorrentModBase):
                 reject_reason = 'dl_speed: {:.2F} MiB > reject_on_dl_speed: {:.2F} MiB'.format(
                     dl_info_speed / (1024 * 1024), reject_on_dl_speed / (1024 * 1024))
 
+        if 'download' not in task.config:
+            download = plugin.get('download', self)
+        headers = copy.deepcopy(task.requests.headers)
         for entry in task.accepted:
             if reject_reason:
                 entry.reject(reason=reject_reason, remember=True)
                 site_name = self._get_site_name(entry.get('url'))
                 logger.info('reject {}, because: {}, site: {}', entry['title'], reject_reason, site_name)
                 continue
-
-        if 'download' not in task.config:
-            download = plugin.get('download', self)
-            download.get_temp_files(task, handle_magnets=True, fail_html=config['fail_html'])
+            if entry.get('headers'):
+                task.requests.headers.update(entry['headers'])
+            else:
+                task.requests.headers.clear()
+                task.requests.headers = headers
+            if entry.get('cookie'):
+                task.requests.cookies.update(NetUtils.cookie_str_to_dict(entry['cookie']))
+            else:
+                task.requests.cookies.clear()
+            download.get_temp_file(task, entry, handle_magnets=True, fail_html=config['fail_html'])
 
     @plugin.priority(135)
     def on_task_output(self, task, config):

@@ -1,4 +1,3 @@
-import asyncio
 import datetime
 import re
 from enum import Enum
@@ -10,6 +9,7 @@ from flexget.utils.soup import get_soup
 from loguru import logger
 from requests.adapters import HTTPAdapter
 
+from ..utils.cfscrapewrapper import CFScrapeWrapper
 from ..utils.net_utils import NetUtils
 from ..utils.url_recorder import UrlRecorder
 
@@ -60,6 +60,7 @@ class Work:
 
 class SiteBase:
     URL = None
+    DOWNLOAD_PAGE = 'download.php?id={torrent_id}'
     USER_CLASSES = None
 
     def __init__(self):
@@ -118,9 +119,18 @@ class SiteBase:
             elif work_key.endswith('urls'):
                 setattr(work, work_key, list(map(lambda path: urljoin(url, path), work_value)))
 
-    @staticmethod
-    def build_reseed(entry, config, site, passkey, torrent_id):
-        download_page = site['download_page'].format(torrent_id=torrent_id, passkey=passkey)
+    @classmethod
+    def build_reseed(cls, entry, config, site, passkey, torrent_id):
+        if isinstance(passkey, dict):
+            user_agent = config.get('user-agent')
+            cookie = passkey.get('cookie')
+            entry['headers'] = {
+                'user-agent': user_agent,
+            }
+            entry['cookie'] = cookie
+            download_page = cls.DOWNLOAD_PAGE.format(torrent_id=torrent_id)
+        else:
+            download_page = site['download_page'].format(torrent_id=torrent_id, passkey=passkey)
         entry['url'] = f"https://{site['base_url']}/{download_page}"
 
     @staticmethod
@@ -135,7 +145,7 @@ class SiteBase:
         download_url = ''
         try:
             torrent_page_url = urljoin(base_url, torrent_page_url.format(torrent_id))
-            session = requests.Session()
+            session = CFScrapeWrapper.create_scraper(requests.Session())
             user_agent = config.get('user-agent')
             cookie = passkey.get('cookie')
             headers = {
@@ -145,16 +155,9 @@ class SiteBase:
             session.headers.update(headers)
             session.cookies.update(NetUtils.cookie_str_to_dict(cookie))
             response = session.get(torrent_page_url, timeout=60)
-            if response is not None and response.content:
-                if re.search(NetworkErrorReason.DDoS_protection_by_Cloudflare.value, NetUtils.decode(response)):
-                    cf_cookie = asyncio.run(
-                        NetUtils.get_cf_cookie(entry['class_name'], torrent_page_url, user_agent, cookie))
-                    session.cookies.update(NetUtils.cookie_str_to_dict(cf_cookie))
-                    response = session.get(torrent_page_url, timeout=60)
-                    if response.status_code == 200:
-                        re_search = re.search(url_regex, response.text)
-                    if re_search:
-                        download_url = urljoin(base_url, re_search.group())
+            if response is not None and response.status_code == 200:
+                if re_search := re.search(url_regex, response.text):
+                    download_url = urljoin(base_url, re_search.group())
         except Exception as e:
             logger.warning(str(e.args))
         if not download_url:
@@ -165,7 +168,7 @@ class SiteBase:
 
     def _request(self, entry, method, url, **kwargs):
         if not self.requests:
-            self.requests = requests.Session()
+            self.requests = CFScrapeWrapper.create_scraper(requests.Session())
             if entry_headers := entry.get('headers'):
                 entry_headers['accept-encoding'] = 'gzip, deflate, br'
                 self.requests.headers.update(entry_headers)
@@ -175,13 +178,6 @@ class SiteBase:
             self.requests.mount('https://', HTTPAdapter(max_retries=2))
         try:
             response = self.requests.request(method, url, timeout=60, **kwargs)
-            if response is not None and response.content:
-                if re.search(NetworkErrorReason.DDoS_protection_by_Cloudflare.value, NetUtils.decode(response)):
-                    cf_cookie = asyncio.run(
-                        NetUtils.get_cf_cookie(entry['site_name'], url, entry.get('headers').get('user-agent'),
-                                               entry['cookie']))
-                    self.requests.cookies.update(NetUtils.cookie_str_to_dict(cf_cookie))
-                    response = self.requests.request(method, url, timeout=60, **kwargs)
             if response is not None and response.status_code != 200:
                 entry.fail_with_prefix(f'response.status_code={response.status_code}')
             return response

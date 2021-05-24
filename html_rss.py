@@ -1,5 +1,3 @@
-import asyncio
-import re
 from urllib.parse import urljoin
 
 from flexget import plugin
@@ -74,11 +72,6 @@ class PluginHtmlRss():
             task.requests.headers.update(headers)
             task.requests.cookies.update(NetUtils.cookie_str_to_dict(cookie))
             response = task.requests.get(url, timeout=60)
-            if response is not None and response.content:
-                if re.search(NetUtils.DDoS_protection_by_Cloudflare, NetUtils.decode(response)):
-                    cf_cookie = asyncio.run(NetUtils.get_cf_cookie(task.name, url, user_agent, cookie))
-                    task.requests.cookies.update(NetUtils.cookie_str_to_dict(cf_cookie))
-                    response = task.requests.get(url, timeout=60)
             content = NetUtils.decode(response)
         except RequestException as e:
             raise plugin.PluginError(

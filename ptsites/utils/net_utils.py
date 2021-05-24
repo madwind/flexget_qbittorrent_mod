@@ -28,8 +28,15 @@ class NetUtils:
         for line in cookie_str.split(';'):
             if '=' in line:
                 i = line.index('=')
-                cookie_dict[line[0:i]] = line[i + 1:]
+                cookie_dict[line[0:i].strip()] = line[i + 1:].strip()
         return cookie_dict
+
+    @staticmethod
+    def cookie_to_str(cookie_items: list):
+        cookie_array = []
+        for k, v in cookie_items:
+            cookie_array.append(f'{k}={v}')
+        return str.join('; ', cookie_array).strip()
 
     @staticmethod
     async def get_cf_cookie(log_name, url, user_agent, cookie):

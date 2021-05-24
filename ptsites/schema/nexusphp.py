@@ -11,7 +11,6 @@ from ..utils.net_utils import NetUtils
 
 
 class NexusPHP(SiteBase):
-    TORRENT_PAGE_URL = '/details.php?id={}&hit=1'
 
     def get_message(self, entry, config):
         self.get_nexusphp_message(entry, config)
