@@ -562,14 +562,18 @@ class PluginQBittorrentMod(QBittorrentModBase):
                     if site_name and site_name not in tags and site_name not in tags_modified:
                         tags_modified.append(site_name)
                 if replace_trackers:
-                    for orig_url, new_url in replace_trackers.items():
-                        if tracker.get('url') == orig_url:
-                            if new_url:
-                                logger.info('{} update tracker {}', entry.get('title'), new_url)
-                                self.client.edit_trackers(entry.get('torrent_info_hash'), orig_url, new_url)
+                    for old_str, new_str in replace_trackers.items():
+                        tracker_url = tracker.get('url')
+                        if tracker_url.startswith(old_str):
+                            if new_str:
+                                if old_str in new_str:
+                                    raise plugin.PluginError(f'{old_str} in {new_str}, this may cause a loop problem')
+                                tracker_url_new = f"{new_str}{tracker_url[len(old_str):]}"
+                                self.client.edit_trackers(entry.get('torrent_info_hash'), tracker_url, tracker_url_new)
+                                logger.info('{} update tracker {}', entry.get('title'), tracker_url_new)
                             else:
-                                logger.info('{} remove tracker {}', entry.get('title'), orig_url)
-                                self.client.remove_trackers(entry.get('torrent_info_hash'), orig_url)
+                                logger.info('{} remove tracker {}', entry.get('title'), tracker_url)
+                                self.client.remove_trackers(entry.get('torrent_info_hash'), tracker_url)
             if tags_modified:
                 self.client.add_torrent_tags(entry['torrent_info_hash'], str.join(',', tags_modified))
                 logger.info(f"{entry.get('title')} add tags {tags_modified}")

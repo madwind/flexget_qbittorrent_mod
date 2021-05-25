@@ -1,10 +1,10 @@
 import re
 from urllib.parse import urljoin
 
-from ..utils.net_utils import NetUtils
 from ..schema.nexusphp import NexusPHP
 from ..schema.site_base import Work, NetworkState, SignState
 from ..utils.google_auth import GoogleAuth
+from ..utils.net_utils import NetUtils
 
 
 class MainClass(NexusPHP):
@@ -61,11 +61,6 @@ class MainClass(NexusPHP):
             else:
                 entry.fail_with_prefix('Attempts text not found!  with google_auth')
         return login_response
-
-    @classmethod
-    def build_reseed(cls, entry, config, site, passkey, torrent_id):
-        download_page = site['download_page'].format(torrent_id=torrent_id, passkey=passkey)
-        entry['url'] = urljoin(cls.URL, download_page + '&https=1')
 
     def get_message(self, entry, config):
         self.get_nexusphp_message(entry, config)
