@@ -79,6 +79,8 @@ class PluginIYUUAutoReseed():
                     site = sites_json.get(str(torrent['sid']))
                     if not site:
                         continue
+                    if torrent['info_hash'] in torrent_dict.keys():
+                        continue
                     site_name = self._get_site_name(site['base_url'])
                     passkey = passkeys.get(site_name)
                     if not passkey:
