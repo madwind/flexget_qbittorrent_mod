@@ -42,7 +42,7 @@ class CFScrapeWrapperFlexget(flexget.utils.requests.Session):
 class CFScrapeWrapper:
     @staticmethod
     def create_scraper(session):
-        if isinstance(session, Session):
+        if type(session) == Session:
             cf_session = CFScrapeWrapperRequests()
         else:
             cf_session = CFScrapeWrapperFlexget()
