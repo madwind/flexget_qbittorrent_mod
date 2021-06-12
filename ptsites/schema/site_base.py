@@ -86,7 +86,8 @@ class SiteBase:
 
     def sign_in(self, entry, config):
         self.workflow = []
-        self.workflow.extend(self.build_login_work(entry, config))
+        if hasattr(entry['site_config'], 'cookie'):
+            self.workflow.extend(self.build_login_work(entry, config))
         self.workflow.extend(self.build_workflow(entry, config))
 
         if not entry.get('url') or not self.workflow:
@@ -180,6 +181,7 @@ class SiteBase:
             response = self.requests.request(method, url, timeout=60, **kwargs)
             if response is not None and response.status_code != 200:
                 entry.fail_with_prefix(f'response.status_code={response.status_code}')
+            print(response.text)
             return response
         except Exception as e:
             entry.fail_with_prefix(NetworkState.NETWORK_ERROR.value.format(url=url, error=str(e.args)))

@@ -11,7 +11,7 @@ class MainClass(Discuz):
         'points': [1000000]
     }
 
-    def build_workflow(self, entry, config):
+    def build_login_work(self, entry, config):
         return [
             Work(
                 url='/login.php',
@@ -21,12 +21,21 @@ class MainClass(Discuz):
             Work(
                 url='/login.php',
                 method='login',
-                succeed_regex='欢迎您回来，.*?(?=，)',
-                check_state=('final', SignState.SUCCEED),
-                is_base_content=True,
+                check_state=('network', NetworkState.SUCCEED),
                 login_url_regex='(?<=action=").*?(?=")',
                 formhash_regex='(?<="formhash" value=").*(?=")'
 
+            )
+        ]
+
+    def build_workflow(self, entry, config):
+        return [
+            Work(
+                url='/',
+                method='get',
+                succeed_regex='<a.*?title="访问我的空间">.*?</a>',
+                check_state=('final', SignState.SUCCEED),
+                is_base_content=True
             )
         ]
 
