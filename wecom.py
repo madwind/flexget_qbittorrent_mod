@@ -1,4 +1,3 @@
-import json
 import time
 from datetime import timedelta, datetime
 
@@ -129,7 +128,10 @@ class WeComNotifier:
 
     def _request(self, method, url, **kwargs):
         try:
-            return requests.request(method, url, **kwargs, timeout=60)
+            response_json = requests.request(method, url, **kwargs, timeout=60).json()
+            if response_json.get('errcode') != 0:
+                raise PluginError(response_json)
+            return response_json
         except Exception as e:
             raise PluginError(str(e))
 
@@ -145,7 +147,7 @@ class WeComNotifier:
             'duplicate_check_interval': 1800
         }
         response_json = self._request('post', _POST_MESSAGE_URL.format(access_token=access_token.access_token),
-                                      json=data).json()
+                                      json=data)
         if response_json.get('errcode') == 0:
             message_entry.sent = True
         else:
@@ -219,7 +221,7 @@ class WeComNotifier:
 
     def _get_new_access_token(self, corp_id, corp_secret):
         response_json = self._request('get',
-                                      _GET_ACCESS_TOKEN_URL.format(corp_id=corp_id, corp_secret=corp_secret)).json()
+                                      _GET_ACCESS_TOKEN_URL.format(corp_id=corp_id, corp_secret=corp_secret))
 
         entry = AccessTokenEntry(
             id='{}{}'.format(corp_id, corp_secret),
@@ -234,11 +236,8 @@ class WeComNotifier:
     def _get_media_id(self, access_token):
         file = ('images', ('flexget.png', open(self.image, 'rb'), 'image/png')),
         response_json = self._request('post', _UPLOAD_IMAGE.format(access_token=access_token.access_token),
-                                      files=file).json()
-        if response_json.get('errcode') != 0:
-            raise PluginError(response_json)
-        else:
-            return response_json.get('media_id')
+                                      files=file)
+        return response_json.get('media_id')
 
     def _send_images(self, access_token):
         media_id = self._get_media_id(access_token)
@@ -252,10 +251,8 @@ class WeComNotifier:
                 "media_id": media_id
             }
         }
-        response_json = self._request('post', _POST_MESSAGE_URL.format(access_token=access_token.access_token),
-                                      json=data).json()
-        if response_json.get('errcode') != 0:
-            raise PluginError(response_json)
+        self._request('post', _POST_MESSAGE_URL.format(access_token=access_token.access_token),
+                      json=data)
 
 
 @event('plugin.register')
