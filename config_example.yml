@@ -551,7 +551,7 @@ tasks:
             - "'tjupt' in qbittorrent_tags and qbittorrent_seeding_time < 7*24*60*60": reject
             - "'gazellegames' in qbittorrent_tags and qbittorrent_seeding_time < 80*60*60": reject
             - "'skyey2' in qbittorrent_tags and qbittorrent_seeding_time < 80*60*60": reject
-            - "'chdbits' in qbittorrent_tags and qbittorrent_seeding_time < 5*24*60*60": reject
+            - "'chdbits' in qbittorrent_tags and qbittorrent_seeding_time < 6*24*60*60": reject
     sort_by: qbittorrent_reseed_last_activity
     template:
       - from_qbittorrent_template
