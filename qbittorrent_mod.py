@@ -455,7 +455,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
 
         for entry in entries:
             logger.info(
-                '{}, size: {:.2f} GiB, seeding_time: {:.2f} h, share_ratio: {:.2f}, last_activity: {}, site: {}',
+                '{}, size: {:.2f} GiB, seeding_time: {:.2f} h, share_ratio: {:.2f}, last_activity: {}, tags: {}',
                 entry['title'],
                 entry['qbittorrent_completed'] / (1024 * 1024 * 1024),
                 entry['qbittorrent_seeding_time'] / (60 * 60),
@@ -503,7 +503,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
         for torrent_hash in hashes:
             entry = entry_dict.get(torrent_hash)
             logger.info(
-                '{}, size: {:.2f} GiB, seeding_time: {:.2f} h, share_ratio: {:.2f}, last_activity: {}, tracker_msg: {}, site: {}, delete_files: {}',
+                '{}, size: {:.2f} GiB, seeding_time: {:.2f} h, share_ratio: {:.2f}, last_activity: {}, tracker_msg: {}, tags: {}, delete_files: {}',
                 entry['title'],
                 entry['qbittorrent_completed'] / (1024 * 1024 * 1024),
                 entry['qbittorrent_seeding_time'] / (60 * 60),
@@ -629,12 +629,12 @@ class PluginQBittorrentMod(QBittorrentModBase):
                     else:
                         working_hashes.append(entry['torrent_info_hash'])
                     logger.debug(
-                        f'{entry["title"]} site: {entry["qbittorrent_tags"]} tracker is working, set torrent upload limit to {entry_working} B/s')
+                        f'{entry["title"]} tags: {entry["qbittorrent_tags"]} tracker is working, set torrent upload limit to {entry_working} B/s')
             else:
                 if up_limit != not_working_speed:
                     not_working_hashes.append(entry['torrent_info_hash'])
                     logger.debug(
-                        f'{entry["title"]} site: {entry["qbittorrent_tags"]} tracker is not working, set torrent upload limit to {not_working_speed} B/s')
+                        f'{entry["title"]} tags: {entry["qbittorrent_tags"]} tracker is not working, set torrent upload limit to {not_working_speed} B/s')
         if working_hashes:
             self.client.set_torrent_upload_limit(str.join('|', working_hashes), working_speed)
         if not_working_hashes:
