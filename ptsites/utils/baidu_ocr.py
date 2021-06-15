@@ -16,6 +16,9 @@ except ImportError:
 
 
 class BaiduOcr:
+    qps = 1
+    lock = threading.Semaphore(qps)
+
     @staticmethod
     def get_client(entry, config):
         app_id = config['aipocr'].get('app_id')
@@ -28,7 +31,6 @@ class BaiduOcr:
         if not (app_id and api_key and secret_key):
             entry.fail_with_prefix('AipOcr not set')
             return None
-
         return AipOcr(app_id, api_key, secret_key)
 
     @staticmethod
