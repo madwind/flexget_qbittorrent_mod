@@ -545,10 +545,13 @@ tasks:
     disable: [ seen, seen_info_hash, retry_failed, history ]
     if:
       - qbittorrent_category in ['Rss'] and qbittorrent_last_activity < now - timedelta(minutes=10): accept
-      - "'open' in qbittorrent_tags and (qbittorrent_seeding_time < 48*60*60 or qbittorrent_num_complete < 5)": reject
-      - "'tjupt' in qbittorrent_tags and qbittorrent_seeding_time < 7*24*60*60": reject
-      - "'gazellegames' in qbittorrent_tags and qbittorrent_seeding_time < 80*60*60": reject
-      - "'skyey2' in qbittorrent_tags and qbittorrent_seeding_time < 80*60*60": reject
+      - "'reseed' not in qbittorrent_tags":
+          if:
+            - "'open' in qbittorrent_tags and (qbittorrent_seeding_time < 48*60*60 or qbittorrent_num_complete < 5)": reject
+            - "'tjupt' in qbittorrent_tags and qbittorrent_seeding_time < 7*24*60*60": reject
+            - "'gazellegames' in qbittorrent_tags and qbittorrent_seeding_time < 80*60*60": reject
+            - "'skyey2' in qbittorrent_tags and qbittorrent_seeding_time < 80*60*60": reject
+            - "'chdbits' in qbittorrent_tags and qbittorrent_seeding_time < 5*24*60*60": reject
     sort_by: qbittorrent_reseed_last_activity
     template:
       - from_qbittorrent_template
