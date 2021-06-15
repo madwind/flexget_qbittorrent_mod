@@ -1,4 +1,5 @@
 import re
+import threading
 from io import BytesIO
 
 from loguru import logger
@@ -42,7 +43,8 @@ class BaiduOcr:
 
         img.save(img_byte_arr, format='JPEG')
         try:
-            result = client.basicAccurate(img_byte_arr.getvalue(), {'language_type': 'JAP'})
+            with BaiduOcr.lock:
+                result = client.basicAccurate(img_byte_arr.getvalue(), {'language_type': 'JAP'})
         except Exception as e:
             entry.fail_with_prefix(f'baidu ocr error: {e}')
             return None
@@ -68,7 +70,8 @@ class BaiduOcr:
         img_byte_arr = BytesIO()
         img.save(img_byte_arr, format='png')
         try:
-            result = client.basicAccurate(img_byte_arr.getvalue(), {"language_type": "ENG"})
+            with BaiduOcr.lock:
+                result = client.basicAccurate(img_byte_arr.getvalue(), {"language_type": "ENG"})
         except Exception as e:
             entry.fail_with_prefix('baidu ocr error.')
             return None, None
