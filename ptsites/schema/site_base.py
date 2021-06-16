@@ -86,10 +86,10 @@ class SiteBase:
 
     def sign_in(self, entry, config):
         self.workflow = []
-        if hasattr(entry['site_config'], 'cookie'):
-            self.workflow.extend(self.build_login_work(entry, config))
+        if not hasattr(entry['site_config'], 'cookie'):
+            self.workflow.extend(self.build_login_workflow(entry, config))
         self.workflow.extend(self.build_workflow(entry, config))
-
+        print(self.workflow)
         if not entry.get('url') or not self.workflow:
             entry.fail_with_prefix(f"site: {entry['site_name']} url or workflow is empty")
             return
@@ -107,7 +107,7 @@ class SiteBase:
                     if not self.check_state(entry, work, last_response, last_content):
                         return
 
-    def build_login_work(self, entry, config):
+    def build_login_workflow(self, entry, config):
         return []
 
     def build_workflow(self, entry, config):

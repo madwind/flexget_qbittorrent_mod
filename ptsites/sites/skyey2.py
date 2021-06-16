@@ -11,7 +11,7 @@ class MainClass(Discuz):
         'points': [1000000]
     }
 
-    def build_login_work(self, entry, config):
+    def build_login_workflow(self, entry, config):
         return [
             Work(
                 url='/login.php',
@@ -24,7 +24,6 @@ class MainClass(Discuz):
                 check_state=('network', NetworkState.SUCCEED),
                 login_url_regex='(?<=action=").*?(?=")',
                 formhash_regex='(?<="formhash" value=").*(?=")'
-
             )
         ]
 

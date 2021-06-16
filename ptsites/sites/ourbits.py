@@ -16,7 +16,7 @@ class MainClass(AttendanceHR):
         'days': [175, 364]
     }
 
-    def build_login_work(self, entry, config):
+    def build_login_workflow(self, entry, config):
         return [
             Work(
                 url='/takelogin.php',
