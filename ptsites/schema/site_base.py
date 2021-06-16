@@ -89,7 +89,6 @@ class SiteBase:
         if not hasattr(entry['site_config'], 'cookie'):
             self.workflow.extend(self.build_login_workflow(entry, config))
         self.workflow.extend(self.build_workflow(entry, config))
-        print(self.workflow)
         if not entry.get('url') or not self.workflow:
             entry.fail_with_prefix(f"site: {entry['site_name']} url or workflow is empty")
             return
