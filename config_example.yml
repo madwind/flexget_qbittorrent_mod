@@ -76,7 +76,10 @@ variables:
       login:
         username: 'xxxxxxxx'
         password: 'xxxxxxxx'
-    gazellegames: 'xxxxxxxx'
+    gazellegames:
+      cookie: 'xxxxxxxx'
+      key: 'xxxxxxxx'
+      name: 'xxxxxxxx'
     haidan: 'xxxxxxxx'
     hd: 'xxxxxxxx'
     hd-space: 'xxxxxxxx'
@@ -547,10 +550,10 @@ tasks:
       - qbittorrent_category in ['Rss'] and qbittorrent_last_activity < now - timedelta(minutes=10): accept
       - "'reseed' not in qbittorrent_tags":
           if:
-            - "'open' in qbittorrent_tags and (qbittorrent_seeding_time < 48*60*60 or qbittorrent_num_complete < 5)": reject
-            - "'tjupt' in qbittorrent_tags and qbittorrent_seeding_time < 7*24*60*60": reject
+            - "'open' in qbittorrent_tags and (qbittorrent_seeding_time < 60*60*60 or qbittorrent_num_complete < 5)": reject
+            - "'tjupt' in qbittorrent_tags and qbittorrent_seeding_time < 8*24*60*60": reject
             - "'gazellegames' in qbittorrent_tags and qbittorrent_seeding_time < 80*60*60": reject
-            - "'skyey2' in qbittorrent_tags and qbittorrent_seeding_time < 80*60*60": reject
+            - "'skyey2' in qbittorrent_tags and qbittorrent_seeding_time < 94*60*60": reject
             - "'chdbits' in qbittorrent_tags and qbittorrent_seeding_time < 6*24*60*60": reject
     sort_by: qbittorrent_reseed_last_activity
     template:
