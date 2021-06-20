@@ -48,7 +48,7 @@ class Gazelle(SiteBase):
         }
         return selector
 
-    def get_gazelle_message(self, entry, config):
+    def get_gazelle_message(self, entry, config, message_body_selector='div[id*="message"]'):
         message_url = urljoin(entry['url'], '/inbox.php')
         message_box_response = self._request(entry, 'get', message_url)
         network_state = self.check_network_state(entry, message_url, message_box_response)
@@ -62,12 +62,12 @@ class Gazelle(SiteBase):
             message_url = urljoin(message_url, href)
             message_response = self._request(entry, 'get', message_url)
             network_state = self.check_network_state(entry, message_url, message_response)
+            message_body = 'Can not read message body!'
             if network_state != NetworkState.SUCCEED:
-                message_body = 'Can not read message body!'
                 failed = True
             else:
                 body_element = get_soup(
-                    NetUtils.decode(message_response)).select_one('div[id*="message"]')
+                    NetUtils.decode(message_response)).select_one(message_body_selector)
                 if body_element:
                     message_body = body_element.text.strip()
             entry['messages'] = entry['messages'] + (
