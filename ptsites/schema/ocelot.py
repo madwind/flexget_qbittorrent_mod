@@ -30,6 +30,7 @@ class Ocelot(SiteBase):
                 },
                 'share_ratio': {
                     'regex': 'Ratio.+?(Inf\\.|[\\d.]+)',
+                    'handle': self.handle_share_ratio
                 },
                 'points': {
                     'regex': ('Hello.+?(\\d+).*?(Inf\\.|[\\d.]+)', 2)
@@ -48,3 +49,9 @@ class Ocelot(SiteBase):
 
     def get_ocelot_message(self, entry, config, messages_url='/messages.php'):
         entry['result'] += '(TODO: Message)'
+
+    def handle_share_ratio(self, value):
+        if value in ['Inf.', '.']:
+            return '0'
+        else:
+            return value
