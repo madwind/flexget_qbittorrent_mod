@@ -99,7 +99,7 @@ class MainClass(Gazelle):
         if not messages_response_json:
             return
         unread_messages = filter(lambda m: m.get('unread'),
-                                 messages_response_json.json().get('response').get('messages'))
+                                 messages_response_json.get('response').get('messages'))
         failed = False
         for message in unread_messages:
             title = message.get('subject')
