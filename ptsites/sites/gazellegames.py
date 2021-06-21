@@ -73,13 +73,13 @@ class MainClass(Gazelle):
         if not details_response_json:
             return
         entry['details'] = {
-            'uploaded': details_response_json.get('response').get('stats').get('uploaded') or 0,
-            'downloaded': details_response_json.get('response').get('stats').get('downloaded') or 0,
-            'share_ratio': details_response_json.get('response').get('stats').get('ratio') or 0,
-            'points': details_response_json.get('response').get('achievements').get('totalPoints') or 0,
-            'seeding': details_response_json.get('response').get('community').get('seeding') or 0,
-            'leeching': details_response_json.get('response').get('community').get('leeching') or 0,
-            'hr': details_response_json.get('response').get('personal').get('hnrs') or 0
+            'uploaded': f'{details_response_json.get("response").get("stats").get("uploaded") or 0} B',
+            'downloaded': f'{details_response_json.get("response").get("stats").get("downloaded") or 0} B',
+            'share_ratio': str(details_response_json.get('response').get('stats').get('ratio') or 0),
+            'points': str(details_response_json.get('response').get('achievements').get('totalPoints') or 0),
+            'seeding': str(details_response_json.get('response').get('community').get('seeding') or 0),
+            'leeching': str(details_response_json.get('response').get('community').get('leeching') or 0),
+            'hr': str(details_response_json.get('response').get('personal').get('hnrs') or 0)
         }
 
     def get_message(self, entry, config):
