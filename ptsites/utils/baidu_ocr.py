@@ -51,9 +51,12 @@ class BaiduOcr:
             entry.fail_with_prefix(f'baidu ocr error: {e}')
             return None
         logger.info(result)
+        if result.get('error_msg'):
+            entry.fail_with_prefix(result.get('error_msg'))
+            return None
         text = ''
-        for bb in result.get('words_result'):
-            text = text + bb.get('words')
+        for words_list in result.get('words_result'):
+            text = text + words_list.get('words')
         return re.sub('[^\\w]|[a-zA-Z\\d]', '', text)
 
     @staticmethod
