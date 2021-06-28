@@ -216,7 +216,7 @@ class SiteBase:
                 user_id = user_id_match.group(1)
             else:
                 entry.fail_with_prefix('User id not found.')
-                logger.debug('site: {} User id not found. content: {}'.format(entry['site_name'], base_content))
+                logger.error('site: {} User id not found. content: {}'.format(entry['site_name'], base_content))
                 return
         details_text = ''
         detail_sources = selector.get('detail_sources')
@@ -251,13 +251,12 @@ class SiteBase:
             else:
                 details_text = details_text + detail_content
         if details_text:
-            logger.debug(details_text)
             details = {}
             for detail_name, detail_config in selector['details'].items():
                 detail_value = self.get_detail_value(details_text, detail_config)
                 if not detail_value:
                     entry.fail_with_prefix(f'detail: {detail_name} not found.')
-                    logger.debug(
+                    logger.error(
                         f"Details=> site: {entry['site_name']}, regex: {detail_config['regex']}，details_text: {details_text}")
                     return
                 details[detail_name] = detail_value
