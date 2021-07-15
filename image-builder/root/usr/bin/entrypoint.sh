@@ -24,7 +24,7 @@ fi
 
 # set FG_WEBUI_PASSWD
 if [ -n "${FG_WEBUI_PASSWD}" ]; then
-  if grep "${FG_WEBUI_PASSWD}" /fg_webui_passwd >/dev/null 2>&1; then
+  if (grep "${FG_WEBUI_PASSWD}" /fg_webui_passwd >/dev/null 2>&1) && [ -f "/config/db-config.sqlite" ]; then
     echo "Using existing password ${FG_WEBUI_PASSWD}"
   else
     echo "Setting flexget web password to '${FG_WEBUI_PASSWD}'"
