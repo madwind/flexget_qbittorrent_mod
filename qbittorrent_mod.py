@@ -255,7 +255,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
         headers = copy.deepcopy(task.requests.headers)
         for entry in task.accepted:
             if reject_reason:
-                entry.reject(reason=reject_reason, remember=True)
+                entry.reject(reason=reject_reason, remember=False)
                 site_name = self._get_site_name(entry.get('url'))
                 logger.info('reject {}, because: {}, site: {}', entry['title'], reject_reason, site_name)
                 continue
