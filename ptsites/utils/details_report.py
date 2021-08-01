@@ -11,6 +11,8 @@ from sqlalchemy import Column, String, Integer, Float, Date
 
 try:
     import matplotlib.pyplot as plt
+    import matplotlib
+    matplotlib.use('agg')
 except ImportError:
     plt = None
 
