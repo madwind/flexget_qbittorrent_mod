@@ -227,7 +227,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
         main_data_snapshot = self.client.get_main_data_snapshot(id(task))
         server_state = main_data_snapshot.get('server_state')
 
-        reject_on = add_options.get('reject_on')
+        reject_on = add_options.get('reject_on', {})
         bandwidth_limit = reject_on.get('bandwidth_limit')
         reject_on_dl_speed = reject_on.get('dl_speed')
         reject_on_dl_limit = reject_on.get('dl_limit')
