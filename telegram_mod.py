@@ -39,7 +39,7 @@ class TelegramNotifierMod(TelegramNotifier):
 
     def notify(self, title, message, config):
         session = Session()
-        chat_ids = self._real_init(Session(), config)
+        chat_ids = self._real_init(session, config)
 
         if not chat_ids:
             return

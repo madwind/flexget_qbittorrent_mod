@@ -132,7 +132,8 @@ class PluginQBittorrentMod(QBittorrentModBase):
                                         ]
                                     },
                                     'dl_limit': {'oneOf': [{'type': 'boolean'}, {'type': 'integer'}]},
-                                    'all': {'type': 'boolean'}
+                                    'all': {'type': 'boolean'},
+                                    'remember': {'type': 'boolean', 'default': True}
                                 }
                             }
                         }
@@ -227,7 +228,8 @@ class PluginQBittorrentMod(QBittorrentModBase):
         main_data_snapshot = self.client.get_main_data_snapshot(id(task))
         server_state = main_data_snapshot.get('server_state')
 
-        reject_on = add_options.get('reject_on')
+        reject_on = add_options.get('reject_on', {})
+        remember_reject = reject_on.get('remember', True)
         bandwidth_limit = reject_on.get('bandwidth_limit')
         reject_on_dl_speed = reject_on.get('dl_speed')
         reject_on_dl_limit = reject_on.get('dl_limit')
@@ -255,7 +257,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
         headers = copy.deepcopy(task.requests.headers)
         for entry in task.accepted:
             if reject_reason:
-                entry.reject(reason=reject_reason, remember=True)
+                entry.reject(reason=reject_reason, remember=remember_reject)
                 site_name = self._get_site_name(entry.get('url'))
                 logger.info('reject {}, because: {}, site: {}', entry['title'], reject_reason, site_name)
                 continue

@@ -21,6 +21,10 @@ class BaiduOcr:
 
     @staticmethod
     def get_client(entry, config):
+        if 'aipocr' not in config:
+            entry.fail_with_prefix('aipocr not set in config')
+            return None
+
         app_id = config['aipocr'].get('app_id')
         api_key = config['aipocr'].get('api_key')
         secret_key = config['aipocr'].get('secret_key')
@@ -64,6 +68,10 @@ class BaiduOcr:
         client = BaiduOcr.get_client(entry, config)
         if not client:
             return None, None
+
+        # transform pixel value < black_threshold to pure black
+        black_threshold = 64
+        img = img.point(lambda p: 0 if p < black_threshold else p)
 
         width = img.size[0]
         height = img.size[1]

@@ -27,6 +27,15 @@ class MainClass(NexusPHP):
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
         NetUtils.dict_merge(selector, {
+            'detail_sources': {
+                'default': {
+                    'elements': {
+                        # 如果是新用户，父类原来的 table selector 会选择到考核信息的 table，导致无法获取到做种积分信息
+                        # 这个 selector 也许可以放到父类里，更通用
+                        'table': '#outer > table:last-of-type'
+                    }
+                }
+            },
             'details': {
                 'points': {
                     'regex': '做种积分: ([\\d.,]+)',
