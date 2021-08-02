@@ -1,9 +1,9 @@
-from ..schema.nexusphp import NexusPHP
+from ..schema.nexusphp import Visit
 from ..schema.site_base import SignState, Work
 from ..utils.net_utils import NetUtils
 
 
-class MainClass(NexusPHP):
+class MainClass(Visit):
     URL = 'https://bt.byr.cn/'
     USER_CLASSES = {
         'uploaded': [4398046511104, 140737488355328],
@@ -22,12 +22,3 @@ class MainClass(NexusPHP):
                 is_base_content=True
             )
         ]
-
-    def build_selector(self):
-        selector = super(MainClass, self).build_selector()
-        NetUtils.dict_merge(selector, {
-            'details': {
-                'hr': None
-            }
-        })
-        return selector
