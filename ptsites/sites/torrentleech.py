@@ -57,7 +57,7 @@ class MainClass(SiteBase):
                     'regex': 'total-TL-points.+?([\\d,.]+)'
                 },
                 'join_date': {
-                    'regex': 'Register date</td>.*?<td>(.*?)</td>',
+                    'regex': 'Registration date</td>.*?<td>(.*?)</td>',
                     'handle': self.handle_join_date
                 },
                 'seeding': {
