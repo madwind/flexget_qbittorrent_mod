@@ -1,4 +1,5 @@
 import copy
+import os
 
 from PIL import Image
 from flexget import plugin
@@ -6,6 +7,7 @@ from flexget.components.notify.notifiers.telegram import TelegramNotifier
 from flexget.event import event
 from flexget.manager import Session
 from flexget.plugin import PluginWarning
+from loguru import logger
 
 try:
     import telegram
@@ -20,6 +22,7 @@ _IMAGE_ATTR = 'image'
 _TEXT_LIMIT = 4096
 _PLUGIN_NAME = 'telegram_mod'
 
+logger = logger.bind(name=_PLUGIN_NAME)
 
 def dict_merge(dict1, dict2):
     for i in dict2:
@@ -53,6 +56,8 @@ class TelegramNotifierMod(TelegramNotifier):
         super(TelegramNotifierMod, self)._parse_config(config)
 
         self._image = config.get(_IMAGE_ATTR)
+        if not os.path.isabs(self._image):
+            logger.warning('relative image path {} may be problematic in daemon mode, use absolute path instead'.format(self._image))
 
     def _get_msg_limits(self, msg):
         msg_limits = ['']

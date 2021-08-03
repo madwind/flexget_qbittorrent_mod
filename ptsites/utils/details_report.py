@@ -1,3 +1,5 @@
+import io
+import os
 import re
 from datetime import datetime
 
@@ -64,7 +66,7 @@ class UserDetailsEntry(UserDetailsBase):
 
 
 class DetailsReport:
-    def build(self, task):
+    def build(self, task, details_report_path: str):
         if not (plt and pd):
             logger.warning('Dependency does not exist: [matplotlib, pandas]')
             return
@@ -213,8 +215,21 @@ class DetailsReport:
         table.set_fontsize(10)
         fig.tight_layout()
         plt.title(datetime.now().replace(microsecond=0))
-        plt.savefig('details_report.png', bbox_inches='tight', dpi=300)
-        self.draw_user_classes(user_classes_dict, session, df)
+
+        buf = io.BytesIO()
+        plt.savefig(buf, bbox_inches='tight', dpi=300, format='png')
+        buf.seek(0)
+        img = Image.open(buf)
+        img = self.draw_user_classes(img, user_classes_dict, session, df)
+
+        try:
+            if not os.path.isabs(details_report_path):
+                details_report_path = os.path.join(task.manager.config_base, details_report_path)
+            img.save(details_report_path)
+        except PermissionError:
+            logger.error('Could not write details report to {} due to permission error'.format(details_report_path))
+        except OSError:
+            logger.error('Could not write details report to {}'.format(details_report_path))
 
     def _get_user_details(self, session, site):
         user_details = session.query(UserDetailsEntry).filter(
@@ -278,8 +293,7 @@ class DetailsReport:
         if key not in ['share_ratio', 'points']:
             count_dict[key] = count_dict[key] + value
 
-    def draw_user_classes(self, user_classes_dict, session, df):
-        img = Image.open('details_report.png')
+    def draw_user_classes(self, img, user_classes_dict, session, df):
         img = img.convert("RGBA")
         tmp = Image.new('RGBA', img.size, (0, 0, 0, 0))
         draw = ImageDraw.Draw(tmp)
@@ -308,7 +322,7 @@ class DetailsReport:
                         j += 1
         img = Image.alpha_composite(img, tmp)
         img = img.convert("RGB").quantize(colors=256)
-        img.save('details_report.png')
+        return img
 
     def build_user_classes_data(self, user_classes, site_details, colors):
         data = {}

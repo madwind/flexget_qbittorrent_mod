@@ -17,6 +17,7 @@ class PluginAutoSignIn:
             'max_workers': {'type': 'integer'},
             'get_messages': {'type': 'boolean', 'default': True},
             'get_details': {'type': 'boolean', 'default': True},
+            'details_report_path': {'type': 'string', 'default': 'details_report.png'},
             'aipocr': {
                 'type': 'object',
                 'properties': {
@@ -81,7 +82,8 @@ class PluginAutoSignIn:
                 all_task = [t.submit(Executor.sign_in, entry, config) for entry in task.accepted]
                 wait(all_task, return_when=ALL_COMPLETED)
         if config.get('get_details', True):
-            DetailsReport().build(task)
+            details_report_path = config.get('details_report_path')
+            DetailsReport().build(task, details_report_path)
 
 
 @event('plugin.register')
