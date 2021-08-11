@@ -9,9 +9,8 @@ from ..utils.net_utils import NetUtils
 class MainClass(Gazelle):
     URL = 'https://greatposterwall.com/'
     USER_CLASSES = {
-        'downloaded': [214748364800, 10995116277760],
-        'share_ratio': [1.2],
-        'points': [14, 140],
+        'share_ratio': [1.2, 1.2],
+        'days': [14, 140]
     }
 
     def build_workflow(self, entry, config):
