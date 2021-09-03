@@ -33,8 +33,8 @@ class MainClass(Gazelle):
             )
         ]
 
-    @staticmethod
-    def build_reseed(entry, config, site, passkey, torrent_id):
+    @classmethod
+    def build_reseed(cls, entry, config, site, passkey, torrent_id):
         download_page = site['download_page'].format(torrent_id=torrent_id,
                                                      authkey=passkey['authkey'],
                                                      torrent_pass=passkey['torrent_pass'])

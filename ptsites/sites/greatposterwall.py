@@ -1,5 +1,6 @@
 import datetime
 import re
+from urllib.parse import urljoin
 
 from ..schema.gazelle import Gazelle
 from ..schema.site_base import Work, SignState
@@ -24,6 +25,13 @@ class MainClass(Gazelle):
                 is_base_content=True
             )
         ]
+
+    @classmethod
+    def build_reseed(cls, entry, config, site, passkey, torrent_id):
+        download_page = site['download_page'].format(torrent_id=torrent_id,
+                                                     authkey=passkey['authkey'],
+                                                     torrent_pass=passkey['torrent_pass'])
+        entry['url'] = urljoin(MainClass.URL, download_page)
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
