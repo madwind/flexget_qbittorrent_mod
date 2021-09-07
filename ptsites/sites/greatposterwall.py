@@ -11,6 +11,7 @@ class MainClass(Gazelle):
     URL = 'https://greatposterwall.com/'
     USER_CLASSES = {
         'share_ratio': [1.2, 1.2],
+        'downloaded': [214748364800, 10995116277760],
         'days': [14, 140]
     }
 

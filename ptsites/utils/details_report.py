@@ -12,6 +12,7 @@ from sqlalchemy import Column, String, Integer, Float, Date
 try:
     import matplotlib.pyplot as plt
     import matplotlib
+
     matplotlib.use('agg')
 except ImportError:
     plt = None
@@ -129,9 +130,9 @@ class DetailsReport:
                 for column in columns:
                     value = getattr(user_details_db, column)
                     if entry.failed:
-                        data[column].append(self.buid_data_text(column, value) + '*')
+                        data[column].append(self.build_data_text(column, value) + '*')
                     else:
-                        data[column].append(self.buid_data_text(column, value))
+                        data[column].append(self.build_data_text(column, value))
                     if not entry.get('do_not_count') and column not in ['site']:
                         self.count(total_details, column, value)
                 data['sort_column'].append(0)
@@ -155,12 +156,12 @@ class DetailsReport:
                 data['sort_column'].append(details_changed['uploaded'])
 
             # append to data
-            data['site'].append(entry['site_name'])
             for column in columns:
                 if column == 'site':
+                    data['site'].append(self.build_data_text(column, entry['site_name']))
                     continue
-                data[column].append('{}{}'.format(self.buid_data_text(column, getattr(user_details_db, column)),
-                                                  self.buid_data_text(column, details_changed[column], append=True)))
+                data[column].append('{}{}'.format(self.build_data_text(column, getattr(user_details_db, column)),
+                                                  self.build_data_text(column, details_changed[column], append=True)))
                 if total_details.get(column) is None:
                     total_details[column] = 0
                 if total_changed.get(column) is None:
@@ -182,8 +183,8 @@ class DetailsReport:
         for column in columns:
             if column == 'site':
                 continue
-            data[column].append('{}{}'.format(self.buid_data_text(column, total_details[column]),
-                                              self.buid_data_text(column, total_changed[column], append=True)))
+            data[column].append('{}{}'.format(self.build_data_text(column, total_details[column]),
+                                              self.build_data_text(column, total_changed[column], append=True)))
         data['sort_column'].append(float('inf'))
         data['default_order'].append(float('inf'))
         df = pd.DataFrame(data)
@@ -245,8 +246,14 @@ class DetailsReport:
             if num < 1000:
                 return specifier.format(round(num, 3), key).rstrip()
 
-    def buid_data_text(self, key, value, append=False):
-        if value == '*' or key == 'site':
+    def build_data_text(self, key, value, append=False):
+        if key == 'site':
+            if len(value) > 12:
+                str_list = list(value)
+                str_list.insert(12, '\n')
+                value = ''.join(str_list)
+            return value
+        if value == '*':
             return value
         if value == 0 and append:
             return ''
@@ -287,10 +294,10 @@ class DetailsReport:
         start_y, cell_height = self.find_start_y(img, start_x)
         cell_width = 342
         start_y = start_y + cell_height
-        colors = [(63, 81, 181, 127), (103, 58, 183, 127), (255, 87, 34, 127)]
+        colors = [(0, 104, 250, 127), (111, 11, 217, 127), (217, 96, 11, 127)]
         font_path = findfont(FontProperties(family=['sans-serif']))
         for i in range(len(df.values)):
-            site_name = re.sub('\\*', '', df.values[i][0])
+            site_name = re.sub('\\*|', '', df.values[i][0].replace('\n', ''))
             mid_y = start_y + i * cell_height
             y, cell_content_height = self.get_cell_position(img, start_x, mid_y)
             if user_classes := user_classes_dict.get(site_name):
