@@ -1,4 +1,4 @@
-import chardet
+import charset_normalizer
 
 
 class NetUtils:
@@ -9,7 +9,7 @@ class NetUtils:
         if response is None:
             return None
         content = response.content
-        charset_encoding = chardet.detect(content).get('encoding')
+        charset_encoding = charset_normalizer.detect(content).get('encoding')
         if charset_encoding == 'ascii':
             charset_encoding = 'unicode_escape'
         elif charset_encoding == 'Windows-1254':
