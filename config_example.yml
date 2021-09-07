@@ -689,12 +689,12 @@ tasks:
         message: |+
           {{ time }}
           qBittorrent Server State:
-          {% if not server_state.flexget_connected -%}
+          {% if not server_state['flexget_connected'] -%}
           flexget_connected: False
           {%- else -%}
-          dl_info_speed: {{(server_state['dl_info_speed']/1024/1024)|int}} MiB
-          up_info_speed: {{(server_state['up_info_speed']/1024/1024)|int}} MiB
-          free_space_on_disk: {{(server_state['free_space_on_disk']/1024/1024/1024)|int}} GiB
+          dl_info_speed: {{ (server_state['dl_info_speed']/1024**2)|round(2) }} MiB
+          up_info_speed: {{ (server_state['up_info_speed']/1024**2)|round(2) }} MiB
+          free_space_on_disk: {{ (server_state['free_space_on_disk']/1024**3)|round(3) }} GiB
           queued_io_jobs: {{server_state['queued_io_jobs']}}
           total_peer_connections: {{server_state['total_peer_connections']}}
           {% endif %}
