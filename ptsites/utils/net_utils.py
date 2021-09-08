@@ -12,7 +12,8 @@ class NetUtils:
         charset_encoding = charset_normalizer.detect(content).get('encoding')
         if charset_encoding == 'ascii':
             charset_encoding = 'unicode_escape'
-        elif charset_encoding == 'Windows-1254':
+        # totheglory
+        elif charset_encoding == 'cp850':
             charset_encoding = 'utf-8'
         return content.decode(charset_encoding if charset_encoding else 'utf-8', 'ignore')
 
