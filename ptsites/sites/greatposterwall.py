@@ -1,5 +1,6 @@
 import datetime
 import re
+from urllib.parse import urljoin
 
 from ..schema.gazelle import Gazelle
 from ..schema.site_base import Work, SignState
@@ -7,19 +8,31 @@ from ..utils.net_utils import NetUtils
 
 
 class MainClass(Gazelle):
-    URL = 'https://snakepop.art/'
+    URL = 'https://greatposterwall.com/'
+    USER_CLASSES = {
+        'share_ratio': [1.2, 1.2],
+        'downloaded': [214748364800, 10995116277760],
+        'days': [14, 140]
+    }
 
     def build_workflow(self, entry, config):
         return [
             Work(
                 url='/',
                 method='get',
-                succeed_regex='分享率 :.*?>(∞|[\\d.]+)',
+                succeed_regex='<a href="user.php\\?id=\\d+" class="username">.*?</a>',
                 fail_regex=None,
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
             )
         ]
+
+    @classmethod
+    def build_reseed(cls, entry, config, site, passkey, torrent_id):
+        download_page = site['download_page'].format(torrent_id=torrent_id,
+                                                     authkey=passkey['authkey'],
+                                                     torrent_pass=passkey['torrent_pass'])
+        entry['url'] = urljoin(MainClass.URL, download_page)
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
@@ -34,7 +47,7 @@ class MainClass(Gazelle):
             },
             'details': {
                 'join_date': {
-                    'regex': '加入时间:(.*?)ago',
+                    'regex': '加入时间:(.*?)前',
                     'handle': self.handle_join_date
                 },
                 'points': None,

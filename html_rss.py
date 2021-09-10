@@ -79,6 +79,7 @@ class PluginHtmlRss():
             )
         elements = get_soup(content).select(root_element_selector)
         if len(elements) == 0:
+            logger.debug(f'no elements found in response: {content}')
             return entries
 
         for element in elements:
