@@ -80,6 +80,7 @@ variables:
       cookie: 'xxxxxxxx'
       key: 'xxxxxxxx'
       name: 'xxxxxxxx'
+      no_proxy: yes
     haidan: 'xxxxxxxx'
     hd: 'xxxxxxxx'
     hd-space: 'xxxxxxxx'
