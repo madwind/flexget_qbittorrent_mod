@@ -1,4 +1,5 @@
 import datetime
+import os
 import re
 from enum import Enum
 from urllib.parse import urljoin
@@ -177,7 +178,22 @@ class SiteBase:
             self.requests.mount('http://', HTTPAdapter(max_retries=2))
             self.requests.mount('https://', HTTPAdapter(max_retries=2))
         try:
+            if 'proxy' in entry['site_config']:
+                kwargs['proxies'] = {
+                    'https': entry['site_config']['proxy']
+                }
+            if 'no_proxy' in entry['site_config']:
+                # ref: https://stackoverflow.com/questions/28521535/requests-how-to-disable-bypass-proxy
+                old_no_proxy = os.environ.get('no_proxy', '')
+                os.environ['no_proxy'] = '*'
+                self.requests.trust_env = False
+                old_proxy = kwargs.get('proxies')
+                kwargs['proxies'] = None
             response = self.requests.request(method, url, timeout=60, **kwargs)
+            if 'no_proxy' in entry['site_config']:
+                os.environ['no_proxy'] = old_no_proxy
+                self.requests.trust_env = True
+                kwargs['proxies'] = old_proxy
             if response is not None and response.status_code != 200:
                 entry.fail_with_prefix(f'response.status_code={response.status_code}')
             return response

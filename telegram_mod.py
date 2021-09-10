@@ -96,6 +96,8 @@ class TelegramNotifierMod(TelegramNotifier):
 
             except TelegramError as e:
                 raise PluginWarning(e.message)
+            except OSError as e:
+                raise PluginWarning(e.message)
 
 
 @event('plugin.register')
