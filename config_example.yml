@@ -536,9 +536,8 @@ tasks:
         - torrent_info_hash
     notify:
       task:
-        always_send: false
         message: |+
-          {%- if task.failed %}
+          {%- if task.failed -%}
           {% for group in task.failed|groupby('task') %}
           The following torrent have failed for task {{ group.grouper }}:
           {%- for entry in group.list %}
@@ -674,7 +673,6 @@ tasks:
         - title
     notify:
       task:
-        always_send: false
         message: |+
           {%- if task.accepted -%}
           {%- for group in task.accepted|groupby('task') -%}
