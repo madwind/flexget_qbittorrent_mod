@@ -38,6 +38,8 @@ class TelegramNotifierMod(TelegramNotifier):
     })
 
     def notify(self, title, message, config):
+        if not message.strip():
+            return
         session = Session()
         chat_ids = self._real_init(session, config)
 

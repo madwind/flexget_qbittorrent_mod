@@ -86,6 +86,8 @@ class WeComNotifier:
     }
 
     def notify(self, title, message, config):
+        if not message.strip():
+            return
         self._parse_config(config)
         session = Session()
 
