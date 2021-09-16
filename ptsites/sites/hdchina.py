@@ -1,5 +1,5 @@
 from ..schema.nexusphp import NexusPHP
-from ..schema.site_base import Work, SignState
+from ..schema.site_base import Work, SignState, SiteBase
 from ..utils.net_utils import NetUtils
 
 
@@ -13,6 +13,8 @@ from ..utils.net_utils import NetUtils
 
 class MainClass(NexusPHP):
     URL = 'https://hdchina.org/'
+    TORRENT_PAGE_URL = '/details.php?id={torrent_id}&hit=1'
+    DOWNLOAD_URL_REGEX = 'download.php?hash=.*?(?=")'
     DATA = {
         'csrf': '(?<=x-csrf" content=").*?(?=")',
     }
@@ -64,3 +66,8 @@ class MainClass(NexusPHP):
             }
         })
         return selector
+
+    @classmethod
+    def build_reseed(cls, entry, config, site, passkey, torrent_id):
+        SiteBase.build_reseed_from_page(entry, config, passkey, torrent_id, cls.URL, cls.TORRENT_PAGE_URL,
+                                        cls.DOWNLOAD_URL_REGEX)
