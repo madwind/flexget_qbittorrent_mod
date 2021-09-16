@@ -3,7 +3,7 @@ from io import BytesIO
 from urllib.parse import urljoin
 
 from ..schema.nexusphp import NexusPHP
-from ..schema.site_base import SignState, Work, NetworkState
+from ..schema.site_base import SignState, Work, NetworkState, SiteBase
 from ..utils.baidu_ocr import BaiduOcr
 from ..utils.net_utils import NetUtils
 
@@ -23,6 +23,8 @@ except ImportError:
 
 class MainClass(NexusPHP):
     URL = 'https://hdsky.me/'
+    TORRENT_PAGE_URL = '/details.php?id={torrent_id}&hit=1'
+    DOWNLOAD_URL_REGEX = 'https://hdsky.me/download.php?id=.*?(?=")'
     USER_CLASSES = {
         'downloaded': [8796093022208, 10995116277760],
         'share_ratio': [5, 5.5],
@@ -91,3 +93,8 @@ class MainClass(NexusPHP):
             }
         })
         return selector
+
+    @classmethod
+    def build_reseed(cls, entry, config, site, passkey, torrent_id):
+        SiteBase.build_reseed_from_page(entry, config, passkey, torrent_id, cls.URL, cls.TORRENT_PAGE_URL,
+                                        cls.DOWNLOAD_URL_REGEX)
