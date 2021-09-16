@@ -14,8 +14,9 @@ from ..utils.net_utils import NetUtils
 
 class MainClass(NexusPHP):
     URL = 'https://hdcity.work/'
-    TORRENT_PAGE_URL = urljoin(URL, '/t-{}')
-    DOWNLOAD_BASE_RUL = 'https://assets.hdcity.work/'
+    TORRENT_PAGE_URL = urljoin(URL, '/t-{torrent_id}')
+    DOWNLOAD_BASE_URL = 'https://assets.hdcity.work/'
+    DOWNLOAD_URL_REGEX = '/dl\\.php.*?(?=")'
     USER_CLASSES = {
         'downloaded': [5497558138880, 43980465111040],
         'share_ratio': [2.5, 4],
@@ -36,8 +37,8 @@ class MainClass(NexusPHP):
 
     @classmethod
     def build_reseed(cls, entry, config, site, passkey, torrent_id):
-        SiteBase.build_reseed_from_page(entry, config, passkey, torrent_id, cls.DOWNLOAD_BASE_RUL, cls.TORRENT_PAGE_URL,
-                                        '/dl\\.php.*?(?=")')
+        SiteBase.build_reseed_from_page(entry, config, passkey, torrent_id, cls.DOWNLOAD_BASE_URL, cls.TORRENT_PAGE_URL,
+                                        cls.DOWNLOAD_URL_REGEX)
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()

@@ -144,7 +144,7 @@ class SiteBase:
                 return
         download_url = ''
         try:
-            torrent_page_url = urljoin(base_url, torrent_page_url.format(torrent_id))
+            torrent_page_url = urljoin(base_url, torrent_page_url.format(torrent_id=torrent_id))
             session = CFScrapeWrapper.create_scraper(requests.Session())
             user_agent = config.get('user-agent')
             cookie = passkey.get('cookie')
