@@ -11,7 +11,7 @@ class MainClass(Visit):
     URL = 'https://www.hd.ai/'
     SUCCEED_REGEX = '(?<=<i class="layui-icon layui-icon-username">)</i>.*?(?=</a>)'
     TORRENT_PAGE_URL = urljoin(URL, '/details.php?id={torrent_id}&hit=1')
-    DOWNLOAD_URL_REGEX = 'download.php\\?hash=.*?id=\\d+'
+    DOWNLOAD_URL_REGEX = 'download\\.php\\?hash=.*?id=\\d+'
     USER_CLASSES = {
         'downloaded': [805306368000, 3298534883328],
         'share_ratio': [3.05, 4.55],

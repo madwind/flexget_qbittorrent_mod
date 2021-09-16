@@ -24,7 +24,7 @@ except ImportError:
 class MainClass(NexusPHP):
     URL = 'https://hdsky.me/'
     TORRENT_PAGE_URL = '/details.php?id={torrent_id}&hit=1'
-    DOWNLOAD_URL_REGEX = 'https://hdsky.me/download.php?id=.*?(?=")'
+    DOWNLOAD_URL_REGEX = '/download\\.php\\?id=\\d+&passkey=.*?(?=")'
     USER_CLASSES = {
         'downloaded': [8796093022208, 10995116277760],
         'share_ratio': [5, 5.5],

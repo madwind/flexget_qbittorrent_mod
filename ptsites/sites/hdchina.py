@@ -14,7 +14,7 @@ from ..utils.net_utils import NetUtils
 class MainClass(NexusPHP):
     URL = 'https://hdchina.org/'
     TORRENT_PAGE_URL = '/details.php?id={torrent_id}&hit=1'
-    DOWNLOAD_URL_REGEX = 'download.php?hash=.*?(?=")'
+    DOWNLOAD_URL_REGEX = '/download\\.php\\?hash=.*?&uid=\\d+'
     DATA = {
         'csrf': '(?<=x-csrf" content=").*?(?=")',
     }
