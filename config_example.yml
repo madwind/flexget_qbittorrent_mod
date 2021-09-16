@@ -534,6 +534,19 @@ tasks:
     seen:
       fields:
         - torrent_info_hash
+    notify:
+      task:
+        always_send: false
+        message: |+
+          {%- if task.failed %}
+          {% for group in task.failed|groupby('task') %}
+          The following torrent have failed for task {{ group.grouper }}:
+          {%- for entry in group.list %}
+          {{ loop.index }}: {{ entry.title }} Reason: {{entry.reason|d('unknown')}}
+          {%- endfor -%}
+          {%- endfor -%}
+          {%- endif -%}
+        via: *via_setting
     qbittorrent_mod:
       action:
         add:
@@ -697,7 +710,7 @@ tasks:
           - telegram_mod:
               bot_token: 'xxxxxxxx'
               image: 'details_report.png'
-             recipients:
+              recipients:
                 - username: 'xxxxxxxx'
 
   warner:
