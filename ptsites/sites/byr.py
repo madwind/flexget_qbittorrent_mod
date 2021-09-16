@@ -1,10 +1,9 @@
 from ..schema.nexusphp import Visit
 from ..schema.site_base import SignState, Work
-from ..utils.net_utils import NetUtils
 
 
 class MainClass(Visit):
-    URL = 'https://bt.byr.cn/'
+    URL = 'https://byr.pt/'
     USER_CLASSES = {
         'uploaded': [4398046511104, 140737488355328],
         'share_ratio': [3.05, 4.55],
