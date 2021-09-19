@@ -5,19 +5,21 @@ from ..utils.net_utils import NetUtils
 class MainClass(VisitHR):
     URL = 'https://tjupt.org/'
     USER_CLASSES = {
-        'downloaded': [805306368000, 3298534883328],
-        'share_ratio': [3.05, 4.55],
-        'days': [280, 700]
+        'uploaded': [5368709120000, 53687091200000],
+        'days': [336, 924]
     }
 
     def build_selector(self):
         selector = super(VisitHR, self).build_selector()
         NetUtils.dict_merge(selector, {
             'details': {
+                'downloaded': None,
+                'share_ratio': None,
                 'hr': {
-                    'regex': 'HnR.*?(\\d+)',
+                    'regex': 'H&R.*?(\\d+)',
                     'handle': self.handle_hr
                 }
+
             }
         })
         return selector
