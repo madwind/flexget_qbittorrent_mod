@@ -65,6 +65,7 @@ class TelegramNotifierMod(TelegramNotifier):
             if len(msg_limits[-1] + line) > _TEXT_LIMIT and len(msg_limits[-1]) > 0:
                 msg_limits.append('')
             msg_limits[-1] = msg_limits[-1] + line
+        return msg_limits
 
     def _send_photo(self, image, chat_ids, session):
         for chat_id in (x.id for x in chat_ids):
