@@ -44,6 +44,8 @@ class PluginIYUUAutoReseed():
         show_detail = config.get('show_detail')
 
         torrent_dict, torrents_hashes = self.get_torrents_data(task, config)
+        if not torrents_hashes:
+            return torrents_hashes
         try:
             data = {
                 'sign': config['iyuu'],
