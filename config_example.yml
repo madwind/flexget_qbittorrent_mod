@@ -583,15 +583,15 @@ tasks:
             - "'skyey2' in qbittorrent_tags and qbittorrent_seeding_time < 70*60*60 + 86400": reject
             - "'tjupt' in qbittorrent_tags":
                 if:
-                  - qbittorrent_seeding_time < 24*24*60*60 +86400: reject
-                  - qbittorrent_size >= 10*1024*1024*1024 and qbittorrent_seeding_time < 48*24*60*60 +86400: reject
-                  - qbittorrent_size >= 20*1024*1024*1024 and qbittorrent_seeding_time < 72*24*60*60 +86400: reject
-                  - qbittorrent_size >= 30*1024*1024*1024 and qbittorrent_seeding_time < 96*24*60*60 +86400: reject
-                  - qbittorrent_size >= 40*1024*1024*1024 and qbittorrent_seeding_time < 120*24*60*60 +86400: reject
-                  - qbittorrent_size >= 50*1024*1024*1024 and qbittorrent_seeding_time < 168*24*60*60 +86400: reject
+                  - qbittorrent_seeding_time < 24*60*60 +86400: reject
+                  - qbittorrent_size >= 10*1024*1024*1024 and qbittorrent_seeding_time < 48*60*60 +86400: reject
+                  - qbittorrent_size >= 20*1024*1024*1024 and qbittorrent_seeding_time < 72*60*60 +86400: reject
+                  - qbittorrent_size >= 30*1024*1024*1024 and qbittorrent_seeding_time < 96*60*60 +86400: reject
+                  - qbittorrent_size >= 40*1024*1024*1024 and qbittorrent_seeding_time < 120*60*60 +86400: reject
+                  - qbittorrent_size >= 50*1024*1024*1024 and qbittorrent_seeding_time < 168*60*60 +86400: reject
             - "'chdbits' in qbittorrent_tags":
                 if:
-                  - qbittorrent_seeding_time < 5*24*60*60 + 86400: reject
+                  - qbittorrent_seeding_time < 3*24*60*60 + 86400: reject
                   - qbittorrent_size > 30*1024*1024*1024 and qbittorrent_seeding_time < 5*24*60*60 + 86400: reject
     sort_by: qbittorrent_reseed_last_activity
     template:
