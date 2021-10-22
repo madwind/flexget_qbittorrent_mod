@@ -38,7 +38,7 @@ class NexusPHP(SiteBase):
                     'regex': ('(下[载載]量|Downloaded).+?([\\d.]+ ?[ZEPTGMK]?i?B)', 2)
                 },
                 'share_ratio': {
-                    'regex': ('(分享率|Ratio).*?(---|∞|Inf\\.|无限|無限|[\\d.]+)', 2),
+                    'regex': ('(分享率|Ratio).*?(---|∞|Inf\\.|无限|無限|[\\d,.]+)', 2),
                     'handle': self.handle_share_ratio
                 },
                 'points': {
@@ -85,6 +85,8 @@ class NexusPHP(SiteBase):
             else:
                 if body_element := get_soup(NetUtils.decode(message_response)).select_one('td[colspan*="2"]'):
                     message_body = body_element.text.strip()
+                else:
+                    message_body = 'Can not find message body element!'
             entry['messages'] = entry['messages'] + (f'\nTitle: {title}\nLink: {message_url}\n{message_body}')
         if failed:
             entry.fail_with_prefix('Can not read message body!')
