@@ -27,7 +27,7 @@ UserDetailsBase = db_schema.versioned_base('user_details', 0)
 suffix = {'B': 1, 'K': 1024, 'M': 1048576, 'G': 1073741824, 'T': 1099511627776, 'P': 1125899906842624,
           'E': 1152921504606846976, 'Z': 1180591620717411303424}
 
-math_suffix = {'': 1, 'K': 1000, 'M': 1000000, 'B': 1000000000}
+math_suffix = {'': 1, 'K': 1000, 'M': 1000000, 'B': 1000000000, 'T': 1000000000000, 'P': 1000000000000000}
 
 
 class UserDetailsEntry(UserDetailsBase):
@@ -263,7 +263,7 @@ class DetailsReport:
             else:
                 specifier = '{:g} {}iB'
             return self.build_suffix(value, specifier)
-        if key in ['points']:
+        if key in ['share_ratio', 'points']:
             if append:
                 specifier = '\n{:+g} {}'
             else:
