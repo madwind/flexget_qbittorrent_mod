@@ -14,6 +14,13 @@ class MainClass(AttendanceHR):
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
         NetUtils.dict_merge(selector, {
+            'detail_sources': {
+                'default': {
+                    'elements': {
+                        'bar': '#info_block > tbody > tr > td > table > tbody > tr > td:nth-child(1)',
+                    }
+                }
+            },
             'details': {
                 'points': {
                     'regex': '做种积分([\\d.,]+)',
