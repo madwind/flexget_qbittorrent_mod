@@ -1,9 +1,10 @@
-from ..schema.nexusphp import AttendanceHR
+from ..schema.nexusphp import VisitHR
 from ..utils.net_utils import NetUtils
 
 
-class MainClass(AttendanceHR):
+class MainClass(VisitHR):
     URL = 'https://www.pttime.org/'
+    SUCCEED_REGEX = '<a  href="userdetails.php\?id=\\d+" class=.+?><b>.+?</b></a>'
     USER_CLASSES = {
         'downloaded': [3221225472000, 16106127360000],
         'share_ratio': [3.05, 4.55],
