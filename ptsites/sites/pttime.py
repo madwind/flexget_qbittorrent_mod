@@ -1,15 +1,29 @@
-from ..schema.nexusphp import VisitHR
+from ..schema.nexusphp import AttendanceHR
+from ..schema.site_base import Work, SignState
 from ..utils.net_utils import NetUtils
 
 
-class MainClass(VisitHR):
+class MainClass(AttendanceHR):
     URL = 'https://www.pttime.org/'
-    SUCCEED_REGEX = '<a  href="userdetails.php\?id=\\d+" class=.+?><b>.+?</b></a>'
     USER_CLASSES = {
         'downloaded': [3221225472000, 16106127360000],
         'share_ratio': [3.05, 4.55],
         'days': [112, 364]
     }
+
+    def build_workflow(self, entry, config):
+        return [
+            Work(
+                url='/attendance.php',
+                method='get',
+                succeed_regex=[
+                    '这是你的第.*?次签到，已连续签到.*天，本次签到获得.*个魔力值。',
+                    '获得魔力值：\\d+',
+                    '你今天已经签到过了，请勿重复刷新。'],
+                check_state=('final', SignState.SUCCEED),
+                is_base_content=True
+            )
+        ]
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
