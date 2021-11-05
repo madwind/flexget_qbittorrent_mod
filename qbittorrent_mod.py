@@ -132,6 +132,14 @@ class PluginQBittorrentMod(QBittorrentModBase):
                                         ]
                                     },
                                     'dl_limit': {'oneOf': [{'type': 'boolean'}, {'type': 'integer'}]},
+                                    'up_bandwidth_limit': {'type': 'integer'},
+                                    'up_speed': {
+                                        'oneOf': [
+                                            {'type': 'boolean'},
+                                            {'type': 'integer'},
+                                            {'type': 'number', 'minimum': 0.1, 'maximum': 0.9},
+                                        ]
+                                    },
                                     'all': {'type': 'boolean'},
                                     'remember': {'type': 'boolean', 'default': True}
                                 }
@@ -233,14 +241,24 @@ class PluginQBittorrentMod(QBittorrentModBase):
         bandwidth_limit = reject_on.get('bandwidth_limit')
         reject_on_dl_speed = reject_on.get('dl_speed')
         reject_on_dl_limit = reject_on.get('dl_limit')
+        up_bandwidth_limit = reject_on.get('up_bandwidth_limit')
+        reject_on_up_speed = reject_on.get('up_speed')
         reject_on_all = reject_on.get('all')
         reject_reason = ''
 
+        up_rate_limit = server_state.get('up_rate_limit')
         dl_rate_limit = server_state.get('dl_rate_limit')
 
-        if reject_on_all:
-            reject_reason = 'reject on all'
-        elif reject_on_dl_limit and dl_rate_limit and dl_rate_limit < reject_on_dl_limit:
+        if reject_on_up_speed:
+            if isinstance(reject_on_up_speed, float):
+                up_rate_limit = up_rate_limit if up_rate_limit else up_bandwidth_limit
+                reject_on_up_speed = int(up_rate_limit * reject_on_up_speed)
+            up_info_speed = server_state.get('up_info_speed')
+            if up_info_speed and up_info_speed > reject_on_up_speed:
+                reject_reason = 'up_speed: {:.2F} MiB > reject_on_up_speed: {:.2F} MiB'.format(
+                    up_info_speed / (1024 * 1024), reject_on_up_speed / (1024 * 1024))
+
+        if reject_on_dl_limit and dl_rate_limit and dl_rate_limit < reject_on_dl_limit:
             reject_reason = 'dl_limit: {:.2F} MiB < reject_on_dl_limit: {:.2F} MiB'.format(
                 dl_rate_limit / (1024 * 1024), reject_on_dl_limit / (1024 * 1024))
         elif reject_on_dl_speed:
@@ -251,6 +269,9 @@ class PluginQBittorrentMod(QBittorrentModBase):
             if dl_info_speed and dl_info_speed > reject_on_dl_speed:
                 reject_reason = 'dl_speed: {:.2F} MiB > reject_on_dl_speed: {:.2F} MiB'.format(
                     dl_info_speed / (1024 * 1024), reject_on_dl_speed / (1024 * 1024))
+
+        if reject_on_all:
+            reject_reason = 'reject on all'
 
         if 'download' not in task.config:
             download = plugin.get('download', self)
@@ -298,8 +319,8 @@ class PluginQBittorrentMod(QBittorrentModBase):
             raise plugin.PluginError('Unknown action.')
 
     def add_entries(self, task, add_options):
-        options = {}
         for entry in task.accepted:
+            options = {}
             for attr_str in ['savepath',
                              'cookie',
                              'category',
@@ -314,7 +335,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                              'sequentialDownload',
                              'firstLastPiecePrio']:
                 attr = entry.get(attr_str, add_options.get(attr_str))
-                if attr:
+                if attr is not None:
                     options[attr_str] = attr
 
             if options.get('autoTMM') and options.get('category') and options.get('savepath'):
