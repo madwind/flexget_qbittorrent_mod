@@ -1,3 +1,4 @@
+import json
 import time
 from datetime import timedelta, datetime
 
@@ -15,10 +16,13 @@ _CORP_ID = 'corp_id'
 _CORP_SECRET = 'corp_secret'
 _AGENT_ID = 'agent_id'
 _TO_USER = 'to_user'
+_TYPE = 'type'
+_IMAGE = 'image'
+_TEXT_LIMIT = 1024
+
 _GET_ACCESS_TOKEN_URL = 'https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid={corp_id}&corpsecret={corp_secret}'
 _POST_MESSAGE_URL = 'https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token={access_token}'
 _UPLOAD_IMAGE = 'https://qyapi.weixin.qq.com/cgi-bin/media/upload?access_token={access_token}&type=image'
-_TEXT_LIMIT = 1024
 
 AccessTokenBase = db_schema.versioned_base('wecom_access_token', 0)
 MessageBase = db_schema.versioned_base('message', 0)
@@ -72,6 +76,8 @@ class WeComNotifier:
     _corp_secret = None
     _agent_id = None
     _to_user = None
+    _type = None
+    _text_limit = None
 
     schema = {
         'type': 'object',
@@ -80,7 +86,8 @@ class WeComNotifier:
             _CORP_SECRET: {'type': 'string'},
             _AGENT_ID: {'type': 'string'},
             _TO_USER: {'type': 'string'},
-            'image': {'type': 'string'}
+            _TYPE: {'type': 'string', 'enum': ['text', 'json'], 'default': 'text'},
+            _IMAGE: {'type': 'string'}
         },
         'additionalProperties': False,
     }
@@ -114,7 +121,11 @@ class WeComNotifier:
         self._corp_secret = config.get(_CORP_SECRET)
         self._agent_id = config.get(_AGENT_ID)
         self._to_user = config.get(_TO_USER)
-        self.image = config.get('image')
+        self._type = config.get(_TYPE)
+        self._text_limit = _TEXT_LIMIT
+        if self._type == 'json':
+            self._text_limit = 9999
+        self.image = config.get(_IMAGE)
 
     def _save_message(self, msg, session):
         msg_limit, msg_extend = self._get_msg_limit(msg)
@@ -138,16 +149,19 @@ class WeComNotifier:
             raise PluginError(str(e))
 
     def _send_msgs(self, message_entry, access_token):
-        data = {
-            'touser': self._to_user,
-            'msgtype': 'text',
-            'agentid': self._agent_id,
-            'text': {'content': message_entry.content},
-            'safe': 0,
-            'enable_id_trans': 0,
-            'enable_duplicate_check': 0,
-            'duplicate_check_interval': 1800
-        }
+        if self._type == 'text':
+            data = {
+                'touser': self._to_user,
+                'msgtype': 'text',
+                'agentid': self._agent_id,
+                'text': {'content': message_entry.content},
+                'safe': 0,
+                'enable_id_trans': 0,
+                'enable_duplicate_check': 0,
+                'duplicate_check_interval': 1800
+            }
+        else:
+            data = json.loads(message_entry.content)
         response_json = self._request('post', _POST_MESSAGE_URL.format(access_token=access_token.access_token),
                                       json=data)
         if response_json.get('errcode') == 0:
@@ -157,17 +171,17 @@ class WeComNotifier:
 
     def _get_msg_limit(self, msg):
         msg_encode = msg.encode()
-        if len(msg_encode) < _TEXT_LIMIT:
+        if len(msg_encode) < self._text_limit:
             return msg, ''
         msg_lines = msg.split('\n')
         msg_limit_len = 0
         for line in msg_lines:
             line_len = len(line.encode())
 
-            if msg_limit_len == 0 and line_len >= _TEXT_LIMIT:
-                return msg_encode[:_TEXT_LIMIT].decode(), msg_encode[_TEXT_LIMIT:].decode()
+            if msg_limit_len == 0 and line_len >= self._text_limit:
+                return msg_encode[:self._text_limit].decode(), msg_encode[self._text_limit:].decode()
 
-            if msg_limit_len + line_len + 1 < _TEXT_LIMIT:
+            if msg_limit_len + line_len + 1 < self._text_limit:
                 msg_limit_len += line_len + 1
             else:
                 return msg_encode[:msg_limit_len].decode(), msg_encode[msg_limit_len:].decode()
