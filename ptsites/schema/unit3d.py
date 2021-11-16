@@ -25,30 +25,30 @@ class Unit3D(SiteBase):
             },
             'details': {
                 'uploaded': {
-                    'regex': '上传.+?([\\d.]+ ?[ZEPTGMK]?iB)'
+                    'regex': ('(上传|Upload).+?([\\d.]+ ?[ZEPTGMK]?iB)', 2)
                 },
                 'downloaded': {
-                    'regex': '下载.+?([\\d.]+ ?[ZEPTGMK]?iB)'
+                    'regex': ('(下载|Download).+?([\\d.]+ ?[ZEPTGMK]?iB)', 2)
                 },
                 'share_ratio': {
-                    'regex': '分享率.+?([\\d.]+)'
+                    'regex': ('(分享率|Ratio).+?([\\d.]+)', 2)
                 },
                 'points': {
-                    'regex': '魔力.+?(\\d[\\d,. ]+)',
+                    'regex': ('(魔力|BON).+?(\\d[\\d,. ]*)', 2),
                     'handle': self.handle_points
                 },
                 'join_date': {
-                    'regex': '注册日期 (.*?\\d{4})',
+                    'regex': ('(注册日期|Registration date) (.*?\\d{4})', 2),
                     'handle': self.handle_join_date
                 },
                 'seeding': {
-                    'regex': '做种.+?(\\d+)'
+                    'regex': ('(做种|Seeding).+?(\\d+)', 2)
                 },
                 'leeching': {
-                    'regex': '吸血.+?(\\d+)'
+                    'regex': ('(吸血|Leeching).+?(\\d+)', 2)
                 },
                 'hr': {
-                    'regex': '警告.+?(\\d+)'
+                    'regex': ('(警告|Warnings).+?(\\d+)', 2)
                 }
             }
         }
@@ -61,4 +61,5 @@ class Unit3D(SiteBase):
         return value.replace(' ', '')
 
     def handle_join_date(self, value):
+        print(value)
         return parse(value).date()
