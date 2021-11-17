@@ -1,5 +1,8 @@
+import re
+from urllib.parse import urljoin
+
 from ..schema.nexusphp import NexusPHP
-from ..schema.site_base import SignState, Work
+from ..schema.site_base import SignState, Work, NetworkState
 from ..utils.net_utils import NetUtils
 
 
@@ -16,12 +19,12 @@ class MainClass(NexusPHP):
         return [
             Work(
                 url='/index.php?action=addbonus',
-                method='get',
+                method='location',
                 succeed_regex='欢迎回来',
                 fail_regex=None,
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
-            )
+            ),
         ]
 
     def build_selector(self):
@@ -43,3 +46,14 @@ class MainClass(NexusPHP):
             }
         })
         return selector
+
+    def sign_in_by_location(self, entry, config, work, last_content=None):
+        response = self._request(entry, 'get', work.url)
+        reload__net_state = self.check_network_state(entry, work.url, response)
+        if reload__net_state != NetworkState.SUCCEED:
+            return None
+        content = NetUtils.decode(response)
+        location_search = re.search('(?<=window\.location=).*?(?=;)', content)
+        location_url = re.sub('"|\\+| ', '', location_search.group(0))
+        work.url = urljoin(MainClass.URL, location_url)
+        return self.sign_in_by_get(entry, config, work, last_content=True)
