@@ -45,11 +45,11 @@ class MainClass(Discuz):
             entry.fail_with_prefix('Login data not found!')
             return
         
-        totp_key = login.get('totp_key')
+        secret_key = login.get('secret_key')
         username,password = login['username'],login['password']
 
-        if totp_key:
-            totp_code = GoogleAuth.calc(totp_key)
+        if secret_key:
+            totp_code = GoogleAuth.calc(secret_key)
             username += '@' + totp_code
 
         login_url = urljoin(entry['url'], re.search(work.login_url_regex, last_content).group())
