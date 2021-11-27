@@ -75,4 +75,4 @@ class MainClass(Unit3D):
         return selector
     
     def get_unit3d_message(self, entry, config, messages_url='/mail'):
-        return super.get_unit3d_message(entry, config, messages_url)
+        return super().get_unit3d_message(entry, config, messages_url)
