@@ -73,9 +73,9 @@ class MainClass(Gazelle):
             return value
 
     def handle_join_date(self, value):
-        year_regex = '(\\d+) years'
-        month_regex = '(\\d+) months'
-        week_regex = '(\\d+) weeks'
+        year_regex = '(\\d+) years?'
+        month_regex = '(\\d+) months?'
+        week_regex = '(\\d+) weeks?'
         year = 0
         month = 0
         week = 0
