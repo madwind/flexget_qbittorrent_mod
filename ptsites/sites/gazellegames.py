@@ -76,7 +76,8 @@ class MainClass(Gazelle):
             'uploaded': f'{details_response_json.get("response").get("stats").get("uploaded") or 0} B'.replace(',', ''),
             'downloaded': f'{details_response_json.get("response").get("stats").get("downloaded") or 0} B'.replace(',',
                                                                                                                    ''),
-            'share_ratio': str(details_response_json.get('response').get('stats').get('ratio') or 0).replace(',', ''),
+            'share_ratio': self.handle_share_ratio(
+                str(details_response_json.get('response').get('stats').get('ratio') or 0).replace(',', '')),
             'points': str(details_response_json.get('response').get('achievements').get('totalPoints') or 0).replace(
                 ',', ''),
             'seeding': str(details_response_json.get('response').get('community').get('seeding') or 0).replace(',', ''),
