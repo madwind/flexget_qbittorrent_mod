@@ -15,6 +15,12 @@ class MainClass(VisitHR):
             'details': {
                 'downloaded': None,
                 'share_ratio': None,
+                'seeding': {
+                    'regex': '活动种子.*?(\\d+)'
+                },
+                'leeching': {
+                    'regex': '活动种子.*?\\d+\\D+(\\d+)'
+                },
                 'hr': {
                     'regex': 'H&R.*?(\\d+)',
                     'handle': self.handle_hr
