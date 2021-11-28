@@ -53,7 +53,9 @@ class MainClass(NexusPHP):
         if reload__net_state != NetworkState.SUCCEED:
             return None
         content = NetUtils.decode(response)
-        location_search = re.search('(?<=window\.location=).*?(?=;)', content)
+        location_search = re.search('(?<=window\\.location=).*?(?=;)', content)
+        if not location_search:
+            return response
         location_url = re.sub('"|\\+| ', '', location_search.group(0))
         work.url = urljoin(MainClass.URL, location_url)
         return self.sign_in_by_get(entry, config, work, last_content=True)
