@@ -1,7 +1,7 @@
-from ..schema.nexusphp import Visit
+from ..schema.nexusphp import Attendance
 
 
-class MainClass(Visit):
+class MainClass(Attendance):
     URL = 'https://hdfans.org/'
     USER_CLASSES = {
         'downloaded': [4398046511104, 10995116277760],
