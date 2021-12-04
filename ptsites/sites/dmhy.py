@@ -116,7 +116,7 @@ class MainClass(NexusPHP):
             entry.fail_with_prefix('Can not found img_url')
             return None
         img_url = img_url_match.group()
-        logger.info('attempts: {} / {}, url: {}', self.times, ocr_config.get('retry'), urljoin(entry['url'], img_url))
+        logger.debug('attempts: {} / {}, url: {}', self.times, ocr_config.get('retry'), urljoin(entry['url'], img_url))
         data = {}
         found = False
         if images := self.get_image(entry, config, img_url, ocr_config.get('char_count')):
@@ -188,10 +188,10 @@ class MainClass(NexusPHP):
         new_image = self.get_new_image(entry, img_url)
         if not DmhyImage.check_analysis(new_image):
             self.save_iamge(new_image, 'z_failed.png')
-            logger.info('can not analyzed!')
+            logger.debug('can not analyzed!')
             return None
         original_text = BaiduOcr.get_jap_ocr(new_image, entry, config)
-        logger.info('original_ocr: {}', original_text)
+        logger.debug('original_ocr: {}', original_text)
         if original_text is None or len(original_text) < char_count:
             return None
         image_list.append(new_image)
@@ -230,7 +230,7 @@ class MainClass(NexusPHP):
                 self.save_iamge(image_last2[2], 'step4_split_2_diff.png')
                 question_image = (image_last2[0], image_last2[1])
             elif image_last:
-                logger.info('compare_images: Two identical are returned')
+                logger.debug('compare_images: Two identical are returned')
                 self.save_iamge(image1, 'identical.png')
                 self.save_iamge(image2, 'identical.png')
                 self.save_iamge(image_last[0], 'identical_a_split_1_diff.png')
@@ -241,7 +241,7 @@ class MainClass(NexusPHP):
                 self.save_iamge(image_last2[2], 'identical_split_2_diff.png')
                 return None
             else:
-                logger.info('compare_images: no Content')
+                logger.debug('compare_images: no Content')
                 return None
             return question_image
 
