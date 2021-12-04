@@ -120,6 +120,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                             'autoTMM': {'type': 'boolean'},
                             'sequentialDownload': {'type': 'string'},
                             'firstLastPiecePrio': {'type': 'string'},
+                            'tag_by_tracker': {'type': 'boolean'},
                             'reject_on': {
                                 'type': 'object',
                                 'properties': {
@@ -334,7 +335,12 @@ class PluginQBittorrentMod(QBittorrentModBase):
                              'autoTMM',
                              'sequentialDownload',
                              'firstLastPiecePrio']:
-                attr = entry.get(attr_str, add_options.get(attr_str))
+                entry_attr = entry.get(attr_str)
+                add_options_attr = add_options.get(attr_str)
+                if attr_str == 'tags' and entry_attr and add_options_attr:
+                    attr = str.join(',', [entry_attr, add_options_attr])
+                else:
+                    attr = entry_attr or add_options_attr
                 if attr is not None:
                     options[attr_str] = attr
 
@@ -353,6 +359,16 @@ class PluginQBittorrentMod(QBittorrentModBase):
                     logger.debug('temp: {}', ', '.join(os.listdir(tmp_path)))
                     entry.fail("Downloaded temp file '%s' doesn't exist!?" % entry['file'])
                     return
+                if add_options.get('tag_by_tracker'):
+                    tags = []
+                    if options.get('tags'):
+                        tags.append(options.get('tags'))
+                    if 'torrent' in entry:
+                        torrent = entry['torrent']
+                        trackers = torrent.trackers
+                        for tracker in trackers:
+                            tags.append(self._get_site_name(tracker))
+                    options['tags'] = str.join(',', tags)
                 self.client.add_torrent_file(entry['file'], options)
             else:
                 self.client.add_torrent_url(entry['url'], options)
