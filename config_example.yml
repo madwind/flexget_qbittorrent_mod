@@ -7,7 +7,7 @@ schedules:
     interval:
       minutes: 1
 
-  - tasks: [ reseed, resume, delete, modify, clean ]
+  - tasks: [ reseed, resume, delete, clean ]
     interval:
       minutes: 2
 
@@ -151,6 +151,10 @@ templates:
     qbittorrent_mod: *qbittorrent_setting
 
   qbittorrent_add_template:
+    modify_trackers:
+      - http2https:
+          from: http://
+          to: https://
     qbittorrent_mod:
       action:
         add:
@@ -161,6 +165,7 @@ templates:
             all: no
           category: Rss
           autoTMM: yes
+          tag_by_tracker: yes
 
   qbittorrent_resume_template:
     qbittorrent_mod:
@@ -534,19 +539,19 @@ tasks:
     seen:
       fields:
         - torrent_info_hash
-    notify:
-      task:
-        always_send: yes
-        message: |+
-          {%- if task.failed -%}
-          {%- for group in task.failed|groupby('task') -%}
-          The following torrent have failed for task {{ group.grouper }}:
-          {%- for entry in group.list %}
-          {{ loop.index }}: {{ entry.title }} Reason: {{entry.reason|d('unknown')}}
-          {%- endfor -%}
-          {%- endfor -%}
-          {%- endif -%}
-        via: *via_setting
+#    notify:
+#      task:
+#        always_send: yes
+#        message: |+
+#          {%- if task.failed -%}
+#          {%- for group in task.failed|groupby('task') -%}
+#          The following torrent have failed for task {{ group.grouper }}:
+#          {%- for entry in group.list %}
+#          {{ loop.index }}: {{ entry.title }} Reason: {{entry.reason|d('unknown')}}
+#          {%- endfor -%}
+#          {%- endfor -%}
+#          {%- endif -%}
+#        via: *via_setting
     qbittorrent_mod:
       action:
         add:
