@@ -120,7 +120,38 @@ class PluginQBittorrentMod(QBittorrentModBase):
                             'autoTMM': {'type': 'boolean'},
                             'sequentialDownload': {'type': 'string'},
                             'firstLastPiecePrio': {'type': 'string'},
-                            'tag_by_tracker': {'type': 'boolean'},
+                            'tracker_options': {
+                                'type': 'object',
+                                'properties': {
+                                    'tag_by_tracker': {'type': 'boolean'},
+                                    'specific_trackers:': {
+                                        'type': 'array',
+                                        'items': {
+                                            'type': 'object',
+                                            'additionalProperties': {
+                                                'type': 'object',
+                                                'properties': {
+                                                    'savepath': {'type': 'string'},
+                                                    'cookie': {'type': 'string'},
+                                                    'category': {'type': 'string'},
+                                                    'tags': {'type': 'string'},
+                                                    'skip_checking': {'type': 'boolean'},
+                                                    'paused': {'type': 'string'},
+                                                    'root_folder': {'type': 'string'},
+                                                    'rename': {'type': 'string'},
+                                                    'upLimit': {'type': 'integer'},
+                                                    'dlLimit': {'type': 'integer'},
+                                                    'autoTMM': {'type': 'boolean'},
+                                                    'sequentialDownload': {'type': 'string'},
+                                                    'firstLastPiecePrio': {'type': 'string'},
+                                                },
+                                                'additionalProperties': False,
+                                            },
+                                            'maxProperties': 1,
+                                        },
+                                    }
+                                }
+                            },
                             'reject_on': {
                                 'type': 'object',
                                 'properties': {
@@ -320,23 +351,45 @@ class PluginQBittorrentMod(QBittorrentModBase):
             raise plugin.PluginError('Unknown action.')
 
     def add_entries(self, task, add_options):
+        add_option_str_list = ['savepath',
+                               'cookie',
+                               'category',
+                               'tags',
+                               'skip_checking',
+                               'paused',
+                               'root_folder',
+                               'rename',
+                               'upLimit',
+                               'dlLimit',
+                               'autoTMM',
+                               'sequentialDownload',
+                               'firstLastPiecePrio']
         for entry in task.accepted:
+            is_magnet = entry['url'].startswith('magnet:')
+            entry_add_option = add_options.copy()
+            if not is_magnet and (tracker_options := add_options.get('tracker_options')):
+                tags = []
+                if 'torrent' in entry:
+                    torrent = entry['torrent']
+                    trackers = torrent.trackers
+                    for tracker in trackers:
+                        site_name = self._get_site_name(tracker)
+                        tags.append(site_name)
+                        if specific_trackers := tracker_options.get('specific_trackers'):
+                            for specific_tracker in specific_trackers:
+                                for tracker_name, tracker_option in specific_tracker.items():
+                                    if tracker_name == site_name:
+                                        NetUtils.dict_merge(entry_add_option, tracker_option)
+                    if tracker_options.get('tag_by_tracker'):
+                        if original_tags := entry_add_option.get('tags'):
+                            tags.append(original_tags)
+                        entry_add_option['tags'] = str.join(',', list(set(tags)))
+
             options = {}
-            for attr_str in ['savepath',
-                             'cookie',
-                             'category',
-                             'tags',
-                             'skip_checking',
-                             'paused',
-                             'root_folder',
-                             'rename',
-                             'upLimit',
-                             'dlLimit',
-                             'autoTMM',
-                             'sequentialDownload',
-                             'firstLastPiecePrio']:
+
+            for attr_str in add_option_str_list:
                 entry_attr = entry.get(attr_str)
-                add_options_attr = add_options.get(attr_str)
+                add_options_attr = entry_add_option.get(attr_str)
                 if attr_str == 'tags' and entry_attr and add_options_attr:
                     attr = str.join(',', [entry_attr, add_options_attr])
                 else:
@@ -347,7 +400,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
             if options.get('autoTMM') and options.get('category') and options.get('savepath'):
                 del options['savepath']
 
-            is_magnet = entry['url'].startswith('magnet:')
+            logger.debug(f"url: {entry['url']}, options: {options}")
 
             if not is_magnet:
                 if 'file' not in entry:
@@ -359,16 +412,6 @@ class PluginQBittorrentMod(QBittorrentModBase):
                     logger.debug('temp: {}', ', '.join(os.listdir(tmp_path)))
                     entry.fail("Downloaded temp file '%s' doesn't exist!?" % entry['file'])
                     return
-                if add_options.get('tag_by_tracker'):
-                    tags = []
-                    if options.get('tags'):
-                        tags.append(options.get('tags'))
-                    if 'torrent' in entry:
-                        torrent = entry['torrent']
-                        trackers = torrent.trackers
-                        for tracker in trackers:
-                            tags.append(self._get_site_name(tracker))
-                    options['tags'] = str.join(',', tags)
                 self.client.add_torrent_file(entry['file'], options)
             else:
                 self.client.add_torrent_url(entry['url'], options)
