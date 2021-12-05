@@ -158,14 +158,18 @@ templates:
     qbittorrent_mod:
       action:
         add:
+          category: Rss
+          autoTMM: yes
+          tracker_options:
+            tag_by_tracker: yes
+            specific_trackers:
+              - keepfrds:
+                  upLimit: 13107200
           reject_on:
             bandwidth_limit: 26214400
             dl_speed: 0.7
             dl_limit: 24117248
             all: no
-          category: Rss
-          autoTMM: yes
-          tag_by_tracker: yes
 
   qbittorrent_resume_template:
     qbittorrent_mod:
