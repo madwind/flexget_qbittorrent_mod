@@ -1,12 +1,14 @@
 from ..schema.nexusphp import AttendanceHR
 
 from ..schema.site_base import Work, NetworkState
+from ..utils.google_auth import GoogleAuth
 
 
 # site_config
 # login:
 #    username: 'xxxxx'
 #    password: 'xxxxxxxx'
+#    secret_key: 'xxxxx' # Optional
 
 class MainClass(AttendanceHR):
     URL = 'https://ourbits.club/'
@@ -31,8 +33,9 @@ class MainClass(AttendanceHR):
         if not login:
             entry.fail_with_prefix('Login data not found!')
             return
+        secret_key = login.get('secret_key')
         data = {
-            '2fa_code': '',
+            '2fa_code': secret_key and GoogleAuth.calc(secret_key) or '',
             'trackerssl': 'yes',
             'username': login['username'],
             'password': login['password'],

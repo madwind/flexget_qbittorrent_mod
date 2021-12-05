@@ -31,8 +31,8 @@ class MainClass(Gazelle):
                 'default': {
                     'link': '/user.php?id={}',
                     'elements': {
-                        'table': '#content > div > div.sidebar > div:nth-child(2) > ul',
-                        'Community': '#content > div > div.sidebar > div:nth-child(5) > ul'
+                        'table': '#content > div > div.sidebar > div:nth-last-child(4) > ul',
+                        'Community': '#content > div > div.sidebar > div:last-child > ul'
 
                     }
                 }
