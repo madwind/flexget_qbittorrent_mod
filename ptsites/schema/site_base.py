@@ -68,6 +68,18 @@ class SiteBase:
         self.requests = None
 
     @classmethod
+    def build_sign_in_schema(cls):
+        return {cls.get_module_name(): {'type': 'string'}}
+
+    @classmethod
+    def build_reseed_schema(cls):
+        return {cls.get_module_name(): {'type': 'string'}}
+
+    @classmethod
+    def get_module_name(cls):
+        return cls.__module__.split('.')[-1]
+
+    @classmethod
     def build_sign_in_entry(cls, entry, config):
         entry['url'] = cls.URL
         site_config = entry['site_config']

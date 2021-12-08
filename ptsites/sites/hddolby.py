@@ -8,3 +8,15 @@ class MainClass(AttendanceHR):
         'share_ratio': [4, 5.5],
         'days': [112, 336]
     }
+
+    @classmethod
+    def build_reseed_schema(cls):
+        return {
+            cls.get_module_name(): {
+                'type': 'object',
+                'properties': {
+                    'cookie': {'type': 'string'}
+                },
+                'additionalProperties': False
+            }
+        }

@@ -7,12 +7,6 @@ from ..schema.site_base import Work, SignState
 from ..utils.net_utils import NetUtils
 
 
-# iyuu_auto_reseed
-# dicmusic:
-#   authkey: ‘{ authkey }’
-#   torrent_pass: '{ torrent_pass }'
-
-
 class MainClass(Gazelle):
     URL = 'https://dicmusic.club/'
     USER_CLASSES = {
@@ -20,6 +14,20 @@ class MainClass(Gazelle):
         'share_ratio': [1.05, 1.05],
         'days': [14, 112]
     }
+
+    @classmethod
+    def build_reseed_schema(cls):
+        return {
+            cls.get_module_name(): {
+                'type': 'object',
+                'properties': {
+                    'authkey': {'type': 'string'},
+                    'torrent_pass': {'type': 'string'}
+                },
+                "required": ["authkey", "torrent_pass"],
+                'additionalProperties': False
+            }
+        }
 
     def build_workflow(self, entry, config):
         return [

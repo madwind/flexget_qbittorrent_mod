@@ -1,8 +1,11 @@
+import importlib
+import pathlib
+import pkgutil
+
 from flexget import plugin
 from flexget.entry import Entry
 from loguru import logger
 
-from . import sites
 from .schema.site_base import SiteBase
 
 
@@ -14,6 +17,29 @@ Entry.fail_with_prefix = fail_with_prefix
 
 
 class Executor:
+    @staticmethod
+    def build_sign_in_schema():
+        module = None
+        sites_schema = {}
+        try:
+            for module in pkgutil.iter_modules(path=[f'{pathlib.PurePath(__file__).parent}/sites']):
+                site_class = Executor.get_site_class(module.name)
+                sites_schema.update(site_class.build_sign_in_schema())
+        except AttributeError as e:
+            raise plugin.PluginError(f"site: {module.name}, error: {str(e.args)}")
+        return sites_schema
+
+    @staticmethod
+    def build_reseed_schema():
+        module = None
+        sites_schema = {}
+        try:
+            for module in pkgutil.iter_modules(path=[f'{pathlib.PurePath(__file__).parent}/sites']):
+                site_class = Executor.get_site_class(module.name)
+                sites_schema.update(site_class.build_reseed_schema())
+        except AttributeError as e:
+            raise plugin.PluginError(f"site: {module.name}, error: {str(e.args)}")
+        return sites_schema
 
     @staticmethod
     def build_sign_in_entry(entry, config):
@@ -71,6 +97,6 @@ class Executor:
 
     @staticmethod
     def get_site_class(class_name):
-        site_module = getattr(sites, class_name.lower())
+        site_module = importlib.import_module(f'flexget.plugins.ptsites.sites.{class_name.lower()}')
         site_class = getattr(site_module, 'MainClass')
         return site_class

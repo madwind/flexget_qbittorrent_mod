@@ -18,6 +18,27 @@ class MainClass(AttendanceHR):
         'days': [175, 364]
     }
 
+    @classmethod
+    def build_sign_in_schema(cls):
+        return {
+            cls.get_module_name(): {
+                'type': 'object',
+                'properties': {
+                    'cookie': {'type': 'string'},
+                    'login': {
+                        'type': 'object',
+                        'properties': {
+                            'username': {'type': 'string'},
+                            'password': {'type': 'string'},
+                            'secret_key': {'type': 'string'}
+                        },
+                        'additionalProperties': False
+                    }
+                },
+                'additionalProperties': False
+            }
+        }
+
     def build_login_workflow(self, entry, config):
         return [
             Work(

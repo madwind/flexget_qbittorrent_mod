@@ -1,3 +1,5 @@
+import re
+
 import chardet
 
 
@@ -39,3 +41,14 @@ class NetUtils:
                 NetUtils.dict_merge(dict1[i], dict2[i])
             else:
                 dict1[i] = dict2[i]
+
+    @staticmethod
+    def get_site_name(url):
+        re_object = re.search('(?<=//).*?(?=/)', url)
+        if re_object:
+            domain = re_object.group().split('.')
+            if len(domain) > 1:
+                site_name = domain[len(domain) - 2]
+                if site_name == 'edu':
+                    site_name = domain[len(domain) - 3]
+                return site_name

@@ -1,7 +1,6 @@
 import copy
 import math
 import os
-import re
 from datetime import datetime
 
 from flexget import plugin
@@ -254,7 +253,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
     @plugin.priority(120)
     def on_task_download(self, task, config):
         config = self.prepare_config(config)
-        add_options = config.get('action').get('add')
+        add_options = config.get('action', {}).get('add')
         if not add_options or not task.accepted:
             return
 
@@ -311,7 +310,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
         for entry in task.accepted:
             if reject_reason:
                 entry.reject(reason=reject_reason, remember=remember_reject)
-                site_name = self._get_site_name(entry.get('url'))
+                site_name = NetUtils.get_site_name(entry.get('url'))
                 logger.info('reject {}, because: {}, site: {}', entry['title'], reject_reason, site_name)
                 continue
             if entry.get('headers'):
@@ -328,7 +327,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
     @plugin.priority(135)
     def on_task_output(self, task, config):
         config = self.prepare_config(config)
-        action_config = config.get('action')
+        action_config = config.get('action', {})
         if len(action_config) != 1:
             raise plugin.PluginError('There must be and only one action')
         # don't add when learning
@@ -373,7 +372,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                     torrent = entry['torrent']
                     trackers = torrent.trackers
                     for tracker in trackers:
-                        site_name = self._get_site_name(tracker)
+                        site_name = NetUtils.get_site_name(tracker)
                         tags.append(site_name)
                         if specific_trackers := tracker_options.get('specific_trackers'):
                             for specific_tracker in specific_trackers:
@@ -487,7 +486,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                     trackers = reseed_entry['qbittorrent_trackers']
                     site_names = []
                     for tracker in trackers:
-                        site_names.append(self._get_site_name(tracker.get('url')))
+                        site_names.append(NetUtils.get_site_name(tracker.get('url')))
 
                     if len(set(check_reseed) & set(site_names)) > 0:
                         check_hashes.append(reseed_entry['torrent_info_hash'])
@@ -640,7 +639,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
             torrent_trackers = entry.get('qbittorrent_trackers')
             for tracker in torrent_trackers:
                 if tag_by_tracker:
-                    site_name = self._get_site_name(tracker.get('url'))
+                    site_name = NetUtils.get_site_name(tracker.get('url'))
                     if site_name and site_name not in tags and site_name not in tags_modified:
                         tags_modified.append(site_name)
                 if replace_trackers:
@@ -721,16 +720,6 @@ class PluginQBittorrentMod(QBittorrentModBase):
             self.client.set_torrent_upload_limit(str.join('|', working_hashes), working_speed)
         if not_working_hashes:
             self.client.set_torrent_upload_limit(str.join('|', not_working_hashes), not_working_speed)
-
-    def _get_site_name(self, tracker_url):
-        re_object = re.search('(?<=//).*?(?=/)', tracker_url)
-        if re_object:
-            domain = re_object.group().split('.')
-            if len(domain) > 1:
-                site_name = domain[len(domain) - 2]
-                if site_name == 'edu':
-                    site_name = domain[len(domain) - 3]
-                return site_name
 
     def on_task_learn(self, task, config):
         """ Make sure all temp files are cleaned up when entries are learned """

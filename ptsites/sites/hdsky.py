@@ -13,14 +13,6 @@ except ImportError:
     Image = None
 
 
-# auto_sign_in
-
-
-# iyuu_auto_reseed
-# hdsky:
-#     cookie: '{ cookie }'
-
-
 class MainClass(NexusPHP):
     URL = 'https://hdsky.me/'
     TORRENT_PAGE_URL = '/details.php?id={torrent_id}&hit=1'
@@ -30,6 +22,18 @@ class MainClass(NexusPHP):
         'share_ratio': [5, 5.5],
         'days': [315, 455]
     }
+
+    @classmethod
+    def build_reseed_schema(cls):
+        return {
+            cls.get_module_name(): {
+                'type': 'object',
+                'properties': {
+                    'cookie': {'type': 'string'}
+                },
+                'additionalProperties': False
+            }
+        }
 
     def build_workflow(self, entry, config):
         return [

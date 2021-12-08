@@ -3,34 +3,44 @@ from datetime import datetime
 from loguru import logger
 
 from ..client.qbittorrent_client import QBittorrentClient
-
-'''
-sign_in:
-  qbittorrent:
-    - <name>: <name>
-      host: <host>
-      port: <port>
-      use_ssl: <use_ssl>
-      username: <username>
-      password: <password>
-    - <name>: <name>
-      host: <host>
-      port: <port>
-      use_ssl: <use_ssl>
-      username: <username>
-      password: <password>
-'''
+from ..schema.site_base import SiteBase
 
 
-class MainClass:
+class MainClass(SiteBase):
 
     def __init__(self):
+        super().__init__()
         self.client = None
 
-    @staticmethod
-    def build_sign_in_entry(entry, config):
+    @classmethod
+    def build_sign_in_schema(cls):
+        return {
+            cls.get_module_name(): {
+                'type': 'array',
+                'items': {
+                    'type': 'object',
+                    'properties': {
+                        'name': {'type': 'string'},
+                        'host': {'type': 'string'},
+                        'port': {'type': 'integer'},
+                        'use_ssl': {'type': 'boolean'},
+                        'username': {'type': 'string'},
+                        'password': {'type': 'string'}
+                    },
+                    'additionalProperties': False
+                }
+            }
+        }
+
+    @classmethod
+    def build_reseed_schema(cls):
+        return {}
+
+    @classmethod
+    def build_sign_in_entry(cls, entry, config):
         entry['site_name'] = entry['site_config'].get('name')
         entry['title'] = f"{entry['site_name']} {datetime.now().date()}"
+        entry['do_not_count'] = True
 
     def sign_in(self, entry, config):
         site_config = self.prepare_config(entry['site_config'])
@@ -46,8 +56,6 @@ class MainClass:
         pass
 
     def get_details(self, entry, config):
-        entry['do_not_count'] = True
-
         server_state = entry['main_data_snapshot']['server_state']
         torrents = entry['main_data_snapshot']['entry_dict']
         details = {

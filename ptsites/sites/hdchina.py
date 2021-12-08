@@ -3,14 +3,6 @@ from ..schema.site_base import Work, SignState, SiteBase
 from ..utils.net_utils import NetUtils
 
 
-# auto_sign_in
-
-
-# iyuu_auto_reseed
-# hdchina:
-#     cookie: '{ cookie }'
-
-
 class MainClass(NexusPHP):
     URL = 'https://hdchina.org/'
     TORRENT_PAGE_URL = '/details.php?id={torrent_id}&hit=1'
@@ -23,6 +15,18 @@ class MainClass(NexusPHP):
         'share_ratio': [8],
         'days': [350]
     }
+
+    @classmethod
+    def build_reseed_schema(cls):
+        return {
+            cls.get_module_name(): {
+                'type': 'object',
+                'properties': {
+                    'cookie': {'type': 'string'}
+                },
+                'additionalProperties': False
+            }
+        }
 
     def build_workflow(self, entry, config):
         return [

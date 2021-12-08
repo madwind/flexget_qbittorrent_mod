@@ -25,17 +25,6 @@ try:
 except ImportError:
     Image = None
 
-# auto_sign_in
-
-
-# site_config
-#    username: 'xxxxx'
-#    cookie: 'xxxxxxxx'
-#    comment: 'xxxxxx'
-#    ocr_config:
-#      retry: 10
-#      char_count: 2
-#      score: 10
 _RETRY = 20
 _CHAR_COUNT = 4
 _SCORE = 40
@@ -61,6 +50,29 @@ class MainClass(NexusPHP):
     def __init__(self):
         super(NexusPHP, self).__init__()
         self.times = 0
+
+    @classmethod
+    def build_sign_in_schema(cls):
+        return {
+            cls.get_module_name(): {
+                'type': 'object',
+                'properties': {
+                    'username': {'type': 'string'},
+                    'cookie': {'type': 'string'},
+                    'comment': {'type': 'string'},
+                    'ocr_config': {
+                        'type': 'object',
+                        'properties': {
+                            'retry': {'type': 'integer'},
+                            'char_count': {'type': 'integer'},
+                            'score': {'type': 'integer'}
+                        },
+                        'additionalProperties': False
+                    }
+                },
+                'additionalProperties': False
+            }
+        }
 
     def build_workflow(self, entry, config):
         site_config = entry['site_config']

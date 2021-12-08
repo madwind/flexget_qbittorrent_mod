@@ -1,6 +1,7 @@
 from ..schema.site_base import SignState, Work
 from ..schema.unit3d import Unit3D
 
+
 # site_config
 #    oneurl: 'xxxxxxxx'
 #    cookie: 'xxxxxxxx'
@@ -15,6 +16,19 @@ from ..schema.unit3d import Unit3D
 
 class MainClass(Unit3D):
     URL = 'https://beyond-hd.me/'
+
+    @classmethod
+    def build_sign_in_schema(cls):
+        return {
+            cls.get_module_name(): {
+                'type': 'object',
+                'properties': {
+                    'oneurl': {'type': 'string'},
+                    'cookie': {'type': 'string'}
+                },
+                'additionalProperties': False
+            }
+        }
 
     def build_workflow(self, entry, config):
         site_config = entry['site_config']
@@ -73,6 +87,6 @@ class MainClass(Unit3D):
             }
         }
         return selector
-    
+
     def get_unit3d_message(self, entry, config, messages_url='/mail'):
         return super().get_unit3d_message(entry, config, messages_url)

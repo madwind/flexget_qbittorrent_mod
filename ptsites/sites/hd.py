@@ -19,6 +19,18 @@ class MainClass(Visit):
     }
 
     @classmethod
+    def build_reseed_schema(cls):
+        return {
+            cls.get_module_name(): {
+                'type': 'object',
+                'properties': {
+                    'cookie': {'type': 'string'}
+                },
+                'additionalProperties': False
+            }
+        }
+
+    @classmethod
     def build_reseed(cls, entry, config, site, passkey, torrent_id):
         SiteBase.build_reseed_from_page(entry, config, passkey, torrent_id, cls.URL, cls.TORRENT_PAGE_URL,
                                         cls.DOWNLOAD_URL_REGEX)

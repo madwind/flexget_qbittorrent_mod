@@ -11,6 +11,18 @@ class MainClass(AttendanceHR):
         'days': [70]
     }
 
+    @classmethod
+    def build_reseed_schema(cls):
+        return {
+            cls.get_module_name(): {
+                'type': 'object',
+                'properties': {
+                    'cookie': {'type': 'string'}
+                },
+                'additionalProperties': False
+            }
+        }
+
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
         NetUtils.dict_merge(selector, {

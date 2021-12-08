@@ -12,7 +12,7 @@ from requests import RequestException
 from .ptsites.executor import Executor
 
 
-class PluginIYUUAutoReseed():
+class PluginIYUUAutoReseed:
     schema = {
         'type': 'object',
         'properties': {
@@ -22,8 +22,7 @@ class PluginIYUUAutoReseed():
             'limit': {'type': 'integer'},
             'passkeys': {
                 'type': 'object',
-                'properties': {
-                }
+                'properties': Executor.build_reseed_schema()
             }
         },
         'additionalProperties': False

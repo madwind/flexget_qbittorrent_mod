@@ -15,6 +15,22 @@ class MainClass(Gazelle):
         'points': [1200, 6000],
     }
 
+    @classmethod
+    def build_sign_in_schema(cls):
+        return {
+            cls.get_module_name(): {
+                cls.get_module_name(): {
+                    'type': 'object',
+                    'properties': {
+                        'cookie': {'type': 'string'},
+                        'key': {'type': 'string'},
+                        'name': {'type': 'string'}
+                    },
+                    'additionalProperties': False
+                }
+            }
+        }
+
     def build_workflow(self, entry, config):
         return [
             Work(

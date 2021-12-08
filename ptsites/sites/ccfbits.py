@@ -12,7 +12,7 @@ class MainClass(VisitHR):
         'days': [224]
     }
 
-    def get_nexusphp_message(self, entry, config):
+    def get_nexusphp_message(self, entry, config, **kwargs):
         super(MainClass, self).get_nexusphp_message(entry, config,
                                                     unread_elements_selector='tr:nth-child(4) > td > img[alt*="未读"]')
 

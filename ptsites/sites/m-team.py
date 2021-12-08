@@ -15,6 +15,26 @@ class MainClass(NexusPHP):
         'days': [168, 224]
     }
 
+    @classmethod
+    def build_sign_in_schema(cls):
+        return {
+            cls.get_module_name(): {
+                'type': 'object',
+                'properties': {
+                    'login': {
+                        'type': 'object',
+                        'properties': {
+                            'username': {'type': 'string'},
+                            'password': {'type': 'string'},
+                            'secret_key': {'type': 'string'}
+                        },
+                        'additionalProperties': False
+                    }
+                },
+                'additionalProperties': False
+            }
+        }
+
     def build_workflow(self, entry, config):
         return [
             Work(

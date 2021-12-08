@@ -28,8 +28,7 @@ class PluginAutoSignIn:
             },
             'sites': {
                 'type': 'object',
-                'properties': {
-                }
+                'properties': Executor.build_sign_in_schema()
             }
         },
         'additionalProperties': False

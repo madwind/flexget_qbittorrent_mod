@@ -5,13 +5,6 @@ from ..schema.site_base import SiteBase, Work, SignState
 from ..utils.net_utils import NetUtils
 
 
-# iyuu_auto_reseed
-# hdcity:
-#   headers:
-#     cookie: '{ cookie }'
-#     user-agent: '{? headers.user_agent ?}'
-
-
 class MainClass(NexusPHP):
     URL = 'https://hdcity.work/'
     TORRENT_PAGE_URL = urljoin(URL, '/t-{torrent_id}')
@@ -22,6 +15,18 @@ class MainClass(NexusPHP):
         'share_ratio': [2.5, 4],
         'days': [168, 700]
     }
+
+    @classmethod
+    def build_reseed_schema(cls):
+        return {
+            cls.get_module_name(): {
+                'type': 'object',
+                'properties': {
+                    'cookie': {'type': 'string'}
+                },
+                'additionalProperties': False
+            }
+        }
 
     def build_workflow(self, entry, config):
         return [
