@@ -37,7 +37,7 @@ class NetworkState(Enum):
 
 class NetworkErrorReason(Enum):
     DDoS_protection_by_Cloudflare = 'DDoS protection by .+?Cloudflare'
-    Server_load_too_high = '<h3 align=center>服务器负载过高，正在重试，请稍后\\.\\.\\.</h3>'
+    Server_load_too_high = '<h3 align=center>(服务器负载过|伺服器負載過)高，正在重(试|試)，(请|請)稍(后|後)\\.\\.\\.</h3>'
     Connection_timed_out = '<h2 class="text-gray-600 leading-1\\.3 text-3xl font-light">Connection timed out</h2>'
     The_web_server_reported_a_bad_gateway_error = '<p>The web server reported a bad gateway error\\.</p>'
     Web_server_is_down = '站点关闭维护中，请稍后再访问...谢谢|站點關閉維護中，請稍後再訪問...謝謝|Web server is down'
@@ -329,7 +329,7 @@ class SiteBase:
 
         if check_state := work.check_state:
             if check_state[1] != SignState.NO_SIGN_IN:
-                logger.warning('no sign in, content: {}'.format(content))
+                logger.warning(f'no sign in, regex: {succeed_regex}, content: {content}')
 
         return SignState.NO_SIGN_IN
 
