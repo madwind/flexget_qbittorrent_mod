@@ -34,7 +34,7 @@ class MainClass(Gazelle):
             Work(
                 url='/',
                 method='get',
-                succeed_regex='<a href="user.php\\?id=\\d+" class="username">.*?</a>',
+                succeed_regex='<span class="username">.*?</span>',
                 fail_regex=None,
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
