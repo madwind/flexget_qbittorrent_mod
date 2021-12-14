@@ -1,5 +1,3 @@
-import logging
-
 from ..schema.nexusphp import NexusPHP
 from ..schema.site_base import Work, SignState
 from ..utils.net_utils import NetUtils
