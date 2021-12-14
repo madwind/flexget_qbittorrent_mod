@@ -1,9 +1,6 @@
 from urllib.parse import urljoin
 
 from ..schema.nexusphp import Visit
-# iyuu_auto_reseed
-# hd:
-#     cookie: '{ cookie }'
 from ..schema.site_base import SiteBase
 
 
