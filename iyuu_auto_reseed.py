@@ -148,7 +148,6 @@ class PluginIYUUAutoReseed:
         sites_dict = {}
         for site in sites_json:
             site['download_page'] = site['download_page'].replace('{}', '{torrent_id}')
-            site['download_page'] = site['download_page'].replace('{rsskey}', '{passkey}')
             if site['base_url'] == 'pt.upxin.net':
                 site['base_url'] = 'pt.hdupt.com'
             sites_dict[str(site['id'])] = site

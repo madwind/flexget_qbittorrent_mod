@@ -1,3 +1,5 @@
+from urllib.parse import urljoin
+
 from ..schema.site_base import SignState, Work
 from ..schema.unit3d import Unit3D
 
@@ -9,6 +11,24 @@ class MainClass(Unit3D):
         'uploaded': [10995116277760],
         'days': [365]
     }
+
+    @classmethod
+    def build_reseed_schema(cls):
+        return {
+            cls.get_module_name(): {
+                'type': 'object',
+                'properties': {
+                    'rsskey': {'type': 'string'}
+                },
+                'additionalProperties': False
+            }
+        }
+
+    @classmethod
+    def build_reseed(cls, entry, config, site, passkey, torrent_id):
+        download_page = site['download_page'].format(torrent_id=torrent_id,
+                                                     rsskey=passkey['rsskey'])
+        entry['url'] = urljoin(MainClass.URL, download_page)
 
     def build_workflow(self, entry, config):
         return [

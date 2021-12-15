@@ -511,6 +511,8 @@ tasks:
         hdfans: 'xxxxxxxx'
         hdhome:
           cookie: '{? sites.hdhome ?}'
+        hdpost:
+          rsskey: 'xxxxxxxx'
         hdsky:
           cookie: '{? sites.hdsky ?}'
         hdtime: 'xxxxxxxx'
