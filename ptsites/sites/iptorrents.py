@@ -1,4 +1,3 @@
-import re
 from dateutil.parser import parse
 
 from ..schema.site_base import SiteBase, Work, SignState
