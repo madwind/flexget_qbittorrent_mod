@@ -561,6 +561,7 @@ tasks:
     qbittorrent_mod:
       action:
         add:
+          category: ''
           tags: reseed
           skip_checking: yes
           reject_on:
