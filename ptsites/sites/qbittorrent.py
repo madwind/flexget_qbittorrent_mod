@@ -25,7 +25,8 @@ class MainClass(SiteBase):
                         'port': {'type': 'integer'},
                         'use_ssl': {'type': 'boolean'},
                         'username': {'type': 'string'},
-                        'password': {'type': 'string'}
+                        'password': {'type': 'string'},
+                        'verify_cert': {'type': 'boolean'}
                     },
                     'additionalProperties': False
                 }

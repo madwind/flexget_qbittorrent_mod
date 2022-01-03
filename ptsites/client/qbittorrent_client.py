@@ -106,7 +106,7 @@ class QBittorrentClient:
     def check_api_version(self, msg_on_fail):
         try:
             url = self.url + "/api/v2/app/webapiVersion"
-            response = self.session.request('get', url)
+            response = self.session.request('get', url, verify=self._verify)
             if response.status_code != 404:
                 return response
             msg = 'Failure. URL: {}'.format(url) if not msg_on_fail else msg_on_fail
