@@ -184,7 +184,8 @@ class WeComNotifier:
             if msg_limit_len + line_len + 1 < self._text_limit:
                 msg_limit_len += line_len + 1
             else:
-                return msg_encode[:msg_limit_len].decode(), msg_encode[msg_limit_len:].decode()
+                return msg_encode[:msg_limit_len].decode('utf-8', 'ignore'), msg_encode[msg_limit_len:].decode('utf-8',
+                                                                                                               'ignore')
 
     def _get_access_token(self, session, corp_id, corp_secret):
         logger.debug('loading cached access token')
