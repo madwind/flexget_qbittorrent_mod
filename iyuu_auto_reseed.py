@@ -1,5 +1,6 @@
 import hashlib
 import time
+from enum import Enum
 from json import JSONDecodeError
 
 from flexget import plugin
@@ -10,6 +11,11 @@ from loguru import logger
 from requests import RequestException
 
 from .ptsites.executor import Executor
+
+
+class ClientType(Enum):
+    qBittorrent = 'qBittorrent'
+    Transmission = 'Transmission'
 
 
 class PluginIYUUAutoReseed:
@@ -42,7 +48,7 @@ class PluginIYUUAutoReseed:
         limit = config.get('limit')
         show_detail = config.get('show_detail')
 
-        torrent_dict, torrents_hashes = self.get_torrents_data(task, config)
+        torrent_dict, torrents_hashes, client_type = self.get_torrents_data(task, config)
         if not torrents_hashes:
             return torrents_hashes
         try:
@@ -107,10 +113,14 @@ class PluginIYUUAutoReseed:
                         title=client_torrent['title'],
                         torrent_info_hash=torrent['info_hash']
                     )
-                    entry['autoTMM'] = client_torrent['qbittorrent_auto_tmm']
-                    entry['category'] = client_torrent['qbittorrent_category']
-                    entry['savepath'] = client_torrent['qbittorrent_save_path']
-                    entry['paused'] = 'true'
+                    if client_type == ClientType.qBittorrent:
+                        entry['autoTMM'] = client_torrent['qbittorrent_auto_tmm']
+                        entry['category'] = client_torrent['qbittorrent_category']
+                        entry['savepath'] = client_torrent['qbittorrent_save_path']
+                        entry['paused'] = 'true'
+                    elif client_type == ClientType.Transmission:
+                        entry['path'] = client_torrent['transmission_downloadDir']
+                        entry['add_paused'] = 'Yes'
                     entry['class_name'] = site_name
                     Executor.build_reseed(entry, config, site, passkey, torrent_id)
                     if show_detail:
@@ -124,12 +134,20 @@ class PluginIYUUAutoReseed:
         torrent_dict = {}
         torrents_hashes = {}
         hashes = []
+        client_type = ''
+
+        if task.all_entries:
+            if task.all_entries[0].get('qbittorrent_state'):
+                client_type = ClientType.qBittorrent
+            elif task.all_entries[0].get('transmission_status'):
+                client_type = ClientType.Transmission
 
         for entry in task.all_entries:
             entry.reject('torrent form client')
-            if 'up' in entry['qbittorrent_state'].lower() and 'pause' not in entry['qbittorrent_state'].lower():
-                torrent_dict[entry['torrent_info_hash']] = entry
-                hashes.append(entry['torrent_info_hash'])
+            if client_type == ClientType.qBittorrent:
+                self.get_qbittorrent_seeding(entry, torrent_dict, hashes)
+            elif client_type == ClientType.Transmission:
+                self.get_transmission_seeding(entry, torrent_dict, hashes)
 
         list.sort(hashes)
         hashes_json = json.dumps(hashes, separators=(',', ':'))
@@ -142,7 +160,7 @@ class PluginIYUUAutoReseed:
         torrents_hashes['timestamp'] = int(time.time())
         torrents_hashes['version'] = config['version']
 
-        return torrent_dict, torrents_hashes
+        return torrent_dict, torrents_hashes, client_type
 
     def modify_sites(self, sites_json):
         sites_dict = {}
@@ -159,6 +177,16 @@ class PluginIYUUAutoReseed:
         if site_name == 'edu':
             site_name = domain[-3]
         return site_name
+
+    def get_qbittorrent_seeding(self, entry, torrent_dict, hashes):
+        if 'up' in entry['qbittorrent_state'].lower() and 'pause' not in entry['qbittorrent_state'].lower():
+            torrent_dict[entry['torrent_info_hash']] = entry
+            hashes.append(entry['torrent_info_hash'])
+
+    def get_transmission_seeding(self, entry, torrent_dict, hashes):
+        if 'seed' in entry['transmission_status'].lower():
+            torrent_dict[entry['torrent_info_hash']] = entry
+            hashes.append(entry['torrent_info_hash'])
 
 
 @event('plugin.register')
