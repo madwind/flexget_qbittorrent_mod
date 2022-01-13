@@ -1,27 +1,140 @@
+import copy
 import hashlib
 import time
-from enum import Enum
 from json import JSONDecodeError
 
 from flexget import plugin
 from flexget.entry import Entry
 from flexget.event import event
+from flexget.plugins.clients.deluge import OutputDeluge
+from flexget.plugins.clients.transmission import PluginTransmission
 from flexget.utils import json
 from loguru import logger
 from requests import RequestException
 
 from .ptsites.executor import Executor
+from .ptsites.utils.net_utils import NetUtils
 
 
-class ClientType(Enum):
-    qBittorrent = 'qBittorrent'
-    Transmission = 'Transmission'
+def update_header_cookie(entry, headers, task):
+    if entry.get('headers'):
+        task.requests.headers.update(entry['headers'])
+    else:
+        task.requests.headers.clear()
+        task.requests.headers = headers
+    if entry.get('cookie'):
+        task.requests.cookies.update(NetUtils.cookie_str_to_dict(entry['cookie']))
+    else:
+        task.requests.cookies.clear()
+
+
+def get_qbittorrent_mod_seeding(client_torrent):
+    if 'up' in client_torrent['qbittorrent_state'].lower() and 'pause' not in client_torrent[
+        'qbittorrent_state'].lower():
+        client_torrent['reseed'] = {
+            'path': client_torrent['qbittorrent_save_path'],
+            'autoTMM': client_torrent['qbittorrent_auto_tmm'],
+            'category': client_torrent['qbittorrent_category']
+        }
+        return True
+
+
+def to_qbittorrent_mod(entry, client_torrent):
+    entry['savepath'] = client_torrent['reseed'].get('path')
+    entry['autoTMM'] = client_torrent['reseed'].get('qbittorrent_auto_tmm')
+    entry['category'] = client_torrent['reseed'].get('qbittorrent_category')
+    entry['paused'] = 'true'
+
+
+def get_transmission_seeding(client_torrent):
+    if 'seed' in client_torrent['transmission_status'].lower():
+        client_torrent['reseed'] = {
+            'path': client_torrent['transmission_downloadDir']
+        }
+        return client_torrent
+
+
+def to_transmission(entry, client_torrent):
+    entry['path'] = client_torrent['reseed'].get('path')
+    entry['add_paused'] = 'Yes'
+
+
+def transmission_on_task_download(self, task, config):
+    config = self.prepare_config(config)
+    if not config['enabled']:
+        return
+    if 'download' not in task.config:
+        download = plugin.get('download', self)
+        headers = copy.deepcopy(task.requests.headers)
+        for entry in task.accepted:
+            if entry.get('transmission_id'):
+                continue
+            if config['action'] != 'add' and entry.get('torrent_info_hash'):
+                continue
+            update_header_cookie(entry, headers, task)
+            download.get_temp_file(task, entry, handle_magnets=True, fail_html=True)
+
+
+PluginTransmission.on_task_download = transmission_on_task_download
+
+
+def get_deluge_seeding(client_torrent):
+    if 'seeding' in client_torrent['deluge_state'].lower():
+        client_torrent['reseed'] = {
+            'path': client_torrent['deluge_save_path'],
+            'move_completed_path': client_torrent['deluge_move_completed_path'],
+            'label': client_torrent['deluge_label']
+        }
+        return client_torrent
+
+
+def to_deluge(entry, client_torrent):
+    entry['path'] = client_torrent['reseed'].get('path')
+    entry['move_completed_path'] = client_torrent['reseed'].get('move_completed_path')
+    entry['label'] = client_torrent['reseed'].get('label')
+    entry['add_paused'] = 'Yes'
+
+
+def deluge_on_task_download(self, task, config):
+    config = self.prepare_config(config)
+    if not config['enabled']:
+        return
+    if 'download' not in task.config:
+        download = plugin.get('download', self)
+        headers = copy.deepcopy(task.requests.headers)
+        for entry in task.accepted:
+            if entry.get('deluge_id'):
+                continue
+            if config['action'] != 'add' and entry.get('torrent_info_hash'):
+                continue
+            update_header_cookie(entry, headers, task)
+            download.get_temp_file(task, entry, handle_magnets=True)
+
+
+OutputDeluge.on_task_download = deluge_on_task_download
+
+client_map = {
+    'from_qbittorrent_mod': get_qbittorrent_mod_seeding,
+    'qbittorrent_mod': to_qbittorrent_mod,
+    'from_transmission': get_transmission_seeding,
+    'transmission': to_transmission,
+    'from_deluge': get_deluge_seeding,
+    'deluge': to_deluge,
+}
 
 
 class PluginIYUUAutoReseed:
     schema = {
         'type': 'object',
         'properties': {
+            'from': {
+                'anyOf': [
+                    {'$ref': '/schema/plugins?name=from_qbittorrent_mod'},
+                    {'$ref': '/schema/plugins?name=from_transmission'},
+                    {'$ref': '/schema/plugins?name=from_deluge'},
+                ]
+            },
+            'to': {'type': 'string', 'enum': list(filter(lambda x: not x.startswith('from'), client_map.keys()))},
             'iyuu': {'type': 'string'},
             'user-agent': {'type': 'string'},
             'show_detail': {'type': 'boolean'},
@@ -47,10 +160,26 @@ class PluginIYUUAutoReseed:
         passkeys = config.get('passkeys')
         limit = config.get('limit')
         show_detail = config.get('show_detail')
+        to = config.get('to')
 
-        torrent_dict, torrents_hashes, client_type = self.get_torrents_data(task, config)
-        if not torrents_hashes:
-            return torrents_hashes
+        result = []
+        from_client_method = None
+        to_client_method = None
+
+        for from_name, client_config in config['from'].items():
+            from_client = plugin.get_plugin_by_name(from_name)
+            method = from_client.phase_handlers['input']
+            if not to:
+                to = from_name[5:]
+            result = method(task, client_config)
+            from_client_method = client_map[from_name]
+            to_client_method = client_map[to]
+
+        torrent_dict, torrents_hashes = self.get_torrents_data(result, config, from_client_method)
+
+        if not torrent_dict:
+            return []
+
         try:
             data = {
                 'sign': config['iyuu'],
@@ -113,14 +242,7 @@ class PluginIYUUAutoReseed:
                         title=client_torrent['title'],
                         torrent_info_hash=torrent['info_hash']
                     )
-                    if client_type == ClientType.qBittorrent:
-                        entry['autoTMM'] = client_torrent['qbittorrent_auto_tmm']
-                        entry['category'] = client_torrent['qbittorrent_category']
-                        entry['savepath'] = client_torrent['qbittorrent_save_path']
-                        entry['paused'] = 'true'
-                    elif client_type == ClientType.Transmission:
-                        entry['path'] = client_torrent['transmission_downloadDir']
-                        entry['add_paused'] = 'Yes'
+                    to_client_method(entry, client_torrent)
                     entry['class_name'] = site_name
                     Executor.build_reseed(entry, config, site, passkey, torrent_id)
                     if show_detail:
@@ -130,24 +252,15 @@ class PluginIYUUAutoReseed:
                         entries.append(entry)
         return entries
 
-    def get_torrents_data(self, task, config):
+    def get_torrents_data(self, result, config, from_client_method):
         torrent_dict = {}
         torrents_hashes = {}
         hashes = []
-        client_type = ''
 
-        if task.all_entries:
-            if task.all_entries[0].get('qbittorrent_state'):
-                client_type = ClientType.qBittorrent
-            elif task.all_entries[0].get('transmission_status'):
-                client_type = ClientType.Transmission
-
-        for entry in task.all_entries:
-            entry.reject('torrent form client')
-            if client_type == ClientType.qBittorrent:
-                self.get_qbittorrent_seeding(entry, torrent_dict, hashes)
-            elif client_type == ClientType.Transmission:
-                self.get_transmission_seeding(entry, torrent_dict, hashes)
+        for client_torrent in result:
+            if from_client_method(client_torrent):
+                torrent_dict[client_torrent['torrent_info_hash']] = client_torrent
+                hashes.append(client_torrent['torrent_info_hash'])
 
         list.sort(hashes)
         hashes_json = json.dumps(hashes, separators=(',', ':'))
@@ -160,7 +273,7 @@ class PluginIYUUAutoReseed:
         torrents_hashes['timestamp'] = int(time.time())
         torrents_hashes['version'] = config['version']
 
-        return torrent_dict, torrents_hashes, client_type
+        return torrent_dict, torrents_hashes
 
     def modify_sites(self, sites_json):
         sites_dict = {}
@@ -177,16 +290,6 @@ class PluginIYUUAutoReseed:
         if site_name == 'edu':
             site_name = domain[-3]
         return site_name
-
-    def get_qbittorrent_seeding(self, entry, torrent_dict, hashes):
-        if 'up' in entry['qbittorrent_state'].lower() and 'pause' not in entry['qbittorrent_state'].lower():
-            torrent_dict[entry['torrent_info_hash']] = entry
-            hashes.append(entry['torrent_info_hash'])
-
-    def get_transmission_seeding(self, entry, torrent_dict, hashes):
-        if 'seed' in entry['transmission_status'].lower():
-            torrent_dict[entry['torrent_info_hash']] = entry
-            hashes.append(entry['torrent_info_hash'])
 
 
 @event('plugin.register')

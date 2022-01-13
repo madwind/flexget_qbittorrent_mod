@@ -381,13 +381,9 @@ tasks:
         promotion:
           element_selector: 'div[style="padding-bottom: 5px"] > img'
           attribute: alt
-        progress:
-          element_selector: '.progress_completed'
-          attribute: class
     no_entries_ok: yes
     if:
       - promotion in ['2X Free', 'Free']: accept
-      - "progress and 'progress_completed' not in progress": reject
     content_size:
       strict: true
       max: 307200
@@ -467,10 +463,9 @@ tasks:
 
   reseed:
     priority: 1
-    plugin_priority:
-      from_qbittorrent_mod: 250
-      iyuu_auto_reseed: 240
     iyuu_auto_reseed:
+      from:
+        from_qbittorrent_mod: *qbittorrent_setting
       iyuu: xxxxxxxx
       user-agent: '{? headers.user_agent ?}'
       show_detail: no
@@ -545,19 +540,19 @@ tasks:
     seen:
       fields:
         - torrent_info_hash
-#    notify:
-#      task:
-#        always_send: yes
-#        message: |+
-#          {%- if task.failed -%}
-#          {%- for group in task.failed|groupby('task') -%}
-#          The following torrent have failed for task {{ group.grouper }}:
-#          {%- for entry in group.list %}
-#          {{ loop.index }}: {{ entry.title }} Reason: {{entry.reason|d('unknown')}}
-#          {%- endfor -%}
-#          {%- endfor -%}
-#          {%- endif -%}
-#        via: *via_setting
+    #    notify:
+    #      task:
+    #        always_send: yes
+    #        message: |+
+    #          {%- if task.failed -%}
+    #          {%- for group in task.failed|groupby('task') -%}
+    #          The following torrent have failed for task {{ group.grouper }}:
+    #          {%- for entry in group.list %}
+    #          {{ loop.index }}: {{ entry.title }} Reason: {{entry.reason|d('unknown')}}
+    #          {%- endfor -%}
+    #          {%- endfor -%}
+    #          {%- endif -%}
+    #        via: *via_setting
     qbittorrent_mod:
       action:
         add:
@@ -571,7 +566,6 @@ tasks:
     template:
       - qbittorrent_base_template
       - qbittorrent_add_template
-      - from_qbittorrent_template
 
   resume:
     priority: 2
