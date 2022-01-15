@@ -83,7 +83,6 @@ def get_deluge_seeding(client_torrent):
         client_torrent['reseed'] = {
             'path': client_torrent['deluge_save_path'],
             'move_completed_path': client_torrent['deluge_move_completed_path'],
-            'label': client_torrent['deluge_label']
         }
         return client_torrent
 
@@ -91,7 +90,6 @@ def get_deluge_seeding(client_torrent):
 def to_deluge(entry, client_torrent):
     entry['path'] = client_torrent['reseed'].get('path')
     entry['move_completed_path'] = client_torrent['reseed'].get('move_completed_path')
-    entry['label'] = client_torrent['reseed'].get('label')
     entry['add_paused'] = 'Yes'
 
 
