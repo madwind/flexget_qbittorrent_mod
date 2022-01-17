@@ -41,8 +41,8 @@ def get_qbittorrent_mod_seeding(client_torrent):
 
 def to_qbittorrent_mod(entry, client_torrent):
     entry['savepath'] = client_torrent['reseed'].get('path')
-    entry['autoTMM'] = client_torrent['reseed'].get('qbittorrent_auto_tmm')
-    entry['category'] = client_torrent['reseed'].get('qbittorrent_category')
+    entry['autoTMM'] = client_torrent['reseed'].get('autoTMM')
+    entry['category'] = client_torrent['reseed'].get('category')
     entry['paused'] = 'true'
 
 
