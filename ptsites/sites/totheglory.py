@@ -17,6 +17,10 @@ class MainClass(NexusPHP):
         'signed_token': '(?<=signed_token: ").*(?=")'
     }
 
+    def sign_in(self, entry, config):
+        entry.fail_with_prefix("公告禁止使用脚本，请移除")
+        return
+
     def build_workflow(self, entry, config):
         return [
             Work(
