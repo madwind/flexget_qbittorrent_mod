@@ -134,7 +134,6 @@ variables:
     springsunday: 'xxxxxxxx'
     sjtu: 'xxxxxxxx'
     torrentleech: 'xxxxxxxx'
-    totheglory: 'xxxxxxxx'
     tjupt: 'xxxxxxxx'
     ultrahd: 'xxxxxxxx'
 
@@ -262,44 +261,6 @@ tasks:
     template:
       - qbittorrent_base_template
       - qbittorrent_add_template
-
-  totheglory:
-    html_rss:
-      url: https://totheglory.im/browse.php?c=M&sort=8&type=desc
-      user-agent: '{? headers.user_agent ?}'
-      cookie: '{? sites.totheglory ?}'
-      params: './xxxxxxxx'
-      root_element_selector: '#torrent_table > tbody > tr:not(:first-child)'
-      fields:
-        title:
-          element_selector: 'div.name_left > a > b'
-          attribute: textContent
-        url:
-          element_selector: '.dl_a'
-          attribute: href
-        hr:
-          element_selector: 'img[title="Hit and Run"]'
-          attribute: title
-        free:
-          element_selector: 'img[alt="free"]'
-          attribute: alt
-        seeders:
-          element_selector: 'td:nth-child(9) > b > a'
-          attribute: textContent
-        leechers:
-          element_selector: 'td:nth-child(9) > b:not(:first-child) > a'
-          attribute: textContent
-    no_entries_ok: yes
-    if:
-      - hr: reject
-      - free and leechers|int > 10 and seeders|int >0 and seeders|int < 6: accept
-    content_size:
-      strict: true
-      max: 307200
-    template:
-      - qbittorrent_base_template
-      - qbittorrent_add_template
-      #- show_entry_template
 
   springsunday:
     html_rss:
@@ -538,6 +499,7 @@ tasks:
     accept_all: yes
     no_entries_ok: yes
     seen:
+      local: yes
       fields:
         - torrent_info_hash
     #    notify:
