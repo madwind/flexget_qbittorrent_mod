@@ -166,10 +166,12 @@ class PluginIYUUAutoReseed:
 
         for from_name, client_config in config['from'].items():
             from_client = plugin.get_plugin_by_name(from_name)
-            method = from_client.phase_handlers['input']
+            start_method = from_client.phase_handlers['start']
+            input_method = from_client.phase_handlers['input']
             if not to:
                 to = from_name[5:]
-            result = method(task, client_config)
+            start_method(task, client_config)
+            result = input_method(task, client_config)
             from_client_method = client_map[from_name]
             to_client_method = client_map[to]
 
