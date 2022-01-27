@@ -392,7 +392,10 @@ class PluginQBittorrentMod(QBittorrentModBase):
                 if attr_str == 'tags' and entry_attr and add_options_attr:
                     attr = str.join(',', [entry_attr, add_options_attr])
                 else:
-                    attr = entry_attr or add_options_attr
+                    if entry_attr is not None:
+                        attr = entry_attr
+                    else:
+                        attr = add_options_attr
                 if attr is not None:
                     options[attr_str] = attr
 
