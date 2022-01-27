@@ -259,8 +259,9 @@ class PluginIYUUAutoReseed:
 
         for client_torrent in result:
             if from_client_method(client_torrent):
-                torrent_dict[client_torrent['torrent_info_hash']] = client_torrent
-                hashes.append(client_torrent['torrent_info_hash'])
+                torrent_info_hash = client_torrent['torrent_info_hash'].lower()
+                torrent_dict[torrent_info_hash] = client_torrent
+                hashes.append(torrent_info_hash)
 
         list.sort(hashes)
         hashes_json = json.dumps(hashes, separators=(',', ':'))
