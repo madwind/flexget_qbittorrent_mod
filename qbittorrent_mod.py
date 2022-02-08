@@ -235,6 +235,9 @@ class PluginQBittorrentMod(QBittorrentModBase):
                             'working': {'type': 'integer'},
                             'not_working': {'type': 'integer'}
                         }
+                    },
+                    'refresh_tracker': {
+                        'type': 'boolean'
                     }
                 },
                 "minProperties": 1,
@@ -723,6 +726,19 @@ class PluginQBittorrentMod(QBittorrentModBase):
             self.client.set_torrent_upload_limit(str.join('|', working_hashes), working_speed)
         if not_working_hashes:
             self.client.set_torrent_upload_limit(str.join('|', not_working_hashes), not_working_speed)
+
+    def refresh_tracker_entries(self, task, refresh_tracker_options):
+        prefix = 'refresh:'
+        for entry in task.accepted:
+            torrent_trackers = entry.get('qbittorrent_trackers')
+            for tracker in torrent_trackers:
+                tracker_url = tracker.get('url')
+
+                if not tracker_url.startswith(prefix):
+                    self.client.edit_trackers(entry.get('torrent_info_hash'), tracker_url, prefix + tracker_url)
+                    self.client.edit_trackers(entry.get('torrent_info_hash'), prefix + tracker_url, tracker_url)
+                else:
+                    self.client.edit_trackers(entry.get('torrent_info_hash'), tracker_url, tracker_url[len(prefix):])
 
     def on_task_learn(self, task, config):
         """ Make sure all temp files are cleaned up when entries are learned """

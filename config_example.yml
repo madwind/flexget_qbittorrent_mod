@@ -11,7 +11,7 @@ schedules:
     interval:
       minutes: 2
 
-  - tasks: [ totheglory, dmhy, skyey2, opencd ]
+  - tasks: [ skyey2, opencd, refresh_tracker ]
     interval:
       minutes: 3
 
@@ -194,6 +194,11 @@ templates:
         limit_upload_by_tracker:
           working: 0
           not_working: 1
+
+  qbittorrent_refresh_tracker_template:
+    qbittorrent_mod:
+      action:
+        refresh_tracker: yes
 
   qbittorrent_delete_keeper_template:
     qbittorrent_mod:
@@ -626,6 +631,20 @@ tasks:
       - from_qbittorrent_template
       - qbittorrent_base_template
       - qbittorrent_limit_upload_by_tracker_template
+
+  refresh_tracker:
+    disable: [ seen, seen_info_hash, retry_failed, history ]
+    if:
+      - qbittorrent_up_limit == 1:
+          regexp:
+            accept:
+              - 'skipping tracker announce \(unreachable\)'
+              - 'unsupported URL protocol'
+            from: qbittorrent_tracker_msg
+    template:
+      - from_qbittorrent_template
+      - qbittorrent_base_template
+      - qbittorrent_refresh_tracker_template
 
   sign_in:
     auto_sign_in:
