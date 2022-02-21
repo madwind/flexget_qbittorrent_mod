@@ -1,9 +1,9 @@
-from ..schema.nexusphp import AttendanceHR
+from ..schema.nexusphp import Attendance
 from ..schema.site_base import Work, SignState
 from ..utils.net_utils import NetUtils
 
 
-class MainClass(AttendanceHR):
+class MainClass(Attendance):
     URL = 'https://www.pttime.org/'
     USER_CLASSES = {
         'downloaded': [3221225472000, 16106127360000],
