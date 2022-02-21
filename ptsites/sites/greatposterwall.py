@@ -34,7 +34,7 @@ class MainClass(Gazelle):
             Work(
                 url='/',
                 method='get',
-                succeed_regex='<span class="username">.*?</span>',
+                succeed_regex='<span class="Header-profileName">.*?</span>',
                 fail_regex=None,
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
