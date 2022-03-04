@@ -48,17 +48,8 @@ class MainClass(NexusPHP):
                     }
                 }},
             'details': {
-                'points': {
-                    'regex': ('(魔力|Bonus).*?([\\d,.]+)', 2),
-                    'handle': self.handle_points
-                },
                 'hr': None
             }
         })
         return selector
 
-    def handle_points(self, value):
-        if value in ['.']:
-            return '0'
-        else:
-            return value

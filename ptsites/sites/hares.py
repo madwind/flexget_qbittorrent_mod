@@ -40,7 +40,8 @@ class MainClass(Attendance):
             },
             'details': {
                 'points': {
-                    'regex': '奶糖.*?([\\d,.]+)'
+                    'regex': '奶糖.*?([\\d,.]+)',
+                    'handle': self.handle_points
                 },
                 'seeding': {
                     'regex': ('(做种中).*?(\\d+)', 2)
@@ -52,3 +53,9 @@ class MainClass(Attendance):
             }
         })
         return selector
+
+    def handle_points(self, value):
+        if value in ['.']:
+            return '0'
+        else:
+            return value
