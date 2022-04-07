@@ -1,11 +1,11 @@
 import re
 from urllib.parse import urljoin
 
-from ..schema.nexusphp import AttendanceHR
+from ..schema.nexusphp import Attendance
 from ..schema.site_base import Work, SignState
 
 
-class MainClass(AttendanceHR):
+class MainClass(Attendance):
     URL = 'https://1ptba.com/'
     USER_CLASSES = {
         'downloaded': [805306368000, 3298534883328],
