@@ -75,6 +75,10 @@ variables:
       login:
         username: 'xxxxxxxx'
         password: 'xxxxxxxx'
+    gaytorrent:
+      login:
+        username: 'xxxxxxxx'
+        password: 'xxxxxxxx'
     gazellegames:
       cookie: 'xxxxxxxx'
       key: 'xxxxxxxx'
