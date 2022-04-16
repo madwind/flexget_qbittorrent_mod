@@ -75,6 +75,7 @@ variables:
       login:
         username: 'xxxxxxxx'
         password: 'xxxxxxxx'
+    gay-torrents: 'xxxxxxxx'
     gaytorrent:
       login:
         username: 'xxxxxxxx'
