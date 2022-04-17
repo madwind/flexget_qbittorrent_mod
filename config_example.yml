@@ -75,6 +75,11 @@ variables:
       login:
         username: 'xxxxxxxx'
         password: 'xxxxxxxx'
+    gay-torrents: 'xxxxxxxx'
+    gaytorrent:
+      login:
+        username: 'xxxxxxxx'
+        password: 'xxxxxxxx'
     gazellegames:
       cookie: 'xxxxxxxx'
       key: 'xxxxxxxx'
@@ -112,6 +117,10 @@ variables:
         username: 'xxxxxxxx'
         password: 'xxxxxxxx'
         secret_key: 'xxxxxxxx'
+    milkie:
+      login:
+        username: 'xxxxxxxx'
+        password: 'xxxxxxxx'
     msg: 'xxxxxxxx'
     nicept: 'xxxxxxxx'
     nanyangpt: 'xxxxxxxx'
