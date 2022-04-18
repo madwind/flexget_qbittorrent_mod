@@ -7,7 +7,7 @@ from ..utils.google_auth import GoogleAuth
 
 
 class MainClass(Discuz):
-    URL = 'https://www.skyey2.com/'
+    URL = 'https://skyeysnow.com/'
     USER_CLASSES = {
         'points': [1000000]
     }
