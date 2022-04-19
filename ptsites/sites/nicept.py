@@ -1,8 +1,8 @@
-from ..schema.nexusphp import AttendanceHR
+from ..schema.nexusphp import Attendance
 
 
 
-class MainClass(AttendanceHR):
+class MainClass(Attendance):
     URL = 'https://www.nicept.net/'
     USER_CLASSES = {
         'downloaded': [805306368000, 3298534883328],
