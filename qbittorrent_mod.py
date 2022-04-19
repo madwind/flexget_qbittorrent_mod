@@ -456,6 +456,8 @@ class PluginQBittorrentMod(QBittorrentModBase):
                 if dl_limit != dl_rate_limit:
                     self.client.set_application_preferences('{{"{}": {}}}'.format(dl_limit_mode, dl_limit))
                     logger.info("set {} to {} KiB/s", dl_limit_mode, dl_limit / 1024)
+            for entry in task.accepted:
+                entry.reject(reason='keep_disk_space < free_space_on_disk')
             return
 
         accepted_entry_hashes = []
@@ -475,6 +477,9 @@ class PluginQBittorrentMod(QBittorrentModBase):
 
         for entry_hash in accepted_entry_hashes:
             if entry_hash in delete_hashes:
+                continue
+            if keep_disk_space < free_space_on_disk + delete_size:
+                entry_dict.get(entry_hash).reject(reason='keep_disk_space < free_space_on_disk')
                 continue
             server_entry = entry_dict.get(entry_hash)
             if not server_entry:
@@ -509,8 +514,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                     delete_size += torrent_size
                     self._build_delete_hashes(delete_hashes, torrent_hashes, entry_dict, keep_disk_space,
                                               free_space_on_disk, delete_size)
-                    if keep_disk_space < free_space_on_disk + delete_size:
-                        break
+
         self.calc_and_set_dl_limit(keep_disk_space, free_space_on_disk, delete_size, dl_limit_interval,
                                    dl_limit_on_succeeded, dl_rate_limit, dl_limit_mode)
         if len(delete_hashes) > 0:
@@ -607,24 +611,28 @@ class PluginQBittorrentMod(QBittorrentModBase):
         reseed_dict = main_data_snapshot.get('reseed_dict')
         hashes = []
         recheck_hashes = []
-        for entry in task.accepted:
-            save_path_with_name = entry['qbittorrent_save_path_with_name']
-            reseed_entry_list = reseed_dict.get(save_path_with_name)
-            resume = False
-            for reseed_entry in reseed_entry_list:
-                seeding = 'up' in reseed_entry['qbittorrent_state'].lower() and reseed_entry[
-                    'qbittorrent_state'] != 'pausedUP'
-                if seeding:
-                    hashes.append(entry['torrent_info_hash'])
-                    logger.info('{}', entry['title'])
-                    resume = True
-                    break
-            if not resume and entry['qbittorrent_state'] != 'checkingUP':
-                entry.reject(reason='can not find seeding torrent in same save path')
-                recheck_hashes.append(entry['torrent_info_hash'])
-        if recheck_torrents and len(recheck_hashes) > 0:
-            logger.info('recheck {}', recheck_hashes)
-            self.client.recheck_torrents(str.join('|', recheck_hashes))
+        if recheck_torrents:
+            for entry in task.accepted:
+                save_path_with_name = entry['qbittorrent_save_path_with_name']
+                reseed_entry_list = reseed_dict.get(save_path_with_name)
+                resume = False
+                for reseed_entry in reseed_entry_list:
+                    seeding = 'up' in reseed_entry['qbittorrent_state'].lower() and reseed_entry[
+                        'qbittorrent_state'] != 'pausedUP'
+                    if seeding:
+                        hashes.append(entry['torrent_info_hash'])
+                        logger.info('{}', entry['title'])
+                        resume = True
+                        break
+                if not resume and entry['qbittorrent_state'] != 'checkingUP':
+                    entry.reject(reason='can not find seeding torrent in same save path')
+                    recheck_hashes.append(entry['torrent_info_hash'])
+            if len(recheck_hashes) > 0:
+                logger.info('recheck {}', recheck_hashes)
+                self.client.recheck_torrents(str.join('|', recheck_hashes))
+        else:
+            for entry in task.accepted:
+                hashes.append(entry['torrent_info_hash'])
         self.client.resume_torrents(str.join('|', hashes))
 
     def pause_entries(self, task, pause_options):
