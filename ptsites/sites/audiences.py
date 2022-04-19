@@ -1,3 +1,5 @@
+from urllib.parse import urljoin
+
 from ..schema.nexusphp import AttendanceHR
 from ..utils.net_utils import NetUtils
 
@@ -27,3 +29,20 @@ class MainClass(AttendanceHR):
             }
         })
         return selector
+
+    @classmethod
+    def build_reseed_schema(cls):
+        return {
+            cls.get_module_name(): {
+                'type': 'object',
+                'properties': {
+                    'cookie': {'type': 'string'}
+                },
+                'additionalProperties': False
+            }
+        }
+
+    @classmethod
+    def build_reseed(cls, entry, config, site, passkey, torrent_id):
+        download_page = f'download.php?id={torrent_id}'
+        entry['url'] = urljoin(MainClass.URL, download_page)
