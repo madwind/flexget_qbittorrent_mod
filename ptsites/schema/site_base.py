@@ -98,7 +98,7 @@ class SiteBase:
 
     def sign_in(self, entry, config):
         self.workflow = []
-        if not hasattr(entry['site_config'], 'cookie'):
+        if not entry['site_config'].get('cookie'):
             self.workflow.extend(self.build_login_workflow(entry, config))
         self.workflow.extend(self.build_workflow(entry, config))
         if not entry.get('url') or not self.workflow:
@@ -263,6 +263,7 @@ class SiteBase:
             else:
                 details_text = details_text + detail_content
         if details_text:
+            logger.debug(details_text)
             details = {}
             for detail_name, detail_config in selector['details'].items():
                 detail_value = self.get_detail_value(details_text, detail_config)

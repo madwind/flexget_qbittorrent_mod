@@ -4,12 +4,6 @@ from ..schema.site_base import Work, NetworkState
 from ..utils.google_auth import GoogleAuth
 
 
-# site_config
-# login:
-#    username: 'xxxxx'
-#    password: 'xxxxxxxx'
-#    secret_key: 'xxxxx' # Optional
-
 class MainClass(AttendanceHR):
     URL = 'https://ourbits.club/'
     USER_CLASSES = {
