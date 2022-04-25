@@ -98,7 +98,7 @@ class SiteBase:
 
     def sign_in(self, entry, config):
         self.workflow = []
-        if not entry['site_config'].get('cookie'):
+        if not entry['cookie']:
             self.workflow.extend(self.build_login_workflow(entry, config))
         self.workflow.extend(self.build_workflow(entry, config))
         if not entry.get('url') or not self.workflow:
