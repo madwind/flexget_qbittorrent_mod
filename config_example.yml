@@ -75,7 +75,11 @@ variables:
       login:
         username: 'xxxxxxxx'
         password: 'xxxxxxxx'
-    gay-torrents: 'xxxxxxxx'
+    gay-torrents_net:
+      login:
+        username: 'xxxxxxxx'
+        password: 'xxxxxxxx'
+    gay-torrents_org: 'xxxxxxxx'
     gaytorrent:
       login:
         username: 'xxxxxxxx'
@@ -146,6 +150,10 @@ variables:
     torrentleech: 'xxxxxxxx'
     tjupt: 'xxxxxxxx'
     ultrahd: 'xxxxxxxx'
+    xtremewrestlingtorrents:
+      login:
+        username: 'xxxxxxxx'
+        password: 'xxxxxxxx'
 
 templates:
   from_qbittorrent_template:
