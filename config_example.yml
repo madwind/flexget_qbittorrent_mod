@@ -84,7 +84,7 @@ variables:
         username: 'xxxxxxxx'
         password: 'xxxxxxxx'
     gay-torrents_org: 'xxxxxxxx'
-    gaytorrent:
+    gaytor:
       login:
         username: 'xxxxxxxx'
         password: 'xxxxxxxx'
@@ -108,7 +108,10 @@ variables:
     hdfans: 'xxxxxxxx'
     hdhome: 'xxxxxxxx'
     hdmayi: 'xxxxxxxx'
-    hdpost: 'xxxxxxxx'
+    hdpost:
+      login:
+        username: 'xxxxxxxx'
+        password: 'xxxxxxxx'
     hdsky: 'xxxxxxxx'
     hdtime: 'xxxxxxxx'
     hdupt: 'xxxxxxxx'
