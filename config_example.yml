@@ -54,6 +54,10 @@ variables:
     avistaz: 'xxxxxxxx'
     beitai: 'xxxxxxxx'
     btschool: 'xxxxxxxx'
+    cathode-ray:
+      login:
+        username: 'xxxxxxxx'
+        password: 'xxxxxxxx'
     ccfbits: 'xxxxxxxx'
     chdbits: 'xxxxxxxx'
     cinemaz: 'xxxxxxxx'
