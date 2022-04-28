@@ -56,7 +56,7 @@ def build_selector():
 
 
 class MainClass(SiteBase):
-    URL = 'https://www.gaytorrent.ru/'
+    URL = 'https://www.gaytor.rent/'
     USER_CLASSES = {
         'downloaded': [858993459200],
         'share_ratio': [1.05],
