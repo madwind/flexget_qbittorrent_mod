@@ -18,6 +18,7 @@ class MainClass(Unit3D):
             cls.get_module_name(): {
                 'type': 'object',
                 'properties': {
+                    'cookie': {'type': 'string'},
                     'login': {
                         'type': 'object',
                         'properties': {
@@ -45,11 +46,10 @@ class MainClass(Unit3D):
 
     @classmethod
     def build_reseed(cls, entry, config, site, passkey, torrent_id):
-        download_page = site['download_page'].format(torrent_id=torrent_id,
-                                                     rsskey=passkey['rsskey'])
+        download_page = site['download_page'].format(torrent_id=torrent_id, rsskey=passkey['rsskey'])
         entry['url'] = urljoin(MainClass.URL, download_page)
 
-    def build_workflow(self, entry, config):
+    def build_login_workflow(self, entry, config):
         return [
             Work(
                 url='/login',
@@ -59,13 +59,22 @@ class MainClass(Unit3D):
             Work(
                 url='/login',
                 method='password',
-                succeed_regex='<title>HDPOST - 欢迎来到普斯特</title>',
-                fail_regex=None,
-                check_state=('final', SignState.SUCCEED),
-                is_base_content=True,
+                check_state=('network', NetworkState.SUCCEED),
                 response_urls=[''],
                 token_regex=r'(?<=name="_token" value=").+?(?=")',
                 captcha_regex=r'(?<=name="_captcha" value=").+?(?=")',
+            )
+        ]
+
+    def build_workflow(self, entry, config):
+        return [
+            Work(
+                url='/',
+                method='get',
+                succeed_regex='<title>HDPOST - 欢迎来到普斯特</title>',
+                fail_regex=None,
+                check_state=('final', SignState.SUCCEED),
+                is_base_content=True
             )
         ]
 
