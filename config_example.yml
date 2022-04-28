@@ -108,7 +108,10 @@ variables:
     hdfans: 'xxxxxxxx'
     hdhome: 'xxxxxxxx'
     hdmayi: 'xxxxxxxx'
-    hdpost: 'xxxxxxxx'
+    hdpost:
+      login:
+        username: 'xxxxxxxx'
+        password: 'xxxxxxxx'
     hdsky: 'xxxxxxxx'
     hdtime: 'xxxxxxxx'
     hdupt: 'xxxxxxxx'
