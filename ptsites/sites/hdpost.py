@@ -8,7 +8,7 @@ from ..schema.unit3d import Unit3D
 class MainClass(Unit3D):
     URL = 'https://pt.hdpost.top'
     USER_CLASSES = {
-        'uploaded': [10995116277760],
+        'uploaded': [109951162777600],
         'days': [365]
     }
 
