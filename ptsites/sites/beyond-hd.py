@@ -6,7 +6,7 @@ from ..schema.unit3d import Unit3D
 #    oneurl: 'xxxxxxxx'
 #    cookie: 'xxxxxxxx'
 
-# Choose between oneurl or cookie 
+# Choose between oneurl or cookie
 # If oneurl provided, cookie will be ignored.
 
 # OneURL is found by accessing your Beyond-HD web site,
@@ -53,7 +53,7 @@ class MainClass(Unit3D):
                     'link': '/{}',
                     'elements': {
                         'bar': '.table-responsive.well-style',
-                        'date_table': '.bhd-profile'
+                        'data_table': '.bhd-profile'
                     }
                 }
             },
