@@ -19,7 +19,7 @@ class Unit3D(SiteBase):
                     'link': '/users/{}',
                     'elements': {
                         'bar': '#main-content > div.ratio-bar > div > ul',
-                        'date_table': '.gradient'
+                        'data_table': '.gradient'
                     }
                 }
             },
