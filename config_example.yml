@@ -181,6 +181,10 @@ variables:
       login:
         username: 'xxxxxxxx'
         password: 'xxxxxxxx'
+    xwt-classics:
+      login:
+        username: 'xxxxxxxx'
+        password: 'xxxxxxxx'
 
 templates:
   from_qbittorrent_template:
