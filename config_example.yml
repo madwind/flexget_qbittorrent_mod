@@ -154,8 +154,12 @@ variables:
     soulvoice: 'xxxxxxxx'
     springsunday: 'xxxxxxxx'
     sjtu: 'xxxxxxxx'
-    torrentleech: 'xxxxxxxx'
     tjupt: 'xxxxxxxx'
+    torrentleech: 'xxxxxxxx'
+    torrentseeds:
+      login:
+        username: 'xxxxxxxx'
+        password: 'xxxxxxxx'
     ultrahd: 'xxxxxxxx'
     xtremewrestlingtorrents:
       login:
