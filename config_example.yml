@@ -155,6 +155,10 @@ variables:
     springsunday: 'xxxxxxxx'
     sjtu: 'xxxxxxxx'
     tjupt: 'xxxxxxxx'
+    torrentdb:
+      login:
+        username: 'xxxxxxxx'
+        password: 'xxxxxxxx'
     torrentleech: 'xxxxxxxx'
     torrentseeds:
       login:

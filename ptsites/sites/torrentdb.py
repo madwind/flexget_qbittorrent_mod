@@ -1,9 +1,8 @@
 import re
-from datetime import datetime
 
-from dateutil.relativedelta import relativedelta
+from dateutil.parser import parse
 
-from ..schema.site_base import SiteBase, Work, SignState, NetworkState
+from ..schema.site_base import SignState, Work, NetworkState, SiteBase
 
 
 def handle_share_ratio(value):
@@ -14,48 +13,44 @@ def handle_share_ratio(value):
 
 
 def handle_join_date(value):
-    value_split = value.replace(',', '').split()
-    return datetime.now() - relativedelta(
-        **dict((unit if unit.endswith('s') else f'{unit}s', int(amount)) for amount, unit in
-               [value_split[i:i + 2] for i in range(0, len(value_split), 2)]))
+    return parse(value).date()
 
 
 def build_selector():
     return {
-        'user_id': r'(?<="/user\.php\?id=)(.+?)(?=")',
+        'user_id': r'<strong class="align-middle">(.+?)</strong>',
         'detail_sources': {
             'default': {
-                'link': '/user.php?id={}',
+                'link': '/profile/{}',
                 'elements': {
-                    'stats': '#content > div > div.sidebar > div:nth-child(4)',
-                    'credits': '#bonusdiv > h4',
-                    'connected': '#content > div > div.sidebar > div:nth-child(10)'
+                    'join_date': 'div.bg-gray-light.rounded.p-5 div:nth-child(4) > div:nth-child(2)',
+                    'table': 'div.bg-gray-light.rounded.p-5 > div > div.mt-2.lg\:mt-0'
                 }
             }
         },
         'details': {
             'uploaded': {
-                'regex': r'Uploaded:\s*([\d.]+ (?:[ZEPTGMK]i)?B)'
+                'regex': r'≈.*?([\d.]+ [ZEPTGMK]?B) '
             },
             'downloaded': {
-                'regex': r'Downloaded:\s*([\d.]+ (?:[ZEPTGMK]i)?B)'
+                'regex': r'([\d.]+ [ZEPTGMK]?B) ≈'
             },
             'share_ratio': {
-                'regex': r'Ratio:\s*(∞|[\d,.]+)',
+                'regex': r'Tokens\s*(∞|[\d,.]+)',
                 'handle': handle_share_ratio
             },
             'points': {
-                'regex': r'Credits:\s*([\d,.]+)'
+                'regex': r'([\d,.]+)(?= BP)'
             },
             'join_date': {
-                'regex': r'Joined:\s*(.+?) ago',
+                'regex': r'Joined on (\w+ \w+ \w+)',
                 'handle': handle_join_date
             },
             'seeding': {
-                'regex': r'(?<=Seeding: )([\d,]+)'
+                'regex': r'Total seeding: ([\d,]+)'
             },
             'leeching': {
-                'regex': r'(?<=Leeching: )([\d,]+)'
+                'regex': r'Total leeching: ([\d,]+)'
             },
             'hr': None
         }
@@ -63,11 +58,11 @@ def build_selector():
 
 
 class MainClass(SiteBase):
-    URL = 'https://www.cathode-ray.tube/'
+    URL = 'https://torrentdb.net'
     USER_CLASSES = {
-        'uploaded': [54975581388800],
-        'share_ratio': [1],
-        'days': [364]
+        'uploaded': [10995116277760],
+        'days': [1095],
+        'share_ratio': [2]
     }
 
     @classmethod
@@ -99,11 +94,11 @@ class MainClass(SiteBase):
             Work(
                 url='/login',
                 method='password',
-                succeed_regex=r'Logout',
+                succeed_regex='Logout',
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
-                response_urls=['/'],
-                token_regex=r'(?<=name="token" value=").*?(?=")'
+                response_urls=[''],
+                token_regex=r'(?<=name="_token" value=").+?(?=")',
             )
         ]
 
@@ -113,22 +108,16 @@ class MainClass(SiteBase):
             entry.fail_with_prefix('Login data not found!')
             return
         data = {
-            'token': re.search(work.token_regex, last_content).group(),
+            '_token': re.search(work.token_regex, last_content).group(),
             'username': login['username'],
             'password': login['password'],
-            'cinfo': '1920|1080|1|24|-480',
-            'iplocked': 0,
-            'keeploggedin': [0, 1],
-            'submit': 'login',
+            'remember': 'on',
         }
         login_response = self._request(entry, 'post', work.url, data=data)
         login_network_state = self.check_network_state(entry, work, login_response)
         if login_network_state != NetworkState.SUCCEED:
             return
         return login_response
-
-    def get_message(self, entry, config):
-        entry['result'] += '(TODO: Message)'  # TODO: Feature not implemented yet
 
     def get_details(self, entry, config):
         self.get_details_base(entry, config, build_selector())
