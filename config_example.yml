@@ -147,6 +147,10 @@ variables:
     pthome: 'xxxxxxxx'
     pttime: 'xxxxxxxx'
     ptsbao: 'xxxxxxxx'
+    pussytorrents:
+      login:
+        username: 'xxxxxxxx'
+        password: 'xxxxxxxx'
     skyey2:
       login:
         username: 'xxxxxxxx'
