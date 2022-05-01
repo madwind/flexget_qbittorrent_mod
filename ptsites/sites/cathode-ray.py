@@ -7,7 +7,7 @@ from ..schema.site_base import SiteBase, Work, SignState, NetworkState
 
 
 def handle_share_ratio(value):
-    if value in ['---', '∞']:
+    if value == '∞':
         return '0'
     else:
         return value
