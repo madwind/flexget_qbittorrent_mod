@@ -46,3 +46,4 @@ class MainClass(AttendanceHR):
     def build_reseed(cls, entry, config, site, passkey, torrent_id):
         download_page = f'download.php?id={torrent_id}'
         entry['url'] = urljoin(MainClass.URL, download_page)
+        entry['cookie'] = passkey['cookie']
