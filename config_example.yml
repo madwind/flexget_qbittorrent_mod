@@ -75,6 +75,10 @@ variables:
     eastgame: 'xxxxxxxx'
     et8: 'xxxxxxxx'
     exoticaz: 'xxxxxxxx'
+    femdomcult:
+      login:
+        username: 'xxxxxxxx'
+        password: 'xxxxxxxx'
     filelist:
       login:
         username: 'xxxxxxxx'
