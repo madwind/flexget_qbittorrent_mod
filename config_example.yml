@@ -53,6 +53,10 @@ variables:
     avgv: 'xxxxxxxx'
     avistaz: 'xxxxxxxx'
     beitai: 'xxxxxxxx'
+    bootytape:
+      login:
+        username: 'xxxxxxxx'
+        password: 'xxxxxxxx'
     btschool: 'xxxxxxxx'
     cathode-ray:
       login:
