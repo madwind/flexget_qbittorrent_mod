@@ -38,15 +38,17 @@ class MainClass(Unit3D):
             },
             'details': {
                 'points': {
-                    'regex': 'bonus.+?(\\d[\\d,. ]*)',
-                    'handle': self.handle_points
+                    'regex': 'title="My Bonus Points".*?</i>.+?(\\d[\\d,. ]*)',
+                },
+                'share_ratio': {
+                    'regex': 'title="Ratio".*?</i>.+?(\\d[\\d,. ]*)',
                 },
                 'join_date': {
                     'regex': 'Registration date (.*?\\d{4})',
                     'handle': self.handle_join_date
                 },
                 'hr': {
-                    'regex': '(Active Warnings).+?(\\d+)'
+                    'regex': 'Active Warnings.+?(\\d+)'
                 }
             }
         })
