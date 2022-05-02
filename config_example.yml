@@ -164,6 +164,10 @@ variables:
         username: 'xxxxxxxx'
         password: 'xxxxxxxx'
     soulvoice: 'xxxxxxxx'
+    speedapp:
+      login:
+        username: 'xxxxxxxx'
+        password: 'xxxxxxxx'
     springsunday: 'xxxxxxxx'
     sjtu: 'xxxxxxxx'
     tjupt: 'xxxxxxxx'
