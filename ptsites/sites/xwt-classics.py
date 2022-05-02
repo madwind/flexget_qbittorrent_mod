@@ -2,4 +2,4 @@ from ..schema.xwt import XWT
 
 
 class MainClass(XWT):
-    URL = 'https://xtremewrestlingtorrents.net/'
+    URL = 'https://xwt-classics.net/'
