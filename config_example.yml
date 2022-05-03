@@ -131,6 +131,10 @@ variables:
     jpopsuki: 'xxxxxxxx'
     jptv: 'xxxxxxxx'
     keepfrds: 'xxxxxxxx'
+    kufirc:
+      login:
+        username: 'xxxxxxxx'
+        password: 'xxxxxxxx'
     lemonhd: 'xxxxxxxx'
     m-team:
       login:
