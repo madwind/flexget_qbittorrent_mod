@@ -94,6 +94,10 @@ variables:
       name: 'xxxxxxxx'
     greatposterwall: 'xxxxxxxx'
     haidan: 'xxxxxxxx'
+    happyfappy:
+      login:
+        username: 'xxxxxxxx'
+        password: 'xxxxxxxx'
     hares: 'xxxxxxxx'
     hd: 'xxxxxxxx'
     hd-space: 'xxxxxxxx'
