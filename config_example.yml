@@ -142,8 +142,12 @@ variables:
         username: 'xxxxxxxx'
         password: 'xxxxxxxx'
     msg: 'xxxxxxxx'
-    nicept: 'xxxxxxxx'
     nanyangpt: 'xxxxxxxx'
+    nicept: 'xxxxxxxx'
+    ninjacentral:
+      login:
+        username: 'xxxxxxxx'
+        password: 'xxxxxxxx'
     open: 'xxxxxxxx'
     oshen: 'xxxxxxxx'
     ourbits:
