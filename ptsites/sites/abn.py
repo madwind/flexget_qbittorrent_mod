@@ -1,12 +1,22 @@
 import re
+from datetime import datetime
 
-from dateutil.parser import parse
+from dateutil.relativedelta import relativedelta
 
 from ..schema.site_base import SiteBase, Work, SignState, NetworkState
 
 
+def handle_amount_of_data(value):
+    return value.replace('o', 'B')
+
+
 def handle_join_date(value):
-    return parse(value).date()
+    value_split = value.removeprefix('Il y a ').replace('et', '').replace('seconde', 'second') \
+        .replace('heure', 'hour').replace('journée', 'day').replace('jours', 'days').replace('semaine', 'week') \
+        .replace('mois', 'months').replace('an', 'year').replace('années', 'years').split()
+    return datetime.now() - relativedelta(**dict(
+        (unit if unit.endswith('s') else f'{unit}s', int(amount)) for amount, unit in
+        [value_split[i:i + 2] for i in range(0, len(value_split), 2)]))
 
 
 def handle_share_ratio(value):
@@ -18,72 +28,53 @@ def handle_share_ratio(value):
 
 def build_selector():
     return {
-        'user_id': fr'''(?x)(?<= {re.escape('"/user.php?id=')})
-                            (. +?)
-                            (?= ")''',
         'detail_sources': {
             'default': {
-                'do_not_strip': True,
-                'link': '/user.php?id={}',
+                'link': '/User',
                 'elements': {
-                    'stats': '#content > div > div.sidebar > div:nth-child(4)',
-                    'credits': '#bonusdiv > h4',
-                    'connected': '#content > div > div.sidebar > div:nth-child(10)'
+                    'points': 'div.navbar-collapse.collapse.d-sm-inline-flex > ul:nth-child(6) > li:nth-child(3)',
+                    'stats': 'div.row.row-padding > div.col-lg-3 > div:nth-child(2) > div.box-body',
                 }
             }
         },
         'details': {
             'uploaded': {
-                'regex': r'''(?x)Feltöltve:
-                                \ 
-                                ([\d.] +
-                                \ 
-                                (?: [ZEPTGMK] i) ?
-                                B)'''
+                'regex': r'''(?x)Upload\ :\ 
+                                ([\d.] + \ [ZEPTGMK] ? o)''',
+                'handle': handle_amount_of_data
             },
             'downloaded': {
-                'regex': r'''(?x)Letöltve:
-                                \ 
-                                ([\d.] +
-                                \ 
-                                (?: [ZEPTGMK] i) ?
-                                B)'''
+                'regex': r'''(?x)Download\ :\ 
+                                ([\d.] + \ [ZEPTGMK] ? o)''',
+                'handle': handle_amount_of_data
             },
             'share_ratio': {
-                'regex': r'''(?x)Arány:\ <span\ class="r99\ infinity">
+                'regex': r'''(?x)Ratio\ :\ 
                                 (∞ | [\d,.] +)''',
                 'handle': handle_share_ratio
             },
             'points': {
-                'regex': r'''(?x)Bónuszpontok:
-                                \s *
+                'regex': r'''(?x)Choco's\ :\ 
                                 ([\d,.] +)'''
             },
             'join_date': {
-                'regex': r'''(?x)Regisztrált:\ <span\ alt="
-                                ((\w + \ ) {2}
-                                \w +)''',
+                'regex': r'''(?mx)Inscrit\ :\ 
+                                (. +?)
+                                $''',
                 'handle': handle_join_date
             },
-            'seeding': {
-                'regex': r'''(?x)(?<= Seeding:\ )
-                                ([\d,] +)'''
-            },
-            'leeching': {
-                'regex': r'''(?x)(?<= Leeching:\ )
-                                ([\d,] +)'''
-            },
+            'seeding': None,
+            'leeching': None,
             'hr': None
         }
     }
 
 
 class MainClass(SiteBase):
-    URL = 'https://kufirc.com/'
+    URL = 'https://abn.lol/'
     USER_CLASSES = {
-        'uploaded': [32985348833280],
-        'share_ratio': [2.05],
-        'days': [350]
+        'uploaded': [5368709120000],
+        'share_ratio': [3.05]
     }
 
     @classmethod
@@ -108,18 +99,18 @@ class MainClass(SiteBase):
     def build_workflow(self, entry, config):
         return [
             Work(
-                url='/login',
+                url='/Home/Login?ReturnUrl=%2F',
                 method='get',
                 check_state=('network', NetworkState.SUCCEED),
             ),
             Work(
-                url='/login',
+                url='/Home/Login',
                 method='password',
-                succeed_regex=r'Kilpés',
+                succeed_regex=r'Déconnexion',
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
                 response_urls=['/'],
-                token_regex=r'''(?x)(?<= name="token"\ value=")
+                token_regex=r'''(?x)(?<= name="__RequestVerificationToken"\ type="hidden"\ value=")
                                     . *?
                                     (?= ")'''
             )
@@ -131,13 +122,10 @@ class MainClass(SiteBase):
             entry.fail_with_prefix('Login data not found!')
             return
         data = {
-            'token': re.search(work.token_regex, last_content).group(),
-            'username': login['username'],
-            'password': login['password'],
-            'cinfo': '1920|1080|24|-480',
-            'iplocked': 0,
-            'keeploggedin': [0, 1],
-            'submit': 'Bejelentkezés',
+            'Username': login['username'],
+            'Password': login['password'],
+            'RememberMe': ['true', 'false'],
+            '__RequestVerificationToken': re.search(work.token_regex, last_content).group(),
         }
         login_response = self._request(entry, 'post', work.url, data=data)
         login_network_state = self.check_network_state(entry, work, login_response)
