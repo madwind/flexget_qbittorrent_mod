@@ -50,6 +50,10 @@ variables:
     1ptba: 'xxxxxxxx'
     3wmg: 'xxxxxxxx'
     52pt: 'xxxxxxxx'
+    abn:
+      login:
+        username: 'xxxxxxxx'
+        password: 'xxxxxxxx'
     avgv: 'xxxxxxxx'
     avistaz: 'xxxxxxxx'
     beitai: 'xxxxxxxx'
