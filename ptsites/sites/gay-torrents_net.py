@@ -30,10 +30,10 @@ def build_selector():
         },
         'details': {
             'uploaded': {
-                'regex': r'Uploaded\s*([\d.]+ (?:[ZEPTGMK]i)?B)'
+                'regex': r'Uploaded\s*([\d.]+ ([ZEPTGMK]i)?B)'
             },
             'downloaded': {
-                'regex': r'Downloaded\s*([\d.]+ (?:[ZEPTGMK]i)?B)'
+                'regex': r'Downloaded\s*([\d.]+ ([ZEPTGMK]i)?B)'
             },
             'share_ratio': {
                 'regex': r'Ratio(∞|[\d,.]+)',
