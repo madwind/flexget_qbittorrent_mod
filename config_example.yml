@@ -54,6 +54,10 @@ variables:
       login:
         username: 'xxxxxxxx'
         password: 'xxxxxxxx'
+    abtorrents:
+      login:
+        username: 'xxxxxxxx'
+        password: 'xxxxxxxx'
     avgv: 'xxxxxxxx'
     avistaz: 'xxxxxxxx'
     beitai: 'xxxxxxxx'
