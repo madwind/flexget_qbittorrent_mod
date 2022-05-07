@@ -1,9 +1,10 @@
-from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 
 from flexget import plugin
 from flexget.entry import Entry
 from flexget.event import event
+from loguru import logger
 
 from .ptsites.executor import Executor
 from .ptsites.utils.details_report import DetailsReport
@@ -72,13 +73,14 @@ class PluginAutoSignIn:
         for entry in task.all_entries:
             if date_now not in entry['title']:
                 entry.reject('{} out of date!'.format(entry['title']))
-        if max_workers == 1:
-            for entry in task.accepted:
-                Executor.sign_in(entry, config)
-        else:
-            with ThreadPoolExecutor(max_workers=max_workers) as t:
-                all_task = [t.submit(Executor.sign_in, entry, config) for entry in task.accepted]
-                wait(all_task, return_when=ALL_COMPLETED)
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            for entry, feature in [(entry, executor.submit(Executor.sign_in, entry, config))
+                                   for entry in task.accepted]:
+                try:
+                    feature.result()
+                except Exception as e:
+                    logger.exception(e)
+                    entry.fail_with_prefix('Exception: ' + str(e))
         if config.get('get_details', True):
             DetailsReport().build(task)
 
