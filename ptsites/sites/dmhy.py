@@ -137,6 +137,8 @@ class MainClass(NexusPHP):
             self.save_iamge(image2, 'step3_b_diff.png')
             ocr_text1 = BaiduOcr.get_jap_ocr(image1, entry, config)
             ocr_text2 = BaiduOcr.get_jap_ocr(image2, entry, config)
+            if entry.failed:
+                return None
             oct_text = ocr_text1 if len(ocr_text1) > len(ocr_text2) else ocr_text2
             logger.debug('jap_ocr: {}', oct_text)
             if oct_text and len(oct_text) > ocr_config.get('char_count'):
