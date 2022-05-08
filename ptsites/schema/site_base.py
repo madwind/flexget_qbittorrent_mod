@@ -310,14 +310,17 @@ class SiteBase:
         if not (succeed_regex := work.succeed_regex):
             entry['result'] = SignState.SUCCEED.value
             return SignState.SUCCEED
-        if isinstance(succeed_regex, str):
-            succeed_regex = [succeed_regex]
+        if not isinstance(succeed_regex, list):
+            regex_tuple = succeed_regex
+            if isinstance(succeed_regex, str):
+                regex_tuple = (succeed_regex, 0)
+            succeed_regex = [regex_tuple]
 
         for regex in succeed_regex:
+            regex, group_index = regex
             if succeed_msg := re.search(regex, content):
-                entry['result'] = re.sub('<.*?>|&shy;|&nbsp;', '', succeed_msg.group())
+                entry['result'] = re.sub('<.*?>|&shy;|&nbsp;', '', succeed_msg.group(group_index))
                 return SignState.SUCCEED
-
         if fail_regex := work.fail_regex:
             if re.search(fail_regex, content):
                 return SignState.WRONG_ANSWER
