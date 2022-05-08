@@ -1,49 +1,66 @@
-import hashlib
+import re
+from datetime import datetime
 
-from dateutil.parser import parse
+from dateutil.relativedelta import relativedelta
 
 from ..schema.site_base import SiteBase, Work, SignState, NetworkState
 
 
+def handle_amount_of_data(value):
+    return value.replace('o', 'B')
+
+
+def handle_join_date(value):
+    value_split = value.removeprefix('Il y a ').replace('et', '').replace('seconde', 'second') \
+        .replace('heure', 'hour').replace('journée', 'day').replace('jours', 'days').replace('semaine', 'week') \
+        .replace('mois', 'months').replace('an', 'year').replace('années', 'years').split()
+    return datetime.now() - relativedelta(**dict(
+        (unit if unit.endswith('s') else f'{unit}s', int(amount)) for amount, unit in
+        [value_split[i:i + 2] for i in range(0, len(value_split), 2)]))
+
+
 def handle_share_ratio(value):
-    if value in ['---', '∞']:
+    if value == '∞':
         return '0'
     else:
         return value
 
 
-def handle_join_date(value):
-    return parse(value).date()
-
-
 def build_selector():
     return {
-        'user_id': r'<a href="member\.php\?([-\w]+?)">My Profile</a>',
         'detail_sources': {
             'default': {
-                'link': '/member.php?{}',
+                'link': '/User',
                 'elements': {
-                    'table1': '#view-stats_mini > div > div > div',
-                    'table2': '#view-stats_mini.subsection > div > div > div'
+                    'points': 'div.navbar-collapse.collapse.d-sm-inline-flex > ul:nth-child(6) > li:nth-child(3)',
+                    'stats': 'div.row.row-padding > div.col-lg-3 > div:nth-child(2) > div.box-body',
                 }
             }
         },
         'details': {
             'uploaded': {
-                'regex': r'Uploaded\s*([\d.]+ ([ZEPTGMK]i)?B)'
+                'regex': r'''(?x)Upload\ :\ 
+                                ([\d.] + \ [ZEPTGMK] ? o)''',
+                'handle': handle_amount_of_data
             },
             'downloaded': {
-                'regex': r'Downloaded\s*([\d.]+ ([ZEPTGMK]i)?B)'
+                'regex': r'''(?x)Download\ :\ 
+                                ([\d.] + \ [ZEPTGMK] ? o)''',
+                'handle': handle_amount_of_data
             },
             'share_ratio': {
-                'regex': r'Ratio(∞|[\d,.]+)',
+                'regex': r'''(?x)Ratio\ :\ 
+                                (∞ | [\d,.] +)''',
                 'handle': handle_share_ratio
             },
             'points': {
-                'regex': r'Juices([\d,.]+)'
+                'regex': r'''(?x)Choco's\ :\ 
+                                ([\d,.] +)'''
             },
             'join_date': {
-                'regex': r'Join Date\s*?[\d:]+? (.+?)\s',
+                'regex': r'''(?mx)Inscrit\ :\ 
+                                (. +?)
+                                $''',
                 'handle': handle_join_date
             },
             'seeding': None,
@@ -54,7 +71,11 @@ def build_selector():
 
 
 class MainClass(SiteBase):
-    URL = 'https://www.gay-torrents.net/'
+    URL = 'https://abn.lol/'
+    USER_CLASSES = {
+        'uploaded': [5368709120000],
+        'share_ratio': [3.05]
+    }
 
     @classmethod
     def build_sign_in_schema(cls):
@@ -78,19 +99,20 @@ class MainClass(SiteBase):
     def build_workflow(self, entry, config):
         return [
             Work(
-                url='/login.php?do=login',
-                method='password',
-                succeed_regex=r'Thank you for logging in, .*?\.</p>',
+                url='/Home/Login?ReturnUrl=%2F',
+                method='get',
                 check_state=('network', NetworkState.SUCCEED),
-                response_urls=['/login.php?do=login']
             ),
             Work(
-                url='/latest/',
-                method='get',
-                succeed_regex=r'Log Out',
+                url='/Home/Login',
+                method='password',
+                succeed_regex=r'Déconnexion',
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
-                response_urls=['/latest/']
+                response_urls=['/'],
+                token_regex=r'''(?x)(?<= name="__RequestVerificationToken"\ type="hidden"\ value=")
+                                    . *?
+                                    (?= ")'''
             )
         ]
 
@@ -100,15 +122,10 @@ class MainClass(SiteBase):
             entry.fail_with_prefix('Login data not found!')
             return
         data = {
-            'do': 'login',
-            'vb_login_md5password': hashlib.md5(login['password'].encode()).hexdigest(),
-            'vb_login_md5password_utf': hashlib.md5(login['password'].encode()).hexdigest(),
-            's': '',
-            'securitytoken': 'guest',
-            'url': '/latest/',
-            'vb_login_username': login['username'],
-            'vb_login_password': login['password'],
-            'cookieuser': 1
+            'Username': login['username'],
+            'Password': login['password'],
+            'RememberMe': ['true', 'false'],
+            '__RequestVerificationToken': re.search(work.token_regex, last_content).group(),
         }
         login_response = self._request(entry, 'post', work.url, data=data)
         login_network_state = self.check_network_state(entry, work, login_response)

@@ -5,11 +5,11 @@ from ..schema.site_base import NetworkState
 
 
 class MainClass(Luminance):
-    URL = 'https://www.cathode-ray.tube/'
+    URL = 'https://kufirc.com/'
     USER_CLASSES = {
-        'uploaded': [54975581388800],
-        'share_ratio': [1],
-        'days': [364]
+        'uploaded': [32985348833280],
+        'share_ratio': [2.05],
+        'days': [350]
     }
 
     def sign_in_by_password(self, entry, config, work, last_content):
@@ -21,10 +21,10 @@ class MainClass(Luminance):
             'token': re.search(work.token_regex, last_content).group(),
             'username': login['username'],
             'password': login['password'],
-            'cinfo': '1920|1080|1|24|-480',
+            'cinfo': '1920|1080|24|-480',
             'iplocked': 0,
             'keeploggedin': [0, 1],
-            'submit': 'login',
+            'submit': 'Bejelentkezés',
         }
         login_response = self._request(entry, 'post', work.url, data=data)
         login_network_state = self.check_network_state(entry, work, login_response)

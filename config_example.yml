@@ -50,6 +50,14 @@ variables:
     1ptba: 'xxxxxxxx'
     3wmg: 'xxxxxxxx'
     52pt: 'xxxxxxxx'
+    abn:
+      login:
+        username: 'xxxxxxxx'
+        password: 'xxxxxxxx'
+    abtorrents:
+      login:
+        username: 'xxxxxxxx'
+        password: 'xxxxxxxx'
     avgv: 'xxxxxxxx'
     avistaz: 'xxxxxxxx'
     beitai: 'xxxxxxxx'
@@ -102,6 +110,10 @@ variables:
       name: 'xxxxxxxx'
     greatposterwall: 'xxxxxxxx'
     haidan: 'xxxxxxxx'
+    happyfappy:
+      login:
+        username: 'xxxxxxxx'
+        password: 'xxxxxxxx'
     hares: 'xxxxxxxx'
     hd: 'xxxxxxxx'
     hd-space: 'xxxxxxxx'
@@ -131,6 +143,10 @@ variables:
     jpopsuki: 'xxxxxxxx'
     jptv: 'xxxxxxxx'
     keepfrds: 'xxxxxxxx'
+    kufirc:
+      login:
+        username: 'xxxxxxxx'
+        password: 'xxxxxxxx'
     lemonhd: 'xxxxxxxx'
     m-team:
       login:
@@ -142,8 +158,12 @@ variables:
         username: 'xxxxxxxx'
         password: 'xxxxxxxx'
     msg: 'xxxxxxxx'
-    nicept: 'xxxxxxxx'
     nanyangpt: 'xxxxxxxx'
+    nicept: 'xxxxxxxx'
+    ninjacentral:
+      login:
+        username: 'xxxxxxxx'
+        password: 'xxxxxxxx'
     open: 'xxxxxxxx'
     oshen: 'xxxxxxxx'
     ourbits:
@@ -164,6 +184,10 @@ variables:
         username: 'xxxxxxxx'
         password: 'xxxxxxxx'
     soulvoice: 'xxxxxxxx'
+    speedapp:
+      login:
+        username: 'xxxxxxxx'
+        password: 'xxxxxxxx'
     springsunday: 'xxxxxxxx'
     sjtu: 'xxxxxxxx'
     tjupt: 'xxxxxxxx'
@@ -178,6 +202,10 @@ variables:
         password: 'xxxxxxxx'
     ultrahd: 'xxxxxxxx'
     xtremewrestlingtorrents:
+      login:
+        username: 'xxxxxxxx'
+        password: 'xxxxxxxx'
+    xwt-classics:
       login:
         username: 'xxxxxxxx'
         password: 'xxxxxxxx'
