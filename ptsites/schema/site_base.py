@@ -311,12 +311,12 @@ class SiteBase:
             entry['result'] = SignState.SUCCEED.value
             return SignState.SUCCEED
         if not isinstance(succeed_regex, list):
-            regex_tuple = succeed_regex
-            if isinstance(succeed_regex, str):
-                regex_tuple = (succeed_regex, 0)
-            succeed_regex = [regex_tuple]
+            print(succeed_regex)
+            succeed_regex = [succeed_regex]
 
         for regex in succeed_regex:
+            if isinstance(regex, str):
+                regex = (regex, 0)
             regex, group_index = regex
             if succeed_msg := re.search(regex, content):
                 entry['result'] = re.sub('<.*?>|&shy;|&nbsp;', '', succeed_msg.group(group_index))
