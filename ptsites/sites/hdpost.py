@@ -63,7 +63,7 @@ class MainClass(Unit3D):
                 url='/login',
                 method='password',
                 check_state=('network', NetworkState.SUCCEED),
-                response_urls=['/pages/1'],
+                response_urls=['', '/pages/1'],
                 token_regex=r'(?<=name="_token" value=").+?(?=")',
                 captcha_regex=r'(?<=name="_captcha" value=").+?(?=")',
             )
