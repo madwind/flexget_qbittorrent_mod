@@ -26,7 +26,7 @@ class Executor:
                 site_class = Executor.get_site_class(module.name)
                 sites_schema.update(site_class.build_sign_in_schema())
         except AttributeError as e:
-            raise plugin.PluginError(f"site: {module.name}, error: {str(e.args)}")
+            raise plugin.PluginError(f"site: {module.name}, error: {e}")
         return sites_schema
 
     @staticmethod
@@ -38,7 +38,7 @@ class Executor:
                 site_class = Executor.get_site_class(module.name)
                 sites_schema.update(site_class.build_reseed_schema())
         except AttributeError as e:
-            raise plugin.PluginError(f"site: {module.name}, error: {str(e.args)}")
+            raise plugin.PluginError(f"site: {module.name}, error: {e}")
         return sites_schema
 
     @staticmethod
@@ -47,14 +47,14 @@ class Executor:
             site_class = Executor.get_site_class(entry['class_name'])
             site_class.build_sign_in_entry(entry, config)
         except AttributeError as e:
-            raise plugin.PluginError(f"site: {entry['site_name']}, error: {str(e.args)}")
+            raise plugin.PluginError(f"site: {entry['site_name']}, error: {e}")
 
     @staticmethod
     def sign_in(entry, config):
         try:
             site_class = Executor.get_site_class(entry['class_name'])
         except AttributeError as e:
-            raise plugin.PluginError(f"site: {entry['class_name']}, error: {str(e.args)}")
+            raise plugin.PluginError(f"site: {entry['class_name']}, error: {e}")
 
         site_object = site_class()
         entry['prefix'] = 'Sign_in'
