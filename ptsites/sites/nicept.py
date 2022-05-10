@@ -1,7 +1,6 @@
 from ..schema.nexusphp import Attendance
 
 
-
 class MainClass(Attendance):
     URL = 'https://www.nicept.net/'
     USER_CLASSES = {

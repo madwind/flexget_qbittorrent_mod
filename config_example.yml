@@ -66,6 +66,7 @@ variables:
         username: 'xxxxxxxx'
         password: 'xxxxxxxx'
     btschool: 'xxxxxxxx'
+    carpt: 'xxxxxxxx'
     cathode-ray:
       login:
         username: 'xxxxxxxx'
