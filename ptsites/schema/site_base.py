@@ -171,7 +171,7 @@ class SiteBase:
                 if re_search := re.search(url_regex, response.text):
                     download_url = urljoin(base_url, re_search.group())
         except Exception as e:
-            logger.warning(str(e.args))
+            logger.warning(e)
         if not download_url:
             entry.fail(f"site:{entry['class_name']} can not found download url from {torrent_page_url}")
         entry['url'] = download_url
@@ -194,7 +194,7 @@ class SiteBase:
                 entry.fail_with_prefix(f'response.status_code={response.status_code}')
             return response
         except Exception as e:
-            entry.fail_with_prefix(NetworkState.NETWORK_ERROR.value.format(url=url, error=str(e.args)))
+            entry.fail_with_prefix(NetworkState.NETWORK_ERROR.value.format(url=url, error=e))
         return None
 
     def sign_in_by_get(self, entry, config, work, last_content=None):
