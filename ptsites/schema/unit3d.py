@@ -61,5 +61,4 @@ class Unit3D(SiteBase):
         return value.replace(' ', '')
 
     def handle_join_date(self, value):
-        print(value)
         return parse(value).date()

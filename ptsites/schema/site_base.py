@@ -311,7 +311,6 @@ class SiteBase:
             entry['result'] = SignState.SUCCEED.value
             return SignState.SUCCEED
         if not isinstance(succeed_regex, list):
-            print(succeed_regex)
             succeed_regex = [succeed_regex]
 
         for regex in succeed_regex:
