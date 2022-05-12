@@ -34,7 +34,7 @@ class MainClass(Gazelle):
             Work(
                 url='/',
                 method='get',
-                succeed_regex='<span class="Header-profileName">.*?</span>',
+                succeed_regex='<span class="HeaderProfile-name">.+?</span>',
                 fail_regex=None,
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
@@ -53,7 +53,7 @@ class MainClass(Gazelle):
         NetUtils.dict_merge(selector, {
             'detail_sources': {
                 'default': {
-                    'elements': {'table': 'div.box.box_info.box_userinfo_stats > ul'}
+                    'elements': {'table': 'div.SidebarItemStats.SidebarItem > ul'}
                 },
                 'extend': {
                     'link': '/ajax.php?action=community_stats&userid={}'
