@@ -185,20 +185,20 @@ class PluginIYUUAutoReseed:
                 'sign': config['iyuu'],
                 'version': config['version']
             }
-            sites_response = task.requests.get('http://api.iyuu.cn/index.php?s=App.Api.Sites', timeout=60,
+            sites_response = task.requests.get('https://api.iyuu.cn/index.php?s=App.Api.Sites', timeout=60,
                                                params=data).json()
             if sites_response.get('ret') != 200:
                 raise plugin.PluginError(
-                    'http://api.iyuu.cn/index.php?s=App.Api.Sites: {}'.format(sites_response)
+                    'https://api.iyuu.cn/index.php?s=App.Api.Sites: {}'.format(sites_response)
                 )
             sites_json = self.modify_sites(sites_response['data']['sites'])
 
-            reseed_response = task.requests.post('http://api.iyuu.cn/index.php?s=App.Api.Infohash',
+            reseed_response = task.requests.post('https://api.iyuu.cn/index.php?s=App.Api.Infohash',
                                                  json=torrents_hashes,
                                                  timeout=60).json()
             if reseed_response.get('ret') != 200:
                 raise plugin.PluginError(
-                    'http://api.iyuu.cn/index.php?s=App.Api.Infohash Error: {}'.format(reseed_response)
+                    'https://api.iyuu.cn/index.php?s=App.Api.Infohash Error: {}'.format(reseed_response)
                 )
             reseed_json = reseed_response['data']
         except (RequestException, JSONDecodeError) as e:
