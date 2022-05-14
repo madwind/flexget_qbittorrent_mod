@@ -40,7 +40,7 @@ class MainClass(Ocelot):
             ),
             Work(
                 url='/takelogin.php',
-                method='login',
+                method='password',
                 succeed_regex='Hello, <a .+?</a>',
                 response_urls=['/my.php'],
                 check_state=('final', SignState.SUCCEED),
@@ -49,7 +49,7 @@ class MainClass(Ocelot):
             )
         ]
 
-    def sign_in_by_login(self, entry, config, work, last_content):
+    def sign_in_by_password(self, entry, config, work, last_content):
         login = entry['site_config'].get('login')
         if not login:
             entry.fail_with_prefix('Login data not found!')
