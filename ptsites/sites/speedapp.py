@@ -113,7 +113,7 @@ class MainClass(SiteBase):
             }
         }
 
-    def build_workflow(self, entry, config):
+    def build_login_workflow(self, entry, config):
         return [
             Work(
                 url='/zh/%E7%99%BB%E5%BD%95?locale=zh',

@@ -75,7 +75,7 @@ class MainClass(SiteBase):
             }
         }
 
-    def build_workflow(self, entry, config):
+    def build_login_workflow(self, entry, config):
         return [
             Work(
                 url='/login.php?do=login',
@@ -83,7 +83,11 @@ class MainClass(SiteBase):
                 succeed_regex=r'Thank you for logging in, .*?\.</p>',
                 check_state=('network', NetworkState.SUCCEED),
                 response_urls=['/login.php?do=login']
-            ),
+            )
+        ]
+
+    def build_workflow(self, entry, config):
+        return [
             Work(
                 url='/latest/',
                 method='get',

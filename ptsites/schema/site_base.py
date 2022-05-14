@@ -105,15 +105,20 @@ class SiteBase:
             entry.fail_with_prefix(f"site: {entry['site_name']} url or workflow is empty")
             return
         last_content = None
+        last_response = None
         for work in self.workflow:
             self.work_urljoin(work, entry['url'])
             method_name = f"sign_in_by_{work.method}"
             if method := getattr(self, method_name, None):
-                last_response = method(entry, config, work, last_content)
-                if last_response == 'skip':
-                    continue
-                if (last_content := NetUtils.decode(last_response)) and work.is_base_content:
+                if work.method == 'get' and last_response and NetUtils.url_equal(
+                        work.url, last_response.url) and work.is_base_content:
                     entry['base_content'] = last_content
+                else:
+                    last_response = method(entry, config, work, last_content)
+                    if last_response == 'skip':
+                        continue
+                    if (last_content := NetUtils.decode(last_response)) and work.is_base_content:
+                        entry['base_content'] = last_content
                 if work.check_state:
                     if not self.check_state(entry, work, last_response, last_content):
                         return

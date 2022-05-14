@@ -1,4 +1,5 @@
 import re
+from urllib.parse import urlparse, parse_qsl, unquote_plus
 
 import chardet
 
@@ -52,3 +53,9 @@ class NetUtils:
                 if site_name == 'edu':
                     site_name = domain[len(domain) - 3]
                 return site_name
+
+    @staticmethod
+    def url_equal(url1, url2):
+        parse = lambda url: (parsed := urlparse(url))._replace(query=frozenset(parse_qsl(parsed.query)),
+                                                               path=unquote_plus(parsed.path).rstrip('/'))
+        return parse(url1) == parse(url2)

@@ -14,7 +14,7 @@ class MainClass(XBT):
         'days': [90],
     }
 
-    def build_workflow(self, entry, config):
+    def build_login_workflow(self, entry, config):
         return [
             Work(
                 url='/login.php?returnto=%2F',
