@@ -40,7 +40,7 @@ class MainClass(Discuz):
             ),
             Work(
                 url='/login.php',
-                method='login',
+                method='password',
                 check_state=('network', NetworkState.SUCCEED),
                 login_url_regex='(?<=action=").*?(?=")',
                 formhash_regex='(?<="formhash" value=").*(?=")'
@@ -58,7 +58,7 @@ class MainClass(Discuz):
             )
         ]
 
-    def sign_in_by_login(self, entry, config, work, last_content):
+    def sign_in_by_password(self, entry, config, work, last_content):
         login = entry['site_config'].get('login')
         if not login:
             entry.fail_with_prefix('Login data not found!')

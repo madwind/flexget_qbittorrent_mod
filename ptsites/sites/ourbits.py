@@ -36,13 +36,13 @@ class MainClass(AttendanceHR):
         return [
             Work(
                 url='/takelogin.php',
-                method='login',
+                method='password',
                 check_state=('network', NetworkState.SUCCEED),
                 response_urls=['/index.php']
             )
         ]
 
-    def sign_in_by_login(self, entry, config, work, last_content=None):
+    def sign_in_by_password(self, entry, config, work, last_content=None):
         login = entry['site_config'].get('login')
         if not login:
             entry.fail_with_prefix('Login data not found!')
