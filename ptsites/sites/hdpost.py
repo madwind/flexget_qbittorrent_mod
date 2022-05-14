@@ -75,9 +75,9 @@ class MainClass(Unit3D):
                 url='/',
                 method='get',
                 succeed_regex=('<a class="top-nav__username" href="https://pt.hdpost.top/users/(.*?)">', 1),
-                fail_regex=None,
                 check_state=('final', SignState.SUCCEED),
-                is_base_content=True
+                is_base_content=True,
+                response_urls=['', '/']
             )
         ]
 

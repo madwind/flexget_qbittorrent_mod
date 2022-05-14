@@ -30,7 +30,7 @@ class MainClass(Unit3D):
             }
         }
 
-    def build_workflow(self, entry, config):
+    def build_login_workflow(self, entry, config):
         return [
             Work(
                 url='/login',
