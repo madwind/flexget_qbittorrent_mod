@@ -196,6 +196,7 @@ variables:
         password: 'xxxxxxxx'
     springsunday: 'xxxxxxxx'
     sjtu: 'xxxxxxxx'
+    theaudioscene: 'xxxxxxxx'
     tjupt: 'xxxxxxxx'
     torrentdb:
       login:
