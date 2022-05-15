@@ -183,6 +183,7 @@ variables:
       login:
         username: 'xxxxxxxx'
         password: 'xxxxxxxx'
+    scenetime: 'xxxxxxxx'
     skyey2:
       login:
         username: 'xxxxxxxx'
