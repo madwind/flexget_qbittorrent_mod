@@ -141,7 +141,10 @@ variables:
     htpt: 'xxxxxxxx'
     iptorrents: 'xxxxxxxx'
     joyhd: 'xxxxxxxx'
-    jpopsuki: 'xxxxxxxx'
+    jpopsuki:
+      login:
+        username: 'xxxxxxxx'
+        password: 'xxxxxxxx'
     jptv: 'xxxxxxxx'
     keepfrds: 'xxxxxxxx'
     kufirc:
