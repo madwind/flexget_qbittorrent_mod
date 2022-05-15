@@ -2,7 +2,7 @@ import datetime
 import re
 
 from ..schema.gazelle import Gazelle
-from ..schema.site_base import Work, SignState
+from ..schema.site_base import Work, SignState, NetworkState
 
 
 class MainClass(Gazelle):
@@ -12,6 +12,53 @@ class MainClass(Gazelle):
         'share_ratio': [1.05],
         'days': [14]
     }
+
+    @classmethod
+    def build_sign_in_schema(cls):
+        return {
+            cls.get_module_name(): {
+                'type': 'object',
+                'properties': {
+                    'cookie': {'type': 'string'},
+                    'login': {
+                        'type': 'object',
+                        'properties': {
+                            'username': {'type': 'string'},
+                            'password': {'type': 'string'}
+                        },
+                        'additionalProperties': False
+                    }
+                },
+                'additionalProperties': False
+            }
+        }
+
+    def build_login_workflow(self, entry, config):
+        return [
+            Work(
+                url='/login.php',
+                method='password',
+                check_state=('network', NetworkState.SUCCEED),
+                response_urls=['/index.php'],
+            ),
+        ]
+
+    def sign_in_by_password(self, entry, config, work, last_content):
+        login = entry['site_config'].get('login')
+        if not login:
+            entry.fail_with_prefix('Login data not found!')
+            return
+        data = {
+            'username': login['username'],
+            'password': login['password'],
+            'keeplogged': 1,
+            'login': 'Log In!',
+        }
+        login_response = self._request(entry, 'post', work.url, data=data)
+        login_network_state = self.check_network_state(entry, work, login_response)
+        if login_network_state != NetworkState.SUCCEED:
+            return
+        return login_response
 
     def build_workflow(self, entry, config):
         return [
