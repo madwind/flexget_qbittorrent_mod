@@ -177,6 +177,7 @@ variables:
       login:
         username: 'xxxxxxxx'
         password: 'xxxxxxxx'
+    ptchina: 'xxxxxxxx'
     pterclub: 'xxxxxxxx'
     pthome: 'xxxxxxxx'
     pttime: 'xxxxxxxx'
