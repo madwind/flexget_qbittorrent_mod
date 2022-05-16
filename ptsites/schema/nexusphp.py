@@ -1,5 +1,6 @@
 import itertools
 import json
+import re
 from pathlib import Path
 from urllib.parse import urljoin
 
@@ -42,16 +43,16 @@ class NexusPHP(SiteBase):
                     'handle': self.handle_share_ratio
                 },
                 'points': {
-                    'regex': ('(魔力|Bonus).*?([\\d,.]+)', 2)
+                    'regex': ('(魔力|Bonus|Bônus).*?([\\d,.]+)', 2)
                 },
                 'join_date': {
-                    'regex': ('(加入日期|注册日期|Join.date).*?(\\d{4}-\\d{2}-\\d{2})', 2),
+                    'regex': ('(加入日期|注册日期|Join.date|Data de Entrada).*?(\\d{4}-\\d{2}-\\d{2})', 2),
                 },
                 'seeding': {
-                    'regex': ('(当前活动|當前活動).*?(\\d+)', 2)
+                    'regex': ('(当前活动|當前活動|Torrents Ativos).*?(\\d+)', 2)
                 },
                 'leeching': {
-                    'regex': ('(当前活动|當前活動).*?\\d+\\D+(\\d+)', 2)
+                    'regex': ('(当前活动|當前活動|Torrents Ativos).*?\\d+\\D+(\\d+)', 2)
                 },
                 'hr': {
                     'regex': 'H&R.*?(\\d+)'
@@ -106,6 +107,7 @@ class AttendanceHR(NexusPHP):
                 method='get',
                 succeed_regex=[
                     '这是您的第.*?次签到，已连续签到.*?天，本次签到获得.*?魔力值。|這是您的第.*次簽到，已連續簽到.*?天，本次簽到獲得.*?魔力值。',
+                    rf'{re.escape("Você já resgatou ")}.*?{re.escape(" dias. Com isso, coletou ")}.*?{re.escape(" dia(s) consecutivos e dessa vez você receberá um bônus de ")}.*?{re.escape(".")}',
                     '[签簽]到已得\\d+',
                     '您今天已经签到过了，请勿重复刷新。|您今天已經簽到過了，請勿重複刷新。'],
                 check_state=('final', SignState.SUCCEED),
