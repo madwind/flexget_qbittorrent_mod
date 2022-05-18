@@ -219,6 +219,21 @@ class SiteBase:
                     return
         return self._request(entry, 'post', work.url, data=data)
 
+    @staticmethod
+    def _get_user_id(entry, user_id_selector, base_content):
+        if isinstance(user_id_selector, str):
+            user_id_match = re.search(user_id_selector, base_content)
+            if user_id_match:
+                return user_id_match.group(1)
+            else:
+                entry.fail_with_prefix('User id not found.')
+                logger.error('site: {} User id not found. content: {}'.format(entry['site_name'], base_content))
+                return
+        else:
+            entry.fail_with_prefix('user_id_selector is not str.')
+            logger.error('site: {} user_id_selector is not str.'.format(entry['site_name']))
+            return
+
     def get_details_base(self, entry, config, selector):
         entry['user_classes'] = getattr(self, 'USER_CLASSES', None)
 
@@ -227,14 +242,8 @@ class SiteBase:
             return
         user_id = ''
         user_id_selector = selector.get('user_id')
-        if user_id_selector:
-            user_id_match = re.search(user_id_selector, base_content)
-            if user_id_match:
-                user_id = user_id_match.group(1)
-            else:
-                entry.fail_with_prefix('User id not found.')
-                logger.error('site: {} User id not found. content: {}'.format(entry['site_name'], base_content))
-                return
+        if user_id_selector and not (user_id := self._get_user_id(entry, user_id_selector, base_content)):
+            return
         details_text = ''
         detail_sources = selector.get('detail_sources')
         for detail_source in detail_sources.values():
