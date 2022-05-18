@@ -261,7 +261,7 @@ class SiteBase:
                                 details_text = details_text + details_info.text
                         else:
                             entry.fail_with_prefix('Element: {} not found.'.format(name))
-                            logger.error('site: {} element: {} not found, selecotr: {}, soup: {}',
+                            logger.error('site: {} element: {} not found, selector: {}, soup: {}',
                                          entry['site_name'],
                                          name, sel, soup)
                             return
