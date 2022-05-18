@@ -55,8 +55,5 @@ class MainClass(SiteBase):
             ),
         ]
 
-    def get_message(self, entry, config):
-        entry['result'] += '(TODO: Message)'  # TODO: Feature not implemented yet
-
     def get_details(self, entry, config):
         self.get_details_base(entry, config, build_selector())

@@ -375,3 +375,6 @@ class SiteBase:
         if handle:
             detail = handle(detail)
         return str(detail)
+
+    def get_message(self, entry, config):
+        entry['result'] += '(TODO: Message)'  # TODO: Feature not implemented yet
