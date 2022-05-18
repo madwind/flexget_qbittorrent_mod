@@ -99,8 +99,7 @@ class MainClass(SiteBase):
         ]
 
     def sign_in_by_password(self, entry, config, work, last_content):
-        login = entry['site_config'].get('login')
-        if not login:
+        if not (login := entry['site_config'].get('login')):
             entry.fail_with_prefix('Login data not found!')
             return
         data = {
@@ -114,11 +113,7 @@ class MainClass(SiteBase):
             'vb_login_password': login['password'],
             'cookieuser': 1
         }
-        login_response = self._request(entry, 'post', work.url, data=data)
-        login_network_state = self.check_network_state(entry, work, login_response)
-        if login_network_state != NetworkState.SUCCEED:
-            return
-        return login_response
+        return self._request(entry, 'post', work.url, data=data)
 
     def get_message(self, entry, config):
         entry['result'] += '(TODO: Message)'  # TODO: Feature not implemented yet
