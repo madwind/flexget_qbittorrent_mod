@@ -1,45 +1,9 @@
 import ast
-
-from dateutil.parser import parse
+import json
+from urllib.parse import urljoin
 
 from ..schema.site_base import SiteBase, Work, SignState, NetworkState
-
-
-def handle_join_date(value):
-    return parse(value).date()
-
-
-def handle_amount_of_data(value):
-    return value + 'B'
-
-
-def build_selector():
-    return {
-        'detail_sources': {
-            'default': {
-                'link': '/api/v1/auth',
-            },
-        },
-        'details': {
-            'uploaded': {
-                'regex': r'"uploaded":(\d+)',
-                'handle': handle_amount_of_data
-            },
-            'downloaded': {
-                'regex': r'"downloaded":(\d+)',
-                'handle': handle_amount_of_data
-            },
-            'share_ratio': None,
-            'points': None,
-            'join_date': {
-                'regex': r'"createdAt":"(\d{4}-\d{2}-\d{2})',
-                'handle': handle_join_date,
-            },
-            'seeding': None,
-            'leeching': None,
-            'hr': None,
-        },
-    }
+from ..utils.net_utils import NetUtils
 
 
 class MainClass(SiteBase):
@@ -96,4 +60,20 @@ class MainClass(SiteBase):
         entry['result'] += '(TODO: Message)'  # TODO: Feature not implemented yet
 
     def get_details(self, entry, config):
-        self.get_details_base(entry, config, build_selector())
+        link = urljoin(entry['url'], '/api/v1/auth')
+        detail_response = self._request(entry, 'get', link)
+        network_state = self.check_network_state(entry, link, detail_response)
+        if network_state != NetworkState.SUCCEED:
+            return
+        detail_content = NetUtils.decode(detail_response)
+        data = json.loads(detail_content)
+        entry['details'] = {
+            'uploaded': str(data['user']['uploaded']) + 'B',
+            'downloaded': str(data['user']['downloaded']) + 'B',
+            'share_ratio': data['user']['uploaded'] / data['user']['downloaded'] if data['user']['downloaded'] else 0,
+            'points': '*',
+            'join_date': data['user']['createdAt'].split('T')[0],
+            'seeding': '*',
+            'leeching': '*',
+            'hr': '*'
+        }
