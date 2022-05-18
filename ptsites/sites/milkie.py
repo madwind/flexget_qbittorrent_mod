@@ -60,6 +60,7 @@ class MainClass(SiteBase):
         entry['result'] += '(TODO: Message)'  # TODO: Feature not implemented yet
 
     def get_details(self, entry, config):
+        entry['user_classes'] = getattr(self, 'USER_CLASSES', None)
         link = urljoin(entry['url'], '/api/v1/auth')
         detail_response = self._request(entry, 'get', link)
         network_state = self.check_network_state(entry, link, detail_response)

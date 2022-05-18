@@ -28,6 +28,7 @@ class MainClass(SiteBase):
         entry['result'] += '(TODO: Message)'  # TODO: Feature not implemented yet
 
     def get_details(self, entry, config):
+        entry['user_classes'] = getattr(self, 'USER_CLASSES', None)
         link = urljoin(entry['url'],
                        '/api/v1/users/{}'.format(self._get_user_id(entry, '"id":(.+?),', entry['base_content'])))
         detail_response = self._request(entry, 'get', link)
