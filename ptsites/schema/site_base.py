@@ -376,5 +376,8 @@ class SiteBase:
             detail = handle(detail)
         return str(detail)
 
+    def get_details(self, entry, config):
+        self.get_details_base(entry, config, self.build_selector())
+
     def get_message(self, entry, config):
-        entry['result'] += '(TODO: Message)'  # TODO: Feature not implemented yet
+        entry['result'] += '(TODO: Message)'

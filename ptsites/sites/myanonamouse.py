@@ -70,9 +70,6 @@ class MainClass(SiteBase):
     def get_message(self, entry, config):
         self.get_myanonamouse_message(entry, config)
 
-    def get_details(self, entry, config):
-        self.get_details_base(entry, config, self.build_selector())
-
     def build_selector(self):
         return {
             'user_id': '/u/(\\d+)',

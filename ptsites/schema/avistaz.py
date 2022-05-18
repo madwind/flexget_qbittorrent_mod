@@ -48,9 +48,6 @@ class AvistaZ(SiteBase):
         }
         return selector
 
-    def get_details(self, entry, config):
-        self.get_details_base(entry, config, self.build_selector())
-
     def handle_points(self, value):
         return value.replace(' ', '')
 

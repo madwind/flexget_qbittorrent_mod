@@ -108,8 +108,5 @@ class XBTIT(SiteBase):
     def get_message(self, entry, config):
         self.get_XBTIT_message(entry, config)
 
-    def get_details(self, entry, config):
-        self.get_details_base(entry, config, self.build_selector())
-
     def handle_join_date(self, value):
         return parse(value, dayfirst=True).date()

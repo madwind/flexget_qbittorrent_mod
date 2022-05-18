@@ -8,9 +8,6 @@ class Unit3D(SiteBase):
     def get_message(self, entry, config):
         self.get_unit3d_message(entry, config)
 
-    def get_details(self, entry, config):
-        self.get_details_base(entry, config, self.build_selector())
-
     def build_selector(self):
         selector = {
             'user_id': '/users/(.*?)"',

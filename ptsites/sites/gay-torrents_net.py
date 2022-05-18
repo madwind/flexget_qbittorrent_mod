@@ -16,43 +16,6 @@ def handle_join_date(value):
     return parse(value).date()
 
 
-def build_selector():
-    return {
-        'user_id': r'<a href="member\.php\?([-\w]+?)">My Profile</a>',
-        'detail_sources': {
-            'default': {
-                'link': '/member.php?{}',
-                'elements': {
-                    'table1': '#view-stats_mini > div > div > div',
-                    'table2': '#view-stats_mini.subsection > div > div > div'
-                }
-            }
-        },
-        'details': {
-            'uploaded': {
-                'regex': r'Uploaded\s*([\d.]+ ([ZEPTGMK]i)?B)'
-            },
-            'downloaded': {
-                'regex': r'Downloaded\s*([\d.]+ ([ZEPTGMK]i)?B)'
-            },
-            'share_ratio': {
-                'regex': r'Ratio(∞|[\d,.]+)',
-                'handle': handle_share_ratio
-            },
-            'points': {
-                'regex': r'Juices([\d,.]+)'
-            },
-            'join_date': {
-                'regex': r'Join Date\s*?[\d:]+? (.+?)\s',
-                'handle': handle_join_date
-            },
-            'seeding': None,
-            'leeching': None,
-            'hr': None
-        }
-    }
-
-
 class MainClass(SiteBase):
     URL = 'https://www.gay-torrents.net/'
 
@@ -120,5 +83,39 @@ class MainClass(SiteBase):
             return
         return login_response
 
-    def get_details(self, entry, config):
-        self.get_details_base(entry, config, build_selector())
+    @staticmethod
+    def build_selector():
+        return {
+            'user_id': r'<a href="member\.php\?([-\w]+?)">My Profile</a>',
+            'detail_sources': {
+                'default': {
+                    'link': '/member.php?{}',
+                    'elements': {
+                        'table1': '#view-stats_mini > div > div > div',
+                        'table2': '#view-stats_mini.subsection > div > div > div'
+                    }
+                }
+            },
+            'details': {
+                'uploaded': {
+                    'regex': r'Uploaded\s*([\d.]+ ([ZEPTGMK]i)?B)'
+                },
+                'downloaded': {
+                    'regex': r'Downloaded\s*([\d.]+ ([ZEPTGMK]i)?B)'
+                },
+                'share_ratio': {
+                    'regex': r'Ratio(∞|[\d,.]+)',
+                    'handle': handle_share_ratio
+                },
+                'points': {
+                    'regex': r'Juices([\d,.]+)'
+                },
+                'join_date': {
+                    'regex': r'Join Date\s*?[\d:]+? (.+?)\s',
+                    'handle': handle_join_date
+                },
+                'seeding': None,
+                'leeching': None,
+                'hr': None
+            }
+        }

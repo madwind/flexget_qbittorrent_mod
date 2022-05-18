@@ -14,41 +14,6 @@ def handle_join_date(value):
     return parse(value).date()
 
 
-def build_selector():
-    return {
-        'user_id': r'Welcome back,</span> <b><a href="/profile/(.+?)">',
-        'detail_sources': {
-            'default': {
-                'link': '/profile/{}',
-                'elements': {
-                    'bar': '#memberBar > div.span8',
-                    'join date': '#profileTable > tbody > tr:nth-child(1)'
-                }
-            }
-        },
-        'details': {
-            'uploaded': {
-                'regex': r'UL: ([\d.]+ [ZEPTGMK]?B)'
-            },
-            'downloaded': {
-                'regex': r'DL: ([\d.]+ [ZEPTGMK]?B)'
-            },
-            'share_ratio': {
-                'regex': r'Ratio: (∞|[\d,.]+)',
-                'handle': handle_share_ratio
-            },
-            'points': None,
-            'join_date': {
-                'regex': r'Join Date((\w+ ){3}\w+)',
-                'handle': handle_join_date
-            },
-            'seeding': None,
-            'leeching': None,
-            'hr': None
-        }
-    }
-
-
 class MainClass(SiteBase):
     URL = 'https://pussytorrents.org/'
 
@@ -100,5 +65,37 @@ class MainClass(SiteBase):
             return
         return login_response
 
-    def get_details(self, entry, config):
-        self.get_details_base(entry, config, build_selector())
+    @staticmethod
+    def build_selector():
+        return {
+            'user_id': r'Welcome back,</span> <b><a href="/profile/(.+?)">',
+            'detail_sources': {
+                'default': {
+                    'link': '/profile/{}',
+                    'elements': {
+                        'bar': '#memberBar > div.span8',
+                        'join date': '#profileTable > tbody > tr:nth-child(1)'
+                    }
+                }
+            },
+            'details': {
+                'uploaded': {
+                    'regex': r'UL: ([\d.]+ [ZEPTGMK]?B)'
+                },
+                'downloaded': {
+                    'regex': r'DL: ([\d.]+ [ZEPTGMK]?B)'
+                },
+                'share_ratio': {
+                    'regex': r'Ratio: (∞|[\d,.]+)',
+                    'handle': handle_share_ratio
+                },
+                'points': None,
+                'join_date': {
+                    'regex': r'Join Date((\w+ ){3}\w+)',
+                    'handle': handle_join_date
+                },
+                'seeding': None,
+                'leeching': None,
+                'hr': None
+            }
+        }

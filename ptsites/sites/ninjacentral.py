@@ -1,32 +1,6 @@
 from ..schema.site_base import SiteBase, Work, SignState, NetworkState
 
 
-def build_selector():
-    return {
-        'detail_sources': {
-            'default': {
-                'do_not_strip': True,
-                'link': '/profile',
-                'elements': {
-                    'table': '#content > div > div > table:nth-child(1) > tbody > tr:nth-child(3) > td',
-                }
-            }
-        },
-        'details': {
-            'uploaded': None,
-            'downloaded': None,
-            'share_ratio': None,
-            'points': None,
-            'join_date': {
-                'regex': r'''(?x)(\d {4} - \d {2} - \d {2})'''
-            },
-            'seeding': None,
-            'leeching': None,
-            'hr': None
-        }
-    }
-
-
 class MainClass(SiteBase):
     URL = 'https://ninjacentral.co.za/'
 
@@ -78,5 +52,28 @@ class MainClass(SiteBase):
             return
         return login_response
 
-    def get_details(self, entry, config):
-        self.get_details_base(entry, config, build_selector())
+    @staticmethod
+    def build_selector():
+        return {
+            'detail_sources': {
+                'default': {
+                    'do_not_strip': True,
+                    'link': '/profile',
+                    'elements': {
+                        'table': '#content > div > div > table:nth-child(1) > tbody > tr:nth-child(3) > td',
+                    }
+                }
+            },
+            'details': {
+                'uploaded': None,
+                'downloaded': None,
+                'share_ratio': None,
+                'points': None,
+                'join_date': {
+                    'regex': r'''(?x)(\d {4} - \d {2} - \d {2})'''
+                },
+                'seeding': None,
+                'leeching': None,
+                'hr': None
+            }
+        }

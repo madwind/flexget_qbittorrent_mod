@@ -26,50 +26,6 @@ def handle_share_ratio(value):
         return value
 
 
-def build_selector():
-    return {
-        'detail_sources': {
-            'default': {
-                'link': '/User',
-                'elements': {
-                    'points': 'div.navbar-collapse.collapse.d-sm-inline-flex > ul:nth-child(6) > li:nth-child(3)',
-                    'stats': 'div.row.row-padding > div.col-lg-3 > div:nth-child(2) > div.box-body',
-                }
-            }
-        },
-        'details': {
-            'uploaded': {
-                'regex': r'''(?x)Upload\ :\ 
-                                ([\d.] + \ [ZEPTGMK] ? o)''',
-                'handle': handle_amount_of_data
-            },
-            'downloaded': {
-                'regex': r'''(?x)Download\ :\ 
-                                ([\d.] + \ [ZEPTGMK] ? o)''',
-                'handle': handle_amount_of_data
-            },
-            'share_ratio': {
-                'regex': r'''(?x)Ratio\ :\ 
-                                (∞ | [\d,.] +)''',
-                'handle': handle_share_ratio
-            },
-            'points': {
-                'regex': r'''(?x)Choco's\ :\ 
-                                ([\d,.] +)'''
-            },
-            'join_date': {
-                'regex': r'''(?mx)Inscrit\ :\ 
-                                (. +?)
-                                $''',
-                'handle': handle_join_date
-            },
-            'seeding': None,
-            'leeching': None,
-            'hr': None
-        }
-    }
-
-
 class MainClass(SiteBase):
     URL = 'https://abn.lol/'
     USER_CLASSES = {
@@ -133,5 +89,46 @@ class MainClass(SiteBase):
             return
         return login_response
 
-    def get_details(self, entry, config):
-        self.get_details_base(entry, config, build_selector())
+    @staticmethod
+    def build_selector():
+        return {
+            'detail_sources': {
+                'default': {
+                    'link': '/User',
+                    'elements': {
+                        'points': 'div.navbar-collapse.collapse.d-sm-inline-flex > ul:nth-child(6) > li:nth-child(3)',
+                        'stats': 'div.row.row-padding > div.col-lg-3 > div:nth-child(2) > div.box-body',
+                    }
+                }
+            },
+            'details': {
+                'uploaded': {
+                    'regex': r'''(?x)Upload\ :\ 
+                                    ([\d.] + \ [ZEPTGMK] ? o)''',
+                    'handle': handle_amount_of_data
+                },
+                'downloaded': {
+                    'regex': r'''(?x)Download\ :\ 
+                                    ([\d.] + \ [ZEPTGMK] ? o)''',
+                    'handle': handle_amount_of_data
+                },
+                'share_ratio': {
+                    'regex': r'''(?x)Ratio\ :\ 
+                                    (∞ | [\d,.] +)''',
+                    'handle': handle_share_ratio
+                },
+                'points': {
+                    'regex': r'''(?x)Choco's\ :\ 
+                                    ([\d,.] +)'''
+                },
+                'join_date': {
+                    'regex': r'''(?mx)Inscrit\ :\ 
+                                    (. +?)
+                                    $''',
+                    'handle': handle_join_date
+                },
+                'seeding': None,
+                'leeching': None,
+                'hr': None
+            }
+        }
