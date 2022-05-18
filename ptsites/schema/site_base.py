@@ -85,7 +85,8 @@ class SiteBase:
         site_config = entry['site_config']
         headers = {
             'user-agent': config.get('user-agent'),
-            'referer': entry['url']
+            'referer': entry['url'],
+            'accept-encoding': 'gzip, deflate, br',
         }
         cookie = None
         if isinstance(site_config, str):
@@ -186,9 +187,7 @@ class SiteBase:
     def _request(self, entry, method, url, **kwargs):
         if not self.requests:
             self.requests = CFScrapeWrapper.create_scraper(requests.Session())
-            if entry_headers := entry.get('headers'):
-                entry_headers['accept-encoding'] = 'gzip, deflate, br'
-                self.requests.headers.update(entry_headers)
+            self.requests.headers.update(entry.get('headers'))
             if entry_cookie := entry.get('cookie'):
                 self.requests.cookies.update(NetUtils.cookie_str_to_dict(entry_cookie))
             self.requests.mount('http://', HTTPAdapter(max_retries=2))
