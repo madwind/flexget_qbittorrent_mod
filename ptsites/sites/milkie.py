@@ -52,9 +52,6 @@ class MainClass(SiteBase):
         self.requests.headers.update({'authorization': 'Bearer ' + ast.literal_eval(login_response.text)['token']})
         return login_response
 
-    def get_message(self, entry, config):
-        entry['result'] += '(TODO: Message)'  # TODO: Feature not implemented yet
-
     def get_details(self, entry, config):
         link = urljoin(entry['url'], '/api/v1/auth')
         detail_response = self._request(entry, 'get', link)

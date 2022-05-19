@@ -8,42 +8,6 @@ def handle_share_ratio(value):
         return value
 
 
-def build_selector():
-    return {
-        'detail_sources': {
-            'default': {
-                'link': '/browse.php',
-                'elements': {
-                    'ratio': '#wel-radio',
-                    'up': '#wel-radiok',
-                    'down': '#wel-radio2',
-                    'active': '#wel-radio3'
-                }
-            }
-        },
-        'details': {
-            'uploaded': {
-                'regex': r'Up:\s*([\d.]+ (?i:[ZEPTGMK])B)'
-            },
-            'downloaded': {
-                'regex': r'(?i)Down:\s*([\d.]+ [ZEPTGMK]B)'
-            },
-            'share_ratio': {
-                'regex': r'Ratio:\s*(---|[\d,.]+)',
-                'handle': handle_share_ratio
-            },
-            'points': None,
-            'seeding': {
-                'regex': r'Active:\s*(\d+)'
-            },
-            'leeching': {
-                'regex': r'Active:\s*\d+\s*(\d+)'
-            },
-            'hr': None
-        }
-    }
-
-
 class XWT(SiteBase):
     @classmethod
     def build_sign_in_schema(cls):
@@ -87,8 +51,38 @@ class XWT(SiteBase):
         }
         return self._request(entry, 'post', work.url, data=data)
 
-    def get_message(self, entry, config):
-        entry['result'] += '(TODO: Message)'  # TODO: Feature not implemented yet
-
-    def get_details(self, entry, config):
-        self.get_details_base(entry, config, build_selector())
+    @staticmethod
+    def build_selector():
+        return {
+            'detail_sources': {
+                'default': {
+                    'link': '/browse.php',
+                    'elements': {
+                        'ratio': '#wel-radio',
+                        'up': '#wel-radiok',
+                        'down': '#wel-radio2',
+                        'active': '#wel-radio3'
+                    }
+                }
+            },
+            'details': {
+                'uploaded': {
+                    'regex': r'Up:\s*([\d.]+ (?i:[ZEPTGMK])B)'
+                },
+                'downloaded': {
+                    'regex': r'(?i)Down:\s*([\d.]+ [ZEPTGMK]B)'
+                },
+                'share_ratio': {
+                    'regex': r'Ratio:\s*(---|[\d,.]+)',
+                    'handle': handle_share_ratio
+                },
+                'points': None,
+                'seeding': {
+                    'regex': r'Active:\s*(\d+)'
+                },
+                'leeching': {
+                    'regex': r'Active:\s*\d+\s*(\d+)'
+                },
+                'hr': None
+            }
+        }

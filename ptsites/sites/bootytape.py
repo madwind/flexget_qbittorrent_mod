@@ -20,64 +20,6 @@ def handle_share_ratio(value):
         return value
 
 
-def build_selector():
-    return {
-        'user_id': fr'{re.escape("Welcome, <a href=userdetails.php?id=")}(\d+)',
-        'detail_sources': {
-            'default': {
-                'link': '/userdetails.php?id={}',
-                'elements': {
-                    'table': 'body > table.mainouter > tbody > tr:nth-child(2) > td > table:nth-child(12)',
-                }
-            }
-        },
-        'details': {
-            'uploaded': {
-                'regex': r"""(?x)Uploaded
-                            [\d.] +
-                            \ 
-                            [ZEPTGMKk] ?
-                            B
-                            \ 
-                            \(
-                            ([\d,] +)""",
-                'handle': handle_amount_of_data
-            },
-            'downloaded': {
-                'regex': r"""(?x)Downloaded
-                            . *?
-                            \(
-                            ([\d,] +)""",
-                'handle': handle_amount_of_data
-            },
-            'share_ratio': {
-                'regex': r"""(?x)Share
-                            \ 
-                            ratio
-                            (∞ | [\d,.] +)""",
-                'handle': handle_share_ratio
-            },
-            'points': {
-                'regex': r"""(?x)Seed
-                            \ 
-                            Bonus
-                            ([\d,.] +)"""
-            },
-            'join_date': {
-                'regex': r"""(?x)Join
-                            \s
-                            date
-                            (. +?)
-                            \ """,
-                'handle': handle_join_date
-            },
-            'seeding': None,
-            'leeching': None,
-            'hr': None
-        }
-    }
-
-
 class MainClass(SiteBase):
     URL = 'https://ssl.bootytape.com/'
     USER_CLASSES = {
@@ -128,8 +70,60 @@ class MainClass(SiteBase):
         }
         return self._request(entry, 'post', work.url, data=data)
 
-    def get_message(self, entry, config):
-        entry['result'] += '(TODO: Message)'  # TODO: Feature not implemented yet
-
-    def get_details(self, entry, config):
-        self.get_details_base(entry, config, build_selector())
+    @staticmethod
+    def build_selector():
+        return {
+            'user_id': fr'{re.escape("Welcome, <a href=userdetails.php?id=")}(\d+)',
+            'detail_sources': {
+                'default': {
+                    'link': '/userdetails.php?id={}',
+                    'elements': {
+                        'table': 'body > table.mainouter > tbody > tr:nth-child(2) > td > table:nth-child(12)',
+                    }
+                }
+            },
+            'details': {
+                'uploaded': {
+                    'regex': r"""(?x)Uploaded
+                                [\d.] +
+                                \ 
+                                [ZEPTGMKk] ?
+                                B
+                                \ 
+                                \(
+                                ([\d,] +)""",
+                    'handle': handle_amount_of_data
+                },
+                'downloaded': {
+                    'regex': r"""(?x)Downloaded
+                                . *?
+                                \(
+                                ([\d,] +)""",
+                    'handle': handle_amount_of_data
+                },
+                'share_ratio': {
+                    'regex': r"""(?x)Share
+                                \ 
+                                ratio
+                                (∞ | [\d,.] +)""",
+                    'handle': handle_share_ratio
+                },
+                'points': {
+                    'regex': r"""(?x)Seed
+                                \ 
+                                Bonus
+                                ([\d,.] +)"""
+                },
+                'join_date': {
+                    'regex': r"""(?x)Join
+                                \s
+                                date
+                                (. +?)
+                                \ """,
+                    'handle': handle_join_date
+                },
+                'seeding': None,
+                'leeching': None,
+                'hr': None
+            }
+        }

@@ -375,3 +375,9 @@ class SiteBase:
         if handle:
             detail = handle(detail)
         return str(detail)
+
+    def get_details(self, entry, config):
+        self.get_details_base(entry, config, self.build_selector())
+
+    def get_message(self, entry, config):
+        entry['result'] += '(TODO: Message)'

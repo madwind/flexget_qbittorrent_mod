@@ -14,47 +14,6 @@ def handle_join_date(value):
     return parse(value).date()
 
 
-def build_selector():
-    return {
-        'user_id': r'id=(\d+)"><i class="icon-tools"></i> Details',
-        'detail_sources': {
-            'default': {
-                'link': '/userdetails.php?id={}',
-                'elements': {
-                    'bar': '#navbar li.dropdown.text-nowrap li:nth-child(8) > a',
-                    'table': 'div:nth-child(2) table:nth-child(11) > tbody'
-                }
-            }
-        },
-        'details': {
-            'uploaded': {
-                'regex': r'Uploaded.*?([\d.]+ [ZEPTGMK]?B)'
-            },
-            'downloaded': {
-                'regex': r'Downloaded.*?([\d.]+ [ZEPTGMK]?B)'
-            },
-            'share_ratio': {
-                'regex': r'Share ratio.*?(∞|[\d,.]+)',
-                'handle': handle_share_ratio
-            },
-            'points': {
-                'regex': r'Total Seed Bonus([\d,.]+)'
-            },
-            'join_date': {
-                'regex': r'Join\sdate\s*?(\d{4}-\d{2}-\d{2})',
-                'handle': handle_join_date
-            },
-            'seeding': {
-                'regex': r'\s*([\d,]+)'
-            },
-            'leeching': {
-                'regex': r'\s*[\d,]+\s*([\d,]+)'
-            },
-            'hr': None
-        }
-    }
-
-
 class MainClass(SiteBase):
     URL = 'https://www.gaytor.rent/'
     USER_CLASSES = {
@@ -105,8 +64,43 @@ class MainClass(SiteBase):
         }
         return self._request(entry, 'post', work.url, data=data)
 
-    def get_message(self, entry, config):
-        entry['result'] += '(TODO: Message)'  # TODO: Feature not implemented yet
-
-    def get_details(self, entry, config):
-        self.get_details_base(entry, config, build_selector())
+    @staticmethod
+    def build_selector():
+        return {
+            'user_id': r'id=(\d+)"><i class="icon-tools"></i> Details',
+            'detail_sources': {
+                'default': {
+                    'link': '/userdetails.php?id={}',
+                    'elements': {
+                        'bar': '#navbar li.dropdown.text-nowrap li:nth-child(8) > a',
+                        'table': 'div:nth-child(2) table:nth-child(11) > tbody'
+                    }
+                }
+            },
+            'details': {
+                'uploaded': {
+                    'regex': r'Uploaded.*?([\d.]+ [ZEPTGMK]?B)'
+                },
+                'downloaded': {
+                    'regex': r'Downloaded.*?([\d.]+ [ZEPTGMK]?B)'
+                },
+                'share_ratio': {
+                    'regex': r'Share ratio.*?(∞|[\d,.]+)',
+                    'handle': handle_share_ratio
+                },
+                'points': {
+                    'regex': r'Total Seed Bonus([\d,.]+)'
+                },
+                'join_date': {
+                    'regex': r'Join\sdate\s*?(\d{4}-\d{2}-\d{2})',
+                    'handle': handle_join_date
+                },
+                'seeding': {
+                    'regex': r'\s*([\d,]+)'
+                },
+                'leeching': {
+                    'regex': r'\s*[\d,]+\s*([\d,]+)'
+                },
+                'hr': None
+            }
+        }

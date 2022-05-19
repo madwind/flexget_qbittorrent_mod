@@ -14,78 +14,6 @@ def handle_share_ratio(value):
         return value
 
 
-def build_selector():
-    return {
-        'detail_sources': {
-            'menu-stats': {
-                'do_not_strip': True,
-                'link': '/profile/menu-stats',
-                'elements': {
-                    'all': 'body',
-                }
-            },
-            'profile': {
-                'link': '/profile',
-                'elements': {
-                    'table': '#kt_content > div.d-flex.flex-column-fluid > div > div > div.flex-row-fluid.ml-lg-8'
-                }
-            }
-        },
-        'details': {
-            'uploaded': {
-                'regex': r'''(?x)已上传
-                                \s*
-                                ([\d.] + \ [ZEPTGMK] ? B)''',
-            },
-            'downloaded': {
-                'regex': r'''(?x)已下载
-                                \s*
-                                ([\d.] + \ [ZEPTGMK] ? B)''',
-            },
-            'share_ratio': {
-                'regex': r'''(?x)比率">
-                                \s*
-                                <i\ class="fas\ fa-fw\ fa-chart-line\ text-info\ fa-sm"></i>
-                                \s*
-                                (Inf. | [\d,.] +)''',
-                'handle': handle_share_ratio
-            },
-            'points': {
-                'regex': r'''(?x)奖励积分">
-                                \s*
-                                <i\ class="fas\ fa-fw\ fa-coins\ text-warning\ fa-sm"></i>
-                                \s*
-                                ([\d,.] +)'''
-            },
-            'join_date': {
-                'regex': r'''(?x)注册日期
-                                \s*
-                                (\d + 年 \d + 月 \d + 日)''',
-                'handle': handle_join_date
-            },
-            'seeding': {
-                'regex': r'''(?x)目前正在播种种子">
-                                \s*
-                                <i\ class="far\ fa-fw\ fa-arrow-alt-circle-up\ text-muted\ fa-sm"></i>
-                                \s*
-                                ([\d,] +)'''
-            },
-            'leeching': {
-                'regex': r'''(?x)目前正在窃取种子">
-                                \s*
-                                <i\ class="far\ fa-fw\ fa-arrow-alt-circle-down\ text-danger\ text-muted\ fa-sm"></i>
-                                \s*
-                                ([\d,] +)'''
-            },
-            'hr': {
-                'regex': r'''(?x)HnR
-                                \ 
-                                ([\d,] +)'''
-            }
-        }
-    }
-
-
 class MainClass(SiteBase):
     URL = 'https://speedapp.io/'
     USER_CLASSES = {
@@ -145,8 +73,74 @@ class MainClass(SiteBase):
         }
         return self._request(entry, 'post', work.url, data=data)
 
-    def get_message(self, entry, config):
-        entry['result'] += '(TODO: Message)'  # TODO: Feature not implemented yet
-
-    def get_details(self, entry, config):
-        self.get_details_base(entry, config, build_selector())
+    @staticmethod
+    def build_selector():
+        return {
+            'detail_sources': {
+                'menu-stats': {
+                    'do_not_strip': True,
+                    'link': '/profile/menu-stats',
+                    'elements': {
+                        'all': 'body',
+                    }
+                },
+                'profile': {
+                    'link': '/profile',
+                    'elements': {
+                        'table': '#kt_content > div.d-flex.flex-column-fluid > div > div > div.flex-row-fluid.ml-lg-8'
+                    }
+                }
+            },
+            'details': {
+                'uploaded': {
+                    'regex': r'''(?x)已上传
+                                    \s*
+                                    ([\d.] + \ [ZEPTGMK] ? B)''',
+                },
+                'downloaded': {
+                    'regex': r'''(?x)已下载
+                                    \s*
+                                    ([\d.] + \ [ZEPTGMK] ? B)''',
+                },
+                'share_ratio': {
+                    'regex': r'''(?x)比率">
+                                    \s*
+                                    <i\ class="fas\ fa-fw\ fa-chart-line\ text-info\ fa-sm"></i>
+                                    \s*
+                                    (Inf. | [\d,.] +)''',
+                    'handle': handle_share_ratio
+                },
+                'points': {
+                    'regex': r'''(?x)奖励积分">
+                                    \s*
+                                    <i\ class="fas\ fa-fw\ fa-coins\ text-warning\ fa-sm"></i>
+                                    \s*
+                                    ([\d,.] +)'''
+                },
+                'join_date': {
+                    'regex': r'''(?x)注册日期
+                                    \s*
+                                    (\d + 年 \d + 月 \d + 日)''',
+                    'handle': handle_join_date
+                },
+                'seeding': {
+                    'regex': r'''(?x)目前正在播种种子">
+                                    \s*
+                                    <i\ class="far\ fa-fw\ fa-arrow-alt-circle-up\ text-muted\ fa-sm"></i>
+                                    \s*
+                                    ([\d,] +)'''
+                },
+                'leeching': {
+                    'regex': r'''(?x)目前正在窃取种子">
+                                    \s*
+                                    <i\ class="far\ fa-fw\ fa-arrow-alt-circle-down\ text-danger\ text-muted\ fa-sm"></i>
+                                    \s*
+                                    ([\d,] +)'''
+                },
+                'hr': {
+                    'regex': r'''(?x)HnR
+                                    \ 
+                                    ([\d,] +)'''
+                }
+            }
+        }

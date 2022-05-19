@@ -16,47 +16,6 @@ def handle_join_date(value):
     return parse(value).date()
 
 
-def build_selector():
-    return {
-        'user_id': r'<strong class="align-middle">(.+?)</strong>',
-        'detail_sources': {
-            'default': {
-                'link': '/profile/{}',
-                'elements': {
-                    'join_date': 'div.bg-gray-light.rounded.p-5 div:nth-child(4) > div:nth-child(2)',
-                    'table': 'div.bg-gray-light.rounded.p-5 > div > div.mt-2.lg\:mt-0'
-                }
-            }
-        },
-        'details': {
-            'uploaded': {
-                'regex': r'≈.*?([\d.]+ [ZEPTGMK]?B) '
-            },
-            'downloaded': {
-                'regex': r'([\d.]+ [ZEPTGMK]?B) ≈'
-            },
-            'share_ratio': {
-                'regex': r'Tokens\s*(∞|[\d,.]+)',
-                'handle': handle_share_ratio
-            },
-            'points': {
-                'regex': r'([\d,.]+)(?= BP)'
-            },
-            'join_date': {
-                'regex': r'Joined on (\w+ \w+ \w+)',
-                'handle': handle_join_date
-            },
-            'seeding': {
-                'regex': r'Total seeding: ([\d,]+)'
-            },
-            'leeching': {
-                'regex': r'Total leeching: ([\d,]+)'
-            },
-            'hr': None
-        }
-    }
-
-
 class MainClass(SiteBase):
     URL = 'https://torrentdb.net'
     USER_CLASSES = {
@@ -114,5 +73,43 @@ class MainClass(SiteBase):
         }
         return self._request(entry, 'post', work.url, data=data)
 
-    def get_details(self, entry, config):
-        self.get_details_base(entry, config, build_selector())
+    @staticmethod
+    def build_selector():
+        return {
+            'user_id': r'<strong class="align-middle">(.+?)</strong>',
+            'detail_sources': {
+                'default': {
+                    'link': '/profile/{}',
+                    'elements': {
+                        'join_date': 'div.bg-gray-light.rounded.p-5 div:nth-child(4) > div:nth-child(2)',
+                        'table': 'div.bg-gray-light.rounded.p-5 > div > div.mt-2.lg\:mt-0'
+                    }
+                }
+            },
+            'details': {
+                'uploaded': {
+                    'regex': r'≈.*?([\d.]+ [ZEPTGMK]?B) '
+                },
+                'downloaded': {
+                    'regex': r'([\d.]+ [ZEPTGMK]?B) ≈'
+                },
+                'share_ratio': {
+                    'regex': r'Tokens\s*(∞|[\d,.]+)',
+                    'handle': handle_share_ratio
+                },
+                'points': {
+                    'regex': r'([\d,.]+)(?= BP)'
+                },
+                'join_date': {
+                    'regex': r'Joined on (\w+ \w+ \w+)',
+                    'handle': handle_join_date
+                },
+                'seeding': {
+                    'regex': r'Total seeding: ([\d,]+)'
+                },
+                'leeching': {
+                    'regex': r'Total leeching: ([\d,]+)'
+                },
+                'hr': None
+            }
+        }
