@@ -49,7 +49,7 @@ class MainClass(Attendance):
             },
             'details': {
                 'points': {
-                    'regex': '奶糖.*?([\\d,.]+)',
+                    'regex': '奶糖.(?:>.*?){4}([\\d,.]+)',
                     'handle': self.handle_points
                 },
                 'seeding': {
