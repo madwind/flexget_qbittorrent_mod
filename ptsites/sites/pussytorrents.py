@@ -1,17 +1,6 @@
-from dateutil.parser import parse
-
 from ..schema.site_base import SiteBase, Work, SignState
 
 
-def handle_share_ratio(value):
-    if value in ['---', '∞']:
-        return '0'
-    else:
-        return value
-
-
-def handle_join_date(value):
-    return parse(value).date()
 
 
 class MainClass(SiteBase):
@@ -48,20 +37,16 @@ class MainClass(SiteBase):
             )
         ]
 
-    def sign_in_by_password(self, entry, config, work, last_content):
-        if not (login := entry['site_config'].get('login')):
-            entry.fail_with_prefix('Login data not found!')
-            return
-        data = {
+    @staticmethod
+    def sign_in_data(login, last_content):
+        return {
             'username': login['username'],
             'password': login['password'],
             'remember_me': 'on',
             'is_forum_login': ''
         }
-        return self._request(entry, 'post', work.url, data=data)
 
-    @staticmethod
-    def build_selector():
+    def build_selector(self):
         return {
             'user_id': r'Welcome back,</span> <b><a href="/profile/(.+?)">',
             'detail_sources': {
@@ -82,12 +67,12 @@ class MainClass(SiteBase):
                 },
                 'share_ratio': {
                     'regex': r'Ratio: (∞|[\d,.]+)',
-                    'handle': handle_share_ratio
+                    'handle': self.handle_share_ratio
                 },
                 'points': None,
                 'join_date': {
                     'regex': r'Join Date((\w+ ){3}\w+)',
-                    'handle': handle_join_date
+                    'handle': self.handle_join_date
                 },
                 'seeding': None,
                 'leeching': None,

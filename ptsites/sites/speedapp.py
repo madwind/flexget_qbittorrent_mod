@@ -7,13 +7,6 @@ def handle_join_date(value):
     return value.translate(str.maketrans('年月', '--', '日'))
 
 
-def handle_share_ratio(value):
-    if value == 'Inf.':
-        return '0'
-    else:
-        return value
-
-
 class MainClass(SiteBase):
     URL = 'https://speedapp.io/'
     USER_CLASSES = {
@@ -55,26 +48,19 @@ class MainClass(SiteBase):
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
                 response_urls=['/'],
-                token_regex=r'''(?x)(?<= name="_csrf_token"\ value=")
-                                    . +?
-                                    (?= ")''',
             )
         ]
 
-    def sign_in_by_password(self, entry, config, work, last_content):
-        if not (login := entry['site_config'].get('login')):
-            entry.fail_with_prefix('Login data not found!')
-            return
-        data = {
-            '_csrf_token': re.search(work.token_regex, last_content).group(),
+    @staticmethod
+    def sign_in_data(login, last_content):
+        return {
+            '_csrf_token': re.search(r'(?<=name="_csrf_token" value=").+?(?=")', last_content).group(),
             'username': login['username'],
             'password': login['password'],
             '_remember_me': 'on',
         }
-        return self._request(entry, 'post', work.url, data=data)
 
-    @staticmethod
-    def build_selector():
+    def build_selector(self):
         return {
             'detail_sources': {
                 'menu-stats': {
@@ -108,7 +94,7 @@ class MainClass(SiteBase):
                                     <i\ class="fas\ fa-fw\ fa-chart-line\ text-info\ fa-sm"></i>
                                     \s*
                                     (Inf. | [\d,.] +)''',
-                    'handle': handle_share_ratio
+                    'handle': self.handle_share_ratio
                 },
                 'points': {
                     'regex': r'''(?x)奖励积分">

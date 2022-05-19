@@ -89,12 +89,6 @@ class NexusPHP(SiteBase):
         if failed:
             entry.fail_with_prefix('Can not read message body!')
 
-    def handle_share_ratio(self, value):
-        if value in ['---', '∞', 'Inf.', '无限', '無限']:
-            return '0'
-        else:
-            return value
-
 
 class AttendanceHR(NexusPHP):
     def build_workflow(self, entry, config):

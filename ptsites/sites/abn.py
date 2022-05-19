@@ -19,13 +19,6 @@ def handle_join_date(value):
         [value_split[i:i + 2] for i in range(0, len(value_split), 2)]))
 
 
-def handle_share_ratio(value):
-    if value == '∞':
-        return '0'
-    else:
-        return value
-
-
 class MainClass(SiteBase):
     URL = 'https://abn.lol/'
     USER_CLASSES = {
@@ -66,26 +59,20 @@ class MainClass(SiteBase):
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
                 response_urls=['/'],
-                token_regex=r'''(?x)(?<= name="__RequestVerificationToken"\ type="hidden"\ value=")
-                                    . *?
-                                    (?= ")'''
             )
         ]
 
-    def sign_in_by_password(self, entry, config, work, last_content):
-        if not (login := entry['site_config'].get('login')):
-            entry.fail_with_prefix('Login data not found!')
-            return
-        data = {
+    @staticmethod
+    def sign_in_data(login, last_content):
+        return {
             'Username': login['username'],
             'Password': login['password'],
             'RememberMe': ['true', 'false'],
-            '__RequestVerificationToken': re.search(work.token_regex, last_content).group(),
+            '__RequestVerificationToken': re.search(
+                r'(?<=name="__RequestVerificationToken" type="hidden" value=").*?(?=")', last_content).group(),
         }
-        return self._request(entry, 'post', work.url, data=data)
 
-    @staticmethod
-    def build_selector():
+    def build_selector(self):
         return {
             'detail_sources': {
                 'default': {
@@ -110,7 +97,7 @@ class MainClass(SiteBase):
                 'share_ratio': {
                     'regex': r'''(?x)Ratio\ :\ 
                                     (∞ | [\d,.] +)''',
-                    'handle': handle_share_ratio
+                    'handle': self.handle_share_ratio
                 },
                 'points': {
                     'regex': r'''(?x)Choco's\ :\ 

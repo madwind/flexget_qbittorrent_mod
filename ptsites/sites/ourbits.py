@@ -42,15 +42,11 @@ class MainClass(AttendanceHR):
             )
         ]
 
-    def sign_in_by_password(self, entry, config, work, last_content=None):
-        if not (login := entry['site_config'].get('login')):
-            entry.fail_with_prefix('Login data not found!')
-            return
-        secret_key = login.get('secret_key')
-        data = {
-            '2fa_code': secret_key and GoogleAuth.calc(secret_key) or '',
+    @staticmethod
+    def sign_in_data(login, last_content):
+        return {
+            '2fa_code': login.get('secret_key') and GoogleAuth.calc(login['secret_key']) or '',
             'trackerssl': 'yes',
             'username': login['username'],
             'password': login['password'],
         }
-        return self._request(entry, 'post', work.url, data=data)

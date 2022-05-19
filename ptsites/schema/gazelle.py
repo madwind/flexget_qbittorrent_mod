@@ -71,9 +71,3 @@ class Gazelle(SiteBase):
                 '\nTitle: {}\nLink: {}\n{}'.format(title, message_url, message_body))
         if failed:
             entry.fail_with_prefix('Can not read message body!')
-
-    def handle_share_ratio(self, value):
-        if value in ['∞']:
-            return '0'
-        else:
-            return value

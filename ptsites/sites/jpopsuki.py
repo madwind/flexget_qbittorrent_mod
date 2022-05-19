@@ -43,17 +43,14 @@ class MainClass(Gazelle):
             ),
         ]
 
-    def sign_in_by_password(self, entry, config, work, last_content):
-        if not (login := entry['site_config'].get('login')):
-            entry.fail_with_prefix('Login data not found!')
-            return
-        data = {
+    @staticmethod
+    def sign_in_data(login, last_content):
+        return {
             'username': login['username'],
             'password': login['password'],
             'keeplogged': 1,
             'login': 'Log In!',
         }
-        return self._request(entry, 'post', work.url, data=data)
 
     def build_workflow(self, entry, config):
         return [
@@ -107,12 +104,6 @@ class MainClass(Gazelle):
             }
         }
         return selector
-
-    def handle_share_ratio(self, value):
-        if value in ['--', '∞']:
-            return '0'
-        else:
-            return value
 
     def handle_join_date(self, value):
         year_regex = '(\\d+) years?'

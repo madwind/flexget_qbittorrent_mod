@@ -1,5 +1,3 @@
-from dateutil.parser import parse
-
 from .site_base import SiteBase
 
 
@@ -56,6 +54,3 @@ class Unit3D(SiteBase):
 
     def handle_points(self, value):
         return value.replace(' ', '')
-
-    def handle_join_date(self, value):
-        return parse(value).date()

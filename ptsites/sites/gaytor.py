@@ -1,17 +1,7 @@
-from dateutil.parser import parse
-
 from ..schema.site_base import SiteBase, Work, SignState
 
 
-def handle_share_ratio(value):
-    if value in ['---', '∞']:
-        return '0'
-    else:
-        return value
 
-
-def handle_join_date(value):
-    return parse(value).date()
 
 
 class MainClass(SiteBase):
@@ -53,19 +43,15 @@ class MainClass(SiteBase):
             )
         ]
 
-    def sign_in_by_password(self, entry, config, work, last_content):
-        if not (login := entry['site_config'].get('login')):
-            entry.fail_with_prefix('Login data not found!')
-            return
-        data = {
+    @staticmethod
+    def sign_in_data(login, last_content):
+        return {
             'username': login['username'],
             'password': login['password'],
             'sw': '1920:1080'
         }
-        return self._request(entry, 'post', work.url, data=data)
 
-    @staticmethod
-    def build_selector():
+    def build_selector(self):
         return {
             'user_id': r'id=(\d+)"><i class="icon-tools"></i> Details',
             'detail_sources': {
@@ -86,14 +72,14 @@ class MainClass(SiteBase):
                 },
                 'share_ratio': {
                     'regex': r'Share ratio.*?(∞|[\d,.]+)',
-                    'handle': handle_share_ratio
+                    'handle': self.handle_share_ratio
                 },
                 'points': {
                     'regex': r'Total Seed Bonus([\d,.]+)'
                 },
                 'join_date': {
                     'regex': r'Join\sdate\s*?(\d{4}-\d{2}-\d{2})',
-                    'handle': handle_join_date
+                    'handle': self.handle_join_date
                 },
                 'seeding': {
                     'regex': r'\s*([\d,]+)'

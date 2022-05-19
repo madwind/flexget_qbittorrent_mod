@@ -1,19 +1,6 @@
 import hashlib
 
-from dateutil.parser import parse
-
 from ..schema.site_base import SiteBase, Work, SignState, NetworkState
-
-
-def handle_share_ratio(value):
-    if value in ['---', '∞']:
-        return '0'
-    else:
-        return value
-
-
-def handle_join_date(value):
-    return parse(value).date()
 
 
 class MainClass(SiteBase):
@@ -61,11 +48,9 @@ class MainClass(SiteBase):
             )
         ]
 
-    def sign_in_by_password(self, entry, config, work, last_content):
-        if not (login := entry['site_config'].get('login')):
-            entry.fail_with_prefix('Login data not found!')
-            return
-        data = {
+    @staticmethod
+    def sign_in_data(login, last_content):
+        return {
             'do': 'login',
             'vb_login_md5password': hashlib.md5(login['password'].encode()).hexdigest(),
             'vb_login_md5password_utf': hashlib.md5(login['password'].encode()).hexdigest(),
@@ -76,10 +61,8 @@ class MainClass(SiteBase):
             'vb_login_password': login['password'],
             'cookieuser': 1
         }
-        return self._request(entry, 'post', work.url, data=data)
 
-    @staticmethod
-    def build_selector():
+    def build_selector(self):
         return {
             'user_id': r'<a href="member\.php\?([-\w]+?)">My Profile</a>',
             'detail_sources': {
@@ -100,14 +83,14 @@ class MainClass(SiteBase):
                 },
                 'share_ratio': {
                     'regex': r'Ratio(∞|[\d,.]+)',
-                    'handle': handle_share_ratio
+                    'handle': self.handle_share_ratio
                 },
                 'points': {
                     'regex': r'Juices([\d,.]+)'
                 },
                 'join_date': {
                     'regex': r'Join Date\s*?[\d:]+? (.+?)\s',
-                    'handle': handle_join_date
+                    'handle': self.handle_join_date
                 },
                 'seeding': None,
                 'leeching': None,

@@ -3,13 +3,6 @@ import re
 from ..schema.site_base import SiteBase, Work, SignState
 
 
-def handle_share_ratio(value):
-    if value == 'Inf.':
-        return '0'
-    else:
-        return value
-
-
 class MainClass(SiteBase):
     URL = 'https://scenetime.com/'
     USER_CLASSES = {
@@ -29,8 +22,7 @@ class MainClass(SiteBase):
             ),
         ]
 
-    @staticmethod
-    def build_selector():
+    def build_selector(self):
         return {
             'user_id': fr'''(?x)(?<= {re.escape('userdetails.php?id=')})
                                 (. +?)
@@ -59,7 +51,7 @@ class MainClass(SiteBase):
                 'share_ratio': {
                     'regex': r'''(?x)(?<= Share\ Ratio)
                                     (Inf. | [\d,.] +)''',
-                    'handle': handle_share_ratio
+                    'handle': self.handle_share_ratio
                 },
                 'points': {
                     'regex': r'''(?x)(?<= Bonus\ Points)
