@@ -1,19 +1,6 @@
 import re
 
-from dateutil.parser import parse
-
 from ..schema.site_base import SignState, Work, NetworkState, SiteBase
-
-
-def handle_share_ratio(value):
-    if value == '∞':
-        return '0'
-    else:
-        return value
-
-
-def handle_join_date(value):
-    return parse(value).date()
 
 
 class MainClass(SiteBase):
@@ -69,8 +56,7 @@ class MainClass(SiteBase):
             'remember': 'on',
         }
 
-    @staticmethod
-    def build_selector():
+    def build_selector(self):
         return {
             'user_id': r'<strong class="align-middle">(.+?)</strong>',
             'detail_sources': {
@@ -91,14 +77,14 @@ class MainClass(SiteBase):
                 },
                 'share_ratio': {
                     'regex': r'Tokens\s*(∞|[\d,.]+)',
-                    'handle': handle_share_ratio
+                    'handle': self.handle_share_ratio
                 },
                 'points': {
                     'regex': r'([\d,.]+)(?= BP)'
                 },
                 'join_date': {
                     'regex': r'Joined on (\w+ \w+ \w+)',
-                    'handle': handle_join_date
+                    'handle': self.handle_join_date
                 },
                 'seeding': {
                     'regex': r'Total seeding: ([\d,]+)'

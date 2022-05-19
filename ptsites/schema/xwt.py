@@ -1,13 +1,6 @@
 from ..schema.site_base import SiteBase, Work, SignState
 
 
-def handle_share_ratio(value):
-    if value == '---':
-        return '0'
-    else:
-        return value
-
-
 class XWT(SiteBase):
     @classmethod
     def build_sign_in_schema(cls):
@@ -48,8 +41,7 @@ class XWT(SiteBase):
             'returnto': '/'
         }
 
-    @staticmethod
-    def build_selector():
+    def build_selector(self):
         return {
             'detail_sources': {
                 'default': {
@@ -71,7 +63,7 @@ class XWT(SiteBase):
                 },
                 'share_ratio': {
                     'regex': r'Ratio:\s*(---|[\d,.]+)',
-                    'handle': handle_share_ratio
+                    'handle': self.handle_share_ratio
                 },
                 'points': None,
                 'seeding': {

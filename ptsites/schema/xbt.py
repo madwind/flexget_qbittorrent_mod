@@ -1,19 +1,6 @@
 import re
 
-from dateutil.parser import parse
-
 from ..schema.site_base import SiteBase
-
-
-def handle_join_date(value):
-    return parse(value).date()
-
-
-def handle_share_ratio(value):
-    if value == 'Inf':
-        return '0'
-    else:
-        return value
 
 
 class XBT(SiteBase):
@@ -36,8 +23,7 @@ class XBT(SiteBase):
             }
         }
 
-    @staticmethod
-    def build_selector():
+    def build_selector(self):
         return {
             'user_id': f'{re.escape("userdetails.php?id=")}'r"(\d+)'>Profile",
             'detail_sources': {
@@ -64,7 +50,7 @@ class XBT(SiteBase):
                     'regex': r'''(?x)Share\ Ratio
                                     \s*
                                     (Inf | [\d,.] +)''',
-                    'handle': handle_share_ratio
+                    'handle': self.handle_share_ratio
                 },
                 'points': {
                     'regex': r'''(?x)Bonus\ Points
@@ -74,7 +60,7 @@ class XBT(SiteBase):
                 'join_date': {
                     'regex': r'''(?x)Join date
                                     ((\w + \ ) {2} \w +)''',
-                    'handle': handle_join_date
+                    'handle': self.handle_join_date
                 },
                 'seeding': {
                     'regex': r'''(?x)Seeding\ Torrents

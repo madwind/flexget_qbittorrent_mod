@@ -387,3 +387,11 @@ class SiteBase:
             entry.fail_with_prefix('Login data not found!')
             return
         return self._request(entry, 'post', work.url, data=self.sign_in_data(login, last_content))
+
+    @staticmethod
+    def handle_share_ratio(value):
+        return '0' if value in ['.', '-', '--', '---', '∞', 'Inf', 'Inf.', '&inf', '无限', '無限'] else value
+
+    @staticmethod
+    def handle_join_date(value):
+        return parse(value).date()

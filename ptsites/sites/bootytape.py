@@ -1,7 +1,5 @@
 import re
 
-from dateutil.parser import parse
-
 from ..schema.site_base import SiteBase, Work, SignState
 
 
@@ -9,15 +7,7 @@ def handle_amount_of_data(value):
     return value + 'B'
 
 
-def handle_join_date(value):
-    return parse(value).date()
 
-
-def handle_share_ratio(value):
-    if value in ['--', '∞']:
-        return '0'
-    else:
-        return value
 
 
 class MainClass(SiteBase):
@@ -67,8 +57,7 @@ class MainClass(SiteBase):
             'password': login['password'],
         }
 
-    @staticmethod
-    def build_selector():
+    def build_selector(self):
         return {
             'user_id': fr'{re.escape("Welcome, <a href=userdetails.php?id=")}(\d+)',
             'detail_sources': {
@@ -103,7 +92,7 @@ class MainClass(SiteBase):
                                 \ 
                                 ratio
                                 (∞ | [\d,.] +)""",
-                    'handle': handle_share_ratio
+                    'handle': self.handle_share_ratio
                 },
                 'points': {
                     'regex': r"""(?x)Seed
@@ -117,7 +106,7 @@ class MainClass(SiteBase):
                                 date
                                 (. +?)
                                 \ """,
-                    'handle': handle_join_date
+                    'handle': self.handle_join_date
                 },
                 'seeding': None,
                 'leeching': None,

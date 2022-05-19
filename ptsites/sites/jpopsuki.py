@@ -105,12 +105,6 @@ class MainClass(Gazelle):
         }
         return selector
 
-    def handle_share_ratio(self, value):
-        if value in ['--', '∞']:
-            return '0'
-        else:
-            return value
-
     def handle_join_date(self, value):
         year_regex = '(\\d+) years?'
         month_regex = '(\\d+) months?'

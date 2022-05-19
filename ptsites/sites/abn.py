@@ -19,13 +19,6 @@ def handle_join_date(value):
         [value_split[i:i + 2] for i in range(0, len(value_split), 2)]))
 
 
-def handle_share_ratio(value):
-    if value == '∞':
-        return '0'
-    else:
-        return value
-
-
 class MainClass(SiteBase):
     URL = 'https://abn.lol/'
     USER_CLASSES = {
@@ -79,8 +72,7 @@ class MainClass(SiteBase):
                 r'(?<=name="__RequestVerificationToken" type="hidden" value=").*?(?=")', last_content).group(),
         }
 
-    @staticmethod
-    def build_selector():
+    def build_selector(self):
         return {
             'detail_sources': {
                 'default': {
@@ -105,7 +97,7 @@ class MainClass(SiteBase):
                 'share_ratio': {
                     'regex': r'''(?x)Ratio\ :\ 
                                     (∞ | [\d,.] +)''',
-                    'handle': handle_share_ratio
+                    'handle': self.handle_share_ratio
                 },
                 'points': {
                     'regex': r'''(?x)Choco's\ :\ 

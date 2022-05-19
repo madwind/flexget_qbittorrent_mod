@@ -1,19 +1,6 @@
 import re
 
-from dateutil.parser import parse
-
 from ..schema.site_base import SiteBase, Work, SignState, NetworkState
-
-
-def handle_join_date(value):
-    return parse(value).date()
-
-
-def handle_share_ratio(value):
-    if value == '∞':
-        return '0'
-    else:
-        return value
 
 
 class Luminance(SiteBase):
@@ -53,8 +40,7 @@ class Luminance(SiteBase):
             )
         ]
 
-    @staticmethod
-    def build_selector():
+    def build_selector(self):
         return {
             'user_id': fr'''(?x)(?<= {re.escape('user.php?id=')})
                                 (. +?)
@@ -88,7 +74,7 @@ class Luminance(SiteBase):
                 'share_ratio': {
                     'regex': r'''(?x)(?: Ratio | Arány):\ <. *?>
                                     (∞ | [\d,.] +)''',
-                    'handle': handle_share_ratio
+                    'handle': self.handle_share_ratio
                 },
                 'points': {
                     'regex': r'''(?x)(?: Credits | Bónuszpontok):
@@ -101,7 +87,7 @@ class Luminance(SiteBase):
                                     title="
                                     ((\w + \ ) {2}
                                     \w +)''',
-                    'handle': handle_join_date
+                    'handle': self.handle_join_date
                 },
                 'seeding': {
                     'regex': r'''(?x)(?<= Seeding:\ )

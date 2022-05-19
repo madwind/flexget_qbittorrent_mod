@@ -7,13 +7,6 @@ def handle_join_date(value):
     return value.translate(str.maketrans('年月', '--', '日'))
 
 
-def handle_share_ratio(value):
-    if value == 'Inf.':
-        return '0'
-    else:
-        return value
-
-
 class MainClass(SiteBase):
     URL = 'https://speedapp.io/'
     USER_CLASSES = {
@@ -67,8 +60,7 @@ class MainClass(SiteBase):
             '_remember_me': 'on',
         }
 
-    @staticmethod
-    def build_selector():
+    def build_selector(self):
         return {
             'detail_sources': {
                 'menu-stats': {
@@ -102,7 +94,7 @@ class MainClass(SiteBase):
                                     <i\ class="fas\ fa-fw\ fa-chart-line\ text-info\ fa-sm"></i>
                                     \s*
                                     (Inf. | [\d,.] +)''',
-                    'handle': handle_share_ratio
+                    'handle': self.handle_share_ratio
                 },
                 'points': {
                     'regex': r'''(?x)奖励积分">

@@ -1,5 +1,3 @@
-from dateutil.parser import parse
-
 from ..schema.site_base import SiteBase, Work, SignState
 
 
@@ -70,11 +68,3 @@ class MainClass(SiteBase):
     def get_torrentleech_message(self, entry, config, messages_url='/messages.php'):
         entry['result'] += '(TODO: Message)'
 
-    def handle_share_ratio(self, value):
-        if value in ['&inf', '∞']:
-            return '0'
-        else:
-            return value
-
-    def handle_join_date(self, value):
-        return parse(value).date()

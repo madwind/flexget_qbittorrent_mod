@@ -140,9 +140,3 @@ class MainClass(Unit3D):
             }
         })
         return selector
-
-    def handle_share_ratio(self, value):
-        if value in ['.']:
-            return '0'
-        else:
-            return value
