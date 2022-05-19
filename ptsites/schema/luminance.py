@@ -50,9 +50,6 @@ class Luminance(SiteBase):
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
                 response_urls=['/'],
-                token_regex=r'''(?x)(?<= name="token"\ value=")
-                                    . *?
-                                    (?= ")'''
             )
         ]
 

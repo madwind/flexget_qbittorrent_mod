@@ -381,3 +381,9 @@ class SiteBase:
 
     def get_message(self, entry, config):
         entry['result'] += '(TODO: Message)'
+
+    def sign_in_by_password(self, entry, config, work, last_content):
+        if not (login := entry['site_config'].get('login')):
+            entry.fail_with_prefix('Login data not found!')
+            return
+        return self._request(entry, 'post', work.url, data=self.sign_in_data(login, last_content))

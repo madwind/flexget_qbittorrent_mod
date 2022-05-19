@@ -59,16 +59,13 @@ class MainClass(SiteBase):
             )
         ]
 
-    def sign_in_by_password(self, entry, config, work, last_content):
-        if not (login := entry['site_config'].get('login')):
-            entry.fail_with_prefix('Login data not found!')
-            return
-        data = {
+    @staticmethod
+    def sign_in_data(login, last_content):
+        return {
             'take_login': 1,
             'username': login['username'],
             'password': login['password'],
         }
-        return self._request(entry, 'post', work.url, data=data)
 
     @staticmethod
     def build_selector():

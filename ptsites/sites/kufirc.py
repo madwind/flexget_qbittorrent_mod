@@ -11,12 +11,10 @@ class MainClass(Luminance):
         'days': [350]
     }
 
-    def sign_in_by_password(self, entry, config, work, last_content):
-        if not (login := entry['site_config'].get('login')):
-            entry.fail_with_prefix('Login data not found!')
-            return
-        data = {
-            'token': re.search(work.token_regex, last_content).group(),
+    @staticmethod
+    def sign_in_data(login, last_content):
+        return {
+            'token': re.search(r'(?<=name="token" value=").*?(?=")', last_content).group(),
             'username': login['username'],
             'password': login['password'],
             'cinfo': '1920|1080|24|-480',
@@ -24,4 +22,3 @@ class MainClass(Luminance):
             'keeploggedin': [0, 1],
             'submit': 'Bejelentkezés',
         }
-        return self._request(entry, 'post', work.url, data=data)

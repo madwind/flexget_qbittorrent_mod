@@ -57,21 +57,17 @@ class MainClass(SiteBase):
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
                 response_urls=[''],
-                token_regex=r'(?<=name="_token" value=").+?(?=")',
             )
         ]
 
-    def sign_in_by_password(self, entry, config, work, last_content):
-        if not (login := entry['site_config'].get('login')):
-            entry.fail_with_prefix('Login data not found!')
-            return
-        data = {
-            '_token': re.search(work.token_regex, last_content).group(),
+    @staticmethod
+    def sign_in_data(login, last_content):
+        return {
+            '_token': re.search(r'(?<=name="_token" value=").+?(?=")', last_content).group(),
             'username': login['username'],
             'password': login['password'],
             'remember': 'on',
         }
-        return self._request(entry, 'post', work.url, data=data)
 
     @staticmethod
     def build_selector():

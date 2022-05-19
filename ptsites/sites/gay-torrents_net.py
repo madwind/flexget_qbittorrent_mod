@@ -61,11 +61,9 @@ class MainClass(SiteBase):
             )
         ]
 
-    def sign_in_by_password(self, entry, config, work, last_content):
-        if not (login := entry['site_config'].get('login')):
-            entry.fail_with_prefix('Login data not found!')
-            return
-        data = {
+    @staticmethod
+    def sign_in_data(login, last_content):
+        return {
             'do': 'login',
             'vb_login_md5password': hashlib.md5(login['password'].encode()).hexdigest(),
             'vb_login_md5password_utf': hashlib.md5(login['password'].encode()).hexdigest(),
@@ -76,7 +74,6 @@ class MainClass(SiteBase):
             'vb_login_password': login['password'],
             'cookieuser': 1
         }
-        return self._request(entry, 'post', work.url, data=data)
 
     @staticmethod
     def build_selector():

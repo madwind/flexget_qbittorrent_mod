@@ -43,17 +43,14 @@ class MainClass(Gazelle):
             ),
         ]
 
-    def sign_in_by_password(self, entry, config, work, last_content):
-        if not (login := entry['site_config'].get('login')):
-            entry.fail_with_prefix('Login data not found!')
-            return
-        data = {
+    @staticmethod
+    def sign_in_data(login, last_content):
+        return {
             'username': login['username'],
             'password': login['password'],
             'keeplogged': 1,
             'login': 'Log In!',
         }
-        return self._request(entry, 'post', work.url, data=data)
 
     def build_workflow(self, entry, config):
         return [

@@ -44,27 +44,21 @@ class MainClass(Unit3D):
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
                 response_urls=['/pages/1'],
-                token_regex=r'(?<=name="_token" value=").+?(?=")',
-                captcha_regex=r'(?<=name="_captcha" value=").+?(?=")',
             )
         ]
 
-    def sign_in_by_password(self, entry, config, work, last_content):
-        if not (login := entry['site_config'].get('login')):
-            entry.fail_with_prefix('Login data not found!')
-            return
-        r = re.compile(r'name="(?P<name>.+?)" value="(?P<value>.+?)" />\s*<button type="submit"')
-        m = re.search(r, last_content)
-        data = {
-            '_token': re.search(work.token_regex, last_content).group(),
+    @staticmethod
+    def sign_in_data(login, last_content):
+        m = re.search(r'name="(?P<name>.+?)" value="(?P<value>.+?)" />\s*<button type="submit"', last_content)
+        return {
+            '_token': re.search(r'(?<=name="_token" value=").+?(?=")', last_content).group(),
             'username': login['username'],
             'password': login['password'],
             'remember': 'on',
-            '_captcha': re.search(work.captcha_regex, last_content).group(),
+            '_captcha': re.search(r'(?<=name="_captcha" value=").+?(?=")', last_content).group(),
             '_username': '',
             m.group('name'): m.group('value'),
         }
-        return self._request(entry, 'post', work.url, data=data)
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
