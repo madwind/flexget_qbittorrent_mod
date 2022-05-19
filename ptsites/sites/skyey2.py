@@ -59,8 +59,7 @@ class MainClass(Discuz):
         ]
 
     def sign_in_by_password(self, entry, config, work, last_content):
-        login = entry['site_config'].get('login')
-        if not login:
+        if not (login := entry['site_config'].get('login')):
             entry.fail_with_prefix('Login data not found!')
             return
 

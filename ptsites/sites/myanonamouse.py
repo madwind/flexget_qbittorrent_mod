@@ -52,8 +52,7 @@ class MainClass(SiteBase):
         ]
 
     def sign_in_by_login(self, entry, config, work, last_content):
-        login = entry['site_config'].get('login')
-        if not login:
+        if not (login := entry['site_config'].get('login')):
             entry.fail_with_prefix('Login data not found!')
             return
         t = re.search(work.t_regex, last_content).group(1)
