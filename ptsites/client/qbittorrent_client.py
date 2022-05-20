@@ -65,7 +65,7 @@ class QBittorrentClient:
     build_entry_lock = threading.Lock()
 
     def __init__(self, config):
-        self.session = {}
+        self.session = None
         self._verify = True
         self.url = ''
         self.connected = False
@@ -242,16 +242,15 @@ class QBittorrentClient:
 
     def edit_trackers(self, torrent_hash, origurl, newurl):
         data = {'hash': torrent_hash, 'origUrl': origurl, 'newUrl': newurl}
-        if self._check_action('edit_trackers', torrent_hash):
-            response = self._request(
-                'post',
-                self.url + self.API_URL_EDIT_TRACKERS,
-                data=data,
-                msg_on_fail='edit_trackers failed.',
-                verify=self._verify,
-            )
-            if response.status_code == 200:
-                self._update_entry_trackers(torrent_hash)
+        response = self._request(
+            'post',
+            self.url + self.API_URL_EDIT_TRACKERS,
+            data=data,
+            msg_on_fail='edit_trackers failed.',
+            verify=self._verify,
+        )
+        if response.status_code == 200:
+            self._update_entry_trackers(torrent_hash)
 
     def remove_trackers(self, torrent_hash, urls):
         data = {'hash': torrent_hash, 'urls': urls}
