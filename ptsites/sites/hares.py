@@ -1,5 +1,5 @@
 from ..schema.nexusphp import Attendance
-from ..schema.site_base import Work, SignState, NetworkState
+from ..schema.site_base import Work, SignState
 from ..utils.net_utils import NetUtils
 
 
@@ -14,6 +14,13 @@ class MainClass(Attendance):
     def build_workflow(self, entry, config):
         return [
             Work(
+                url='/',
+                method='get',
+                succeed_regex='已签到',
+                check_state=('sign_in', SignState.NO_SIGN_IN),
+                is_base_content=True,
+            ),
+            Work(
                 url='/attendance.php?action=sign',
                 method='punch_in',
                 succeed_regex=[
@@ -22,12 +29,6 @@ class MainClass(Attendance):
                 ],
                 check_state=('final', SignState.SUCCEED),
             ),
-            Work(
-                url='/',
-                method='get',
-                check_state=('network', NetworkState.SUCCEED),
-                is_base_content=True,
-            )
         ]
 
     def sign_in_by_punch_in(self, entry, config, work, last_content):
