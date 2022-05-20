@@ -25,7 +25,7 @@ class MainClass(Gazelle):
                 is_base_content=True
             )
         ]
-    
+
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
         NetUtils.dict_merge(selector, {

@@ -1,9 +1,6 @@
 from ..schema.site_base import SiteBase, Work, SignState
 
 
-
-
-
 class MainClass(SiteBase):
     URL = 'https://www.gaytor.rent/'
     USER_CLASSES = {

@@ -1,6 +1,6 @@
 from ..schema.nexusphp import NexusPHP
-from ..utils.net_utils import NetUtils
 from ..schema.site_base import Work, SignState
+from ..utils.net_utils import NetUtils
 
 
 class MainClass(NexusPHP):

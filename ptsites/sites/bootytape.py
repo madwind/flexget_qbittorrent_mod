@@ -7,9 +7,6 @@ def handle_amount_of_data(value):
     return value + 'B'
 
 
-
-
-
 class MainClass(SiteBase):
     URL = 'https://ssl.bootytape.com/'
     USER_CLASSES = {

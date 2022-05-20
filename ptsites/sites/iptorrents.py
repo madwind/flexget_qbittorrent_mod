@@ -68,4 +68,3 @@ class MainClass(SiteBase):
 
     def get_iptorrents_message(self, entry, config, messages_url='/inbox'):
         entry['result'] += '(TODO: Message)'
-

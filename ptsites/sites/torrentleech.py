@@ -67,4 +67,3 @@ class MainClass(SiteBase):
 
     def get_torrentleech_message(self, entry, config, messages_url='/messages.php'):
         entry['result'] += '(TODO: Message)'
-

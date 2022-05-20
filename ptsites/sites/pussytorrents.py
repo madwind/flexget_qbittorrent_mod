@@ -1,8 +1,6 @@
 from ..schema.site_base import SiteBase, Work, SignState
 
 
-
-
 class MainClass(SiteBase):
     URL = 'https://pussytorrents.org/'
 
