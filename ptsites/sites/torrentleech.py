@@ -61,4 +61,3 @@ class MainClass(SiteBase):
                 'hr': None
             }
         }
-

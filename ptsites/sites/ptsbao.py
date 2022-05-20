@@ -1,6 +1,7 @@
 from ..schema.nexusphp import VisitHR
 from ..utils import net_utils
 
+
 class MainClass(VisitHR):
     URL = 'https://ptsbao.club/'
     USER_CLASSES = {

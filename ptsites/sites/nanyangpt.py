@@ -1,6 +1,7 @@
 from ..schema.nexusphp import Visit
 from ..utils import net_utils
 
+
 class MainClass(Visit):
     URL = 'https://nanyangpt.com/'
     SUCCEED_REGEX = '魔力豆 \\(.*?\\)'

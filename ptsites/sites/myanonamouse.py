@@ -105,5 +105,3 @@ class MainClass(SiteBase):
 
     def get_myanonamouse_message(self, entry, config, messages_url='/messages.php?action=viewmailbox'):
         entry['result'] += '(TODO: Message)'
-
-
