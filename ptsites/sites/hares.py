@@ -33,6 +33,7 @@ class MainClass(Attendance):
 
     def sign_in_by_punch_in(self, entry, config, work, last_content):
         entry['headers']['accept'] = 'application/json'
+        self.requests.headers.update(entry['headers'])
         return self._request(entry, 'get', work.url)
 
     def build_selector(self):
