@@ -1,6 +1,7 @@
 import re
 
 from ..schema.site_base import SiteBase, Work, SignState
+from ..utils.value_hanlder import handle_join_date
 
 
 class MainClass(SiteBase):
@@ -61,7 +62,7 @@ class MainClass(SiteBase):
                     'regex': r'''(?x)(?<= Join date)
                                     ((\w + \ ) {2}
                                     \w +)''',
-                    'handle': self.handle_join_date
+                    'handle': handle_join_date
                 },
                 'seeding': {
                     'regex': r'''(?x)(?<= Seeding:\ )

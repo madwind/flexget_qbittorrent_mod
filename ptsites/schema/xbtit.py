@@ -5,7 +5,7 @@ from dateutil.parser import parse
 from flexget.utils.soup import get_soup
 
 from ..schema.site_base import SiteBase, Work, SignState, NetworkState
-from ..utils.net_utils import NetUtils
+from ..utils import net_utils
 
 
 class XBTIT(SiteBase):
@@ -22,7 +22,6 @@ class XBTIT(SiteBase):
                 url='/',
                 method='get',
                 succeed_regex=self.SUCCEED_REGEX,
-                fail_regex=None,
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
             )
@@ -81,7 +80,7 @@ class XBTIT(SiteBase):
             entry.fail_with_prefix('Can not read message box! url:{}'.format(messages_url))
             return
 
-        message_elements = get_soup(NetUtils.decode(message_box_response)).select(
+        message_elements = get_soup(net_utils.decode(message_box_response)).select(
             'tr > td.lista:nth-child(1)')
         unread_elements = filter(lambda elements: elements.get_text() == 'no', message_elements)
         failed = False
@@ -96,7 +95,7 @@ class XBTIT(SiteBase):
                 message_body = 'Can not read message body!'
                 failed = True
             else:
-                body_element = get_soup(NetUtils.decode(message_response)).select_one(
+                body_element = get_soup(net_utils.decode(message_response)).select_one(
                     '#PrivateMessageHideShowTR > td > table:nth-child(1) > tbody > tr:nth-child(2) > td')
                 if body_element:
                     message_body = body_element.text.strip()

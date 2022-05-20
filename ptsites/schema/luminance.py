@@ -1,6 +1,7 @@
 import re
 
 from ..schema.site_base import SiteBase, Work, SignState, NetworkState
+from ..utils.value_hanlder import handle_infinite, handle_join_date
 
 
 class Luminance(SiteBase):
@@ -32,7 +33,7 @@ class Luminance(SiteBase):
             ),
             Work(
                 url='/login',
-                method='password',
+                method='login',
                 succeed_regex=r'''(?x)Logout | Kilpés''',
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
@@ -74,7 +75,7 @@ class Luminance(SiteBase):
                 'share_ratio': {
                     'regex': r'''(?x)(?: Ratio | Arány):\ <. *?>
                                     (∞ | [\d,.] +)''',
-                    'handle': self.handle_share_ratio
+                    'handle': handle_infinite
                 },
                 'points': {
                     'regex': r'''(?x)(?: Credits | Bónuszpontok):
@@ -87,7 +88,7 @@ class Luminance(SiteBase):
                                     title="
                                     ((\w + \ ) {2}
                                     \w +)''',
-                    'handle': self.handle_join_date
+                    'handle': handle_join_date
                 },
                 'seeding': {
                     'regex': r'''(?x)(?<= Seeding:\ )

@@ -1,6 +1,7 @@
 import re
 
 from ..schema.site_base import SiteBase
+from ..utils.value_hanlder import handle_infinite, handle_join_date
 
 
 class XBT(SiteBase):
@@ -50,7 +51,7 @@ class XBT(SiteBase):
                     'regex': r'''(?x)Share\ Ratio
                                     \s*
                                     (Inf | [\d,.] +)''',
-                    'handle': self.handle_share_ratio
+                    'handle': handle_infinite
                 },
                 'points': {
                     'regex': r'''(?x)Bonus\ Points
@@ -60,7 +61,7 @@ class XBT(SiteBase):
                 'join_date': {
                     'regex': r'''(?x)Join date
                                     ((\w + \ ) {2} \w +)''',
-                    'handle': self.handle_join_date
+                    'handle': handle_join_date
                 },
                 'seeding': {
                     'regex': r'''(?x)Seeding\ Torrents

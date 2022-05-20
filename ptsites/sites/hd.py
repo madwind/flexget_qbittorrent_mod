@@ -1,7 +1,6 @@
 from urllib.parse import urljoin
 
 from ..schema.nexusphp import Visit
-from ..schema.site_base import SiteBase
 
 
 class MainClass(Visit):
@@ -28,6 +27,6 @@ class MainClass(Visit):
         }
 
     @classmethod
-    def build_reseed(cls, entry, config, site, passkey, torrent_id):
-        SiteBase.build_reseed_from_page(entry, config, passkey, torrent_id, cls.URL, cls.TORRENT_PAGE_URL,
-                                        cls.DOWNLOAD_URL_REGEX)
+    def build_reseed_entry(cls, entry, config, site, passkey, torrent_id):
+        cls.build_reseed_from_page(entry, config, passkey, torrent_id, cls.URL, cls.TORRENT_PAGE_URL,
+                                   cls.DOWNLOAD_URL_REGEX)

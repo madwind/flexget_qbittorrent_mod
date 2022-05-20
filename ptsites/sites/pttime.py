@@ -1,6 +1,6 @@
 from ..schema.nexusphp import Attendance
 from ..schema.site_base import Work, SignState
-from ..utils.net_utils import NetUtils
+from ..utils import net_utils
 
 
 class MainClass(Attendance):
@@ -27,7 +27,7 @@ class MainClass(Attendance):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        NetUtils.dict_merge(selector, {
+        net_utils.dict_merge(selector, {
             'detail_sources': {
                 'default': {
                     'elements': {
@@ -39,5 +39,5 @@ class MainClass(Attendance):
         })
         return selector
 
-    def get_nexusphp_message(self, entry, config):
+    def get_nexusphp_message(self, entry, config, **kwargs):
         super(MainClass, self).get_nexusphp_message(entry, config, unread_elements_selector='td > i[alt*="Unread"]')

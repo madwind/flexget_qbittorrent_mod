@@ -1,10 +1,8 @@
-import datetime
-import re
 from urllib.parse import urljoin
 
 from ..schema.gazelle import Gazelle
 from ..schema.site_base import Work, SignState
-from ..utils.net_utils import NetUtils
+from ..utils import net_utils
 
 
 class MainClass(Gazelle):
@@ -35,14 +33,13 @@ class MainClass(Gazelle):
                 url='/',
                 method='get',
                 succeed_regex='积分 \\(.*?\\)',
-                fail_regex=None,
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
             )
         ]
 
     @classmethod
-    def build_reseed(cls, entry, config, site, passkey, torrent_id):
+    def build_reseed_entry(cls, entry, config, site, passkey, torrent_id):
         download_page = site['download_page'].format(torrent_id=torrent_id,
                                                      authkey=passkey['authkey'],
                                                      torrent_pass=passkey['torrent_pass'])
@@ -50,7 +47,7 @@ class MainClass(Gazelle):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        NetUtils.dict_merge(selector, {
+        net_utils.dict_merge(selector, {
             'detail_sources': {
                 'default': {
                     'elements': {'table': 'div.box.box_info.box_userinfo_stats > ul'}
@@ -58,28 +55,6 @@ class MainClass(Gazelle):
                 'extend': {
                     'link': '/ajax.php?action=community_stats&userid={}'
                 }
-            },
-            'details': {
-                'join_date': {
-                    'regex': '加入时间:(.*?)前',
-                    'handle': self.handle_join_date
-                },
-                'hr': None
             }
         })
         return selector
-
-    def handle_join_date(self, value):
-        year_regex = '(\\d+) 年'
-        month_regex = '(\\d+) 月'
-        week_regex = '(\\d+) 周'
-        year = 0
-        month = 0
-        week = 0
-        if year_match := re.search(year_regex, value):
-            year = int(year_match.group(1))
-        if month_match := re.search(month_regex, value):
-            month = int(month_match.group(1))
-        if week_match := re.search(week_regex, value):
-            week = int(week_match.group(1))
-        return (datetime.datetime.now() - datetime.timedelta(days=year * 365 + month * 31 + week * 7)).date()

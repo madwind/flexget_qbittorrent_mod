@@ -9,9 +9,8 @@ from flexget.utils.soup import get_soup
 from loguru import logger
 from requests.adapters import HTTPAdapter
 
+from ..utils import net_utils, url_recorder
 from ..utils.cfscrapewrapper import CFScrapeWrapper
-from ..utils.net_utils import NetUtils
-from ..utils.url_recorder import UrlRecorder
 
 try:
     from pyppeteer import launch, chromium_downloader
@@ -64,7 +63,6 @@ class SiteBase:
     USER_CLASSES = None
 
     def __init__(self):
-        self.workflow = None
         self.requests = None
 
     @classmethod
@@ -96,49 +94,60 @@ class SiteBase:
         if cookie:
             entry['cookie'] = cookie
         entry['headers'] = headers
+        entry['user_classes'] = cls.USER_CLASSES
+
+    def build_login_workflow(self, entry, config):
+        return []
+
+    def build_login_data(self, login, last_content):
+        return {}
+
+    def build_workflow(self, entry, config):
+        return []
+
+    def build_selector(self):
+        return {}
+
+    def get_details(self, entry, config):
+        self.get_details_base(entry, config, self.build_selector())
+
+    def get_message(self, entry, config):
+        entry['result'] += '(TODO: Message)'
 
     def sign_in(self, entry, config):
-        self.workflow = []
+        workflow = []
         if not entry.get('cookie'):
-            self.workflow.extend(self.build_login_workflow(entry, config))
-        self.workflow.extend(self.build_workflow(entry, config))
-        if not entry.get('url') or not self.workflow:
+            workflow.extend(self.build_login_workflow(entry, config))
+        workflow.extend(self.build_workflow(entry, config))
+        if not entry.get('url') or not workflow:
             entry.fail_with_prefix(f"site: {entry['site_name']} url or workflow is empty")
             return
         last_content = None
         last_response = None
-        for work in self.workflow:
-            self.work_urljoin(work, entry['url'])
+        for work in workflow:
+            work.url = urljoin(entry['url'], work.url)
+            work.response_urls = list(map(lambda response_url: urljoin(entry['url'], response_url), work.response_urls))
             method_name = f"sign_in_by_{work.method}"
             if method := getattr(self, method_name, None):
-                if work.method == 'get' and last_response and NetUtils.url_equal(
+                if work.method == 'get' and last_response and net_utils.url_equal(
                         work.url, last_response.url) and work.is_base_content:
                     entry['base_content'] = last_content
                 else:
                     last_response = method(entry, config, work, last_content)
                     if last_response == 'skip':
                         continue
-                    if (last_content := NetUtils.decode(last_response)) and work.is_base_content:
+                    if (last_content := net_utils.decode(last_response)) and work.is_base_content:
                         entry['base_content'] = last_content
                 if work.check_state:
                     if not self.check_state(entry, work, last_response, last_content):
                         return
 
-    def build_login_workflow(self, entry, config):
-        return []
-
-    def build_workflow(self, entry, config):
-        return []
-
-    def work_urljoin(self, work, url):
-        for work_key, work_value in work.__dict__.items():
-            if work_key.endswith('url'):
-                setattr(work, work_key, urljoin(url, work_value))
-            elif work_key.endswith('urls'):
-                setattr(work, work_key, list(map(lambda path: urljoin(url, path), work_value)))
+    @classmethod
+    def build_reseed_entry(cls, entry, config, site, passkey, torrent_id):
+        cls.build_reseed_entry_from_url(entry, config, site, passkey, torrent_id)
 
     @classmethod
-    def build_reseed(cls, entry, config, site, passkey, torrent_id):
+    def build_reseed_entry_from_url(cls, entry, config, site, passkey, torrent_id):
         if isinstance(passkey, dict):
             user_agent = config.get('user-agent')
             cookie = passkey.get('cookie')
@@ -151,9 +160,9 @@ class SiteBase:
             download_page = site['download_page'].format(torrent_id=torrent_id, passkey=passkey)
         entry['url'] = f"https://{site['base_url']}/{download_page}"
 
-    @staticmethod
-    def build_reseed_from_page(entry, config, passkey, torrent_id, base_url, torrent_page_url, url_regex):
-        record = UrlRecorder.load_record(entry['class_name'])
+    @classmethod
+    def build_reseed_from_page(cls, entry, config, passkey, torrent_id, base_url, torrent_page_url, url_regex):
+        record = url_recorder.load_record(entry['class_name'])
         now = datetime.datetime.now()
         expire = datetime.timedelta(days=7)
         if torrent := record.get(torrent_id):
@@ -171,7 +180,7 @@ class SiteBase:
                 'referer': base_url
             }
             session.headers.update(headers)
-            session.cookies.update(NetUtils.cookie_str_to_dict(cookie))
+            session.cookies.update(net_utils.cookie_str_to_dict(cookie))
             response = session.get(torrent_page_url, timeout=60)
             if response is not None and response.status_code == 200:
                 if re_search := re.search(url_regex, response.text):
@@ -182,14 +191,15 @@ class SiteBase:
             entry.fail(f"site:{entry['class_name']} can not found download url from {torrent_page_url}")
         entry['url'] = download_url
         record[torrent_id] = {'url': download_url, 'expire': (now + expire).strftime('%Y-%m-%d')}
-        UrlRecorder.save_record(entry['class_name'], record)
+        url_recorder.save_record(entry['class_name'], record)
 
     def _request(self, entry, method, url, **kwargs):
         if not self.requests:
             self.requests = CFScrapeWrapper.create_scraper(requests.Session())
-            self.requests.headers.update(entry.get('headers'))
+            if entry_headers := entry.get('headers'):
+                self.requests.headers.update(entry_headers)
             if entry_cookie := entry.get('cookie'):
-                self.requests.cookies.update(NetUtils.cookie_str_to_dict(entry_cookie))
+                self.requests.cookies.update(net_utils.cookie_str_to_dict(entry_cookie))
             self.requests.mount('http://', HTTPAdapter(max_retries=2))
             self.requests.mount('https://', HTTPAdapter(max_retries=2))
         try:
@@ -208,7 +218,7 @@ class SiteBase:
         data = {}
         for key, regex in work.data.items():
             if key == 'fixed':
-                NetUtils.dict_merge(data, regex)
+                net_utils.dict_merge(data, regex)
             else:
                 value_search = re.search(regex, last_content)
                 if value_search:
@@ -218,8 +228,13 @@ class SiteBase:
                     return
         return self._request(entry, 'post', work.url, data=data)
 
-    @staticmethod
-    def _get_user_id(entry, user_id_selector, base_content):
+    def sign_in_by_login(self, entry, config, work, last_content):
+        if not (login := entry['site_config'].get('login')):
+            entry.fail_with_prefix('Login data not found!')
+            return
+        return self._request(entry, 'post', work.url, data=self.build_login_data(login, last_content))
+
+    def get_user_id(self, entry, user_id_selector, base_content):
         if isinstance(user_id_selector, str):
             user_id_match = re.search(user_id_selector, base_content)
             if user_id_match:
@@ -234,14 +249,12 @@ class SiteBase:
             return
 
     def get_details_base(self, entry, config, selector):
-        entry['user_classes'] = getattr(self, 'USER_CLASSES', None)
-
         if not (base_content := entry.get('base_content')):
             entry.fail_with_prefix('base_content is None.')
             return
         user_id = ''
         user_id_selector = selector.get('user_id')
-        if user_id_selector and not (user_id := self._get_user_id(entry, user_id_selector, base_content)):
+        if user_id_selector and not (user_id := self.get_user_id(entry, user_id_selector, base_content)):
             return
         details_text = ''
         detail_sources = selector.get('detail_sources')
@@ -252,7 +265,7 @@ class SiteBase:
                 network_state = self.check_network_state(entry, detail_source['link'], detail_response)
                 if network_state != NetworkState.SUCCEED:
                     return
-                detail_content = NetUtils.decode(detail_response)
+                detail_content = net_utils.decode(detail_response)
             else:
                 detail_content = base_content
             do_not_strip = detail_source.get('do_not_strip')
@@ -374,23 +387,3 @@ class SiteBase:
         if handle:
             detail = handle(detail)
         return str(detail)
-
-    def get_details(self, entry, config):
-        self.get_details_base(entry, config, self.build_selector())
-
-    def get_message(self, entry, config):
-        entry['result'] += '(TODO: Message)'
-
-    def sign_in_by_password(self, entry, config, work, last_content):
-        if not (login := entry['site_config'].get('login')):
-            entry.fail_with_prefix('Login data not found!')
-            return
-        return self._request(entry, 'post', work.url, data=self.sign_in_data(login, last_content))
-
-    @staticmethod
-    def handle_share_ratio(value):
-        return '0' if value in ['.', '-', '--', '---', '∞', 'Inf', 'Inf.', '&inf', '无限', '無限'] else value
-
-    @staticmethod
-    def handle_join_date(value):
-        return parse(value).date()

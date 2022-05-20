@@ -1,6 +1,5 @@
 from ..schema.site_base import SiteBase, Work, SignState
-
-
+from ..utils.value_hanlder import handle_infinite, handle_join_date
 
 
 class MainClass(SiteBase):
@@ -29,7 +28,7 @@ class MainClass(SiteBase):
         return [
             Work(
                 url='/user/account/login/',
-                method='password',
+                method='login',
                 succeed_regex=r'Welcome back,</span> <b><a href="/profile/\w+">\w+',
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
@@ -37,8 +36,7 @@ class MainClass(SiteBase):
             )
         ]
 
-    @staticmethod
-    def sign_in_data(login, last_content):
+    def build_login_data(self, login, last_content):
         return {
             'username': login['username'],
             'password': login['password'],
@@ -67,12 +65,12 @@ class MainClass(SiteBase):
                 },
                 'share_ratio': {
                     'regex': r'Ratio: (∞|[\d,.]+)',
-                    'handle': self.handle_share_ratio
+                    'handle': handle_infinite
                 },
                 'points': None,
                 'join_date': {
                     'regex': r'Join Date((\w+ ){3}\w+)',
-                    'handle': self.handle_join_date
+                    'handle': handle_join_date
                 },
                 'seeding': None,
                 'leeching': None,

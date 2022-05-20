@@ -1,10 +1,7 @@
 import re
 
 from ..schema.site_base import SiteBase, Work, SignState, NetworkState
-
-
-def handle_join_date(value):
-    return value.translate(str.maketrans('年月', '--', '日'))
+from ..utils.value_hanlder import handle_infinite
 
 
 class MainClass(SiteBase):
@@ -43,7 +40,7 @@ class MainClass(SiteBase):
             ),
             Work(
                 url='/zh/登录?locale=zh',
-                method='password',
+                method='login',
                 succeed_regex='logout',
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
@@ -51,8 +48,7 @@ class MainClass(SiteBase):
             )
         ]
 
-    @staticmethod
-    def sign_in_data(login, last_content):
+    def build_login_data(self, login, last_content):
         return {
             '_csrf_token': re.search(r'(?<=name="_csrf_token" value=").+?(?=")', last_content).group(),
             'username': login['username'],
@@ -94,7 +90,7 @@ class MainClass(SiteBase):
                                     <i\ class="fas\ fa-fw\ fa-chart-line\ text-info\ fa-sm"></i>
                                     \s*
                                     (Inf. | [\d,.] +)''',
-                    'handle': self.handle_share_ratio
+                    'handle': handle_infinite
                 },
                 'points': {
                     'regex': r'''(?x)奖励积分">
@@ -107,7 +103,7 @@ class MainClass(SiteBase):
                     'regex': r'''(?x)注册日期
                                     \s*
                                     (\d + 年 \d + 月 \d + 日)''',
-                    'handle': handle_join_date
+                    'handle': self.handle_join_date
                 },
                 'seeding': {
                     'regex': r'''(?x)目前正在播种种子">
@@ -130,3 +126,5 @@ class MainClass(SiteBase):
                 }
             }
         }
+    def handle_join_date(self,value):
+        return value.translate(str.maketrans('年月', '--', '日'))

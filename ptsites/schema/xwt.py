@@ -1,4 +1,5 @@
 from ..schema.site_base import SiteBase, Work, SignState
+from ..utils.value_hanlder import handle_infinite
 
 
 class XWT(SiteBase):
@@ -25,7 +26,7 @@ class XWT(SiteBase):
         return [
             Work(
                 url='/takelogin.php',
-                method='password',
+                method='login',
                 succeed_regex=r'Top 5 Torrents',
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
@@ -33,8 +34,7 @@ class XWT(SiteBase):
             )
         ]
 
-    @staticmethod
-    def sign_in_data(login, last_content):
+    def build_login_data(self, login, last_content):
         return {
             'username': login['username'],
             'password': login['password'],
@@ -63,7 +63,7 @@ class XWT(SiteBase):
                 },
                 'share_ratio': {
                     'regex': r'Ratio:\s*(---|[\d,.]+)',
-                    'handle': self.handle_share_ratio
+                    'handle': handle_infinite
                 },
                 'points': None,
                 'seeding': {

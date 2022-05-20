@@ -1,8 +1,6 @@
-import datetime
-import re
-
 from ..schema.gazelle import Gazelle
 from ..schema.site_base import Work, SignState, NetworkState
+from ..utils import net_utils
 
 
 class MainClass(Gazelle):
@@ -37,14 +35,13 @@ class MainClass(Gazelle):
         return [
             Work(
                 url='/login.php',
-                method='password',
+                method='login',
                 check_state=('network', NetworkState.SUCCEED),
                 response_urls=['/index.php'],
             ),
         ]
 
-    @staticmethod
-    def sign_in_data(login, last_content):
+    def build_login_data(self, login, last_content):
         return {
             'username': login['username'],
             'password': login['password'],
@@ -64,7 +61,8 @@ class MainClass(Gazelle):
         ]
 
     def build_selector(self):
-        selector = {
+        selector = super(MainClass, self).build_selector()
+        net_utils.dict_merge(selector, {
             'user_id': 'user.php\\?id=(\\d+)',
             'detail_sources': {
                 'default': {
@@ -75,47 +73,6 @@ class MainClass(Gazelle):
 
                     }
                 }
-            },
-            'details': {
-                'uploaded': {
-                    'regex': 'Uploaded: ([\\d.]+ ?[ZEPTGMK]?B)'
-                },
-                'downloaded': {
-                    'regex': 'Downloaded: ([\\d.]+ ?[ZEPTGMK]?B)'
-                },
-                'share_ratio': {
-                    'regex': 'Ratio: (--|∞|[\\d,.]+)',
-                    'handle': self.handle_share_ratio
-                },
-                'points': {
-                    'regex': 'Bonus Points: ([\\d,.]+)',
-                },
-                'join_date': {
-                    'regex': 'Joined: (.*?ago)',
-                    'handle': self.handle_join_date
-                },
-                'seeding': {
-                    'regex': 'Seeding: ([\\d,]+)'
-                },
-                'leeching': {
-                    'regex': 'Leeching: ([\\d,]+)'
-                },
-                'hr': None
             }
-        }
+        })
         return selector
-
-    def handle_join_date(self, value):
-        year_regex = '(\\d+) years?'
-        month_regex = '(\\d+) months?'
-        week_regex = '(\\d+) weeks?'
-        year = 0
-        month = 0
-        week = 0
-        if year_match := re.search(year_regex, value):
-            year = int(year_match.group(1))
-        if month_match := re.search(month_regex, value):
-            month = int(month_match.group(1))
-        if week_match := re.search(week_regex, value):
-            week = int(week_match.group(1))
-        return (datetime.datetime.now() - datetime.timedelta(days=year * 365 + month * 31 + week * 7)).date()

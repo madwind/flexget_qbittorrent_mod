@@ -1,6 +1,7 @@
 import re
 
 from ..schema.site_base import SignState, Work, NetworkState, SiteBase
+from ..utils.value_hanlder import handle_infinite, handle_join_date
 
 
 class MainClass(SiteBase):
@@ -39,7 +40,7 @@ class MainClass(SiteBase):
             ),
             Work(
                 url='/login',
-                method='password',
+                method='login',
                 succeed_regex='Logout',
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
@@ -47,8 +48,7 @@ class MainClass(SiteBase):
             )
         ]
 
-    @staticmethod
-    def sign_in_data(login, last_content):
+    def build_login_data(self, login, last_content):
         return {
             '_token': re.search(r'(?<=name="_token" value=").+?(?=")', last_content).group(),
             'username': login['username'],
@@ -77,14 +77,14 @@ class MainClass(SiteBase):
                 },
                 'share_ratio': {
                     'regex': r'Tokens\s*(∞|[\d,.]+)',
-                    'handle': self.handle_share_ratio
+                    'handle': handle_infinite
                 },
                 'points': {
                     'regex': r'([\d,.]+)(?= BP)'
                 },
                 'join_date': {
                     'regex': r'Joined on (\w+ \w+ \w+)',
-                    'handle': self.handle_join_date
+                    'handle': handle_join_date
                 },
                 'seeding': {
                     'regex': r'Total seeding: ([\d,]+)'

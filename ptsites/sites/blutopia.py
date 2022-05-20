@@ -1,6 +1,7 @@
 from ..schema.site_base import SignState, Work
 from ..schema.unit3d import Unit3D
-from ..utils.net_utils import NetUtils
+from ..utils import net_utils
+from ..utils.value_hanlder import handle_join_date
 
 
 class MainClass(Unit3D):
@@ -16,7 +17,6 @@ class MainClass(Unit3D):
                 url='/',
                 method='get',
                 succeed_regex='<title>Blutopia - Where Quality Matters</title>',
-                fail_regex=None,
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
             )
@@ -24,7 +24,7 @@ class MainClass(Unit3D):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        NetUtils.dict_merge(selector, {
+        net_utils.dict_merge(selector, {
             'user_id': '/users/(.*?)/',
             'detail_sources': {
                 'default': {
@@ -45,7 +45,7 @@ class MainClass(Unit3D):
                 },
                 'join_date': {
                     'regex': 'Registration date (.*?\\d{4})',
-                    'handle': self.handle_join_date
+                    'handle': handle_join_date
                 },
                 'hr': {
                     'regex': 'Active Warnings.+?(\\d+)'

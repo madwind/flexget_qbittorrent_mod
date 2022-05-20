@@ -8,7 +8,8 @@ from flexget.utils.soup import get_soup
 from loguru import logger
 
 from ..schema.site_base import SiteBase, SignState, NetworkState, Work
-from ..utils.net_utils import NetUtils
+from ..utils import net_utils
+from ..utils.value_hanlder import handle_infinite
 
 
 class NexusPHP(SiteBase):
@@ -37,7 +38,7 @@ class NexusPHP(SiteBase):
                 },
                 'share_ratio': {
                     'regex': ('(分享率|Ratio).*?(---|∞|Inf\\.|无限|無限|[\\d,.]+)', 2),
-                    'handle': self.handle_share_ratio
+                    'handle': handle_infinite
                 },
                 'points': {
                     'regex': ('(魔力|Bonus|Bônus).*?([\\d,.]+)', 2)
@@ -67,7 +68,7 @@ class NexusPHP(SiteBase):
             entry.fail_with_prefix('Can not read message box! url:{}'.format(message_url))
             return
 
-        unread_elements = get_soup(NetUtils.decode(message_box_response)).select(
+        unread_elements = get_soup(net_utils.decode(message_box_response)).select(
             unread_elements_selector)
         failed = False
         for unread_element in unread_elements:
@@ -81,7 +82,7 @@ class NexusPHP(SiteBase):
                 message_body = 'Can not read message body!'
                 failed = True
             else:
-                if body_element := get_soup(NetUtils.decode(message_response)).select_one('td[colspan*="2"]'):
+                if body_element := get_soup(net_utils.decode(message_response)).select_one('td[colspan*="2"]'):
                     message_body = body_element.text.strip()
                 else:
                     message_body = 'Can not find message body element!'
@@ -110,7 +111,7 @@ class AttendanceHR(NexusPHP):
 class Attendance(AttendanceHR):
     def build_selector(self):
         selector = super(Attendance, self).build_selector()
-        NetUtils.dict_merge(selector, {
+        net_utils.dict_merge(selector, {
             'details': {
                 'hr': None
             }
@@ -151,7 +152,7 @@ class BakatestHR(NexusPHP):
             question_extend_file = Path(__file__).with_name('nexusphp_question.json')
             if question_extend_file.is_file():
                 question_extend_json = json.loads(question_extend_file.read_text())
-                NetUtils.dict_merge(question_json, question_extend_json)
+                net_utils.dict_merge(question_json, question_extend_json)
                 question_file.write_text(json.dumps(question_json))
                 question_extend_file.unlink()
 
@@ -184,7 +185,7 @@ class BakatestHR(NexusPHP):
             for answer in answer_list:
                 data = {'questionid': question_id, 'choice[]': answer, 'usercomment': '此刻心情:无', 'submit': '提交'}
                 response = self._request(entry, 'post', work.url, data=data)
-                state = self.check_sign_in_state(entry, work, response, NetUtils.decode(response))
+                state = self.check_sign_in_state(entry, work, response, net_utils.decode(response))
                 if state == SignState.SUCCEED:
                     entry['result'] = f"{entry['result']} ( {times} attempts.)"
                     question_json[entry['url']][question_id] = answer
@@ -199,7 +200,7 @@ class Bakatest(BakatestHR):
 
     def build_selector(self):
         selector = super(Bakatest, self).build_selector()
-        NetUtils.dict_merge(selector, {
+        net_utils.dict_merge(selector, {
             'details': {
                 'hr': None
             }
@@ -226,7 +227,7 @@ class Visit(VisitHR):
 
     def build_selector(self):
         selector = super(Visit, self).build_selector()
-        NetUtils.dict_merge(selector, {
+        net_utils.dict_merge(selector, {
             'details': {
                 'hr': None
             }

@@ -2,7 +2,7 @@ import json
 from urllib.parse import urljoin
 
 from ..schema.site_base import SiteBase, Work, SignState, NetworkState
-from ..utils.net_utils import NetUtils
+from ..utils import net_utils
 
 
 class MainClass(SiteBase):
@@ -25,14 +25,13 @@ class MainClass(SiteBase):
         ]
 
     def get_details(self, entry, config):
-        entry['user_classes'] = getattr(self, 'USER_CLASSES', None)
         link = urljoin(entry['url'],
-                       '/api/v1/users/{}'.format(self._get_user_id(entry, '"id":(.+?),', entry['base_content'])))
+                       '/api/v1/users/{}'.format(self.get_user_id(entry, '"id":(.+?),', entry['base_content'])))
         detail_response = self._request(entry, 'get', link)
         network_state = self.check_network_state(entry, link, detail_response)
         if network_state != NetworkState.SUCCEED:
             return
-        detail_content = NetUtils.decode(detail_response)
+        detail_content = net_utils.decode(detail_response)
         data = json.loads(detail_content)
         data2 = json.loads(entry['base_content'])
         entry['details'] = {

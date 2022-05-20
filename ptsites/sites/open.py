@@ -4,8 +4,8 @@ from urllib.parse import urljoin
 
 from ..schema.nexusphp import NexusPHP
 from ..schema.site_base import SignState, Work, NetworkState
-from ..utils.baidu_ocr import BaiduOcr
-from ..utils.net_utils import NetUtils
+from ..utils import baidu_ocr
+from ..utils import net_utils
 
 try:
     from PIL import Image
@@ -46,7 +46,7 @@ class MainClass(NexusPHP):
         if image_hash_network_state != NetworkState.SUCCEED:
             entry.fail_with_prefix('Get image hash failed.')
             return
-        image_hash_content = NetUtils.decode(image_hash_response)
+        image_hash_content = net_utils.decode(image_hash_response)
         image_hash_re = re.search('(?<=imagehash=).*?(?=")', image_hash_content)
         img_src_re = re.search('(?<=img src=").*?(?=")', image_hash_content)
 
@@ -64,7 +64,7 @@ class MainClass(NexusPHP):
             return
 
         img = Image.open(BytesIO(img_response.content))
-        code, img_byte_arr = BaiduOcr.get_ocr_code(img, entry, config)
+        code, img_byte_arr = baidu_ocr.get_ocr_code(img, entry, config)
         if not entry.failed:
             if len(code) == 6:
                 params = {
@@ -78,7 +78,7 @@ class MainClass(NexusPHP):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        NetUtils.dict_merge(selector, {
+        net_utils.dict_merge(selector, {
             'detail_sources': {
                 'default': {
                     'elements': {

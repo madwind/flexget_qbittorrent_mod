@@ -27,7 +27,7 @@ class MainClass(SiteBase):
         return [
             Work(
                 url='/login',
-                method='password',
+                method='login',
                 succeed_regex='Logout',
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
@@ -35,8 +35,7 @@ class MainClass(SiteBase):
             )
         ]
 
-    @staticmethod
-    def sign_in_data(login, last_content):
+    def build_login_data(self, login, last_content):
         return {
             'redirect': '',
             'username': login['username'],
@@ -44,8 +43,7 @@ class MainClass(SiteBase):
             'rememberme': 'on'
         }
 
-    @staticmethod
-    def build_selector():
+    def build_selector(self):
         return {
             'detail_sources': {
                 'default': {

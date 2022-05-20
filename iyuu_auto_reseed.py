@@ -12,8 +12,8 @@ from flexget.utils import json
 from loguru import logger
 from requests import RequestException
 
-from .ptsites.executor import Executor
-from .ptsites.utils.net_utils import NetUtils
+from .ptsites import executor
+from .ptsites.utils import net_utils
 
 
 def update_header_cookie(entry, headers, task):
@@ -23,7 +23,7 @@ def update_header_cookie(entry, headers, task):
         task.requests.headers.clear()
         task.requests.headers = headers
     if entry.get('cookie'):
-        task.requests.cookies.update(NetUtils.cookie_str_to_dict(entry['cookie']))
+        task.requests.cookies.update(net_utils.cookie_str_to_dict(entry['cookie']))
     else:
         task.requests.cookies.clear()
 
@@ -139,7 +139,7 @@ class PluginIYUUAutoReseed:
             'limit': {'type': 'integer'},
             'passkeys': {
                 'type': 'object',
-                'properties': Executor.build_reseed_schema()
+                'properties': executor.build_reseed_schema()
             }
         },
         'additionalProperties': False
@@ -244,7 +244,7 @@ class PluginIYUUAutoReseed:
                     )
                     to_client_method(entry, client_torrent)
                     entry['class_name'] = site_name
-                    Executor.build_reseed(entry, config, site, passkey, torrent_id)
+                    executor.build_reseed_entry(entry, config, site, passkey, torrent_id)
                     if show_detail:
                         logger.info(
                             f"accept site: {site_name}, title: {client_torrent['title']}, url: {entry.get('url', None)}")

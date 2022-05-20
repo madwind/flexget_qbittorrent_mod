@@ -6,7 +6,7 @@ import requests
 from loguru import logger
 from requests import Session
 
-from .net_utils import NetUtils
+from . import net_utils
 
 try:
     from pyppeteer import launch
@@ -21,9 +21,9 @@ class CFScrapeWrapperRequests(Session):
     def request(self, method: str, url: str, *args, **kwargs) -> requests.Response:
         response = super(CFScrapeWrapperRequests, self).request(method, url, *args, **kwargs)
         if response is not None and response.content:
-            if re.search(DDoS_protection_by_Cloudflare, NetUtils.decode(response)):
+            if re.search(DDoS_protection_by_Cloudflare, net_utils.decode(response)):
                 cf_cookie = asyncio.run(CFScrapeWrapper.get_cf_cookie(url, self))
-                self.cookies.update(NetUtils.cookie_str_to_dict(cf_cookie))
+                self.cookies.update(net_utils.cookie_str_to_dict(cf_cookie))
                 response = super(CFScrapeWrapperRequests, self).request(method, url, *args, **kwargs)
         return response
 
@@ -32,9 +32,9 @@ class CFScrapeWrapperFlexget(flexget.utils.requests.Session):
     def request(self, method: str, url: str, *args, **kwargs) -> requests.Response:
         response = super(CFScrapeWrapperFlexget, self).request(method, url, *args, **kwargs)
         if response is not None and response.content:
-            if re.search(DDoS_protection_by_Cloudflare, NetUtils.decode(response)):
+            if re.search(DDoS_protection_by_Cloudflare, net_utils.decode(response)):
                 cf_cookie = asyncio.run(CFScrapeWrapper.get_cf_cookie(url, self))
-                self.cookies.update(NetUtils.cookie_str_to_dict(cf_cookie))
+                self.cookies.update(net_utils.cookie_str_to_dict(cf_cookie))
                 response = super(CFScrapeWrapperFlexget, self).request(method, url, *args, **kwargs)
         return response
 
@@ -58,7 +58,7 @@ class CFScrapeWrapper:
         page = await browser.newPage()
         await stealth(page)
         await page.setUserAgent(session.headers.get('user-agent'))
-        cookie_without_cf = NetUtils.cookie_to_str(list(
+        cookie_without_cf = net_utils.cookie_to_str(list(
             filter(lambda x: x[0] not in ['__cfduid', 'cf_clearance', '__cf_bm'], session.cookies.items())))
         await page.setExtraHTTPHeaders({'cookie': cookie_without_cf})
         await page.goto(url)

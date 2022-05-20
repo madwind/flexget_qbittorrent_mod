@@ -11,8 +11,7 @@ class MainClass(Luminance):
         'days': [364]
     }
 
-    @staticmethod
-    def sign_in_data(login, last_content):
+    def build_login_data(self, login, last_content):
         return {
             'token': re.search(r'(?<=name="token" value=").*?(?=")', last_content).group(),
             'username': login['username'],

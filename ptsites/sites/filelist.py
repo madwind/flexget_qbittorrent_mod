@@ -40,7 +40,7 @@ class MainClass(Ocelot):
             ),
             Work(
                 url='/takelogin.php',
-                method='password',
+                method='login',
                 succeed_regex='Hello, <a .+?</a>',
                 response_urls=['/my.php'],
                 check_state=('final', SignState.SUCCEED),
@@ -48,8 +48,7 @@ class MainClass(Ocelot):
             )
         ]
 
-    @staticmethod
-    def sign_in_data(login, last_content):
+    def build_login_data(self, login, last_content):
         return {
             'validator': re.search("(?<='validator' value=').*(?=')", last_content).group(),
             'username': login['username'],

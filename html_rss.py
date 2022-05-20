@@ -7,7 +7,7 @@ from flexget.utils.soup import get_soup
 from loguru import logger
 from requests import RequestException
 
-from .ptsites.utils.net_utils import NetUtils
+from .ptsites.utils import net_utils
 
 
 class PluginHtmlRss():
@@ -70,9 +70,9 @@ class PluginHtmlRss():
 
         try:
             task.requests.headers.update(headers)
-            task.requests.cookies.update(NetUtils.cookie_str_to_dict(cookie))
+            task.requests.cookies.update(net_utils.cookie_str_to_dict(cookie))
             response = task.requests.get(url, timeout=60)
-            content = NetUtils.decode(response)
+            content = net_utils.decode(response)
         except RequestException as e:
             raise plugin.PluginError(
                 'Unable to download the Html for task {} ({}): {}'.format(task.name, url, e)

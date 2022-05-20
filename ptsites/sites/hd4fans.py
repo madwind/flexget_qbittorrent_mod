@@ -1,6 +1,6 @@
 from ..schema.nexusphp import NexusPHP
 from ..schema.site_base import SignState, NetworkState, Work
-from ..utils.net_utils import NetUtils
+from ..utils import net_utils
 
 
 class MainClass(NexusPHP):
@@ -23,7 +23,6 @@ class MainClass(NexusPHP):
                 url='/',
                 method='get',
                 succeed_regex='<span id="checkedin">\\[签到成功\\]</span>',
-                fail_regex=None,
                 check_state=('sign_in', SignState.NO_SIGN_IN),
                 is_base_content=True
             ),
@@ -31,22 +30,19 @@ class MainClass(NexusPHP):
                 url='/checkin.php',
                 method='post',
                 data=self.DATA,
-                succeed_regex=None,
-                fail_regex=None,
                 check_state=('network', NetworkState.SUCCEED)
             ),
             Work(
                 url='/',
                 method='get',
                 succeed_regex='<span id="checkedin">\\[签到成功\\]</span>',
-                fail_regex=None,
                 check_state=('final', SignState.SUCCEED)
             )
         ]
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        NetUtils.dict_merge(selector, {
+        net_utils.dict_merge(selector, {
             'details': {
                 'hr': None
             }

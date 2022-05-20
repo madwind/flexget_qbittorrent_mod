@@ -1,11 +1,6 @@
 from ..schema.xbtit import XBTIT
-from ..utils.net_utils import NetUtils
-
-
-def handle_inf(value):
-    if value == '---':
-        value = 0
-    return value
+from ..utils import net_utils
+from ..utils.value_hanlder import handle_infinite
 
 
 class MainClass(XBTIT):
@@ -18,7 +13,7 @@ class MainClass(XBTIT):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        NetUtils.dict_merge(selector, {
+        net_utils.dict_merge(selector, {
             'user_id': r'<li><a href="usercp\.php\?uid=(\d+)">My Panel</a>',
             'detail_sources': {
                 'default': {
@@ -38,11 +33,11 @@ class MainClass(XBTIT):
                 },
                 'share_ratio': {
                     'regex': r'Ratio\s*(---|[\d.]+)',
-                    'handle': handle_inf
+                    'handle': handle_infinite
                 },
                 'points': {
                     'regex': r'Bonus: (---|[\d.]+)',
-                    'handle': handle_inf
+                    'handle': handle_infinite
                 },
                 'join_date': {
                     'regex': r'Joined on\s*(\d{2}/\d{2}/\d{4})',

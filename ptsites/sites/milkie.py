@@ -3,7 +3,7 @@ import json
 from urllib.parse import urljoin
 
 from ..schema.site_base import SiteBase, Work, SignState, NetworkState
-from ..utils.net_utils import NetUtils
+from ..utils import net_utils
 
 
 class MainClass(SiteBase):
@@ -32,7 +32,7 @@ class MainClass(SiteBase):
         return [
             Work(
                 url='/api/v1/auth/sessions',
-                method='password',
+                method='login',
                 succeed_regex='{"token":".*"}',
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
@@ -40,7 +40,7 @@ class MainClass(SiteBase):
             )
         ]
 
-    def sign_in_by_password(self, entry, config, work, last_content):
+    def sign_in_by_login(self, entry, config, work, last_content):
         if not (login := entry['site_config'].get('login')):
             entry.fail_with_prefix('Login data not found!')
             return
@@ -53,13 +53,12 @@ class MainClass(SiteBase):
         return login_response
 
     def get_details(self, entry, config):
-        entry['user_classes'] = getattr(self, 'USER_CLASSES', None)
         link = urljoin(entry['url'], '/api/v1/auth')
         detail_response = self._request(entry, 'get', link)
         network_state = self.check_network_state(entry, link, detail_response)
         if network_state != NetworkState.SUCCEED:
             return
-        detail_content = NetUtils.decode(detail_response)
+        detail_content = net_utils.decode(detail_response)
         data = json.loads(detail_content)
         entry['details'] = {
             'uploaded': str(data['user']['uploaded']) + 'B',

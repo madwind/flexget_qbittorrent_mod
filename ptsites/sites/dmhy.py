@@ -5,7 +5,7 @@ from io import BytesIO
 from pathlib import Path
 from urllib.parse import urljoin
 
-from ..utils.net_utils import NetUtils
+from ..utils import net_utils, baidu_ocr, dmhy_image
 
 try:
     from fuzzywuzzy import fuzz, process
@@ -17,8 +17,6 @@ from loguru import logger
 
 from ..schema.nexusphp import NexusPHP
 from ..schema.site_base import SignState, Work, NetworkState
-from ..utils.baidu_ocr import BaiduOcr
-from ..utils.dmhy_image import DmhyImage
 
 try:
     from PIL import Image
@@ -135,8 +133,8 @@ class MainClass(NexusPHP):
             image1, image2 = images
             self.save_iamge(image1, 'step3_a_diff.png')
             self.save_iamge(image2, 'step3_b_diff.png')
-            ocr_text1 = BaiduOcr.get_jap_ocr(image1, entry, config)
-            ocr_text2 = BaiduOcr.get_jap_ocr(image2, entry, config)
+            ocr_text1 = baidu_ocr.get_jap_ocr(image1, entry, config)
+            ocr_text2 = baidu_ocr.get_jap_ocr(image2, entry, config)
             if entry.failed:
                 return None
             oct_text = ocr_text1 if len(ocr_text1) > len(ocr_text2) else ocr_text2
@@ -187,7 +185,7 @@ class MainClass(NexusPHP):
                 reload__net_state = self.check_network_state(entry, real_reload_url, reload_response)
                 if reload__net_state != NetworkState.SUCCEED:
                     return None
-                reload_content = NetUtils.decode(reload_response)
+                reload_content = net_utils.decode(reload_response)
                 return self.build_data(entry, config, work, reload_content, ocr_config)
             else:
                 return None
@@ -200,11 +198,11 @@ class MainClass(NexusPHP):
         checked_list = []
         images_sort_match = None
         new_image = self.get_new_image(entry, img_url)
-        if not DmhyImage.check_analysis(new_image):
+        if not dmhy_image.check_analysis(new_image):
             self.save_iamge(new_image, 'z_failed.png')
             logger.debug('can not analyzed!')
             return None
-        original_text = BaiduOcr.get_jap_ocr(new_image, entry, config)
+        original_text = baidu_ocr.get_jap_ocr(new_image, entry, config)
         logger.debug('original_ocr: {}', original_text)
         if original_text is None or len(original_text) < char_count:
             return None
@@ -220,19 +218,19 @@ class MainClass(NexusPHP):
                     image1, image2 = images
                     self.save_iamge(image1, 'step1_a_original.png')
                     self.save_iamge(image2, 'step1_b_original.png')
-                    if DmhyImage.compare_images_sort(image1, image2):
+                    if dmhy_image.compare_images_sort(image1, image2):
                         images_sort_match = images
                         break
         if images_sort_match:
             image1, image2 = images_sort_match
-            image_a_split_1, image_a_split_2 = DmhyImage.split_image(image1)
+            image_a_split_1, image_a_split_2 = dmhy_image.split_image(image1)
             self.save_iamge(image_a_split_1, 'step2_a_split_1.png')
             self.save_iamge(image_a_split_2, 'step2_a_split_2.png')
-            image_b_split_1, image_b_split_2 = DmhyImage.split_image(image2)
+            image_b_split_1, image_b_split_2 = dmhy_image.split_image(image2)
             self.save_iamge(image_b_split_1, 'step2_b_split_1.png')
             self.save_iamge(image_b_split_2, 'step2_b_split_2.png')
-            image_last = DmhyImage.compare_images(image_a_split_1, image_b_split_1)
-            image_last2 = DmhyImage.compare_images(image_a_split_2, image_b_split_2)
+            image_last = dmhy_image.compare_images(image_a_split_1, image_b_split_1)
+            image_last2 = dmhy_image.compare_images(image_a_split_2, image_b_split_2)
             if image_last and not image_last2:
                 self.save_iamge(image_last[0], 'step3_a_split_1_diff.png')
                 self.save_iamge(image_last[1], 'step3_b_split_1_diff.png')
@@ -268,7 +266,7 @@ class MainClass(NexusPHP):
                 entry['url'], '/pic/trans.gif?debug=NIM'):
             return None
         new_image = Image.open(BytesIO(base_img_response.content))
-        DmhyImage.remove_date_string(new_image)
+        dmhy_image.remove_date_string(new_image)
         return new_image
 
     def save_iamge(self, new_image, path):
@@ -279,7 +277,7 @@ class MainClass(NexusPHP):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        NetUtils.dict_merge(selector, {
+        net_utils.dict_merge(selector, {
             'details': {
                 'points': {
                     'regex': ('UCoin.*?([\\d,.]+)\\(([\\d,.]+)\\)', 2)

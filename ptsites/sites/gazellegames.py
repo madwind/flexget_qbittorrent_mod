@@ -4,7 +4,8 @@ from flexget.utils.soup import get_soup
 
 from ..schema.gazelle import Gazelle
 from ..schema.site_base import Work, SignState, NetworkState
-from ..utils.net_utils import NetUtils
+from ..utils import net_utils
+from ..utils.value_hanlder import handle_infinite
 
 
 class MainClass(Gazelle):
@@ -37,7 +38,6 @@ class MainClass(Gazelle):
                 url='/',
                 method='get',
                 succeed_regex='Welcome, <a.+?</a>',
-                fail_regex=None,
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
             )
@@ -45,7 +45,7 @@ class MainClass(Gazelle):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        NetUtils.dict_merge(selector, {
+        net_utils.dict_merge(selector, {
             'detail_sources': {
                 'default': {
                     'do_not_strip': True,
@@ -92,7 +92,7 @@ class MainClass(Gazelle):
             'uploaded': f'{details_response_json.get("response").get("stats").get("uploaded") or 0} B'.replace(',', ''),
             'downloaded': f'{details_response_json.get("response").get("stats").get("downloaded") or 0} B'.replace(',',
                                                                                                                    ''),
-            'share_ratio': self.handle_share_ratio(
+            'share_ratio': handle_infinite(
                 str(details_response_json.get('response').get('stats').get('ratio') or 0).replace(',', '')),
             'points': str(details_response_json.get('response').get('achievements').get('totalPoints') or 0).replace(
                 ',', ''),
@@ -132,7 +132,7 @@ class MainClass(Gazelle):
                 failed = True
             else:
                 body_element = get_soup(
-                    NetUtils.decode(message_response)).select_one('.body')
+                    net_utils.decode(message_response)).select_one('.body')
                 if body_element:
                     message_body = body_element.text.strip()
             entry['messages'] = entry['messages'] + (

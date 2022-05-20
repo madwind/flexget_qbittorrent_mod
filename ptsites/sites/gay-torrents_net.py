@@ -1,6 +1,7 @@
 import hashlib
 
 from ..schema.site_base import SiteBase, Work, SignState, NetworkState
+from ..utils.value_hanlder import handle_infinite
 
 
 class MainClass(SiteBase):
@@ -29,7 +30,7 @@ class MainClass(SiteBase):
         return [
             Work(
                 url='/login.php?do=login',
-                method='password',
+                method='login',
                 succeed_regex=r'Thank you for logging in, .*?\.</p>',
                 check_state=('network', NetworkState.SUCCEED),
                 response_urls=['/login.php?do=login']
@@ -48,8 +49,7 @@ class MainClass(SiteBase):
             )
         ]
 
-    @staticmethod
-    def sign_in_data(login, last_content):
+    def build_login_data(self, login, last_content):
         return {
             'do': 'login',
             'vb_login_md5password': hashlib.md5(login['password'].encode()).hexdigest(),
@@ -83,14 +83,13 @@ class MainClass(SiteBase):
                 },
                 'share_ratio': {
                     'regex': r'Ratio(∞|[\d,.]+)',
-                    'handle': self.handle_share_ratio
+                    'handle': handle_infinite
                 },
                 'points': {
                     'regex': r'Juices([\d,.]+)'
                 },
                 'join_date': {
                     'regex': r'Join Date\s*?[\d:]+? (.+?)\s',
-                    'handle': self.handle_join_date
                 },
                 'seeding': None,
                 'leeching': None,

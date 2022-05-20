@@ -3,9 +3,9 @@ from io import BytesIO
 from urllib.parse import urljoin
 
 from ..schema.nexusphp import NexusPHP
-from ..schema.site_base import SignState, Work, NetworkState, SiteBase
-from ..utils.baidu_ocr import BaiduOcr
-from ..utils.net_utils import NetUtils
+from ..schema.site_base import SignState, Work, NetworkState
+from ..utils import baidu_ocr
+from ..utils import net_utils
 
 try:
     from PIL import Image
@@ -65,7 +65,7 @@ class MainClass(NexusPHP):
         image_hash_network_state = self.check_network_state(entry, image_hash_url, image_hash_response)
         if image_hash_network_state != NetworkState.SUCCEED:
             return
-        content = NetUtils.decode(image_hash_response)
+        content = net_utils.decode(image_hash_response)
         image_hash = json.loads(content)['code']
 
         if image_hash:
@@ -79,7 +79,7 @@ class MainClass(NexusPHP):
             entry.fail_with_prefix('Cannot find: image_hash')
             return
         img = Image.open(BytesIO(img_response.content))
-        code, img_byte_arr = BaiduOcr.get_ocr_code(img, entry, config)
+        code, img_byte_arr = baidu_ocr.get_ocr_code(img, entry, config)
         if code:
             if len(code) == 6:
                 data = {
@@ -91,7 +91,7 @@ class MainClass(NexusPHP):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        NetUtils.dict_merge(selector, {
+        net_utils.dict_merge(selector, {
             'details': {
                 'hr': None
             }
@@ -99,6 +99,6 @@ class MainClass(NexusPHP):
         return selector
 
     @classmethod
-    def build_reseed(cls, entry, config, site, passkey, torrent_id):
-        SiteBase.build_reseed_from_page(entry, config, passkey, torrent_id, cls.URL, cls.TORRENT_PAGE_URL,
-                                        cls.DOWNLOAD_URL_REGEX)
+    def build_reseed_entry(cls, entry, config, site, passkey, torrent_id):
+        cls.build_reseed_from_page(entry, config, passkey, torrent_id, cls.URL, cls.TORRENT_PAGE_URL,
+                                   cls.DOWNLOAD_URL_REGEX)

@@ -1,6 +1,6 @@
 from ..schema.nexusphp import NexusPHP
 from ..schema.site_base import SignState, Work
-from ..utils.net_utils import NetUtils
+from ..utils import net_utils
 
 
 class MainClass(NexusPHP):
@@ -17,7 +17,6 @@ class MainClass(NexusPHP):
                 url='/index.php',
                 method='get',
                 succeed_regex='(?<=value=")已经打卡(?=")',
-                fail_regex=None,
                 check_state=('sign_in', SignState.NO_SIGN_IN),
                 is_base_content=True
             ),
@@ -25,7 +24,6 @@ class MainClass(NexusPHP):
                 url='/signin.php',
                 method='get',
                 succeed_regex='(?<=value=")已经打卡(?=")',
-                fail_regex=None,
                 response_urls=['/signin.php', '/index.php'],
                 check_state=('final', SignState.SUCCEED)
             )
@@ -33,7 +31,7 @@ class MainClass(NexusPHP):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        NetUtils.dict_merge(selector, {
+        net_utils.dict_merge(selector, {
             'detail_sources': {
                 'default': {
                     'elements': {

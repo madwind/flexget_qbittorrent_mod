@@ -6,7 +6,7 @@ from flexget.entry import Entry
 from flexget.event import event
 from loguru import logger
 
-from .ptsites.executor import Executor
+from .ptsites import executor
 from .ptsites.utils.details_report import DetailsReport
 
 
@@ -29,7 +29,7 @@ class PluginAutoSignIn:
             },
             'sites': {
                 'type': 'object',
-                'properties': Executor.build_sign_in_schema()
+                'properties': executor.build_sign_in_schema()
             }
         },
         'additionalProperties': False
@@ -63,7 +63,7 @@ class PluginAutoSignIn:
                 entry['result'] = ''
                 entry['messages'] = ''
                 entry['details'] = ''
-                Executor.build_sign_in_entry(entry, config)
+                executor.build_sign_in_entry(entry, config)
                 entries.append(entry)
         return entries
 
@@ -73,8 +73,8 @@ class PluginAutoSignIn:
         for entry in task.all_entries:
             if date_now not in entry['title']:
                 entry.reject('{} out of date!'.format(entry['title']))
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            for entry, feature in [(entry, executor.submit(Executor.sign_in, entry, config))
+        with ThreadPoolExecutor(max_workers=max_workers) as threadExecutor:
+            for entry, feature in [(entry, threadExecutor.submit(executor.sign_in, entry, config))
                                    for entry in task.accepted]:
                 try:
                     feature.result()

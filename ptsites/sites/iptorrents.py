@@ -1,4 +1,5 @@
 from ..schema.site_base import SiteBase, Work, SignState
+from ..utils.value_hanlder import handle_join_date,handle_infinite
 
 
 class MainClass(SiteBase):
@@ -16,15 +17,11 @@ class MainClass(SiteBase):
                 url='/',
                 method='get',
                 succeed_regex='Log out',
-                fail_regex=None,
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
                 response_urls=['/t']
             )
         ]
-
-    def get_message(self, entry, config):
-        self.get_iptorrents_message(entry, config)
 
     def build_selector(self):
         return {
@@ -47,14 +44,14 @@ class MainClass(SiteBase):
                 },
                 'share_ratio': {
                     'regex': r'Ratio (-|[\d,.]+)',
-                    'handle': self.handle_share_ratio
+                    'handle': handle_infinite
                 },
                 'points': {
                     'regex': 'Bonus Points\s+([\\d,.]+)'
                 },
                 'join_date': {
                     'regex': 'Join date\\s*?(\\d{4}-\\d{2}-\\d{2})',
-                    'handle': self.handle_join_date
+                    'handle': handle_join_date
                 },
                 'seeding': {
                     'regex': 'Seeding([\\d,]+)'
@@ -65,7 +62,3 @@ class MainClass(SiteBase):
                 'hr': None
             }
         }
-
-    def get_iptorrents_message(self, entry, config, messages_url='/inbox'):
-        entry['result'] += '(TODO: Message)'
-

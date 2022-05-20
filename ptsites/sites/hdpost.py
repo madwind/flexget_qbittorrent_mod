@@ -5,7 +5,8 @@ from flexget.utils.soup import get_soup
 
 from ..schema.site_base import SignState, Work, NetworkState
 from ..schema.unit3d import Unit3D
-from ..utils.net_utils import NetUtils
+from ..utils import net_utils
+from ..utils.value_hanlder import handle_join_date, handle_infinite
 
 
 class MainClass(Unit3D):
@@ -48,7 +49,7 @@ class MainClass(Unit3D):
         }
 
     @classmethod
-    def build_reseed(cls, entry, config, site, passkey, torrent_id):
+    def build_reseed_entry(cls, entry, config, site, passkey, torrent_id):
         download_page = site['download_page'].format(torrent_id=torrent_id, rsskey=passkey['rsskey'])
         entry['url'] = urljoin(MainClass.URL, download_page)
 
@@ -61,7 +62,7 @@ class MainClass(Unit3D):
             ),
             Work(
                 url='/login',
-                method='password',
+                method='login',
                 check_state=('network', NetworkState.SUCCEED),
                 response_urls=['', '/pages/1'],
             )
@@ -79,8 +80,7 @@ class MainClass(Unit3D):
             )
         ]
 
-    @staticmethod
-    def sign_in_data(login, last_content):
+    def build_login_data(self, login, last_content):
         login_page = get_soup(last_content)
         hidden_input = login_page.select_one('#formContent > form > input[type=hidden]:nth-child(7)')
         name = hidden_input.attrs['name']
@@ -97,7 +97,7 @@ class MainClass(Unit3D):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        NetUtils.dict_merge(selector, {
+        net_utils.dict_merge(selector, {
             'user_id': '/users/(.*?)/',
             'detail_sources': {
                 'default': {
@@ -118,7 +118,7 @@ class MainClass(Unit3D):
                 },
                 'share_ratio': {
                     'regex': '分享率.+?([\\d.]+)',
-                    'handle': self.handle_share_ratio
+                    'handle': handle_infinite
                 },
                 'points': {
                     'regex': '魔力.+?(\\d[\\d,. ]*)',
@@ -126,7 +126,7 @@ class MainClass(Unit3D):
                 },
                 'join_date': {
                     'regex': '注册日期 (.*?\\d{4})',
-                    'handle': self.handle_join_date
+                    'handle': handle_join_date
                 },
                 'seeding': {
                     'regex': '做种.+?(\\d+)'

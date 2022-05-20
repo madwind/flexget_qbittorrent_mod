@@ -4,19 +4,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
 from ..schema.site_base import SiteBase, Work, SignState, NetworkState
-
-
-def handle_amount_of_data(value):
-    return value.replace('o', 'B')
-
-
-def handle_join_date(value):
-    value_split = value.removeprefix('Il y a ').replace('et', '').replace('seconde', 'second') \
-        .replace('heure', 'hour').replace('journée', 'day').replace('jours', 'days').replace('semaine', 'week') \
-        .replace('mois', 'months').replace('an', 'year').replace('années', 'years').split()
-    return datetime.now() - relativedelta(**dict(
-        (unit if unit.endswith('s') else f'{unit}s', int(amount)) for amount, unit in
-        [value_split[i:i + 2] for i in range(0, len(value_split), 2)]))
+from ..utils.value_hanlder import handle_infinite
 
 
 class MainClass(SiteBase):
@@ -54,7 +42,7 @@ class MainClass(SiteBase):
             ),
             Work(
                 url='/Home/Login',
-                method='password',
+                method='login',
                 succeed_regex=r'Déconnexion',
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
@@ -62,8 +50,7 @@ class MainClass(SiteBase):
             )
         ]
 
-    @staticmethod
-    def sign_in_data(login, last_content):
+    def build_login_data(self, login, last_content):
         return {
             'Username': login['username'],
             'Password': login['password'],
@@ -87,17 +74,17 @@ class MainClass(SiteBase):
                 'uploaded': {
                     'regex': r'''(?x)Upload\ :\ 
                                     ([\d.] + \ [ZEPTGMK] ? o)''',
-                    'handle': handle_amount_of_data
+                    'handle': self.handle_amount_of_data
                 },
                 'downloaded': {
                     'regex': r'''(?x)Download\ :\ 
                                     ([\d.] + \ [ZEPTGMK] ? o)''',
-                    'handle': handle_amount_of_data
+                    'handle': self.handle_amount_of_data
                 },
                 'share_ratio': {
                     'regex': r'''(?x)Ratio\ :\ 
                                     (∞ | [\d,.] +)''',
-                    'handle': self.handle_share_ratio
+                    'handle': handle_infinite
                 },
                 'points': {
                     'regex': r'''(?x)Choco's\ :\ 
@@ -107,10 +94,21 @@ class MainClass(SiteBase):
                     'regex': r'''(?mx)Inscrit\ :\ 
                                     (. +?)
                                     $''',
-                    'handle': handle_join_date
+                    'handle': self.handle_join_date
                 },
                 'seeding': None,
                 'leeching': None,
                 'hr': None
             }
         }
+
+    def handle_amount_of_data(self, value):
+        return value.replace('o', 'B')
+
+    def handle_join_date(self, value):
+        value_split = value.removeprefix('Il y a ').replace('et', '').replace('seconde', 'second') \
+            .replace('heure', 'hour').replace('journée', 'day').replace('jours', 'days').replace('semaine', 'week') \
+            .replace('mois', 'months').replace('an', 'year').replace('années', 'years').split()
+        return datetime.now() - relativedelta(**dict(
+            (unit if unit.endswith('s') else f'{unit}s', int(amount)) for amount, unit in
+            [value_split[i:i + 2] for i in range(0, len(value_split), 2)]))

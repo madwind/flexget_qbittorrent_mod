@@ -1,8 +1,8 @@
 from urllib.parse import urljoin
 
 from ..schema.nexusphp import NexusPHP
-from ..schema.site_base import SiteBase, Work, SignState
-from ..utils.net_utils import NetUtils
+from ..schema.site_base import Work, SignState
+from ..utils import net_utils
 
 
 class MainClass(NexusPHP):
@@ -34,20 +34,19 @@ class MainClass(NexusPHP):
                 url='/sign',
                 method='get',
                 succeed_regex='本次签到获得魅力\\d+',
-                fail_regex=None,
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
             )
         ]
 
     @classmethod
-    def build_reseed(cls, entry, config, site, passkey, torrent_id):
-        SiteBase.build_reseed_from_page(entry, config, passkey, torrent_id, cls.DOWNLOAD_BASE_URL, cls.TORRENT_PAGE_URL,
-                                        cls.DOWNLOAD_URL_REGEX)
+    def build_reseed_entry(cls, entry, config, site, passkey, torrent_id):
+        cls.build_reseed_from_page(entry, config, passkey, torrent_id, cls.DOWNLOAD_BASE_URL, cls.TORRENT_PAGE_URL,
+                                   cls.DOWNLOAD_URL_REGEX)
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        NetUtils.dict_merge(selector, {
+        net_utils.dict_merge(selector, {
             'user_id': None,
             'detail_sources': {
                 'default': {

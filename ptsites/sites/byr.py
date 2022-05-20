@@ -16,7 +16,6 @@ class MainClass(Visit):
                 url='/index.php',
                 method='get',
                 succeed_regex='欢迎',
-                fail_regex=None,
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
             )

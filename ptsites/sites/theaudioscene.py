@@ -15,8 +15,7 @@ class MainClass(SiteBase):
             ),
         ]
 
-    @staticmethod
-    def build_selector():
+    def build_selector(self):
         return {
             'detail_sources': {
                 'default': {

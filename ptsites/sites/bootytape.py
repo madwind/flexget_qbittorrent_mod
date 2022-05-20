@@ -1,13 +1,7 @@
 import re
 
 from ..schema.site_base import SiteBase, Work, SignState
-
-
-def handle_amount_of_data(value):
-    return value + 'B'
-
-
-
+from ..utils.value_hanlder import handle_join_date, handle_infinite
 
 
 class MainClass(SiteBase):
@@ -41,7 +35,7 @@ class MainClass(SiteBase):
         return [
             Work(
                 url='/login.php',
-                method='password',
+                method='login',
                 succeed_regex='logout',
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
@@ -49,8 +43,7 @@ class MainClass(SiteBase):
             )
         ]
 
-    @staticmethod
-    def sign_in_data(login, last_content):
+    def build_login_data(self, login, last_content):
         return {
             'take_login': 1,
             'username': login['username'],
@@ -78,21 +71,21 @@ class MainClass(SiteBase):
                                 \ 
                                 \(
                                 ([\d,] +)""",
-                    'handle': handle_amount_of_data
+                    'handle': self.handle_amount_of_data
                 },
                 'downloaded': {
                     'regex': r"""(?x)Downloaded
                                 . *?
                                 \(
                                 ([\d,] +)""",
-                    'handle': handle_amount_of_data
+                    'handle': self.handle_amount_of_data
                 },
                 'share_ratio': {
                     'regex': r"""(?x)Share
                                 \ 
                                 ratio
                                 (∞ | [\d,.] +)""",
-                    'handle': self.handle_share_ratio
+                    'handle': handle_infinite
                 },
                 'points': {
                     'regex': r"""(?x)Seed
@@ -106,10 +99,13 @@ class MainClass(SiteBase):
                                 date
                                 (. +?)
                                 \ """,
-                    'handle': self.handle_join_date
+                    'handle': handle_join_date
                 },
                 'seeding': None,
                 'leeching': None,
                 'hr': None
             }
         }
+
+    def handle_amount_of_data(self, value):
+        return value + 'B'

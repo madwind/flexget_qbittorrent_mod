@@ -1,3 +1,4 @@
+from ..utils.value_hanlder import handle_join_date
 from ..schema.site_base import SignState, Work
 from ..schema.unit3d import Unit3D
 
@@ -38,7 +39,6 @@ class MainClass(Unit3D):
                 url=oneurl or '/',
                 method='get',
                 succeed_regex='<title>BeyondHD | Beyond Your Imagination</title>',
-                fail_regex=None,
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
                 response_urls=['https://beyond-hd.me']
@@ -46,7 +46,7 @@ class MainClass(Unit3D):
         ]
 
     def build_selector(self):
-        selector = {
+        return {
             'user_id': '/([^.]+\.\d+)/badges"',
             'detail_sources': {
                 'default': {
@@ -73,7 +73,7 @@ class MainClass(Unit3D):
                 },
                 'join_date': {
                     'regex': ('(注册日期|Member Since:) (\\d{4}-\\d{2}-\\d{2})', 2),
-                    'handle': self.handle_join_date
+                    'handle': handle_join_date
                 },
                 'seeding': {
                     'regex': ('(\\d+)\\s*?(做种|Active Seeds)', 1)
@@ -86,7 +86,3 @@ class MainClass(Unit3D):
                 }
             }
         }
-        return selector
-
-    def get_unit3d_message(self, entry, config, messages_url='/mail'):
-        return super().get_unit3d_message(entry, config, messages_url)

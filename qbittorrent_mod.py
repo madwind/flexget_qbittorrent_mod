@@ -9,7 +9,7 @@ from flexget.event import event
 from loguru import logger
 
 from .ptsites.client.qbittorrent_client import QBittorrentClientFactory
-from .ptsites.utils.net_utils import NetUtils
+from .ptsites.utils import net_utils
 
 
 class QBittorrentModBase:
@@ -313,7 +313,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
         for entry in task.accepted:
             if reject_reason:
                 entry.reject(reason=reject_reason, remember=remember_reject)
-                site_name = NetUtils.get_site_name(entry.get('url'))
+                site_name = net_utils.get_site_name(entry.get('url'))
                 logger.info('reject {}, because: {}, site: {}', entry['title'], reject_reason, site_name)
                 continue
             if entry.get('headers'):
@@ -322,7 +322,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                 task.requests.headers.clear()
                 task.requests.headers = headers
             if entry.get('cookie'):
-                task.requests.cookies.update(NetUtils.cookie_str_to_dict(entry['cookie']))
+                task.requests.cookies.update(net_utils.cookie_str_to_dict(entry['cookie']))
             else:
                 task.requests.cookies.clear()
             download.get_temp_file(task, entry, handle_magnets=True, fail_html=config['fail_html'])
@@ -375,13 +375,13 @@ class PluginQBittorrentMod(QBittorrentModBase):
                     torrent = entry['torrent']
                     trackers = torrent.trackers
                     for tracker in trackers:
-                        site_name = NetUtils.get_site_name(tracker)
+                        site_name = net_utils.get_site_name(tracker)
                         tags.append(site_name)
                         if specific_trackers := tracker_options.get('specific_trackers'):
                             for specific_tracker in specific_trackers:
                                 for tracker_name, tracker_option in specific_tracker.items():
                                     if tracker_name == site_name:
-                                        NetUtils.dict_merge(entry_add_option, tracker_option)
+                                        net_utils.dict_merge(entry_add_option, tracker_option)
                     if tracker_options.get('tag_by_tracker'):
                         if original_tags := entry_add_option.get('tags'):
                             tags.append(original_tags)
@@ -497,7 +497,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                     trackers = reseed_entry['qbittorrent_trackers']
                     site_names = []
                     for tracker in trackers:
-                        site_names.append(NetUtils.get_site_name(tracker.get('url')))
+                        site_names.append(net_utils.get_site_name(tracker.get('url')))
 
                     if len(set(check_reseed) & set(site_names)) > 0:
                         check_hashes.append(reseed_entry['torrent_info_hash'])
@@ -653,7 +653,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
             torrent_trackers = entry.get('qbittorrent_trackers')
             for tracker in torrent_trackers:
                 if tag_by_tracker:
-                    site_name = NetUtils.get_site_name(tracker.get('url'))
+                    site_name = net_utils.get_site_name(tracker.get('url'))
                     if site_name and site_name not in tags and site_name not in tags_modified:
                         tags_modified.append(site_name)
                 if replace_trackers:

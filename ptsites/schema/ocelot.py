@@ -1,13 +1,11 @@
 from .site_base import SiteBase
+from ..utils.value_hanlder import handle_infinite
 
 
 class Ocelot(SiteBase):
 
-    def get_message(self, entry, config):
-        self.get_ocelot_message(entry, config)
-
     def build_selector(self):
-        selector = {
+        return {
             'user_id': 'userdetails.php\\?id=(\\d+)',
             'detail_sources': {
                 'default': {
@@ -27,7 +25,7 @@ class Ocelot(SiteBase):
                 },
                 'share_ratio': {
                     'regex': 'Ratio.+?(Inf\\.|[\\d.]+)',
-                    'handle': self.handle_share_ratio
+                    'handle': handle_infinite
                 },
                 'points': {
                     'regex': ('Hello.+?(\\d+).*?(Inf\\.|[\\d.]+)', 2)
@@ -42,7 +40,3 @@ class Ocelot(SiteBase):
                 'hr': None
             }
         }
-        return selector
-
-    def get_ocelot_message(self, entry, config, messages_url='/messages.php'):
-        entry['result'] += '(TODO: Message)'

@@ -3,7 +3,7 @@ from urllib.parse import urljoin
 
 from ..schema.nexusphp import NexusPHP
 from ..schema.site_base import SignState, Work, NetworkState
-from ..utils.net_utils import NetUtils
+from ..utils import net_utils
 
 
 class MainClass(NexusPHP):
@@ -21,7 +21,6 @@ class MainClass(NexusPHP):
                 url='/index.php?action=addbonus',
                 method='location',
                 succeed_regex='欢迎回来',
-                fail_regex=None,
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
             ),
@@ -29,7 +28,7 @@ class MainClass(NexusPHP):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        NetUtils.dict_merge(selector, {
+        net_utils.dict_merge(selector, {
             'detail_sources': {
                 'default': {
                     'elements': {
@@ -52,7 +51,7 @@ class MainClass(NexusPHP):
         reload__net_state = self.check_network_state(entry, work.url, response)
         if reload__net_state != NetworkState.SUCCEED:
             return None
-        content = NetUtils.decode(response)
+        content = net_utils.decode(response)
         location_search = re.search('(?<=window\\.location=).*?(?=;)', content)
         if not location_search:
             return response

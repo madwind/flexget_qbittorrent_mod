@@ -1,9 +1,12 @@
+import datetime
+import re
 from urllib.parse import urljoin
 
 from flexget.utils.soup import get_soup
 
 from .site_base import SiteBase, NetworkState
-from ..utils.net_utils import NetUtils
+from ..utils import net_utils
+from ..utils.value_hanlder import handle_infinite
 
 
 class Gazelle(SiteBase):
@@ -12,7 +15,7 @@ class Gazelle(SiteBase):
         self.get_gazelle_message(entry, config)
 
     def build_selector(self):
-        selector = {
+        return {
             'user_id': 'user.php\\?id=(\\d+)',
             'detail_sources': {
                 'default': {
@@ -29,10 +32,14 @@ class Gazelle(SiteBase):
                 },
                 'share_ratio': {
                     'regex': ('(Ratio|分享率).*?(∞|[\\d,.]+)', 2),
-                    'handle': self.handle_share_ratio
+                    'handle': handle_infinite
                 },
                 'points': {
-                    'regex': ('(Gold|积分).*?([\\d,.]+)', 2)
+                    'regex': ('(Gold|积分|Bonus|Credits|Nips).*?([\\d,.]+)', 2)
+                },
+                'join_date': {
+                    'regex': ('(Joined|加入时间).*?(.*?)(ago|前)', 2),
+                    'handle': self.handle_join_date
                 },
                 'seeding': {
                     'regex': '[Ss]eeding.+?([\\d,]+)'
@@ -43,7 +50,6 @@ class Gazelle(SiteBase):
                 'hr': None
             }
         }
-        return selector
 
     def get_gazelle_message(self, entry, config, message_body_selector='div[id*="message"]'):
         message_url = urljoin(entry['url'], '/inbox.php')
@@ -51,7 +57,7 @@ class Gazelle(SiteBase):
         network_state = self.check_network_state(entry, message_url, message_box_response)
         if network_state != NetworkState.SUCCEED:
             return
-        unread_elements = get_soup(NetUtils.decode(message_box_response)).select("tr.unreadpm > td > strong > a")
+        unread_elements = get_soup(net_utils.decode(message_box_response)).select("tr.unreadpm > td > strong > a")
         failed = False
         for unread_element in unread_elements:
             title = unread_element.text
@@ -64,10 +70,25 @@ class Gazelle(SiteBase):
                 failed = True
             else:
                 body_element = get_soup(
-                    NetUtils.decode(message_response)).select_one(message_body_selector)
+                    net_utils.decode(message_response)).select_one(message_body_selector)
                 if body_element:
                     message_body = body_element.text.strip()
             entry['messages'] = entry['messages'] + (
                 '\nTitle: {}\nLink: {}\n{}'.format(title, message_url, message_body))
         if failed:
             entry.fail_with_prefix('Can not read message body!')
+
+    def handle_join_date(self, value):
+        year_regex = '(\\d+) (年|years?)'
+        month_regex = '(\\d+) (月|months?)'
+        week_regex = '(\\d+) (周|weeks?)'
+        year = 0
+        month = 0
+        week = 0
+        if year_match := re.search(year_regex, value):
+            year = int(year_match.group(1))
+        if month_match := re.search(month_regex, value):
+            month = int(month_match.group(1))
+        if week_match := re.search(week_regex, value):
+            week = int(week_match.group(1))
+        return (datetime.datetime.now() - datetime.timedelta(days=year * 365 + month * 31 + week * 7)).date()

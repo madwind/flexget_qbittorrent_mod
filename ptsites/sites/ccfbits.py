@@ -1,5 +1,5 @@
 from ..schema.nexusphp import VisitHR
-from ..utils.net_utils import NetUtils
+from ..utils import net_utils
 
 
 class MainClass(VisitHR):
@@ -18,7 +18,7 @@ class MainClass(VisitHR):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        NetUtils.dict_merge(selector, {
+        net_utils.dict_merge(selector, {
             'detail_sources': {
                 'default': {
                     'elements': {

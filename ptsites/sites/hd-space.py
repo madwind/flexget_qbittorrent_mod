@@ -1,5 +1,5 @@
 from ..schema.xbtit import XBTIT
-from ..utils.net_utils import NetUtils
+from ..utils import net_utils
 
 
 class MainClass(XBTIT):
@@ -12,7 +12,7 @@ class MainClass(XBTIT):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        NetUtils.dict_merge(selector, {
+        net_utils.dict_merge(selector, {
             'user_id': 'index.php\\?page=usercp&amp;uid=(\\d+)',
             'detail_sources': {
                 'default': {

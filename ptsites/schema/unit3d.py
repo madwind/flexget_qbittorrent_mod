@@ -1,11 +1,8 @@
 from .site_base import SiteBase
+from ..utils.value_hanlder import handle_join_date
 
 
 class Unit3D(SiteBase):
-
-    def get_message(self, entry, config):
-        self.get_unit3d_message(entry, config)
-
     def build_selector(self):
         selector = {
             'user_id': '/users/(.*?)"',
@@ -34,7 +31,7 @@ class Unit3D(SiteBase):
                 },
                 'join_date': {
                     'regex': ('(注册日期|Registration date) (.*?\\d{4})', 2),
-                    'handle': self.handle_join_date
+                    'handle': handle_join_date
                 },
                 'seeding': {
                     'regex': ('(做种|Seeding).+?(\\d+)', 2)
@@ -48,9 +45,6 @@ class Unit3D(SiteBase):
             }
         }
         return selector
-
-    def get_unit3d_message(self, entry, config, messages_url='/mail/inbox'):
-        entry['result'] += '(TODO: Message)'
 
     def handle_points(self, value):
         return value.replace(' ', '')

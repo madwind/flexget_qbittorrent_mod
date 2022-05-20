@@ -3,7 +3,7 @@ from urllib.parse import urljoin
 
 from ..schema.discuz import Discuz
 from ..schema.site_base import Work, NetworkState, SignState
-from ..utils.google_auth import GoogleAuth
+from ..utils import google_auth
 
 
 class MainClass(Discuz):
@@ -40,7 +40,7 @@ class MainClass(Discuz):
             ),
             Work(
                 url='/login.php',
-                method='password',
+                method='login',
                 check_state=('network', NetworkState.SUCCEED),
                 login_url_regex='(?<=action=").*?(?=")',
                 formhash_regex='(?<="formhash" value=").*(?=")'
@@ -58,7 +58,7 @@ class MainClass(Discuz):
             )
         ]
 
-    def sign_in_by_password(self, entry, config, work, last_content):
+    def sign_in_by_login(self, entry, config, work, last_content):
         if not (login := entry['site_config'].get('login')):
             entry.fail_with_prefix('Login data not found!')
             return
@@ -67,7 +67,7 @@ class MainClass(Discuz):
         username, password = login['username'], login['password']
 
         if secret_key:
-            totp_code = GoogleAuth.calc(secret_key)
+            totp_code = google_auth.calc(secret_key)
             username += '@' + totp_code
 
         login_url = urljoin(entry['url'], re.search(work.login_url_regex, last_content).group())

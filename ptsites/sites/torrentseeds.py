@@ -39,7 +39,7 @@ class MainClass(Unit3D):
             ),
             Work(
                 url='/login',
-                method='password',
+                method='login',
                 succeed_regex='Logout',
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
@@ -47,8 +47,7 @@ class MainClass(Unit3D):
             )
         ]
 
-    @staticmethod
-    def sign_in_data(login, last_content):
+    def build_login_data(self, login, last_content):
         m = re.search(r'name="(?P<name>.+?)" value="(?P<value>.+?)" />\s*<button type="submit"', last_content)
         return {
             '_token': re.search(r'(?<=name="_token" value=").+?(?=")', last_content).group(),

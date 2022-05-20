@@ -14,7 +14,7 @@ class MainClass(Luminance):
         return [
             Work(
                 url='/login.php',
-                method='password',
+                method='login',
                 succeed_regex='Logout',
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
@@ -22,8 +22,7 @@ class MainClass(Luminance):
             )
         ]
 
-    @staticmethod
-    def sign_in_data(login, last_content):
+    def build_login_data(self, login, last_content):
         return {
             'username': login['username'],
             'password': login['password'],

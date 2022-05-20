@@ -1,5 +1,5 @@
 from ..schema.nexusphp import Visit
-from ..utils.net_utils import NetUtils
+from ..utils import net_utils
 
 class MainClass(Visit):
     URL = 'https://www.joyhd.net/'
@@ -11,7 +11,7 @@ class MainClass(Visit):
 
     def build_selector(self):
         selector = super(MainClass, self).build_selector()
-        NetUtils.dict_merge(selector, {
+        net_utils.dict_merge(selector, {
             'details': {
                 'points': {
                     'regex': '银元.*?([\\d,.]+)'
