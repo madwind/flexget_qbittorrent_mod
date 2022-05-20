@@ -126,5 +126,6 @@ class MainClass(SiteBase):
                 }
             }
         }
-    def handle_join_date(self,value):
+
+    def handle_join_date(self, value):
         return value.translate(str.maketrans('年月', '--', '日'))

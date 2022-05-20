@@ -1,5 +1,5 @@
 from ..schema.site_base import SiteBase, Work, SignState
-from ..utils.value_hanlder import handle_join_date,handle_infinite
+from ..utils.value_hanlder import handle_join_date, handle_infinite
 
 
 class MainClass(SiteBase):

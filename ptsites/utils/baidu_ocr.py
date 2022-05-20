@@ -18,7 +18,6 @@ qps = 1
 lock = threading.Semaphore(qps)
 
 
-
 def get_client(entry, config):
     if 'aipocr' not in config:
         entry.fail_with_prefix('aipocr not set in config')
@@ -35,7 +34,6 @@ def get_client(entry, config):
         entry.fail_with_prefix('AipOcr not set')
         return None
     return AipOcr(app_id, api_key, secret_key)
-
 
 
 def get_jap_ocr(img, entry, config):
@@ -62,7 +60,6 @@ def get_jap_ocr(img, entry, config):
     for words_list in result.get('words_result'):
         text = text + words_list.get('words')
     return re.sub('[^\\w]|[a-zA-Z\\d]', '', text)
-
 
 
 def get_ocr_code(img, entry, config):
@@ -97,7 +94,6 @@ def get_ocr_code(img, entry, config):
     code = re.sub('\\W', '', result['words_result'][0]['words'])
     code = code.upper()
     return code, img_byte_arr.getvalue()
-
 
 
 def _detect_noise(img, i, j, width, height):
