@@ -2,20 +2,21 @@ import re
 from datetime import datetime
 
 from dateutil.relativedelta import relativedelta
+from flexget.entry import Entry
 
 from ..schema.site_base import SiteBase, Work, SignState, NetworkState
 from ..utils.value_hanlder import handle_infinite
 
 
 class MainClass(SiteBase):
-    URL = 'https://abn.lol/'
-    USER_CLASSES = {
+    URL: str = 'https://abn.lol/'
+    USER_CLASSES: dict = {
         'uploaded': [5368709120000],
         'share_ratio': [3.05]
     }
 
     @classmethod
-    def build_sign_in_schema(cls):
+    def build_sign_in_schema(cls) -> dict:
         return {
             cls.get_module_name(): {
                 'type': 'object',
@@ -33,7 +34,7 @@ class MainClass(SiteBase):
             }
         }
 
-    def build_login_workflow(self, entry, config):
+    def build_login_workflow(self, entry: Entry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/Home/Login?ReturnUrl=%2F',
@@ -50,7 +51,7 @@ class MainClass(SiteBase):
             )
         ]
 
-    def build_login_data(self, login, last_content):
+    def build_login_data(self, login: dict, last_content: str) -> dict:
         return {
             'Username': login['username'],
             'Password': login['password'],
@@ -59,7 +60,7 @@ class MainClass(SiteBase):
                 r'(?<=name="__RequestVerificationToken" type="hidden" value=").*?(?=")', last_content).group(),
         }
 
-    def build_selector(self):
+    def build_selector(self) -> dict:
         return {
             'detail_sources': {
                 'default': {
@@ -102,10 +103,10 @@ class MainClass(SiteBase):
             }
         }
 
-    def handle_amount_of_data(self, value):
+    def handle_amount_of_data(self, value: str) -> str:
         return value.replace('o', 'B')
 
-    def handle_join_date(self, value):
+    def handle_join_date(self, value: str) -> datetime:
         value_split = value.removeprefix('Il y a ').replace('et', '').replace('seconde', 'second') \
             .replace('heure', 'hour').replace('journée', 'day').replace('jours', 'days').replace('semaine', 'week') \
             .replace('mois', 'months').replace('an', 'year').replace('années', 'years').split()
