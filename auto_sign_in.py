@@ -4,6 +4,7 @@ from datetime import datetime
 from flexget import plugin
 from flexget.entry import Entry
 from flexget.event import event
+from flexget.task import Task
 from loguru import logger
 
 from .ptsites import executor
@@ -11,7 +12,7 @@ from .ptsites.utils.details_report import DetailsReport
 
 
 class PluginAutoSignIn:
-    schema = {
+    schema: dict = {
         'type': 'object',
         'properties': {
             'user-agent': {'type': 'string'},
@@ -35,7 +36,7 @@ class PluginAutoSignIn:
         'additionalProperties': False
     }
 
-    def prepare_config(self, config):
+    def prepare_config(self, config: dict) -> dict:
         config.setdefault('user-agent', '')
         config.setdefault('command_executor', '')
         config.setdefault('max_workers', {})
@@ -43,17 +44,17 @@ class PluginAutoSignIn:
         config.setdefault('sites', {})
         return config
 
-    def on_task_input(self, task, config):
-        config = self.prepare_config(config)
-        sites = config.get('sites')
+    def on_task_input(self, task: Task, config: dict) -> list[Entry]:
+        config: dict = self.prepare_config(config)
+        sites: dict = config.get('sites')
 
-        entries = []
+        entries: list[Entry] = []
 
         for site_name, site_configs in sites.items():
             if not isinstance(site_configs, list):
-                site_configs = [site_configs]
+                site_configs: list = [site_configs]
             for sub_site_config in site_configs:
-                entry = Entry(
+                entry: Entry = Entry(
                     title='{} {}'.format(site_name, datetime.now().date()),
                     url=''
                 )
@@ -67,9 +68,9 @@ class PluginAutoSignIn:
                 entries.append(entry)
         return entries
 
-    def on_task_output(self, task, config):
-        max_workers = config.get('max_workers', 1)
-        date_now = str(datetime.now().date())
+    def on_task_output(self, task: Task, config: dict) -> None:
+        max_workers: int = config.get('max_workers', 1)
+        date_now: str = str(datetime.now().date())
         for entry in task.all_entries:
             if date_now not in entry['title']:
                 entry.reject('{} out of date!'.format(entry['title']))

@@ -9,16 +9,16 @@ from loguru import logger
 from .schema.site_base import SiteBase
 
 
-def fail_with_prefix(self, reason):
+def fail_with_prefix(self, reason: str) -> None:
     self.fail(f"{self.get('prefix')}=> {reason}")
 
 
 Entry.fail_with_prefix = fail_with_prefix
 
 
-def build_sign_in_schema():
+def build_sign_in_schema() -> dict:
     module = None
-    sites_schema = {}
+    sites_schema: dict = {}
     try:
         for module in pkgutil.iter_modules(path=[f'{pathlib.PurePath(__file__).parent}/sites']):
             site_class = get_site_class(module.name)
@@ -28,9 +28,9 @@ def build_sign_in_schema():
     return sites_schema
 
 
-def build_reseed_schema():
+def build_reseed_schema() -> dict:
     module = None
-    sites_schema = {}
+    sites_schema: dict = {}
     try:
         for module in pkgutil.iter_modules(path=[f'{pathlib.PurePath(__file__).parent}/sites']):
             site_class = get_site_class(module.name)
@@ -40,7 +40,7 @@ def build_reseed_schema():
     return sites_schema
 
 
-def build_sign_in_entry(entry, config):
+def build_sign_in_entry(entry: Entry, config: dict) -> None:
     try:
         site_class = get_site_class(entry['class_name'])
         site_class.build_sign_in_entry(entry, config)
@@ -48,7 +48,7 @@ def build_sign_in_entry(entry, config):
         raise plugin.PluginError(f"site: {entry['site_name']}, error: {e}")
 
 
-def sign_in(entry, config):
+def sign_in(entry: Entry, config: dict) -> None:
     try:
         site_class = get_site_class(entry['class_name'])
     except AttributeError as e:
@@ -80,13 +80,13 @@ def sign_in(entry, config):
     clean_entry_attr(entry)
 
 
-def clean_entry_attr(entry):
+def clean_entry_attr(entry: Entry) -> None:
     for attr in ['base_content', 'prefix']:
         if hasattr(entry, attr):
             del entry[attr]
 
 
-def build_reseed_entry(entry, config, site, passkey, torrent_id):
+def build_reseed_entry(entry: Entry, config: dict, site, passkey, torrent_id) -> None:
     try:
         site_class = get_site_class(entry['class_name'])
         site_class.build_reseed_entry(entry, config, site, passkey, torrent_id)
@@ -94,7 +94,7 @@ def build_reseed_entry(entry, config, site, passkey, torrent_id):
         SiteBase.build_reseed_entry(entry, config, site, passkey, torrent_id)
 
 
-def get_site_class(class_name):
+def get_site_class(class_name: str):
     site_module = importlib.import_module(f'flexget.plugins.ptsites.sites.{class_name.lower()}')
     site_class = getattr(site_module, 'MainClass')
     return site_class
