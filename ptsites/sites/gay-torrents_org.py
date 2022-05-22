@@ -1,4 +1,4 @@
-from ..schema.xbtit import XBTIT
+from ..schema.xbtit import XBTIT, handle_join_date
 from ..utils import net_utils
 from ..utils.value_hanlder import handle_infinite
 
@@ -41,7 +41,7 @@ class MainClass(XBTIT):
                 },
                 'join_date': {
                     'regex': r'Joined on\s*(\d{2}/\d{2}/\d{4})',
-                    'handle': self.handle_join_date
+                    'handle': handle_join_date
                 },
                 'seeding': {
                     'regex': r'Active:\s*(\d+)\s*/\s*\d+'

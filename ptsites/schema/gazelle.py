@@ -1,22 +1,40 @@
 import datetime
 import re
+from abc import ABC
 from urllib.parse import urljoin
 
 from flexget.utils.soup import get_soup
 
-from .site_base import SiteBase, NetworkState
+from ..base.base import NetworkState
+from ..base.site_base import SiteBase
 from ..utils import net_utils
+from ..utils.state_checkers import check_network_state
 from ..utils.value_hanlder import handle_infinite
 
 
-class Gazelle(SiteBase):
+def handle_join_date(value):
+    year_regex = '(\\d+) (年|years?)'
+    month_regex = '(\\d+) (月|months?)'
+    week_regex = '(\\d+) (周|weeks?)'
+    year = 0
+    month = 0
+    week = 0
+    if year_match := re.search(year_regex, value):
+        year = int(year_match.group(1))
+    if month_match := re.search(month_regex, value):
+        month = int(month_match.group(1))
+    if week_match := re.search(week_regex, value):
+        week = int(week_match.group(1))
+    return (datetime.datetime.now() - datetime.timedelta(days=year * 365 + month * 31 + week * 7)).date()
 
+
+class Gazelle(SiteBase, ABC):
     def get_message(self, entry, config):
         self.get_gazelle_message(entry, config)
 
     def build_selector(self):
         return {
-            'user_id': 'user.php\\?id=(\\d+)',
+            'user_id': r'user\.php\?id=(\d+)',
             'detail_sources': {
                 'default': {
                     'link': '/user.php?id={}',
@@ -25,27 +43,27 @@ class Gazelle(SiteBase):
             },
             'details': {
                 'uploaded': {
-                    'regex': ('(Upload|上传量).+?([\\d.]+ ?[ZEPTGMK]?i?B)', 2)
+                    'regex': (r'(Upload|上传量).+?([\d.]+ ?[ZEPTGMK]?i?B)', 2)
                 },
                 'downloaded': {
-                    'regex': ('(Download|下载量).+?([\\d.]+ ?[ZEPTGMK]?i?B)', 2)
+                    'regex': (r'(Download|下载量).+?([\d.]+ ?[ZEPTGMK]?i?B)', 2)
                 },
                 'share_ratio': {
-                    'regex': ('(Ratio|分享率).*?(∞|[\\d,.]+)', 2),
+                    'regex': (r'(Ratio|分享率).*?(∞|[\d,.]+)', 2),
                     'handle': handle_infinite
                 },
                 'points': {
-                    'regex': ('(Gold|积分|Bonus|Credits|Nips).*?([\\d,.]+)', 2)
+                    'regex': (r'(Gold|积分|Bonus|Credits|Nips).*?([\d,.]+)', 2)
                 },
                 'join_date': {
                     'regex': ('(Joined|加入时间).*?(.*?)(ago|前)', 2),
-                    'handle': self.handle_join_date
+                    'handle': handle_join_date
                 },
                 'seeding': {
-                    'regex': '[Ss]eeding.+?([\\d,]+)'
+                    'regex': r'[Ss]eeding.+?([\d,]+)'
                 },
                 'leeching': {
-                    'regex': '[Ll]eeching.+?([\\d,]+)'
+                    'regex': r'[Ll]eeching.+?([\d,]+)'
                 },
                 'hr': None
             }
@@ -53,8 +71,8 @@ class Gazelle(SiteBase):
 
     def get_gazelle_message(self, entry, config, message_body_selector='div[id*="message"]'):
         message_url = urljoin(entry['url'], '/inbox.php')
-        message_box_response = self._request(entry, 'get', message_url)
-        network_state = self.check_network_state(entry, message_url, message_box_response)
+        message_box_response = self.request(entry, 'get', message_url)
+        network_state = check_network_state(entry, message_url, message_box_response)
         if network_state != NetworkState.SUCCEED:
             return
         unread_elements = get_soup(net_utils.decode(message_box_response)).select("tr.unreadpm > td > strong > a")
@@ -63,8 +81,8 @@ class Gazelle(SiteBase):
             title = unread_element.text
             href = unread_element.get('href')
             message_url = urljoin(message_url, href)
-            message_response = self._request(entry, 'get', message_url)
-            network_state = self.check_network_state(entry, message_url, message_response)
+            message_response = self.request(entry, 'get', message_url)
+            network_state = check_network_state(entry, message_url, message_response)
             message_body = 'Can not read message body!'
             if network_state != NetworkState.SUCCEED:
                 failed = True
@@ -77,18 +95,3 @@ class Gazelle(SiteBase):
                 '\nTitle: {}\nLink: {}\n{}'.format(title, message_url, message_body))
         if failed:
             entry.fail_with_prefix('Can not read message body!')
-
-    def handle_join_date(self, value):
-        year_regex = '(\\d+) (年|years?)'
-        month_regex = '(\\d+) (月|months?)'
-        week_regex = '(\\d+) (周|weeks?)'
-        year = 0
-        month = 0
-        week = 0
-        if year_match := re.search(year_regex, value):
-            year = int(year_match.group(1))
-        if month_match := re.search(month_regex, value):
-            month = int(month_match.group(1))
-        if week_match := re.search(week_regex, value):
-            week = int(week_match.group(1))
-        return (datetime.datetime.now() - datetime.timedelta(days=year * 365 + month * 31 + week * 7)).date()

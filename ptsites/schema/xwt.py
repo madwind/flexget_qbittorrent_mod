@@ -1,8 +1,11 @@
-from ..schema.site_base import SiteBase, Work, SignState
+from abc import ABC
+
+from ..base.base import SignState, Work
+from ..base.site_base import SiteBase
 from ..utils.value_hanlder import handle_infinite
 
 
-class XWT(SiteBase):
+class XWT(SiteBase, ABC):
     @classmethod
     def build_sign_in_schema(cls):
         return {

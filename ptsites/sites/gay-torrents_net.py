@@ -1,6 +1,7 @@
 import hashlib
 
-from ..schema.site_base import SiteBase, Work, SignState, NetworkState
+from ..base.base import SignState, NetworkState, Work
+from ..base.site_base import SiteBase
 from ..utils.value_hanlder import handle_infinite
 
 

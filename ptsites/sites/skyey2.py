@@ -1,8 +1,8 @@
 import re
 from urllib.parse import urljoin
 
+from ..base.base import SignState, NetworkState, Work
 from ..schema.discuz import Discuz
-from ..schema.site_base import Work, NetworkState, SignState
 from ..utils import google_auth
 
 
@@ -81,4 +81,4 @@ class MainClass(Discuz):
             'password': password,
             'loginsubmit': 'true'
         }
-        return self._request(entry, 'post', login_url, data=data, verify=False)
+        return self.request(entry, 'post', login_url, data=data, verify=False)

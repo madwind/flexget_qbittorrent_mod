@@ -1,4 +1,5 @@
-from ..schema.site_base import SiteBase, Work, SignState
+from ..base.base import SignState, Work
+from ..base.site_base import SiteBase
 from ..utils.value_hanlder import handle_join_date, handle_infinite
 
 
@@ -47,7 +48,7 @@ class MainClass(SiteBase):
                     'handle': handle_infinite
                 },
                 'points': {
-                    'regex': 'Bonus Points\s+([\\d,.]+)'
+                    'regex': r'Bonus Points\s+([\d,.]+)'
                 },
                 'join_date': {
                     'regex': 'Join date\\s*?(\\d{4}-\\d{2}-\\d{2})',

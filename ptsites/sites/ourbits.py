@@ -1,5 +1,5 @@
+from ..base.base import NetworkState, Work
 from ..schema.nexusphp import AttendanceHR
-from ..schema.site_base import Work, NetworkState
 from ..utils import google_auth
 
 

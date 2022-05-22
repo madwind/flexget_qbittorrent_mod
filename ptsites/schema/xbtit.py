@@ -1,14 +1,21 @@
 import re
+from abc import ABC
 from urllib.parse import urljoin
 
 from dateutil.parser import parse
 from flexget.utils.soup import get_soup
 
-from ..schema.site_base import SiteBase, Work, SignState, NetworkState
+from ..base.base import SignState, NetworkState, Work
+from ..base.site_base import SiteBase
 from ..utils import net_utils
+from ..utils.state_checkers import check_network_state
 
 
-class XBTIT(SiteBase):
+def handle_join_date(value):
+    return parse(value, dayfirst=True).date()
+
+
+class XBTIT(SiteBase, ABC):
     SUCCEED_REGEX = None
     USER_CLASSES = {
         'uploaded': [8796093022208],
@@ -29,7 +36,7 @@ class XBTIT(SiteBase):
 
     def build_selector(self):
         selector = {
-            'user_id': 'usercp.php\\?uid=(\\d+)',
+            'user_id': r'usercp\.php\?uid=(\d+)',
             'detail_sources': {
                 'default': {
                     'link': '/usercp.php?uid={}',
@@ -41,26 +48,26 @@ class XBTIT(SiteBase):
             },
             'details': {
                 'uploaded': {
-                    'regex': '↑.([\\d.]+ [ZEPTGMK]?iB)'
+                    'regex': r'↑.([\d.]+ [ZEPTGMK]?iB)'
                 },
                 'downloaded': {
-                    'regex': '↓.([\\d.]+ [ZEPTGMK]?iB)'
+                    'regex': r'↓.([\d.]+ [ZEPTGMK]?iB)'
                 },
                 'share_ratio': {
-                    'regex': 'Ratio: ([\\d.]+)'
+                    'regex': r'Ratio: ([\d.]+)'
                 },
                 'points': {
-                    'regex': 'Bonus Points:.+?([\\d,.]+)'
+                    'regex': r'Bonus Points:.+?([\d,.]+)'
                 },
                 'join_date': {
-                    'regex': 'Joined on.*?(\\d{2}/\\d{2}/\\d{4})',
-                    'handle': self.handle_join_date
+                    'regex': r'Joined on.*?(\d{2}/\d{2}/\d{4})',
+                    'handle': handle_join_date
                 },
                 'seeding': {
-                    'regex': 'Seeding (\\d+)'
+                    'regex': r'Seeding (\d+)'
                 },
                 'leeching': {
-                    'regex': 'Leeching (\\d+)'
+                    'regex': r'Leeching (\d+)'
                 },
                 'hr': None
             }
@@ -74,8 +81,8 @@ class XBTIT(SiteBase):
             entry.fail_with_prefix('Can not found messages_url.')
             return
         messages_url = urljoin(entry['url'], messages_url)
-        message_box_response = self._request(entry, 'get', messages_url)
-        network_state = self.check_network_state(entry, messages_url, message_box_response)
+        message_box_response = self.request(entry, 'get', messages_url)
+        network_state = check_network_state(entry, messages_url, message_box_response)
         if network_state != NetworkState.SUCCEED:
             entry.fail_with_prefix('Can not read message box! url:{}'.format(messages_url))
             return
@@ -89,8 +96,8 @@ class XBTIT(SiteBase):
             title = td.text
             href = td.a.get('href')
             messages_url = urljoin(messages_url, href)
-            message_response = self._request(entry, 'get', messages_url)
-            network_state = self.check_network_state(entry, [messages_url], message_response)
+            message_response = self.request(entry, 'get', messages_url)
+            network_state = check_network_state(entry, [messages_url], message_response)
             if network_state != NetworkState.SUCCEED:
                 message_body = 'Can not read message body!'
                 failed = True
@@ -106,6 +113,3 @@ class XBTIT(SiteBase):
 
     def get_message(self, entry, config):
         self.get_XBTIT_message(entry, config)
-
-    def handle_join_date(self, value):
-        return parse(value, dayfirst=True).date()

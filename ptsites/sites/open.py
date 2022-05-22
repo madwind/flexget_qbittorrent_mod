@@ -2,10 +2,11 @@ import re
 from io import BytesIO
 from urllib.parse import urljoin
 
+from ..base.base import SignState, NetworkState, Work
 from ..schema.nexusphp import NexusPHP
-from ..schema.site_base import SignState, Work, NetworkState
 from ..utils import baidu_ocr
 from ..utils import net_utils
+from ..utils.state_checkers import check_network_state
 
 try:
     from PIL import Image
@@ -41,8 +42,8 @@ class MainClass(NexusPHP):
         ]
 
     def sign_in_by_ocr(self, entry, config, work, last_content):
-        image_hash_response = self._request(entry, 'get', work.url)
-        image_hash_network_state = self.check_network_state(entry, work, image_hash_response)
+        image_hash_response = self.request(entry, 'get', work.url)
+        image_hash_network_state = check_network_state(entry, work, image_hash_response)
         if image_hash_network_state != NetworkState.SUCCEED:
             entry.fail_with_prefix('Get image hash failed.')
             return
@@ -54,8 +55,8 @@ class MainClass(NexusPHP):
             image_hash = image_hash_re.group()
             img_src = img_src_re.group()
             img_url = urljoin(entry['url'], img_src)
-            img_response = self._request(entry, 'get', img_url)
-            img_network_state = self.check_network_state(entry, img_url, img_response)
+            img_response = self.request(entry, 'get', img_url)
+            img_network_state = check_network_state(entry, img_url, img_response)
             if img_network_state != NetworkState.SUCCEED:
                 entry.fail_with_prefix('Get image failed.')
                 return
@@ -74,7 +75,7 @@ class MainClass(NexusPHP):
                     'imagehash': (None, image_hash),
                     'imagestring': (None, code)
                 }
-                return self._request(entry, 'post', work.url, files=data, params=params)
+                return self.request(entry, 'post', work.url, files=data, params=params)
 
     def build_selector(self):
         selector = super().build_selector()

@@ -1,5 +1,5 @@
+from ..base.base import SignState, Work
 from ..schema.nexusphp import NexusPHP
-from ..schema.site_base import Work, SignState
 from ..utils import net_utils
 
 
@@ -23,7 +23,8 @@ class MainClass(NexusPHP):
             Work(
                 url='/',
                 method='get',
-                succeed_regex=['<span id="sign_in_done"><font color="green">\\[已签到\\]</font></></font>&nbsp;\\(\\d+\\)'],
+                succeed_regex=[
+                    '<span id="sign_in_done"><font color="green">\\[已签到\\]</font></></font>&nbsp;\\(\\d+\\)'],
                 check_state=('sign_in', SignState.NO_SIGN_IN),
                 is_base_content=True
             ),

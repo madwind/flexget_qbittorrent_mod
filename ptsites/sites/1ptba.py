@@ -1,13 +1,13 @@
 import re
 from re import Match
-from typing import Union
+from typing import Optional
 from urllib.parse import urljoin
 
 from flexget.entry import Entry
 from requests import Response
 
+from ..base.base import SignState, Work
 from ..schema.nexusphp import Attendance
-from ..schema.site_base import Work, SignState
 
 
 class MainClass(Attendance):
@@ -32,9 +32,8 @@ class MainClass(Attendance):
             )
         ]
 
-    def sign_in_by_param(self, entry: Entry, config: dict, work: Work, last_content: str = None) -> Union[
-        Response, None]:
-        response: Response = self._request(entry, 'get', work.url)
+    def sign_in_by_param(self, entry: Entry, config: dict, work: Work, last_content: str = None) -> Optional[Response]:
+        response: Response = self.request(entry, 'get', work.url)
         if response:
             location_match: Match = re.search('window\\.location="(.*?);</script>', response.text)
             if location_match:

@@ -341,20 +341,17 @@ class QBittorrentClient:
         self._building = True
         main_data = self.get_main_data()
         self._rid = main_data.get('rid')
-        is_new_data = main_data.get('full_update')
-        if is_new_data:
+        if is_new_data := main_data.get('full_update'):
             self._entry_dict = {}
             self._reseed_dict = {}
             self._action_history = {}
             self._last_update_time = datetime.now()
 
-        server_state = main_data.get('server_state')
-        if server_state:
+        if server_state := main_data.get('server_state'):
             for state, value in server_state.items():
                 self._server_state[state] = value
 
-        torrents = main_data.get('torrents')
-        if torrents:
+        if torrents := main_data.get('torrents'):
             values = list(torrents.values())
             values_len = len(values)
             if is_new_data and values_len > 0:
@@ -362,8 +359,7 @@ class QBittorrentClient:
                 logger.info('build_entry: building {} entries', values_len)
             for torrent_hash, torrent in torrents.items():
                 self._update_entry(torrent_hash, torrent)
-        torrent_removed = main_data.get('torrents_removed')
-        if torrent_removed:
+        if torrent_removed := main_data.get('torrents_removed'):
             for torrent_hash in torrent_removed:
                 self._remove_torrent(torrent_hash)
 
@@ -387,9 +383,8 @@ class QBittorrentClient:
             logger.info('build_entry: build completion')
 
     def _update_entry(self, torrent_hash, torrent):
-        entry = self._entry_dict.get(torrent_hash)
         is_new_entry = False
-        if not entry:
+        if not (entry := self._entry_dict.get(torrent_hash)):
             is_new_entry = True
             if len(torrent) != self._torrent_attr_len:
                 self.reset_rid(reason='torrent lose attr')
@@ -453,24 +448,20 @@ class QBittorrentClient:
 
     def _update_entry_last_activity(self, entry):
         empty_time = datetime.fromtimestamp(0)
-        is_reseed_failed = entry['qbittorrent_state'] == 'pausedDL' and entry['qbittorrent_completed'] == 0
-        is_never_activated = entry['qbittorrent_last_activity'] == empty_time or (
-                entry['qbittorrent_uploaded'] == 0 and entry['qbittorrent_downloaded'] == 0)
-        if is_reseed_failed:
+        if is_reseed_failed := entry['qbittorrent_state'] == 'pausedDL' and entry['qbittorrent_completed'] == 0:
             entry['qbittorrent_last_activity'] = empty_time
-        elif is_never_activated:
+        elif is_never_activated := entry['qbittorrent_last_activity'] == empty_time or (
+                entry['qbittorrent_uploaded'] == 0 and entry['qbittorrent_downloaded'] == 0):
             if entry['qbittorrent_completion_on'] > empty_time:
                 entry['qbittorrent_last_activity'] = entry['qbittorrent_completion_on']
             else:
                 entry['qbittorrent_last_activity'] = entry['qbittorrent_added_on']
 
     def _remove_torrent(self, torrent_hash):
-        torrent = self._entry_dict.get(torrent_hash)
-        if not torrent:
+        if not (torrent := self._entry_dict.get(torrent_hash)):
             self.reset_rid(reason='_remove_torrent torrent not in entry_dict')
         save_path_with_name = torrent.get('qbittorrent_save_path_with_name')
-        torrent_list = self._reseed_dict.get(save_path_with_name)
-        if torrent_list and (torrent_hash in self._entry_dict.keys()):
+        if (torrent_list := self._reseed_dict.get(save_path_with_name)) and (torrent_hash in self._entry_dict.keys()):
             torrent_list_removed = list(
                 filter(lambda t: t['torrent_info_hash'] != torrent_hash, torrent_list))
             if len(torrent_list_removed) == 0:
@@ -494,6 +485,4 @@ class QBittorrentClient:
         return True
 
     def save_path_suffix(self, save_path):
-        if not save_path.endswith(os.sep):
-            return save_path + os.sep
-        return save_path
+        return save_path if save_path.endswith(os.sep) else save_path + os.sep

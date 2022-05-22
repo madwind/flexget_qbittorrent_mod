@@ -1,5 +1,5 @@
+from ..base.base import SignState, NetworkState, Work
 from ..schema.gazelle import Gazelle
-from ..schema.site_base import Work, SignState, NetworkState
 from ..utils import net_utils
 
 

@@ -1,4 +1,5 @@
-from ..schema.site_base import SiteBase, Work, SignState
+from ..base.base import SignState, Work
+from ..base.site_base import SiteBase
 from ..utils.value_hanlder import handle_infinite, handle_join_date
 
 

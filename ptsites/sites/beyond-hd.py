@@ -1,5 +1,5 @@
-from ..schema.site_base import SignState, Work
-from ..schema.unit3d import Unit3D
+from ..base.base import SignState, Work
+from ..schema.unit3d import Unit3D, handle_points
 from ..utils.value_hanlder import handle_join_date
 
 
@@ -10,7 +10,7 @@ from ..utils.value_hanlder import handle_join_date
 # Choose between oneurl or cookie
 # If oneurl provided, cookie will be ignored.
 
-# OneURL is found by accessing your Beyond-HD web site,
+# OneURL is found by accessing your Beyond-HD website,
 # hovering over the user icon and going to My Security then going to the One URL (OID) tab,
 # and if it's not already active, you need to hit Reset One URL to activate it.
 # Then use that link here.
@@ -69,7 +69,7 @@ class MainClass(Unit3D):
                 },
                 'points': {
                     'regex': ('(魔力|BP:).+?(\\d[\\d,. ]*)', 2),
-                    'handle': self.handle_points
+                    'handle': handle_points
                 },
                 'join_date': {
                     'regex': ('(注册日期|Member Since:) (\\d{4}-\\d{2}-\\d{2})', 2),

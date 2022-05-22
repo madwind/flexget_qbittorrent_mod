@@ -10,7 +10,7 @@ from requests import RequestException
 from .ptsites.utils import net_utils
 
 
-class PluginHtmlRss():
+class PluginHtmlRss:
     schema = {
         'type': 'object',
         'properties': {

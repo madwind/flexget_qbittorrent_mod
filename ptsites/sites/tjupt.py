@@ -2,9 +2,22 @@ import re
 
 import requests
 
+from ..base.base import SignState, Work
 from ..schema.nexusphp import NexusPHP
-from ..schema.site_base import Work, SignState
 from ..utils import net_utils
+
+
+def handle_hr(hr):
+    return str(100 - int(hr))
+
+
+def get_answer(config, img_name, answers):
+    for value, answer in answers:
+        movies = requests.get(f'https://movie.douban.com/j/subject_suggest?q={answer}',
+                              headers={'user-agent': config.get('user-agent')}).json()
+        for movie in movies:
+            if img_name in movie.get('img'):
+                return value
 
 
 class MainClass(NexusPHP):
@@ -48,7 +61,7 @@ class MainClass(NexusPHP):
                 },
                 'hr': {
                     'regex': 'H&R.*?(\\d+)',
-                    'handle': self.handle_hr
+                    'handle': handle_hr
                 }
 
             }
@@ -58,19 +71,8 @@ class MainClass(NexusPHP):
     def sign_in_by_douban(self, entry, config, work, last_content=None):
         img_name = re.search(self.IMG_REGEX, last_content).group(1)
         answers = re.findall(self.ANSWER_REGEX, last_content)
-        answer = self.get_answer(config, img_name, answers)
-        return self._request(entry, 'post', work.url, data={
+        answer = get_answer(config, img_name, answers)
+        return self.request(entry, 'post', work.url, data={
             'answer': answer,
             'submit': '提交'
         })
-
-    def get_answer(self, config, img_name, answers):
-        for value, answer in answers:
-            movies = requests.get(f'https://movie.douban.com/j/subject_suggest?q={answer}',
-                                  headers={'user-agent': config.get('user-agent')}).json()
-            for movie in movies:
-                if img_name in movie.get('img'):
-                    return value
-
-    def handle_hr(self, hr):
-        return str(100 - int(hr))

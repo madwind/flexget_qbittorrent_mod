@@ -4,8 +4,22 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from flexget.entry import Entry
 
-from ..schema.site_base import SiteBase, Work, SignState, NetworkState
+from ..base.base import SignState, NetworkState, Work
+from ..base.site_base import SiteBase
 from ..utils.value_hanlder import handle_infinite
+
+
+def handle_amount_of_data(value: str) -> str:
+    return value.replace('o', 'B')
+
+
+def handle_join_date(value: str) -> datetime:
+    value_split = value.removeprefix('Il y a ').replace('et', '').replace('seconde', 'second') \
+        .replace('heure', 'hour').replace('journée', 'day').replace('jours', 'days').replace('semaine', 'week') \
+        .replace('mois', 'months').replace('an', 'year').replace('années', 'years').split()
+    return datetime.now() - relativedelta(**dict(
+        (unit if unit.endswith('s') else f'{unit}s', int(amount)) for amount, unit in
+        [value_split[i:i + 2] for i in range(0, len(value_split), 2)]))
 
 
 class MainClass(SiteBase):
@@ -75,12 +89,12 @@ class MainClass(SiteBase):
                 'uploaded': {
                     'regex': r'''(?x)Upload\ :\ 
                                     ([\d.] + \ [ZEPTGMK] ? o)''',
-                    'handle': self.handle_amount_of_data
+                    'handle': handle_amount_of_data
                 },
                 'downloaded': {
                     'regex': r'''(?x)Download\ :\ 
                                     ([\d.] + \ [ZEPTGMK] ? o)''',
-                    'handle': self.handle_amount_of_data
+                    'handle': handle_amount_of_data
                 },
                 'share_ratio': {
                     'regex': r'''(?x)Ratio\ :\ 
@@ -95,21 +109,10 @@ class MainClass(SiteBase):
                     'regex': r'''(?mx)Inscrit\ :\ 
                                     (. +?)
                                     $''',
-                    'handle': self.handle_join_date
+                    'handle': handle_join_date
                 },
                 'seeding': None,
                 'leeching': None,
                 'hr': None
             }
         }
-
-    def handle_amount_of_data(self, value: str) -> str:
-        return value.replace('o', 'B')
-
-    def handle_join_date(self, value: str) -> datetime:
-        value_split = value.removeprefix('Il y a ').replace('et', '').replace('seconde', 'second') \
-            .replace('heure', 'hour').replace('journée', 'day').replace('jours', 'days').replace('semaine', 'week') \
-            .replace('mois', 'months').replace('an', 'year').replace('années', 'years').split()
-        return datetime.now() - relativedelta(**dict(
-            (unit if unit.endswith('s') else f'{unit}s', int(amount)) for amount, unit in
-            [value_split[i:i + 2] for i in range(0, len(value_split), 2)]))

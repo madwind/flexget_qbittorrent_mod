@@ -1,6 +1,14 @@
+from ..base.base import SignState, Work
 from ..schema.nexusphp import NexusPHP
-from ..schema.site_base import SignState, Work
 from ..utils import net_utils
+
+
+def handle_size(size):
+    return size.upper()
+
+
+def handle_hr(hr):
+    return str(15 - int(hr))
 
 
 class MainClass(NexusPHP):
@@ -53,11 +61,11 @@ class MainClass(NexusPHP):
             'details': {
                 'uploaded': {
                     'regex': ('(上[传傳]量|Uploaded).+?([\\d.]+ ?[ZEPTGMk]?i?B)', 2),
-                    'handle': self.handle_size
+                    'handle': handle_size
                 },
                 'downloaded': {
                     'regex': ('(下[载載]量|Downloaded).+?([\\d.]+ ?[ZEPTGMk]?i?B)', 2),
-                    'handle': self.handle_size
+                    'handle': handle_size
                 },
                 'points': {
                     'regex': '积分.*?([\\d,.]+)'
@@ -70,14 +78,8 @@ class MainClass(NexusPHP):
                 },
                 'hr': {
                     'regex': 'HP.*?(\\d+)',
-                    'handle': self.handle_hr
+                    'handle': handle_hr
                 }
             }
         })
         return selector
-
-    def handle_size(self, size):
-        return size.upper()
-
-    def handle_hr(self, hr):
-        return str(15 - int(hr))

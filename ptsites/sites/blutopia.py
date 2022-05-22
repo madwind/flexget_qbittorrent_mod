@@ -1,4 +1,4 @@
-from ..schema.site_base import SignState, Work
+from ..base.base import SignState, Work
 from ..schema.unit3d import Unit3D
 from ..utils import net_utils
 from ..utils.value_hanlder import handle_join_date
@@ -22,7 +22,7 @@ class MainClass(Unit3D):
             )
         ]
 
-    def build_selector(self):
+    def build_selector(self) -> dict:
         selector = super().build_selector()
         net_utils.dict_merge(selector, {
             'user_id': '/users/(.*?)/',

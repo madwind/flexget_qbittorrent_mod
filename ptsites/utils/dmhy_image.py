@@ -10,9 +10,7 @@ def compare_images_sort(image1, image2):
     point1 = get_split_point(image1)
     point2 = get_split_point(image2)
 
-    if point1 and point1 == point2:
-        return True
-    return False
+    return True if point1 and point1 == point2 else False
 
 
 def check_analysis(image: Image):
@@ -41,9 +39,7 @@ def compare_images(image_a: Image, image_b: Image):
     image_b_compare = image_b.crop((0, 0, b_width, b_height - 45))
 
     diff = ImageChops.difference(image_a_compare, image_b_compare)
-    if diff.getbbox() is None:
-        return None
-    return image_a, image_b, diff
+    return image_a, image_b, diff if diff.getbbox() is not None else None
 
 
 def get_split_point(image: Image):
@@ -65,10 +61,7 @@ def get_split_point(image: Image):
             if r > 7 or g > 7 or b > 7:
                 y += h
                 break
-    if x > 100 or y > 100:
-        return x, y
-    else:
-        return None
+    return x, y if x > 100 or y > 100 else None
 
 
 def split_image(image):

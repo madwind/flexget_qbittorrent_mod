@@ -258,21 +258,12 @@ class DetailsReport:
         if value == 0 and append:
             return ''
         if key in ['uploaded', 'downloaded']:
-            if append:
-                specifier = '\n{:+g} {}iB'
-            else:
-                specifier = '{:g} {}iB'
+            specifier = '\n{:+g} {}iB' if append else '{:g} {}iB'
             return self.build_suffix(value, specifier)
         if key in ['share_ratio', 'points']:
-            if append:
-                specifier = '\n{:+g} {}'
-            else:
-                specifier = '{:g} {}'
+            specifier = '\n{:+g} {}' if append else '{:g} {}'
             return self.build_math_suffix(value, specifier)
-        if append:
-            return '\n{:+g}'.format(value)
-        else:
-            return '{:g}'.format(value)
+        return '\n{:+g}'.format(value) if append else '{:g}'.format(value)
 
     def transfer_data(self, key, value):
         if value == '*' or key in ['join_date']:
@@ -286,8 +277,7 @@ class DetailsReport:
             count_dict[key] = count_dict[key] + value
 
     def draw_user_classes(self, user_classes_dict, session, df):
-        img = Image.open('details_report.png')
-        img = img.convert("RGBA")
+        img = Image.open('details_report.png').convert("RGBA")
         tmp = Image.new('RGBA', img.size, (0, 0, 0, 0))
         draw = ImageDraw.Draw(tmp)
         start_x = 32
@@ -313,9 +303,7 @@ class DetailsReport:
                         draw.text((start_x, y + bar_height * j + (bar_height - height) / 2), name, font=font,
                                   fill=(158, 158, 158, 127))
                         j += 1
-        img = Image.alpha_composite(img, tmp)
-        img = img.convert("RGB").quantize(colors=256)
-        img.save('details_report.png')
+        Image.alpha_composite(img, tmp).convert("RGB").quantize(colors=256).save('details_report.png')
 
     def build_user_classes_data(self, user_classes, site_details, colors):
         data = {}
@@ -330,10 +318,8 @@ class DetailsReport:
             user_classes = uploaded_classes
 
         for name, value in user_classes.items():
-            if name == 'days':
-                db_value = (datetime.now().date() - site_details.join_date).days
-            else:
-                db_value = getattr(site_details, name, None)
+            db_value = (datetime.now().date() - site_details.join_date).days if name == 'days' else getattr(
+                site_details, name, None)
             if db_value is None:
                 logger.error(f'get data: {name} error')
                 return
@@ -350,10 +336,7 @@ class DetailsReport:
             return data
 
     def build_single_data(self, value_tuple, value, colors):
-        if (max_value := value_tuple[-1]) == 0:
-            percent = 1
-        else:
-            percent = value / max_value
+        percent = 1 if (max_value := value_tuple[-1]) == 0 else value / max_value
         if percent > 1:
             percent = 1
         i = 0
@@ -362,7 +345,7 @@ class DetailsReport:
                 i += 1
         if len(value_tuple) == 1:
             i = -i
-        return (percent, colors[i])
+        return percent, colors[i]
 
     def find_start_y(self, img, start_x):
         start_y = 0

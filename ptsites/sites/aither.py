@@ -1,6 +1,6 @@
 from flexget.entry import Entry
 
-from ..schema.site_base import SignState, Work
+from ..base.base import SignState, Work
 from ..schema.unit3d import Unit3D
 from ..utils import net_utils
 from ..utils.value_hanlder import handle_join_date

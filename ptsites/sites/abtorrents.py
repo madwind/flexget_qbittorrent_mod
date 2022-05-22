@@ -2,7 +2,7 @@ import ast
 import hashlib
 from urllib.parse import urljoin
 
-from ..schema.site_base import Work, SignState, NetworkState
+from ..base.base import SignState, NetworkState, Work
 from ..schema.xbt import XBT
 
 
@@ -44,7 +44,7 @@ class MainClass(XBT):
         target = {'light bulb': '44c7285b', 'house': 'b9a403b9', 'musical note': '3a8441da', 'key': '2faefa2b', 'bug':
             'c2ba10a5', 'heart': 'bed5a0e2', 'clock': '99d86267', 'world': 'ededf171'}[last_content['text']]
         for hash in last_content['images']:
-            if hashlib.shake_128(self._request(entry, 'get', urljoin(entry['url'], '/simpleCaptcha.php?hash=' + hash))
+            if hashlib.shake_128(self.request(entry, 'get', urljoin(entry['url'], '/simpleCaptcha.php?hash=' + hash))
                                          .content).hexdigest(4) == target:
                 break
         data = {
@@ -55,4 +55,4 @@ class MainClass(XBT):
             'submitme': 'X',
             'returnto': '/'
         }
-        return self._request(entry, 'post', work.url, data=data)
+        return self.request(entry, 'post', work.url, data=data)

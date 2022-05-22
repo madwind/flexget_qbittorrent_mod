@@ -6,7 +6,8 @@ from flexget import plugin
 from flexget.entry import Entry
 from loguru import logger
 
-from .schema.site_base import SiteBase
+from .base.sign_in import sign_in
+from .base.site_base import SiteBase
 
 
 def fail_with_prefix(self, reason: str) -> None:
@@ -48,7 +49,7 @@ def build_sign_in_entry(entry: Entry, config: dict) -> None:
         raise plugin.PluginError(f"site: {entry['site_name']}, error: {e}")
 
 
-def sign_in(entry: Entry, config: dict) -> None:
+def process_sites(entry: Entry, config: dict) -> None:
     try:
         site_class = get_site_class(entry['class_name'])
     except AttributeError as e:
@@ -56,7 +57,7 @@ def sign_in(entry: Entry, config: dict) -> None:
 
     site_object = site_class()
     entry['prefix'] = 'Sign_in'
-    site_object.sign_in(entry, config)
+    sign_in(site_object, entry, config)
     if entry.failed:
         return
     if entry['result']:

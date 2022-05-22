@@ -1,7 +1,7 @@
 import re
 
+from ..base.base import SignState, Work
 from ..schema.nexusphp import Attendance
-from ..schema.site_base import Work, SignState
 
 
 class MainClass(Attendance):
@@ -17,7 +17,8 @@ class MainClass(Attendance):
             Work(
                 url='/attendance.php',
                 method='get',
-                succeed_regex=[rf'{re.escape("Você já resgatou ")}.*?{re.escape(" dias. Com isso, coletou ")}.*?{re.escape(" dia(s) consecutivos e dessa vez você receberá um bônus de ")}.*?{re.escape(".")}'],
+                succeed_regex=[
+                    rf'{re.escape("Você já resgatou ")}.*?{re.escape(" dias. Com isso, coletou ")}.*?{re.escape(" dia(s) consecutivos e dessa vez você receberá um bônus de ")}.*?{re.escape(".")}'],
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
             )

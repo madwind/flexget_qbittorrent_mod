@@ -1,5 +1,5 @@
+from ..base.base import SignState, Work
 from ..schema.nexusphp import NexusPHP
-from ..schema.site_base import Work, SignState
 from ..utils import net_utils
 
 

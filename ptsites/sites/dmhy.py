@@ -6,6 +6,7 @@ from pathlib import Path
 from urllib.parse import urljoin
 
 from ..utils import net_utils, baidu_ocr, dmhy_image
+from ..utils.state_checkers import check_network_state
 
 try:
     from fuzzywuzzy import fuzz, process
@@ -16,7 +17,7 @@ except ImportError:
 from loguru import logger
 
 from ..schema.nexusphp import NexusPHP
-from ..schema.site_base import SignState, Work, NetworkState
+from ..base.base import SignState, NetworkState, Work
 
 try:
     from PIL import Image
@@ -116,7 +117,7 @@ class MainClass(NexusPHP):
             entry.fail_with_prefix('Can not build_data')
             return None
         logger.info(data)
-        return self._request(entry, 'post', work.url, data=data)
+        return self.request(entry, 'post', work.url, data=data)
 
     def build_data(self, entry, config, work, base_content, ocr_config):
         if entry.failed:
@@ -149,7 +150,7 @@ class MainClass(NexusPHP):
                             if regex_key_search:
                                 for captcha, value in regex_key_search:
                                     answer_list = list(filter(lambda x2: len(x2) > 0,
-                                                              map(lambda x: re.sub('[^\\w]|[a-zA-Z\\d]', '', x),
+                                                              map(lambda x: re.sub(r'\W|[a-zA-Z\d]', '', x),
                                                                   value.split('\n'))))
                                     if answer_list:
                                         split_value, partial_ratio = process.extractOne(oct_text, answer_list,
@@ -181,8 +182,8 @@ class MainClass(NexusPHP):
                 self.times += 1
                 reload_url = re.search(work.reload_regex, base_content).group()
                 real_reload_url = urljoin(entry['url'], reload_url)
-                reload_response = self._request(entry, 'get', real_reload_url)
-                reload__net_state = self.check_network_state(entry, real_reload_url, reload_response)
+                reload_response = self.request(entry, 'get', real_reload_url)
+                reload__net_state = check_network_state(entry, real_reload_url, reload_response)
                 if reload__net_state != NetworkState.SUCCEED:
                     return None
                 reload_content = net_utils.decode(reload_response)
@@ -261,7 +262,7 @@ class MainClass(NexusPHP):
         time.sleep(1)
         logger.debug('request image...')
         real_img_url = urljoin(entry['url'], img_url)
-        base_img_response = self._request(entry, 'get', real_img_url)
+        base_img_response = self.request(entry, 'get', real_img_url)
         if base_img_response is None or base_img_response.status_code != 200 or base_img_response.url == urljoin(
                 entry['url'], '/pic/trans.gif?debug=NIM'):
             return None

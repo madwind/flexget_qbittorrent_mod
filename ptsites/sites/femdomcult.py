@@ -1,5 +1,5 @@
+from ..base.base import SignState, Work
 from ..schema.luminance import Luminance
-from ..schema.site_base import Work, SignState
 
 
 class MainClass(Luminance):

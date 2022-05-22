@@ -1,24 +1,27 @@
 import itertools
 import json
+from abc import ABC
 from pathlib import Path
 from urllib.parse import urljoin
 
 from flexget.utils.soup import get_soup
 from loguru import logger
 
-from ..schema.site_base import SiteBase, SignState, NetworkState, Work
+from ..base.base import SignState, NetworkState, Work
+from ..base.site_base import SiteBase
 from ..utils import net_utils
+from ..utils.state_checkers import check_sign_in_state, check_network_state
 from ..utils.value_hanlder import handle_infinite
 
 
-class NexusPHP(SiteBase):
+class NexusPHP(SiteBase, ABC):
 
     def get_message(self, entry, config):
         self.get_nexusphp_message(entry, config)
 
     def build_selector(self):
         return {
-            'user_id': 'userdetails.php\\?id=(\\d+)',
+            'user_id': r'userdetails\.php\?id=(\d+)',
             'detail_sources': {
                 'default': {
                     'link': '/userdetails.php?id={}',
@@ -30,29 +33,29 @@ class NexusPHP(SiteBase):
             },
             'details': {
                 'uploaded': {
-                    'regex': ('(上[传傳]量|Uploaded).+?([\\d.]+ ?[ZEPTGMK]?i?B)', 2)
+                    'regex': (r'(上[传傳]量|Uploaded).+?([\d.]+ ?[ZEPTGMK]?i?B)', 2)
                 },
                 'downloaded': {
-                    'regex': ('(下[载載]量|Downloaded).+?([\\d.]+ ?[ZEPTGMK]?i?B)', 2)
+                    'regex': (r'(下[载載]量|Downloaded).+?([\d.]+ ?[ZEPTGMK]?i?B)', 2)
                 },
                 'share_ratio': {
-                    'regex': ('(分享率|Ratio).*?(---|∞|Inf\\.|无限|無限|[\\d,.]+)', 2),
+                    'regex': (r'(分享率|Ratio).*?(---|∞|Inf\.|无限|無限|[\d,.]+)', 2),
                     'handle': handle_infinite
                 },
                 'points': {
-                    'regex': ('(魔力|Bonus|Bônus).*?([\\d,.]+)', 2)
+                    'regex': (r'(魔力|Bonus|Bônus).*?([\d,.]+)', 2)
                 },
                 'join_date': {
-                    'regex': ('(加入日期|注册日期|Join.date|Data de Entrada).*?(\\d{4}-\\d{2}-\\d{2})', 2),
+                    'regex': (r'(加入日期|注册日期|Join.date|Data de Entrada).*?(\d{4}-\d{2}-\d{2})', 2),
                 },
                 'seeding': {
-                    'regex': ('(当前活动|當前活動|Torrents Ativos).*?(\\d+)', 2)
+                    'regex': (r'(当前活动|當前活動|Torrents Ativos).*?(\d+)', 2)
                 },
                 'leeching': {
-                    'regex': ('(当前活动|當前活動|Torrents Ativos).*?\\d+\\D+(\\d+)', 2)
+                    'regex': (r'(当前活动|當前活動|Torrents Ativos).*?\d+\D+(\d+)', 2)
                 },
                 'hr': {
-                    'regex': 'H&R.*?(\\d+)'
+                    'regex': r'H&R.*?(\d+)'
                 }
             }
         }
@@ -60,8 +63,8 @@ class NexusPHP(SiteBase):
     def get_nexusphp_message(self, entry, config, messages_url='/messages.php?action=viewmailbox&box=1&unread=yes',
                              unread_elements_selector='td > img[alt*="Unread"]'):
         message_url = urljoin(entry['url'], messages_url)
-        message_box_response = self._request(entry, 'get', message_url)
-        message_box_network_state = self.check_network_state(entry, message_url, message_box_response)
+        message_box_response = self.request(entry, 'get', message_url)
+        message_box_network_state = check_network_state(entry, message_url, message_box_response)
         if message_box_network_state != NetworkState.SUCCEED:
             entry.fail_with_prefix(f'Can not read message box! url:{message_url}')
             return
@@ -74,8 +77,8 @@ class NexusPHP(SiteBase):
             title = td.text
             href = td.a.get('href')
             message_url = urljoin(message_url, href)
-            message_response = self._request(entry, 'get', message_url)
-            message_network_state = self.check_network_state(entry, message_url, message_response)
+            message_response = self.request(entry, 'get', message_url)
+            message_network_state = check_network_state(entry, message_url, message_response)
             if message_network_state != NetworkState.SUCCEED:
                 message_body = 'Can not read message body!'
                 failed = True
@@ -89,7 +92,7 @@ class NexusPHP(SiteBase):
             entry.fail_with_prefix('Can not read message body!')
 
 
-class AttendanceHR(NexusPHP):
+class AttendanceHR(NexusPHP, ABC):
     def build_workflow(self, entry, config):
         return [
             Work(
@@ -105,7 +108,7 @@ class AttendanceHR(NexusPHP):
         ]
 
 
-class Attendance(AttendanceHR):
+class Attendance(AttendanceHR, ABC):
     def build_selector(self):
         selector = super().build_selector()
         net_utils.dict_merge(selector, {
@@ -116,7 +119,7 @@ class Attendance(AttendanceHR):
         return selector
 
 
-class BakatestHR(NexusPHP):
+class BakatestHR(NexusPHP, ABC):
     def build_workflow(self, entry, config):
         return [
             Work(
@@ -181,8 +184,8 @@ class BakatestHR(NexusPHP):
             times = 0
             for answer in answer_list:
                 data = {'questionid': question_id, 'choice[]': answer, 'usercomment': '此刻心情:无', 'submit': '提交'}
-                response = self._request(entry, 'post', work.url, data=data)
-                state = self.check_sign_in_state(entry, work, response, net_utils.decode(response))
+                response = self.request(entry, 'post', work.url, data=data)
+                state = check_sign_in_state(entry, work, response, net_utils.decode(response))
                 if state == SignState.SUCCEED:
                     entry['result'] = f"{entry['result']} ( {times} attempts.)"
                     question_json[entry['url']][question_id] = answer
@@ -193,8 +196,7 @@ class BakatestHR(NexusPHP):
         entry.fail_with_prefix(SignState.SIGN_IN_FAILED.value.format('No answer.'))
 
 
-class Bakatest(BakatestHR):
-
+class Bakatest(BakatestHR, ABC):
     def build_selector(self):
         selector = super().build_selector()
         net_utils.dict_merge(selector, {
@@ -205,7 +207,7 @@ class Bakatest(BakatestHR):
         return selector
 
 
-class VisitHR(NexusPHP):
+class VisitHR(NexusPHP, ABC):
     SUCCEED_REGEX = '[欢歡]迎回[来來家]'
 
     def build_workflow(self, entry, config):
@@ -220,8 +222,7 @@ class VisitHR(NexusPHP):
         ]
 
 
-class Visit(VisitHR):
-
+class Visit(VisitHR, ABC):
     def build_selector(self):
         selector = super().build_selector()
         net_utils.dict_merge(selector, {
