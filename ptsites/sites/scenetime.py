@@ -1,6 +1,7 @@
 import re
 
 from ..schema.site_base import SiteBase, Work, SignState
+from ..utils.value_hanlder import handle_infinite
 
 
 class MainClass(SiteBase):
@@ -51,7 +52,7 @@ class MainClass(SiteBase):
                 'share_ratio': {
                     'regex': r'''(?x)(?<= Share\ Ratio)
                                     (Inf. | [\d,.] +)''',
-                    'handle': self.handle_share_ratio
+                    'handle': handle_infinite
                 },
                 'points': {
                     'regex': r'''(?x)(?<= Bonus\ Points)
