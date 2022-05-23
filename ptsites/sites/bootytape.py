@@ -36,7 +36,7 @@ class MainClass(SiteBase):
             Work(
                 url='/login.php',
                 method='login',
-                succeed_regex='logout',
+                succeed_regex=['logout'],
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
                 response_urls=['/my.php']

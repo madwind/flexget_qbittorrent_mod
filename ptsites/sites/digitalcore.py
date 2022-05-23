@@ -18,7 +18,7 @@ class MainClass(SiteBase):
             Work(
                 url='/api/v1/status?timeSinceLastCheck=0',
                 method='get',
-                succeed_regex=r'user',
+                succeed_regex=['user'],
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
             ),

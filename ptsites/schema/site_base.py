@@ -1,10 +1,8 @@
-from __future__ import annotations
-
 import datetime
 import re
 from enum import Enum
 from re import Match
-from typing import Callable
+from typing import Callable, Union
 from urllib.parse import urljoin
 
 import requests
@@ -27,47 +25,47 @@ except ImportError:
 
 
 class SignState(Enum):
-    NO_SIGN_IN: SignState = 'No sign in'
-    SUCCEED: SignState = 'Succeed'
-    WRONG_ANSWER: SignState = 'Wrong answer'
-    SIGN_IN_FAILED: SignState = 'Sign in failed, {}'
-    UNKNOWN: SignState = 'Unknown, url: {}'
+    NO_SIGN_IN = 'No sign in'
+    SUCCEED = 'Succeed'
+    WRONG_ANSWER = 'Wrong answer'
+    SIGN_IN_FAILED = 'Sign in failed, {}'
+    UNKNOWN = 'Unknown, url: {}'
 
 
 class NetworkState(Enum):
-    SUCCEED: NetworkState = 'Succeed'
-    URL_REDIRECT: NetworkState = 'Url: {original_url} redirect to {redirect_url}'
-    NETWORK_ERROR: NetworkState = 'Network error: url: {url}, error: {error}'
+    SUCCEED = 'Succeed'
+    URL_REDIRECT = 'Url: {original_url} redirect to {redirect_url}'
+    NETWORK_ERROR = 'Network error: url: {url}, error: {error}'
 
 
 class NetworkErrorReason(Enum):
-    DDoS_protection_by_Cloudflare: NetworkErrorReason = 'DDoS protection by .+?Cloudflare'
-    Server_load_too_high: NetworkErrorReason = r'<h3 align=center>(服务器负载过|伺服器負載過)高，正在重(试|試)，(请|請)稍(后|後)\.\.\.</h3>'
-    Connection_timed_out: NetworkErrorReason = r'<h2 class="text-gray-600 leading-1\.3 text-3xl font-light">Connection timed out</h2>'
-    The_web_server_reported_a_bad_gateway_error: NetworkErrorReason = r'<p>The web server reported a bad gateway error\.</p>'
-    Web_server_is_down: NetworkErrorReason = '站点关闭维护中，请稍后再访问...谢谢|站點關閉維護中，請稍後再訪問...謝謝|Web server is down'
+    DDOS_PROTECTION_BY_CLOUDFLARE = 'DDoS protection by .+?Cloudflare'
+    SERVER_LOAD_TOO_HIGH = r'<h3 align=center>(服务器负载过|伺服器負載過)高，正在重(试|試)，(请|請)稍(后|後)\.\.\.</h3>'
+    CONNECTION_TIMED_OUT = r'<h2 class="text-gray-600 leading-1\.3 text-3xl font-light">Connection timed out</h2>'
+    THE_WEB_SERVER_REPORTED_A_BAD_GATEWAY_ERROR = r'<p>The web server reported a bad gateway error\.</p>'
+    WEB_SERVER_IS_DOWN = '站点关闭维护中，请稍后再访问...谢谢|站點關閉維護中，請稍後再訪問...謝謝|Web server is down'
 
 
 class Work:
-    def __init__(self, url: str = None, method: str = None, data=None, succeed_regex: str | list[str] = None,
+    def __init__(self, url: str = None, method: str = None, data=None, succeed_regex: list[Union[str, tuple]] = None,
                  fail_regex: str = None,
-                 check_state=None, response_urls=None, is_base_content: bool = False, **kwargs):
+                 check_state: tuple = None, response_urls=None, is_base_content=False, **kwargs):
         self.url: str = url
-        self.method: str = method
+        self.method = method
         self.data = data
-        self.succeed_regex: str | list[str] = succeed_regex
-        self.fail_regex: str = fail_regex
+        self.succeed_regex = succeed_regex
+        self.fail_regex = fail_regex
         self.check_state = check_state
-        self.is_base_content: bool = is_base_content
-        self.response_urls: list[str] = response_urls if response_urls else [url]
-        for k, v in kwargs.items():
-            self.__setattr__(k, v)
+        self.is_base_content = is_base_content
+        self.response_urls = response_urls if response_urls else [url]
+        for key, value in kwargs.items():
+            self.__setattr__(key, value)
 
 
 class SiteBase:
-    URL: str | None = None
+    URL: str = None
+    USER_CLASSES: dict = None
     DOWNLOAD_PAGE = 'download.php?id={torrent_id}'
-    USER_CLASSES: dict | None = None
 
     def __init__(self):
         self.requests = None
@@ -82,31 +80,31 @@ class SiteBase:
 
     @classmethod
     def get_module_name(cls):
-        return cls.__module__.split('.')[-1]
+        return cls.__module__.rsplit('.', maxsplit=1)[-1]
 
     @classmethod
     def build_sign_in_entry(cls, entry: Entry, config: dict) -> None:
         entry['url'] = cls.URL
-        site_config: str | dict = entry['site_config']
+        site_config: Union[str, dict] = entry['site_config']
         headers: dict = {
             'user-agent': config.get('user-agent'),
             'referer': entry['url'],
             'accept-encoding': 'gzip, deflate, br',
         }
-        cookie: str | None = None
+        cookie: Union[str, None] = None
         if isinstance(site_config, str):
-            cookie: str = site_config
+            cookie = site_config
         elif isinstance(site_config, dict):
-            cookie: str = site_config.get('cookie')
+            cookie = site_config.get('cookie')
         if cookie:
-            entry['cookie']: str = cookie
-        entry['headers']: str = headers
-        entry['user_classes']: dict = cls.USER_CLASSES
+            entry['cookie'] = cookie
+        entry['headers'] = headers
+        entry['user_classes'] = cls.USER_CLASSES
 
     def build_login_workflow(self, entry: Entry, config: dict) -> list[Work]:
         return []
 
-    def build_login_data(self, login, last_content) -> dict:
+    def build_login_data(self, login: dict, last_content) -> dict:
         return {}
 
     def build_workflow(self, entry: Entry, config: dict) -> list[Work]:
@@ -129,22 +127,22 @@ class SiteBase:
         if not entry.get('url') or not workflow:
             entry.fail_with_prefix(f"site: {entry['site_name']} url or workflow is empty")
             return
-        last_content: str | None = None
-        last_response: Response | None = None
+        last_content: Union[str, None] = None
+        last_response: Union[Response, None] = None
         for work in workflow:
             work.url = urljoin(entry['url'], work.url)
             work.response_urls = list(map(lambda response_url: urljoin(entry['url'], response_url), work.response_urls))
-            method_name: str = f"sign_in_by_{work.method}"
+            method_name = f"sign_in_by_{work.method}"
             if method := getattr(self, method_name, None):
                 if work.method == 'get' and last_response and net_utils.url_equal(
                         work.url, last_response.url) and work.is_base_content:
-                    entry['base_content']: str = last_content
+                    entry['base_content'] = last_content
                 else:
                     last_response: Response = method(entry, config, work, last_content)
                     if last_response == 'skip':
                         continue
                     if (last_content := net_utils.decode(last_response)) and work.is_base_content:
-                        entry['base_content']: str = last_content
+                        entry['base_content'] = last_content
                 if work.check_state:
                     if not self.check_state(entry, work, last_response, last_content):
                         return
@@ -161,11 +159,11 @@ class SiteBase:
             entry['headers']: dict = {
                 'user-agent': user_agent,
             }
-            entry['cookie']: str = cookie
-            download_page: str = cls.DOWNLOAD_PAGE.format(torrent_id=torrent_id)
+            entry['cookie'] = cookie
+            download_page = cls.DOWNLOAD_PAGE.format(torrent_id=torrent_id)
         else:
-            download_page: str = site['download_page'].format(torrent_id=torrent_id, passkey=passkey)
-        entry['url']: str = f"https://{site['base_url']}/{download_page}"
+            download_page = site['download_page'].format(torrent_id=torrent_id, passkey=passkey)
+        entry['url'] = f"https://{site['base_url']}/{download_page}"
 
     @classmethod
     def build_reseed_from_page(cls, entry: Entry, config: dict, passkey, torrent_id, base_url, torrent_page_url,
@@ -201,7 +199,7 @@ class SiteBase:
         record[torrent_id] = {'url': download_url, 'expire': (now + expire).strftime('%Y-%m-%d')}
         url_recorder.save_record(entry['class_name'], record)
 
-    def _request(self, entry, method: str, url: str, **kwargs) -> Response | None:
+    def _request(self, entry, method: str, url: str, **kwargs) -> Union[Response, None]:
         if not self.requests:
             self.requests = CFScrapeWrapper.create_scraper(requests.Session())
             if entry_headers := entry.get('headers'):
@@ -219,49 +217,49 @@ class SiteBase:
             entry.fail_with_prefix(NetworkState.NETWORK_ERROR.value.format(url=url, error=e))
         return None
 
-    def sign_in_by_get(self, entry, config: dict, work: Work, last_content: str | None = None) -> Response:
+    def sign_in_by_get(self, entry, config: dict, work: Work, last_content: Union[str, None] = None) -> Response:
         return self._request(entry, 'get', work.url)
 
     def sign_in_by_post(self, entry, config: dict, work: Work,
-                        last_content: str | None = None) -> Response | None:
-        data: dict = {}
+                        last_content: Union[str, None] = None) -> Union[Response, None]:
+        data = {}
         for key, regex in work.data.items():
             if key == 'fixed':
                 net_utils.dict_merge(data, regex)
             else:
                 value_search: Match = re.search(regex, last_content)
                 if value_search:
-                    data[key]: str = value_search.group()
+                    data[key] = value_search.group()
                 else:
                     entry.fail_with_prefix('Cannot find key: {}, url: {}'.format(key, work.url))
                     return
         return self._request(entry, 'post', work.url, data=data)
 
-    def sign_in_by_login(self, entry, config: dict, work: Work, last_content: str) -> Response | None:
+    def sign_in_by_login(self, entry, config: dict, work: Work, last_content: str) -> Union[Response, None]:
         if not (login := entry['site_config'].get('login')):
             entry.fail_with_prefix('Login data not found!')
             return
         return self._request(entry, 'post', work.url, data=self.build_login_data(login, last_content))
 
-    def get_user_id(self, entry, user_id_selector: str, base_content: str) -> str | None:
+    def get_user_id(self, entry, user_id_selector: str, base_content: str) -> Union[str, None]:
         if isinstance(user_id_selector, str):
             user_id_match: Match = re.search(user_id_selector, base_content)
             if user_id_match:
                 return user_id_match.group(1)
             else:
                 entry.fail_with_prefix('User id not found.')
-                logger.error('site: {} User id not found. content: {}'.format(entry['site_name'], base_content))
+                logger.error(f'site: {entry["site_name"]} User id not found. content: {base_content}')
                 return
         else:
             entry.fail_with_prefix('user_id_selector is not str.')
-            logger.error('site: {} user_id_selector is not str.'.format(entry['site_name']))
+            logger.error(f'site: {entry["site_name"]} user_id_selector is not str.')
             return
 
     def get_details_base(self, entry, config: str, selector: dict) -> None:
         if not (base_content := entry.get('base_content')):
             entry.fail_with_prefix('base_content is None.')
             return
-        user_id: str = ''
+        user_id = ''
         user_id_selector: str = selector.get('user_id')
         if user_id_selector and not (user_id := self.get_user_id(entry, user_id_selector, base_content)):
             return
@@ -290,7 +288,7 @@ class SiteBase:
                             else:
                                 details_text = details_text + details_info.text
                         else:
-                            entry.fail_with_prefix('Element: {} not found.'.format(name))
+                            entry.fail_with_prefix(f'Element: {name} not found.')
                             logger.error('site: {} element: {} not found, selector: {}, soup: {}',
                                          entry['site_name'],
                                          name, sel, soup)
@@ -319,8 +317,8 @@ class SiteBase:
         if check := getattr(self, f"check_{check_type}_state", None):
             return check(entry, work, response, content) == check_result
 
-    def check_network_state(self, entry, param: Work | str, response: Response | None,
-                            content: str | None = None, check_content: bool = False) -> NetworkState:
+    def check_network_state(self, entry, param: Union[Work, str], response: Response,
+                            content: str = None, check_content=False) -> NetworkState:
         urls = param
         if isinstance(param, Work):
             urls = param.response_urls
@@ -336,7 +334,7 @@ class SiteBase:
         return NetworkState.SUCCEED
 
     def check_sign_in_state(self, entry, work: Work, response: Response,
-                            content: str) -> NetworkState | SignState:
+                            content: str) -> Union[NetworkState, SignState]:
         network_state = self.check_network_state(entry, work, response, content=content, check_content=True)
         if network_state != NetworkState.SUCCEED:
             return network_state
@@ -344,8 +342,6 @@ class SiteBase:
         if not (succeed_regex := work.succeed_regex):
             entry['result'] = SignState.SUCCEED.value
             return SignState.SUCCEED
-        if not isinstance(succeed_regex, list):
-            succeed_regex = [succeed_regex]
 
         for regex in succeed_regex:
             if isinstance(regex, str):
@@ -361,7 +357,7 @@ class SiteBase:
         for reason in NetworkErrorReason:
             if re.search(reason.value, content):
                 entry.fail_with_prefix(
-                    NetworkState.NETWORK_ERROR.value.format(url=work.url, error=reason.name))
+                    NetworkState.NETWORK_ERROR.value.format(url=work.url, error=reason.name.title()))
                 return NetworkState.NETWORK_ERROR
 
         if check_state := work.check_state:
@@ -377,20 +373,20 @@ class SiteBase:
             return SignState.SIGN_IN_FAILED
         return sign_in_state
 
-    def get_detail_value(self, content: str, detail_config: dict) -> str | None:
+    def get_detail_value(self, content: str, detail_config: dict) -> Union[str, None]:
         if detail_config is None:
             return '*'
-        regex: str | tuple = detail_config['regex']
-        group_index: int = 1
+        regex: Union[str, tuple] = detail_config['regex']
+        group_index = 1
         if isinstance(regex, tuple):
             regex, group_index = regex
         detail_match: Match = re.search(regex, content, re.DOTALL)
         if not detail_match:
             return None
-        detail: str = detail_match.group(group_index)
+        detail = detail_match.group(group_index)
         if not detail:
             return None
-        detail: str = detail.replace(',', '')
+        detail = detail.replace(',', '')
         handle: Callable = detail_config.get('handle')
         if handle:
             detail = handle(detail)

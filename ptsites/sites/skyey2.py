@@ -52,7 +52,7 @@ class MainClass(Discuz):
             Work(
                 url='/',
                 method='get',
-                succeed_regex='<a.*?title="访问我的空间">.*?</a>',
+                succeed_regex=['<a.*?title="访问我的空间">.*?</a>'],
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
             )

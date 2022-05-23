@@ -21,7 +21,7 @@ class XBTIT(SiteBase):
             Work(
                 url='/',
                 method='get',
-                succeed_regex=self.SUCCEED_REGEX,
+                succeed_regex=[self.SUCCEED_REGEX],
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
             )

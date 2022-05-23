@@ -26,7 +26,7 @@ class MainClass(NexusPHP):
             Work(
                 url='/',
                 method='get',
-                succeed_regex='<b style="color:green;">已签到</b>',
+                succeed_regex=['<b style="color:green;">已签到</b>'],
                 check_state=('sign_in', SignState.NO_SIGN_IN),
                 is_base_content=True
             ),
@@ -34,13 +34,13 @@ class MainClass(NexusPHP):
                 url='/signed.php',
                 method='post',
                 data=self.DATA,
-                succeed_regex='您已连续签到\\d+天，奖励\\d+积分，明天继续签到将获得\\d+积分奖励。',
+                succeed_regex=['您已连续签到\\d+天，奖励\\d+积分，明天继续签到将获得\\d+积分奖励。'],
                 check_state=('final', SignState.SUCCEED),
             )
         ]
 
     def build_selector(self):
-        selector = super(MainClass, self).build_selector()
+        selector = super().build_selector()
         net_utils.dict_merge(selector, {
             'detail_sources': {
                 'default': {

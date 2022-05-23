@@ -16,21 +16,21 @@ class MainClass(NexusPHP):
             Work(
                 url='/index.php',
                 method='get',
-                succeed_regex='(?<=value=")已经打卡(?=")',
+                succeed_regex=['(?<=value=")已经打卡(?=")'],
                 check_state=('sign_in', SignState.NO_SIGN_IN),
                 is_base_content=True
             ),
             Work(
                 url='/signin.php',
                 method='get',
-                succeed_regex='(?<=value=")已经打卡(?=")',
+                succeed_regex=['(?<=value=")已经打卡(?=")'],
                 response_urls=['/signin.php', '/index.php'],
                 check_state=('final', SignState.SUCCEED)
             )
         ]
 
     def build_selector(self):
-        selector = super(MainClass, self).build_selector()
+        selector = super().build_selector()
         net_utils.dict_merge(selector, {
             'detail_sources': {
                 'default': {

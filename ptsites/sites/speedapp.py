@@ -41,7 +41,7 @@ class MainClass(SiteBase):
             Work(
                 url='/zh/登录?locale=zh',
                 method='login',
-                succeed_regex='logout',
+                succeed_regex=['logout'],
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
                 response_urls=['/'],

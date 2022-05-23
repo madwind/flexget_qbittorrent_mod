@@ -14,12 +14,12 @@ class MainClass(Unit3D):
             Work(
                 url='/',
                 method='get',
-                succeed_regex='<title>JPTV\\.club - JPTV for everyone!</title>',
+                succeed_regex=['<title>JPTV\\.club - JPTV for everyone!</title>'],
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
             )
         ]
 
     def build_selector(self):
-        selector = super(MainClass, self).build_selector()
+        selector = super().build_selector()
         return selector

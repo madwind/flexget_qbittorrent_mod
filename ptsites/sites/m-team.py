@@ -39,7 +39,7 @@ class MainClass(NexusPHP):
             Work(
                 url='/takelogin.php',
                 method='verify',
-                succeed_regex='歡迎回來',
+                succeed_regex=['歡迎回來'],
                 check_state=('final', SignState.SUCCEED),
                 response_urls=['/verify.php?returnto=', '/index.php'],
                 is_base_content=True,
@@ -87,7 +87,7 @@ class MainClass(NexusPHP):
         self.get_nexusphp_message(entry, config, messages_url=system_message_url)
 
     def build_selector(self):
-        selector = super(MainClass, self).build_selector()
+        selector = super().build_selector()
         net_utils.dict_merge(selector, {
             'details': {
                 'hr': None

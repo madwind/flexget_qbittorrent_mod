@@ -33,7 +33,7 @@ class MainClass(NexusPHP):
             Work(
                 url='/torrents.php',
                 method='get',
-                succeed_regex='<a class="label label-default" href="#">已签到</a>',
+                succeed_regex=['<a class="label label-default" href="#">已签到</a>'],
                 check_state=('sign_in', SignState.NO_SIGN_IN),
                 is_base_content=True
             ),
@@ -41,13 +41,13 @@ class MainClass(NexusPHP):
                 url='/plugin_sign-in.php?cmd=signin',
                 method='post',
                 data=self.DATA,
-                succeed_regex='{"state":"success","signindays":\\d+,"integral":"?\\d+"?}',
+                succeed_regex=['{"state":"success","signindays":\\d+,"integral":"?\\d+"?}'],
                 check_state=('final', SignState.SUCCEED)
             )
         ]
 
     def build_selector(self):
-        selector = super(MainClass, self).build_selector()
+        selector = super().build_selector()
         net_utils.dict_merge(selector, {
             'detail_sources': {
                 'default': {

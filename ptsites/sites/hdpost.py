@@ -96,7 +96,7 @@ class MainClass(Unit3D):
         }
 
     def build_selector(self):
-        selector = super(MainClass, self).build_selector()
+        selector = super().build_selector()
         net_utils.dict_merge(selector, {
             'user_id': '/users/(.*?)/',
             'detail_sources': {

@@ -31,7 +31,7 @@ class MainClass(SiteBase):
             Work(
                 url='/login.php?do=login',
                 method='login',
-                succeed_regex=r'Thank you for logging in, .*?\.</p>',
+                succeed_regex=[r'Thank you for logging in, .*?\.</p>'],
                 check_state=('network', NetworkState.SUCCEED),
                 response_urls=['/login.php?do=login']
             )
@@ -42,7 +42,7 @@ class MainClass(SiteBase):
             Work(
                 url='/latest/',
                 method='get',
-                succeed_regex=r'Log Out',
+                succeed_regex=['Log Out'],
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
                 response_urls=['/latest/']

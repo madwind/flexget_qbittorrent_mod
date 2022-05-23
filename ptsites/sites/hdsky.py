@@ -40,14 +40,14 @@ class MainClass(NexusPHP):
             Work(
                 url='/',
                 method='get',
-                succeed_regex='已签到',
+                succeed_regex=['已签到'],
                 check_state=('sign_in', SignState.NO_SIGN_IN),
                 is_base_content=True,
             ),
             Work(
                 url='/showup.php',
                 method='ocr',
-                succeed_regex='{"success":true,"message":\\d+}',
+                succeed_regex=['{"success":true,"message":\\d+}'],
                 fail_regex='{"success":false,"message":"invalid_imagehash"}',
                 check_state=('final', SignState.SUCCEED),
 
@@ -90,7 +90,7 @@ class MainClass(NexusPHP):
                 return self._request(entry, 'post', work.url, files=data)
 
     def build_selector(self):
-        selector = super(MainClass, self).build_selector()
+        selector = super().build_selector()
         net_utils.dict_merge(selector, {
             'details': {
                 'hr': None

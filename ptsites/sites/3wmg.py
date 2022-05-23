@@ -3,15 +3,15 @@ from ..utils import net_utils
 
 
 class MainClass(Attendance):
-    URL: str = 'https://www.3wmg.com/)'
-    USER_CLASSES: dict = {
+    URL = 'https://www.3wmg.com/)'
+    USER_CLASSES = {
         'downloaded': [1099511627776, 16492674416640],
         'share_ratio': [3.05, 4.55],
         'days': [280, 700]
     }
 
     def build_selector(self) -> dict:
-        selector: dict = super(MainClass, self).build_selector()
+        selector = super().build_selector()
         net_utils.dict_merge(selector, {
             'detail_sources': {
                 'default': {

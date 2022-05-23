@@ -16,7 +16,7 @@ class MainClass(SiteBase):
             Work(
                 url='/',
                 method='get',
-                succeed_regex='Log out',
+                succeed_regex=['Log out'],
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
                 response_urls=['/t']

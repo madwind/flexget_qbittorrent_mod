@@ -7,8 +7,8 @@ from ..utils.value_hanlder import handle_join_date
 
 
 class MainClass(Unit3D):
-    URL: str = 'https://aither.cc/'
-    USER_CLASSES: dict = {
+    URL = 'https://aither.cc/'
+    USER_CLASSES = {
         'uploaded': [43980465111040],
         'days': [365]
     }
@@ -18,14 +18,14 @@ class MainClass(Unit3D):
             Work(
                 url='/',
                 method='get',
-                succeed_regex='<title>Aither - Heaven</title>',
+                succeed_regex=['<title>Aither - Heaven</title>'],
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
             )
         ]
 
     def build_selector(self) -> dict:
-        selector = super(MainClass, self).build_selector()
+        selector = super().build_selector()
         net_utils.dict_merge(selector, {
             'user_id': '/users/(.*?)/',
             'detail_sources': {

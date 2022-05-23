@@ -27,7 +27,7 @@ class XWT(SiteBase):
             Work(
                 url='/takelogin.php',
                 method='login',
-                succeed_regex=r'Top 5 Torrents',
+                succeed_regex=[r'Top 5 Torrents'],
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
                 response_urls=['/']

@@ -40,7 +40,7 @@ class MainClass(Unit3D):
             Work(
                 url='/login',
                 method='login',
-                succeed_regex='Logout',
+                succeed_regex=['Logout'],
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
                 response_urls=['/pages/1'],
@@ -60,5 +60,5 @@ class MainClass(Unit3D):
         }
 
     def build_selector(self):
-        selector = super(MainClass, self).build_selector()
+        selector = super().build_selector()
         return selector

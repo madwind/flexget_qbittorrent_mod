@@ -15,7 +15,7 @@ class MainClass(Luminance):
             Work(
                 url='/login.php',
                 method='login',
-                succeed_regex='Logout',
+                succeed_regex=['Logout'],
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
                 response_urls=['/index.php']

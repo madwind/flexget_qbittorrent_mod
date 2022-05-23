@@ -12,7 +12,7 @@ class MainClass(XBTIT):
     }
 
     def build_selector(self):
-        selector = super(MainClass, self).build_selector()
+        selector = super().build_selector()
         net_utils.dict_merge(selector, {
             'user_id': r'<li><a href="usercp\.php\?uid=(\d+)">My Panel</a>',
             'detail_sources': {

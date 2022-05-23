@@ -32,7 +32,7 @@ class MainClass(Gazelle):
             Work(
                 url='/',
                 method='get',
-                succeed_regex='<span class="HeaderProfile-name">.+?</span>',
+                succeed_regex=('class="HeaderProfile-name">(.+?)</span>', 1),
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
             )
@@ -46,7 +46,7 @@ class MainClass(Gazelle):
         entry['url'] = urljoin(MainClass.URL, download_page)
 
     def build_selector(self):
-        selector = super(MainClass, self).build_selector()
+        selector = super().build_selector()
         net_utils.dict_merge(selector, {
             'detail_sources': {
                 'default': {

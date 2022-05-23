@@ -9,8 +9,8 @@ from ..utils.value_hanlder import handle_infinite
 
 
 class MainClass(SiteBase):
-    URL: str = 'https://abn.lol/'
-    USER_CLASSES: dict = {
+    URL = 'https://abn.lol/'
+    USER_CLASSES = {
         'uploaded': [5368709120000],
         'share_ratio': [3.05]
     }
@@ -44,7 +44,7 @@ class MainClass(SiteBase):
             Work(
                 url='/Home/Login',
                 method='login',
-                succeed_regex=r'Déconnexion',
+                succeed_regex=[r'Déconnexion'],
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
                 response_urls=['/'],

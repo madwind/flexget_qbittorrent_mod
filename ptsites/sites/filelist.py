@@ -41,7 +41,7 @@ class MainClass(Ocelot):
             Work(
                 url='/takelogin.php',
                 method='login',
-                succeed_regex='Hello, <a .+?</a>',
+                succeed_regex=['Hello, <a .+?</a>'],
                 response_urls=['/my.php'],
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,

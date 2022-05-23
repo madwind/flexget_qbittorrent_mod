@@ -1,6 +1,7 @@
 import re
 
 from ..schema.site_base import SiteBase, Work, SignState, NetworkState
+from ..utils.value_hanlder import handle_join_date,handle_infinite
 
 
 class MainClass(SiteBase):
@@ -40,7 +41,7 @@ class MainClass(SiteBase):
             Work(
                 url='/takelogin.php',
                 method='login',
-                succeed_regex='Log Out',
+                succeed_regex=['Log Out'],
                 response_urls=['/u/'],
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
@@ -64,9 +65,6 @@ class MainClass(SiteBase):
         }
         return self._request(entry, 'post', work.url, data=data)
 
-    def get_message(self, entry, config):
-        self.get_myanonamouse_message(entry, config)
-
     def build_selector(self):
         return {
             'user_id': '/u/(\\d+)',
@@ -88,20 +86,17 @@ class MainClass(SiteBase):
                 },
                 'share_ratio': {
                     'regex': 'Share ratio.*?(∞|[\\d,.]+)',
-                    'handle': self.handle_share_ratio
+                    'handle': handle_infinite
                 },
                 'points': {
                     'regex': 'Bonus:\s+([\\d,.]+)'
                 },
                 'join_date': {
                     'regex': 'Join date\\s*?(\\d{4}-\\d{2}-\\d{2})',
-                    'handle': self.handle_join_date
+                    'handle': handle_join_date
                 },
                 'seeding': None,
                 'leeching': None,
                 'hr': None
             }
         }
-
-    def get_myanonamouse_message(self, entry, config, messages_url='/messages.php?action=viewmailbox'):
-        entry['result'] += '(TODO: Message)'

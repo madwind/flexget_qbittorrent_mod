@@ -9,7 +9,7 @@ class MainClass(SiteBase):
             Work(
                 url='/',
                 method='get',
-                succeed_regex=r'Logout',
+                succeed_regex=['Logout'],
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
             ),

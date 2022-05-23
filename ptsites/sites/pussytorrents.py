@@ -29,7 +29,7 @@ class MainClass(SiteBase):
             Work(
                 url='/user/account/login/',
                 method='login',
-                succeed_regex=r'Welcome back,</span> <b><a href="/profile/\w+">\w+',
+                succeed_regex=[r'Welcome back,</span> <b><a href="/profile/\w+">\w+'],
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
                 response_urls=['/']

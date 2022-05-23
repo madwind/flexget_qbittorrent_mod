@@ -63,7 +63,7 @@ class NexusPHP(SiteBase):
         message_box_response = self._request(entry, 'get', message_url)
         message_box_network_state = self.check_network_state(entry, message_url, message_box_response)
         if message_box_network_state != NetworkState.SUCCEED:
-            entry.fail_with_prefix('Can not read message box! url:{}'.format(message_url))
+            entry.fail_with_prefix(f'Can not read message box! url:{message_url}')
             return
 
         unread_elements = get_soup(net_utils.decode(message_box_response)).select(
@@ -84,7 +84,7 @@ class NexusPHP(SiteBase):
                     message_body = body_element.text.strip()
                 else:
                     message_body = 'Can not find message body element!'
-            entry['messages'] = entry['messages'] + (f'\nTitle: {title}\nLink: {message_url}\n{message_body}')
+            entry['messages'] = entry['messages'] + f'\nTitle: {title}\nLink: {message_url}\n{message_body}'
         if failed:
             entry.fail_with_prefix('Can not read message body!')
 
@@ -107,7 +107,7 @@ class AttendanceHR(NexusPHP):
 
 class Attendance(AttendanceHR):
     def build_selector(self):
-        selector = super(Attendance, self).build_selector()
+        selector = super().build_selector()
         net_utils.dict_merge(selector, {
             'details': {
                 'hr': None
@@ -122,14 +122,14 @@ class BakatestHR(NexusPHP):
             Work(
                 url='/bakatest.php',
                 method='get',
-                succeed_regex='今天已经签过到了\\(已连续.*天签到\\)',
+                succeed_regex=['今天已经签过到了\\(已连续.*天签到\\)'],
                 check_state=('sign_in', SignState.NO_SIGN_IN),
                 is_base_content=True
             ),
             Work(
                 url='/bakatest.php',
                 method='question',
-                succeed_regex='连续.*天签到,获得.*点魔力值|今天已经签过到了\\(已连续.*天签到\\)',
+                succeed_regex=['连续.*天签到,获得.*点魔力值|今天已经签过到了\\(已连续.*天签到\\)'],
                 fail_regex='回答错误,失去 1 魔力值,这道题还会再考一次',
             )
         ]
@@ -196,7 +196,7 @@ class BakatestHR(NexusPHP):
 class Bakatest(BakatestHR):
 
     def build_selector(self):
-        selector = super(Bakatest, self).build_selector()
+        selector = super().build_selector()
         net_utils.dict_merge(selector, {
             'details': {
                 'hr': None
@@ -213,7 +213,7 @@ class VisitHR(NexusPHP):
             Work(
                 url='/',
                 method='get',
-                succeed_regex=self.SUCCEED_REGEX,
+                succeed_regex=[self.SUCCEED_REGEX],
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
             )
@@ -223,7 +223,7 @@ class VisitHR(NexusPHP):
 class Visit(VisitHR):
 
     def build_selector(self):
-        selector = super(Visit, self).build_selector()
+        selector = super().build_selector()
         net_utils.dict_merge(selector, {
             'details': {
                 'hr': None

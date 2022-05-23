@@ -34,7 +34,7 @@ class Luminance(SiteBase):
             Work(
                 url='/login',
                 method='login',
-                succeed_regex=r'''(?x)Logout | Kilpés''',
+                succeed_regex=[r'''(?x)Logout | Kilpés'''],
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
                 response_urls=['/'],

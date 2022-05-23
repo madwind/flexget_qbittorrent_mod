@@ -46,7 +46,7 @@ class MainClass(NexusPHP):
     }
 
     def __init__(self):
-        super(NexusPHP, self).__init__()
+        super().__init__()
         self.times = 0
 
     @classmethod
@@ -104,7 +104,7 @@ class MainClass(NexusPHP):
     def sign_in_by_anime(self, entry, config, work, last_content):
         if not fuzz or not process:
             entry.fail_with_prefix('Dependency does not exist: [fuzzywuzzy]')
-            return
+            return None
 
         ocr_config = entry['site_config'].get('ocr_config', {})
         ocr_config.setdefault('retry', _RETRY)
@@ -114,7 +114,7 @@ class MainClass(NexusPHP):
         data = self.build_data(entry, config, work, last_content, ocr_config)
         if not data:
             entry.fail_with_prefix('Can not build_data')
-            return
+            return None
         logger.info(data)
         return self._request(entry, 'post', work.url, data=data)
 
@@ -276,7 +276,7 @@ class MainClass(NexusPHP):
             new_image.save('dmhy/' + path)
 
     def build_selector(self):
-        selector = super(MainClass, self).build_selector()
+        selector = super().build_selector()
         net_utils.dict_merge(selector, {
             'details': {
                 'points': {

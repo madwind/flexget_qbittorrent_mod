@@ -15,7 +15,7 @@ class MainClass(SiteBase):
             Work(
                 url='/',
                 method='get',
-                succeed_regex='<span class="link" style="margin-right: 1em;white-space: nowrap;" onclick="window.location.href=\'.+?\'">.+?</span>',
+                succeed_regex=['<span class="link" style="margin-right: 1em;white-space: nowrap;" onclick="window.location.href=\'.+?\'">.+?</span>'],
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
             )

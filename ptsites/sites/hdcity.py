@@ -33,7 +33,7 @@ class MainClass(NexusPHP):
             Work(
                 url='/sign',
                 method='get',
-                succeed_regex='本次签到获得魅力\\d+',
+                succeed_regex=['本次签到获得魅力\\d+'],
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
             )
@@ -45,7 +45,7 @@ class MainClass(NexusPHP):
                                    cls.DOWNLOAD_URL_REGEX)
 
     def build_selector(self):
-        selector = super(MainClass, self).build_selector()
+        selector = super().build_selector()
         net_utils.dict_merge(selector, {
             'user_id': None,
             'detail_sources': {

@@ -1,5 +1,6 @@
 import re
 from re import Match
+from typing import Union
 from urllib.parse import urljoin
 
 from flexget.entry import Entry
@@ -10,8 +11,8 @@ from ..schema.site_base import Work, SignState
 
 
 class MainClass(Attendance):
-    URL: str = 'https://1ptba.com/'
-    USER_CLASSES: dict = {
+    URL = 'https://1ptba.com/'
+    USER_CLASSES = {
         'downloaded': [805306368000, 3298534883328],
         'share_ratio': [3.05, 4.55],
         'days': [280, 700]
@@ -31,13 +32,14 @@ class MainClass(Attendance):
             )
         ]
 
-    def sign_in_by_param(self, entry: Entry, config: dict, work: Work, last_content: str | None = None) -> Response:
+    def sign_in_by_param(self, entry: Entry, config: dict, work: Work, last_content: str = None) -> Union[
+        Response, None]:
         response: Response = self._request(entry, 'get', work.url)
         if response:
             location_match: Match = re.search('window\\.location="(.*?);</script>', response.text)
             if location_match:
-                uri: str = re.sub('["|+| ]', '', location_match.group(1))
+                uri: str = re.sub('["+ ]', '', location_match.group(1))
                 work.url = urljoin(work.url, uri)
                 return self.sign_in_by_get(entry, config, work, last_content)
-            else:
-                return response
+            return response
+        return None

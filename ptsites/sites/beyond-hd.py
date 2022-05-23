@@ -38,7 +38,7 @@ class MainClass(Unit3D):
             Work(
                 url=oneurl or '/',
                 method='get',
-                succeed_regex='<title>BeyondHD | Beyond Your Imagination</title>',
+                succeed_regex=['<title>BeyondHD | Beyond Your Imagination</title>'],
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
                 response_urls=['https://beyond-hd.me']

@@ -15,7 +15,7 @@ class MainClass(Visit):
             Work(
                 url='/index.php',
                 method='get',
-                succeed_regex='欢迎',
+                succeed_regex=['欢迎'],
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
             )

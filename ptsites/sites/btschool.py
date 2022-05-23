@@ -20,14 +20,14 @@ class MainClass(NexusPHP):
             Work(
                 url='/index.php?action=addbonus',
                 method='location',
-                succeed_regex='欢迎回来',
+                succeed_regex=['欢迎回来'],
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
             ),
         ]
 
     def build_selector(self):
-        selector = super(MainClass, self).build_selector()
+        selector = super().build_selector()
         net_utils.dict_merge(selector, {
             'detail_sources': {
                 'default': {

@@ -16,14 +16,14 @@ class MainClass(Gazelle):
             Work(
                 url='/',
                 method='get',
-                succeed_regex='<h1 class="hidden">Empornium</h1>',
+                succeed_regex=['<h1 class="hidden">Empornium</h1>'],
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
             )
         ]
 
     def build_selector(self):
-        selector = super(MainClass, self).build_selector()
+        selector = super().build_selector()
         net_utils.dict_merge(selector, {
             'detail_sources': {
                 'default': {

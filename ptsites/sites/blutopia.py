@@ -16,14 +16,14 @@ class MainClass(Unit3D):
             Work(
                 url='/',
                 method='get',
-                succeed_regex='<title>Blutopia - Where Quality Matters</title>',
+                succeed_regex=['<title>Blutopia - Where Quality Matters</title>'],
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
             )
         ]
 
     def build_selector(self):
-        selector = super(MainClass, self).build_selector()
+        selector = super().build_selector()
         net_utils.dict_merge(selector, {
             'user_id': '/users/(.*?)/',
             'detail_sources': {

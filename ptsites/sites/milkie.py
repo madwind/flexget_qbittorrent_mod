@@ -33,7 +33,7 @@ class MainClass(SiteBase):
             Work(
                 url='/api/v1/auth/sessions',
                 method='login',
-                succeed_regex='{"token":".*"}',
+                succeed_regex=['{"token":".*"}'],
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True,
                 response_urls=['/api/v1/auth/sessions'],

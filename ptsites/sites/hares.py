@@ -16,7 +16,7 @@ class MainClass(Attendance):
             Work(
                 url='/',
                 method='get',
-                succeed_regex='已签到',
+                succeed_regex=['已签到'],
                 check_state=('sign_in', SignState.NO_SIGN_IN),
                 is_base_content=True,
             ),
@@ -35,7 +35,7 @@ class MainClass(Attendance):
         return self._request(entry, 'get', work.url, headers={'accept': 'application/json'})
 
     def build_selector(self):
-        selector = super(MainClass, self).build_selector()
+        selector = super().build_selector()
         net_utils.dict_merge(selector, {
             'detail_sources': {
                 'default': {
