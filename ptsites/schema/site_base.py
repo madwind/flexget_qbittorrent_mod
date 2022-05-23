@@ -115,7 +115,7 @@ class SiteBase:
     def get_details(self, entry, config):
         self.get_details_base(entry, config, self.build_selector())
 
-    def get_message(self, entry: Entry, config: dict) -> None:
+    def get_message(self, entry, config: dict) -> None:
         entry['result'] += '(TODO: Message)'
 
     def sign_in(self, entry, config: dict) -> None:

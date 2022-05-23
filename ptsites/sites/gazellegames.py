@@ -78,7 +78,7 @@ class MainClass(Gazelle):
         key = site_config.get('key')
         name = site_config.get('name')
         if not (key and name):
-            self.get_details_base(entry, config, self.build_selector())
+            entry.fail_with_prefix('key or name not found')
             return
         params = {
             'request': 'user',
@@ -105,9 +105,8 @@ class MainClass(Gazelle):
     def get_message(self, entry, config):
         site_config = entry['site_config']
         key = site_config.get('key')
-        name = site_config.get('name')
-        if not (key and name):
-            self.get_gazelle_message(entry, config, message_body_selector='.body')
+        if not key:
+            entry.fail_with_prefix('key not found')
             return
         params = {
             'request': 'inbox',
@@ -136,7 +135,7 @@ class MainClass(Gazelle):
                 if body_element:
                     message_body = body_element.text.strip()
             entry['messages'] = entry['messages'] + (
-                '\nTitle: {}\nLink: {}\n{}'.format(title, message_url, message_body))
+                f'\nTitle: {title}\nLink: {message_url}\n{message_body}')
         if failed:
             entry.fail_with_prefix('Can not read message body!')
 
