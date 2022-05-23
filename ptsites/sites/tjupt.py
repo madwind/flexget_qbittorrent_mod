@@ -21,21 +21,21 @@ class MainClass(NexusPHP):
             Work(
                 url='/attendance.php',
                 method='get',
-                succeed_regex='今日已签到',
+                succeed_regex=['今日已签到'],
                 check_state=('sign_in', SignState.NO_SIGN_IN),
                 is_base_content=True
             ),
             Work(
                 url='/attendance.php',
                 method='douban',
-                succeed_regex=[r'这是您的首次签到，本次签到获得 \d+ 个魔力值。',
-                               r'今日已签到，已累计签到 \d+ 次，已连续签到 \d+ 天，今日获得了 \d+ 个魔力值。'],
+                succeed_regex=['这是您的首次签到，本次签到获得.*?个魔力值。',
+                               '今日已签到，已累计签到.*?次，已连续签到.*?天，今日获得了.*?个魔力值。'],
                 check_state=('final', SignState.SUCCEED)
             )
         ]
 
     def build_selector(self):
-        selector = super(MainClass, self).build_selector()
+        selector = super().build_selector()
         net_utils.dict_merge(selector, {
             'details': {
                 'downloaded': None,
