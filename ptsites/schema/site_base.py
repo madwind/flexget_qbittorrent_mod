@@ -14,7 +14,6 @@ from requests import Response
 from requests.adapters import HTTPAdapter
 
 from ..utils import net_utils, url_recorder
-from ..utils.cfscrapewrapper import CFScrapeWrapper
 
 try:
     from pyppeteer import launch, chromium_downloader
@@ -178,7 +177,7 @@ class SiteBase:
         download_url = ''
         try:
             torrent_page_url = urljoin(base_url, torrent_page_url.format(torrent_id=torrent_id))
-            session = CFScrapeWrapper.create_scraper(requests.Session())
+            session = requests.Session()
             user_agent = config.get('user-agent')
             cookie = passkey.get('cookie')
             headers = {
@@ -201,7 +200,7 @@ class SiteBase:
 
     def _request(self, entry, method: str, url: str, **kwargs) -> Union[Response, None]:
         if not self.requests:
-            self.requests = CFScrapeWrapper.create_scraper(requests.Session())
+            self.requests = requests.Session()
             if entry_headers := entry.get('headers'):
                 self.requests.headers.update(entry_headers)
             if entry_cookie := entry.get('cookie'):
