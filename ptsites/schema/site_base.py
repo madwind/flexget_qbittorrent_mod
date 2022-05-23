@@ -42,9 +42,9 @@ class NetworkState(Enum):
 
 class NetworkErrorReason(Enum):
     DDoS_protection_by_Cloudflare: NetworkErrorReason = 'DDoS protection by .+?Cloudflare'
-    Server_load_too_high: NetworkErrorReason = '<h3 align=center>(服务器负载过|伺服器負載過)高，正在重(试|試)，(请|請)稍(后|後)\\.\\.\\.</h3>'
-    Connection_timed_out: NetworkErrorReason = '<h2 class="text-gray-600 leading-1\\.3 text-3xl font-light">Connection timed out</h2>'
-    The_web_server_reported_a_bad_gateway_error: NetworkErrorReason = '<p>The web server reported a bad gateway error\\.</p>'
+    Server_load_too_high: NetworkErrorReason = r'<h3 align=center>(服务器负载过|伺服器負載過)高，正在重(试|試)，(请|請)稍(后|後)\.\.\.</h3>'
+    Connection_timed_out: NetworkErrorReason = r'<h2 class="text-gray-600 leading-1\.3 text-3xl font-light">Connection timed out</h2>'
+    The_web_server_reported_a_bad_gateway_error: NetworkErrorReason = r'<p>The web server reported a bad gateway error\.</p>'
     Web_server_is_down: NetworkErrorReason = '站点关闭维护中，请稍后再访问...谢谢|站點關閉維護中，請稍後再訪問...謝謝|Web server is down'
 
 
@@ -121,7 +121,7 @@ class SiteBase:
     def get_message(self, entry: Entry, config: dict) -> None:
         entry['result'] += '(TODO: Message)'
 
-    def sign_in(self, entry: Entry, config: dict) -> None:
+    def sign_in(self, entry, config: dict) -> None:
         workflow: list[Work] = []
         if not entry.get('cookie'):
             workflow.extend(self.build_login_workflow(entry, config))
@@ -201,7 +201,7 @@ class SiteBase:
         record[torrent_id] = {'url': download_url, 'expire': (now + expire).strftime('%Y-%m-%d')}
         url_recorder.save_record(entry['class_name'], record)
 
-    def _request(self, entry: Entry, method: str, url: str, **kwargs) -> Response | None:
+    def _request(self, entry, method: str, url: str, **kwargs) -> Response | None:
         if not self.requests:
             self.requests = CFScrapeWrapper.create_scraper(requests.Session())
             if entry_headers := entry.get('headers'):
@@ -219,10 +219,10 @@ class SiteBase:
             entry.fail_with_prefix(NetworkState.NETWORK_ERROR.value.format(url=url, error=e))
         return None
 
-    def sign_in_by_get(self, entry: Entry, config: dict, work: Work, last_content: str | None = None) -> Response:
+    def sign_in_by_get(self, entry, config: dict, work: Work, last_content: str | None = None) -> Response:
         return self._request(entry, 'get', work.url)
 
-    def sign_in_by_post(self, entry: Entry, config: dict, work: Work,
+    def sign_in_by_post(self, entry, config: dict, work: Work,
                         last_content: str | None = None) -> Response | None:
         data: dict = {}
         for key, regex in work.data.items():
@@ -237,13 +237,13 @@ class SiteBase:
                     return
         return self._request(entry, 'post', work.url, data=data)
 
-    def sign_in_by_login(self, entry: Entry, config: dict, work: Work, last_content: str) -> Response | None:
+    def sign_in_by_login(self, entry, config: dict, work: Work, last_content: str) -> Response | None:
         if not (login := entry['site_config'].get('login')):
             entry.fail_with_prefix('Login data not found!')
             return
         return self._request(entry, 'post', work.url, data=self.build_login_data(login, last_content))
 
-    def get_user_id(self, entry: Entry, user_id_selector: str, base_content: str) -> str | None:
+    def get_user_id(self, entry, user_id_selector: str, base_content: str) -> str | None:
         if isinstance(user_id_selector, str):
             user_id_match: Match = re.search(user_id_selector, base_content)
             if user_id_match:
@@ -257,7 +257,7 @@ class SiteBase:
             logger.error('site: {} user_id_selector is not str.'.format(entry['site_name']))
             return
 
-    def get_details_base(self, entry: Entry, config: str, selector: dict) -> None:
+    def get_details_base(self, entry, config: str, selector: dict) -> None:
         if not (base_content := entry.get('base_content')):
             entry.fail_with_prefix('base_content is None.')
             return
@@ -317,12 +317,9 @@ class SiteBase:
             return False
         check_type, check_result = work.check_state
         if check := getattr(self, f"check_{check_type}_state", None):
-            if check(entry, work, response, content) != check_result:
-                return False
-            else:
-                return True
+            return check(entry, work, response, content) == check_result
 
-    def check_network_state(self, entry: Entry, param: Work | str, response: Response | None,
+    def check_network_state(self, entry, param: Work | str, response: Response | None,
                             content: str | None = None, check_content: bool = False) -> NetworkState:
         urls = param
         if isinstance(param, Work):
@@ -338,7 +335,7 @@ class SiteBase:
             return NetworkState.URL_REDIRECT
         return NetworkState.SUCCEED
 
-    def check_sign_in_state(self, entry: Entry, work: Work, response: Response,
+    def check_sign_in_state(self, entry, work: Work, response: Response,
                             content: str) -> NetworkState | SignState:
         network_state = self.check_network_state(entry, work, response, content=content, check_content=True)
         if network_state != NetworkState.SUCCEED:
@@ -373,7 +370,7 @@ class SiteBase:
 
         return SignState.NO_SIGN_IN
 
-    def check_final_state(self, entry: Entry, work: Work, response: Response, content: str) -> SignState:
+    def check_final_state(self, entry, work: Work, response: Response, content: str) -> SignState:
         sign_in_state: SignState = self.check_sign_in_state(entry, work, response, content)
         if sign_in_state == SignState.NO_SIGN_IN:
             entry.fail_with_prefix(SignState.SIGN_IN_FAILED.value.format('no sign in'))

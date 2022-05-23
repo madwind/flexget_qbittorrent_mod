@@ -18,7 +18,7 @@ class NexusPHP(SiteBase):
         self.get_nexusphp_message(entry, config)
 
     def build_selector(self):
-        selector = {
+        return {
             'user_id': 'userdetails.php\\?id=(\\d+)',
             'detail_sources': {
                 'default': {
@@ -57,7 +57,6 @@ class NexusPHP(SiteBase):
                 }
             }
         }
-        return selector
 
     def get_nexusphp_message(self, entry, config, messages_url='/messages.php?action=viewmailbox&box=1&unread=yes',
                              unread_elements_selector='td > img[alt*="Unread"]'):
