@@ -1,9 +1,10 @@
 import re
 from urllib.parse import urljoin
 
+from ..base.base import SignState, NetworkState, Work
 from ..schema.nexusphp import NexusPHP
-from ..schema.site_base import SignState, Work, NetworkState
 from ..utils import net_utils
+from ..utils.state_checkers import check_network_state
 
 
 class MainClass(NexusPHP):
@@ -47,14 +48,14 @@ class MainClass(NexusPHP):
         return selector
 
     def sign_in_by_location(self, entry, config, work, last_content=None):
-        response = self._request(entry, 'get', work.url)
-        reload__net_state = self.check_network_state(entry, work.url, response)
+        response = self.request(entry, 'get', work.url)
+        reload__net_state = check_network_state(entry, work.url, response)
         if reload__net_state != NetworkState.SUCCEED:
             return None
         content = net_utils.decode(response)
         location_search = re.search('(?<=window\\.location=).*?(?=;)', content)
         if not location_search:
             return response
-        location_url = re.sub('"|\\+| ', '', location_search.group(0))
+        location_url = re.sub('["+ ]', '', location_search.group(0))
         work.url = urljoin(MainClass.URL, location_url)
-        return self.sign_in_by_get(entry, config, work, last_content=True)
+        return self.sign_in_by_get(entry, config, work)

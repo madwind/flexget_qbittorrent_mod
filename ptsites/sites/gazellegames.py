@@ -2,9 +2,10 @@ from urllib.parse import urljoin
 
 from flexget.utils.soup import get_soup
 
+from ..base.base import SignState, NetworkState, Work
 from ..schema.gazelle import Gazelle
-from ..schema.site_base import Work, SignState, NetworkState
 from ..utils import net_utils
+from ..utils.state_checkers import check_network_state
 from ..utils.value_hanlder import handle_infinite
 
 
@@ -124,8 +125,8 @@ class MainClass(Gazelle):
             title = message.get('subject')
             conv_id = message.get('convId')
             message_url = MainClass.MESSAGE_URL.format(conv_id=conv_id)
-            message_response = self._request(entry, 'get', message_url)
-            network_state = self.check_network_state(entry, message_url, message_response)
+            message_response = self.request(entry, 'get', message_url)
+            network_state = check_network_state(entry, message_url, message_response)
             message_body = 'Can not read message body!'
             if network_state != NetworkState.SUCCEED:
                 failed = True
@@ -140,8 +141,8 @@ class MainClass(Gazelle):
             entry.fail_with_prefix('Can not read message body!')
 
     def get_api_response_json(self, entry, params):
-        api_response = self._request(entry, 'get', MainClass.API_URL, params=params)
-        network_state = self.check_network_state(entry, api_response.request.url, api_response)
+        api_response = self.request(entry, 'get', MainClass.API_URL, params=params)
+        network_state = check_network_state(entry, api_response.request.url, api_response)
         if network_state != NetworkState.SUCCEED:
             return
         api_response_json = api_response.json()

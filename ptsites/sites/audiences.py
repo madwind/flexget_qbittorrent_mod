@@ -43,7 +43,7 @@ class MainClass(AttendanceHR):
         }
 
     @classmethod
-    def build_reseed_entry(cls, entry, config, site, passkey, torrent_id):
+    def build_reseed_entry(cls, entry, config: dict, site, passkey, torrent_id):
         download_page = f'download.php?id={torrent_id}'
         entry['url'] = urljoin(MainClass.URL, download_page)
         entry['cookie'] = passkey['cookie']

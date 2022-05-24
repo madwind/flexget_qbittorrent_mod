@@ -6,10 +6,7 @@ RECORD_FILE_PATH = 'reseed'
 
 def load_record(site_name):
     record_file = Path(f'{RECORD_FILE_PATH}/{site_name}.json')
-    if record_file.is_file():
-        return json.loads(record_file.read_text())
-    else:
-        return {}
+    return json.loads(record_file.read_text()) if record_file.is_file() else {}
 
 
 def save_record(site_name, record):

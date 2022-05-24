@@ -75,7 +75,7 @@ class PluginAutoSignIn:
             if date_now not in entry['title']:
                 entry.reject('{} out of date!'.format(entry['title']))
         with ThreadPoolExecutor(max_workers=max_workers) as threadExecutor:
-            for entry, feature in [(entry, threadExecutor.submit(executor.sign_in, entry, config))
+            for entry, feature in [(entry, threadExecutor.submit(executor.process_sites, entry, config))
                                    for entry in task.accepted]:
                 try:
                     feature.result()

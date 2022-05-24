@@ -1,7 +1,8 @@
 import re
 
-from ..schema.site_base import SiteBase, Work, SignState, NetworkState
-from ..utils.value_hanlder import handle_join_date,handle_infinite
+from ..base.base import SignState, NetworkState, Work
+from ..base.site_base import SiteBase
+from ..utils.value_hanlder import handle_join_date, handle_infinite
 
 
 class MainClass(SiteBase):
@@ -63,7 +64,7 @@ class MainClass(SiteBase):
             'password': login['password'],
             'rememberMe': 'yes'
         }
-        return self._request(entry, 'post', work.url, data=data)
+        return self.request(entry, 'post', work.url, data=data)
 
     def build_selector(self):
         return {
@@ -89,7 +90,7 @@ class MainClass(SiteBase):
                     'handle': handle_infinite
                 },
                 'points': {
-                    'regex': 'Bonus:\s+([\\d,.]+)'
+                    'regex': r'Bonus:\s+([\d,.]+)'
                 },
                 'join_date': {
                     'regex': 'Join date\\s*?(\\d{4}-\\d{2}-\\d{2})',

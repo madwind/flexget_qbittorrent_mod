@@ -1,5 +1,5 @@
+from ..base.base import SignState, Work
 from ..schema.nexusphp import Visit
-from ..schema.site_base import SignState, Work
 
 
 class MainClass(Visit):

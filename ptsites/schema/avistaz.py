@@ -1,8 +1,15 @@
-from .site_base import SiteBase, Work, SignState
+from abc import ABC
+
+from ..base.base import SignState, Work
+from ..base.site_base import SiteBase
 from ..utils.value_hanlder import handle_join_date
 
 
-class AvistaZ(SiteBase):
+def handle_points(value):
+    return value.replace(' ', '')
+
+
+class AvistaZ(SiteBase, ABC):
     SUCCEED_REGEX = None
 
     def build_workflow(self, entry, config):
@@ -30,32 +37,29 @@ class AvistaZ(SiteBase):
             },
             'details': {
                 'uploaded': {
-                    'regex': ('([\\d.]+ [ZEPTGMK]B).*?([\\d.]+ [ZEPTGMK]B).*?([\\d.]+)', 1)
+                    'regex': (r'([\d.]+ [ZEPTGMK]B).*?([\d.]+ [ZEPTGMK]B).*?([\d.]+)', 1)
                 },
                 'downloaded': {
-                    'regex': ('([\\d.]+ [ZEPTGMK]B).*?([\\d.]+ [ZEPTGMK]B).*?([\\d.]+)', 2)
+                    'regex': (r'([\d.]+ [ZEPTGMK]B).*?([\d.]+ [ZEPTGMK]B).*?([\d.]+)', 2)
                 },
                 'share_ratio': {
-                    'regex': ('([\\d.]+ [ZEPTGMK]B).*?([\\d.]+ [ZEPTGMK]B).*?([\\d.]+)', 3)
+                    'regex': (r'([\d.]+ [ZEPTGMK]B).*?([\d.]+ [ZEPTGMK]B).*?([\d.]+)', 3)
                 },
                 'points': {
-                    'regex': 'Bonus:.([\\d.]+)'
+                    'regex': r'Bonus:.([\d.]+)'
                 },
                 'join_date': {
-                    'regex': 'Joined.(.*? \\d{4})',
+                    'regex': r'Joined.(.*? \d{4})',
                     'handle': handle_join_date
                 },
                 'seeding': {
-                    'regex': 'Seeding:.(\\d+)'
+                    'regex': r'Seeding:.(\d+)'
                 },
                 'leeching': {
-                    'regex': 'Leeching:.(\\d+)'
+                    'regex': r'Leeching:.(\d+)'
                 },
                 'hr': {
-                    'regex': 'Hit & Run:.(\\d+)'
+                    'regex': r'Hit & Run:.(\d+)'
                 }
             }
         }
-
-    def handle_points(self, value):
-        return value.replace(' ', '')

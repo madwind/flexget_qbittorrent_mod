@@ -1,7 +1,12 @@
 import re
 
-from ..schema.site_base import SiteBase, Work, SignState
+from ..base.base import SignState, Work
+from ..base.site_base import SiteBase
 from ..utils.value_hanlder import handle_join_date, handle_infinite
+
+
+def handle_amount_of_data(value):
+    return value + 'B'
 
 
 class MainClass(SiteBase):
@@ -71,14 +76,14 @@ class MainClass(SiteBase):
                                 \ 
                                 \(
                                 ([\d,] +)""",
-                    'handle': self.handle_amount_of_data
+                    'handle': handle_amount_of_data
                 },
                 'downloaded': {
                     'regex': r"""(?x)Downloaded
                                 . *?
                                 \(
                                 ([\d,] +)""",
-                    'handle': self.handle_amount_of_data
+                    'handle': handle_amount_of_data
                 },
                 'share_ratio': {
                     'regex': r"""(?x)Share
@@ -106,6 +111,3 @@ class MainClass(SiteBase):
                 'hr': None
             }
         }
-
-    def handle_amount_of_data(self, value):
-        return value + 'B'

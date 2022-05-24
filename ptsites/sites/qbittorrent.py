@@ -2,8 +2,8 @@ from datetime import datetime
 
 from loguru import logger
 
+from ..base.site_base import SiteBase
 from ..client.qbittorrent_client import QBittorrentClient
-from ..schema.site_base import SiteBase
 
 
 class MainClass(SiteBase):

@@ -1,4 +1,4 @@
-from ..schema.site_base import SignState, Work
+from ..base.base import SignState, Work
 from ..schema.unit3d import Unit3D
 
 

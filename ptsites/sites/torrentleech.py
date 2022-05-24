@@ -1,4 +1,5 @@
-from ..schema.site_base import SiteBase, Work, SignState
+from ..base.base import SignState, Work
+from ..base.site_base import SiteBase
 from ..utils.value_hanlder import handle_join_date, handle_infinite
 
 
@@ -15,7 +16,8 @@ class MainClass(SiteBase):
             Work(
                 url='/',
                 method='get',
-                succeed_regex=['<span class="link" style="margin-right: 1em;white-space: nowrap;" onclick="window.location.href=\'.+?\'">.+?</span>'],
+                succeed_regex=[
+                    '<span class="link" style="margin-right: 1em;white-space: nowrap;" onclick="window.location.href=\'.+?\'">.+?</span>'],
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
             )

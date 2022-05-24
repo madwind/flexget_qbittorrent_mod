@@ -3,7 +3,7 @@ from flexget.event import event
 from loguru import logger
 
 
-class PluginHtmlRss():
+class PluginHtmlRss:
     schema = {
         'type': 'object',
         'properties': {

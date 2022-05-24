@@ -1,10 +1,11 @@
 import re
+from abc import ABC
 
-from ..schema.site_base import SiteBase
+from ..base.site_base import SiteBase
 from ..utils.value_hanlder import handle_infinite, handle_join_date
 
 
-class XBT(SiteBase):
+class XBT(SiteBase, ABC):
     @classmethod
     def build_sign_in_schema(cls):
         return {

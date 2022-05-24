@@ -1,7 +1,7 @@
 from urllib.parse import urljoin
 
+from ..base.base import SignState, Work
 from ..schema.gazelle import Gazelle
-from ..schema.site_base import Work, SignState
 from ..utils import net_utils
 
 
@@ -32,7 +32,7 @@ class MainClass(Gazelle):
             Work(
                 url='/',
                 method='get',
-                succeed_regex=('class="HeaderProfile-name">(.+?)</span>', 1),
+                succeed_regex=[('class="HeaderProfile-name">(.+?)</a>', 1)],
                 check_state=('final', SignState.SUCCEED),
                 is_base_content=True
             )

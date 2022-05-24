@@ -1,5 +1,6 @@
-from ..schema.xbtit import XBTIT
+from ..schema.xbtit import XBTIT, handle_join_date
 from ..utils import net_utils
+from ..utils.value_hanlder import handle_infinite
 
 
 class MainClass(XBTIT):
@@ -32,16 +33,16 @@ class MainClass(XBTIT):
                 },
                 'share_ratio': {
                     'regex': 'Ratio: (---|[\\d.]+)',
-                    'handle': self.handle_inf
+                    'handle': handle_infinite
 
                 },
                 'points': {
                     'regex': 'Bonus: (---|[\\d,.]+)',
-                    'handle': self.handle_inf
+                    'handle': handle_infinite
                 },
                 'join_date': {
                     'regex': 'Joined on.{5}(.*?\\d{4})',
-                    'handle': self.handle_join_date
+                    'handle': handle_join_date
                 },
                 'seeding': None,
                 'leeching': None,
@@ -54,8 +55,3 @@ class MainClass(XBTIT):
     def get_message(self, entry, config):
         self.get_XBTIT_message(entry, config,
                                MESSAGES_URL_REGEX='index.php\\?page=usercp&amp;uid=\\d+&amp;do=pm&amp;action=list')
-
-    def handle_inf(self, value):
-        if value == '---':
-            value = 0
-        return value

@@ -1,8 +1,11 @@
 import json
 from urllib.parse import urljoin
 
-from ..schema.site_base import SiteBase, Work, SignState, NetworkState
+from ..base.base import SignState, NetworkState, Work
+from ..base.get_details import get_user_id
+from ..base.site_base import SiteBase
 from ..utils import net_utils
+from ..utils.state_checkers import check_network_state
 
 
 class MainClass(SiteBase):
@@ -26,9 +29,9 @@ class MainClass(SiteBase):
 
     def get_details(self, entry, config):
         link = urljoin(entry['url'],
-                       '/api/v1/users/{}'.format(self.get_user_id(entry, '"id":(.+?),', entry['base_content'])))
-        detail_response = self._request(entry, 'get', link)
-        network_state = self.check_network_state(entry, link, detail_response)
+                       '/api/v1/users/{}'.format(get_user_id(entry, '"id":(.+?),', entry['base_content'])))
+        detail_response = self.request(entry, 'get', link)
+        network_state = check_network_state(entry, link, detail_response)
         if network_state != NetworkState.SUCCEED:
             return
         detail_content = net_utils.decode(detail_response)

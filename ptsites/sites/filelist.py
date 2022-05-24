@@ -1,7 +1,7 @@
 import re
 
+from ..base.base import SignState, NetworkState, Work
 from ..schema.ocelot import Ocelot
-from ..schema.site_base import Work, SignState, NetworkState
 
 
 class MainClass(Ocelot):

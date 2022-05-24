@@ -37,9 +37,8 @@ def get_client(entry, config):
 
 
 def get_jap_ocr(img, entry, config):
-    client = get_client(entry, config)
-    if not client:
-        return None
+    if not (client := get_client(entry, config)):
+        return
     img_byte_arr = BytesIO()
 
     if img.mode == "P":
@@ -51,15 +50,15 @@ def get_jap_ocr(img, entry, config):
             result = client.basicAccurate(img_byte_arr.getvalue(), {'language_type': 'JAP'})
     except Exception as e:
         entry.fail_with_prefix(f'baidu ocr error: {e}')
-        return None
+        return
     logger.info(result)
     if result.get('error_msg'):
         entry.fail_with_prefix(result.get('error_msg'))
-        return None
+        return
     text = ''
     for words_list in result.get('words_result'):
-        text = text + words_list.get('words')
-    return re.sub('[^\\w]|[a-zA-Z\\d]', '', text)
+        text += words_list.get('words')
+    return re.sub(r'\W|[a-zA-Z\d]', '', text)
 
 
 def get_ocr_code(img, entry, config):
@@ -75,8 +74,7 @@ def get_ocr_code(img, entry, config):
     height = img.size[1]
     for i in range(0, width):
         for j in range(0, height):
-            noise = _detect_noise(img, i, j, width, height)
-            if noise:
+            if noise := _detect_noise(img, i, j, width, height):
                 img.putpixel((i, j), (255, 255, 255))
     img_byte_arr = BytesIO()
     img.save(img_byte_arr, format='png')

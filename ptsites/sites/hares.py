@@ -1,6 +1,10 @@
+from ..base.base import SignState, Work
 from ..schema.nexusphp import Attendance
-from ..schema.site_base import Work, SignState
 from ..utils import net_utils
+
+
+def handle_points(value):
+    return '0' if value in ['.'] else value
 
 
 class MainClass(Attendance):
@@ -32,7 +36,7 @@ class MainClass(Attendance):
         ]
 
     def sign_in_by_punch_in(self, entry, config, work, last_content):
-        return self._request(entry, 'get', work.url, headers={'accept': 'application/json'})
+        return self.request(entry, 'get', work.url, headers={'accept': 'application/json'})
 
     def build_selector(self):
         selector = super().build_selector()
@@ -50,7 +54,7 @@ class MainClass(Attendance):
             'details': {
                 'points': {
                     'regex': '奶糖.(?:>.*?){4}([\\d,.]+)',
-                    'handle': self.handle_points
+                    'handle': handle_points
                 },
                 'seeding': {
                     'regex': ('(做种中).*?(\\d+)', 2)
@@ -62,9 +66,3 @@ class MainClass(Attendance):
             }
         })
         return selector
-
-    def handle_points(self, value):
-        if value in ['.']:
-            return '0'
-        else:
-            return value

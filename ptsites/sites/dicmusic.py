@@ -1,7 +1,7 @@
 from urllib.parse import urljoin
 
+from ..base.base import SignState, Work
 from ..schema.gazelle import Gazelle
-from ..schema.site_base import Work, SignState
 from ..utils import net_utils
 
 

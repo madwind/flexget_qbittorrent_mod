@@ -1,9 +1,10 @@
 import re
 from urllib.parse import urljoin
 
+from ..base.base import SignState, NetworkState, Work
 from ..schema.nexusphp import NexusPHP
-from ..schema.site_base import Work, NetworkState, SignState
 from ..utils import net_utils, google_auth
+from ..utils.state_checkers import check_network_state
 
 
 class MainClass(NexusPHP):
@@ -60,7 +61,7 @@ class MainClass(NexusPHP):
 
         login_response = self.sign_in_by_login(entry, config, work, last_content)
 
-        login_network_state = self.check_network_state(entry, work, login_response)
+        login_network_state = check_network_state(entry, work, login_response)
         if login_network_state != NetworkState.SUCCEED:
             return
         verify_url = urljoin(entry['url'], work.verify_url)
@@ -74,7 +75,7 @@ class MainClass(NexusPHP):
                     data = {
                         'otp': (None, google_code)
                     }
-                    return self._request(entry, 'post', verify_url, files=data)
+                    return self.request(entry, 'post', verify_url, files=data)
                 else:
                     entry.fail_with_prefix('{} with google_auth'.format(attempts.group()))
             else:

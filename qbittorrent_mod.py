@@ -334,9 +334,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
         if len(action_config) != 1:
             raise plugin.PluginError('There must be and only one action')
         # don't add when learning
-        if task.options.learn:
-            return
-        if not task.accepted and not action_config.get('remove'):
+        if task.options.learn or not (task.accepted or action_config.get('remove')):
             return
         if not self.client:
             self.client = self.create_client(config)
@@ -395,10 +393,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                 if attr_str == 'tags' and entry_attr and add_options_attr:
                     attr = str.join(',', [entry_attr, add_options_attr])
                 else:
-                    if entry_attr is not None:
-                        attr = entry_attr
-                    else:
-                        attr = add_options_attr
+                    attr = entry_attr if entry_attr is not None else add_options_attr
                 if attr is not None:
                     options[attr_str] = attr
 
@@ -439,13 +434,12 @@ class PluginQBittorrentMod(QBittorrentModBase):
         server_state = main_data_snapshot.get('server_state')
 
         dl_rate_limit = server_state.get('dl_rate_limit')
-        use_alt_speed_limits = server_state.get('use_alt_speed_limits')
         free_space_on_disk = server_state.get('free_space_on_disk')
 
         dl_limit_mode = 'dl_limit'
         dl_limit_on_succeeded = keeper_options.get('dl_limit_on_succeeded', 0)
         alt_dl_limit_on_succeeded = keeper_options.get('alt_dl_limit_on_succeeded', 0)
-        if use_alt_speed_limits:
+        if server_state.get('use_alt_speed_limits'):
             dl_limit_mode = 'alt_dl_limit'
             dl_limit_on_succeeded = alt_dl_limit_on_succeeded
 
@@ -481,8 +475,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
             if keep_disk_space < free_space_on_disk + delete_size:
                 entry_dict.get(entry_hash).reject(reason='keep_disk_space < free_space_on_disk')
                 continue
-            server_entry = entry_dict.get(entry_hash)
-            if not server_entry:
+            if not (server_entry := entry_dict.get(entry_hash)):
                 self.client.reset_rid()
             save_path_with_name = server_entry.get('qbittorrent_save_path_with_name')
             reseed_entry_list = reseed_dict.get(save_path_with_name)
@@ -494,9 +487,8 @@ class PluginQBittorrentMod(QBittorrentModBase):
                 if reseed_entry['qbittorrent_completed'] != 0:
                     torrent_size = reseed_entry['qbittorrent_completed']
                 if isinstance(check_reseed, list):
-                    trackers = reseed_entry['qbittorrent_trackers']
                     site_names = []
-                    for tracker in trackers:
+                    for tracker in reseed_entry['qbittorrent_trackers']:
                         site_names.append(net_utils.get_site_name(tracker.get('url')))
 
                     if len(set(check_reseed) & set(site_names)) > 0:
@@ -645,18 +637,15 @@ class PluginQBittorrentMod(QBittorrentModBase):
         self.client.pause_torrents(str.join('|', hashes))
 
     def modify_entries(self, task, modify_options):
-        tag_by_tracker = modify_options.get('tag_by_tracker')
-        replace_trackers = modify_options.get('replace_trackers')
         for entry in task.accepted:
             tags = entry.get('qbittorrent_tags')
             tags_modified = []
             torrent_trackers = entry.get('qbittorrent_trackers')
             for tracker in torrent_trackers:
-                if tag_by_tracker:
-                    site_name = net_utils.get_site_name(tracker.get('url'))
-                    if site_name and site_name not in tags and site_name not in tags_modified:
-                        tags_modified.append(site_name)
-                if replace_trackers:
+                if modify_options.get('tag_by_tracker') and ((site_name := net_utils.get_site_name(
+                        tracker.get('url'))) and site_name not in tags and site_name not in tags_modified):
+                    tags_modified.append(site_name)
+                if replace_trackers := modify_options.get('replace_trackers'):
                     for old_str, new_str in replace_trackers.items():
                         tracker_url = tracker.get('url')
                         if tracker_url.startswith(old_str):

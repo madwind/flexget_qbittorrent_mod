@@ -1,7 +1,12 @@
 import re
 
-from ..schema.site_base import SiteBase, Work, SignState, NetworkState
+from ..base.base import SignState, NetworkState, Work
+from ..base.site_base import SiteBase
 from ..utils.value_hanlder import handle_infinite
+
+
+def handle_join_date(value):
+    return value.translate(str.maketrans('年月', '--', '日'))
 
 
 class MainClass(SiteBase):
@@ -103,7 +108,7 @@ class MainClass(SiteBase):
                     'regex': r'''(?x)注册日期
                                     \s*
                                     (\d + 年 \d + 月 \d + 日)''',
-                    'handle': self.handle_join_date
+                    'handle': handle_join_date
                 },
                 'seeding': {
                     'regex': r'''(?x)目前正在播种种子">
@@ -126,6 +131,3 @@ class MainClass(SiteBase):
                 }
             }
         }
-
-    def handle_join_date(self, value):
-        return value.translate(str.maketrans('年月', '--', '日'))

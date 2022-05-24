@@ -1,12 +1,14 @@
-from .site_base import SiteBase
+from abc import ABC
+
+from ..base.site_base import SiteBase
 from ..utils.value_hanlder import handle_infinite
 
 
-class Ocelot(SiteBase):
+class Ocelot(SiteBase, ABC):
 
     def build_selector(self):
         return {
-            'user_id': 'userdetails.php\\?id=(\\d+)',
+            'user_id': r'userdetails\.php\?id=(\d+)',
             'detail_sources': {
                 'default': {
                     'link': '/userdetails.php?id={}',
@@ -18,23 +20,23 @@ class Ocelot(SiteBase):
             },
             'details': {
                 'uploaded': {
-                    'regex': 'Uploaded.+?([\\d.]+ ?[ZEPTGMk]?B)'
+                    'regex': r'Uploaded.+?([\d.]+ ?[ZEPTGMk]?B)'
                 },
                 'downloaded': {
-                    'regex': 'Downloaded.+?([\\d.]+ ?[ZEPTGMk]?B)'
+                    'regex': r'Downloaded.+?([\d.]+ ?[ZEPTGMk]?B)'
                 },
                 'share_ratio': {
-                    'regex': 'Ratio.+?(Inf\\.|[\\d.]+)',
+                    'regex': r'Ratio.+?(Inf\.|[\d.]+)',
                     'handle': handle_infinite
                 },
                 'points': {
-                    'regex': ('Hello.+?(\\d+).*?(Inf\\.|[\\d.]+)', 2)
+                    'regex': (r'Hello.+?(\d+).*?(Inf\.|[\d.]+)', 2)
                 },
                 'join_date': {
-                    'regex': 'Join.date.*?(\\d{4}-\\d{2}-\\d{2})',
+                    'regex': r'Join.date.*?(\d{4}-\d{2}-\d{2})',
                 },
                 'seeding': {
-                    'regex': 'Seeding (\\d)+'
+                    'regex': r'Seeding (\d)+'
                 },
                 'leeching': None,
                 'hr': None

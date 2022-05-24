@@ -2,10 +2,11 @@ import json
 from io import BytesIO
 from urllib.parse import urljoin
 
+from ..base.base import SignState, NetworkState, Work
 from ..schema.nexusphp import NexusPHP
-from ..schema.site_base import SignState, Work, NetworkState
 from ..utils import baidu_ocr
 from ..utils import net_utils
+from ..utils.state_checkers import check_network_state
 
 try:
     from PIL import Image
@@ -61,8 +62,8 @@ class MainClass(NexusPHP):
             'action': (None, 'new')
         }
         image_hash_url = urljoin(entry['url'], work.image_hash_url)
-        image_hash_response = self._request(entry, 'post', image_hash_url, files=data)
-        image_hash_network_state = self.check_network_state(entry, image_hash_url, image_hash_response)
+        image_hash_response = self.request(entry, 'post', image_hash_url, files=data)
+        image_hash_network_state = check_network_state(entry, image_hash_url, image_hash_response)
         if image_hash_network_state != NetworkState.SUCCEED:
             return
         content = net_utils.decode(image_hash_response)
@@ -71,8 +72,8 @@ class MainClass(NexusPHP):
         if image_hash:
             image_url = urljoin(entry['url'], work.image_url)
             img_url = image_url.format(image_hash)
-            img_response = self._request(entry, 'get', img_url)
-            img_network_state = self.check_network_state(entry, img_url, img_response)
+            img_response = self.request(entry, 'get', img_url)
+            img_network_state = check_network_state(entry, img_url, img_response)
             if img_network_state != NetworkState.SUCCEED:
                 return
         else:
@@ -87,7 +88,7 @@ class MainClass(NexusPHP):
                     'imagehash': (None, image_hash),
                     'imagestring': (None, code)
                 }
-                return self._request(entry, 'post', work.url, files=data)
+                return self.request(entry, 'post', work.url, files=data)
 
     def build_selector(self):
         selector = super().build_selector()

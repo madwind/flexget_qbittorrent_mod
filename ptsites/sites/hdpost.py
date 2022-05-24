@@ -3,8 +3,8 @@ from urllib.parse import urljoin
 
 from flexget.utils.soup import get_soup
 
-from ..schema.site_base import SignState, Work, NetworkState
-from ..schema.unit3d import Unit3D
+from ..base.base import SignState, NetworkState, Work
+from ..schema.unit3d import Unit3D, handle_points
 from ..utils import net_utils
 from ..utils.value_hanlder import handle_join_date, handle_infinite
 
@@ -122,7 +122,7 @@ class MainClass(Unit3D):
                 },
                 'points': {
                     'regex': '魔力.+?(\\d[\\d,. ]*)',
-                    'handle': self.handle_points
+                    'handle': handle_points
                 },
                 'join_date': {
                     'regex': '注册日期 (.*?\\d{4})',

@@ -1,10 +1,12 @@
 import re
+from abc import ABC
 
-from ..schema.site_base import SiteBase, Work, SignState, NetworkState
+from ..base.base import SignState, NetworkState, Work
+from ..base.site_base import SiteBase
 from ..utils.value_hanlder import handle_infinite, handle_join_date
 
 
-class Luminance(SiteBase):
+class Luminance(SiteBase, ABC):
     @classmethod
     def build_sign_in_schema(cls):
         return {
