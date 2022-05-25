@@ -58,7 +58,7 @@ def get_jap_ocr(img, entry, config):
     text = ''
     for words_list in result.get('words_result'):
         text += words_list.get('words')
-    return re.sub(r'\W|[a-zA-Z\d]', '', text)
+    return str.join('', re.findall(r'[\u2E80-\u9FFF]', text))
 
 
 def get_ocr_code(img, entry, config):

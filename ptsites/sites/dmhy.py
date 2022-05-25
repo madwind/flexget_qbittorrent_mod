@@ -116,7 +116,11 @@ class MainClass(NexusPHP):
 
         data = self.build_data(entry, config, work, last_content, ocr_config)
         if not data:
-            entry.fail_with_prefix('Can not build_data')
+            if self.times == ocr_config.get('retry'):
+                reason = 'Maximum number of retries reached'
+            else:
+                reason = 'Can not build_data'
+            entry.fail_with_prefix(reason)
             return None
         logger.info(data)
         return self.request(entry, 'post', work.url, data=data)
@@ -152,7 +156,8 @@ class MainClass(NexusPHP):
                             if regex_key_search:
                                 for captcha, value in regex_key_search:
                                     answer_list = list(filter(lambda x2: len(x2) > 0,
-                                                              map(lambda x: re.sub(r'\W|[a-zA-Z\d]', '', x),
+                                                              map(lambda x: str.join('',
+                                                                                     re.findall(r'[\u2E80-\u9FFF]', x)),
                                                                   value.split('\n'))))
                                     if answer_list:
                                         split_value, partial_ratio = process.extractOne(oct_text, answer_list,

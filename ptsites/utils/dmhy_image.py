@@ -6,10 +6,8 @@ RGB_BLACK = (0, 0, 0)
 def compare_images_sort(image1, image2):
     if image1.size != image2.size:
         return False
-
     point1 = get_split_point(image1)
     point2 = get_split_point(image2)
-
     return bool(point1 and point1 == point2)
 
 
@@ -63,7 +61,7 @@ def get_split_point(image: Image):
             if r > 7 or g > 7 or b > 7:
                 y += h
                 break
-        return (x, y) if x > 100 or y > 100 else None
+    return (x, y) if x > 100 or y > 100 else None
 
 
 def split_image(image):

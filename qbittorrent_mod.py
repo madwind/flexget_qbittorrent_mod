@@ -637,15 +637,18 @@ class PluginQBittorrentMod(QBittorrentModBase):
         self.client.pause_torrents(str.join('|', hashes))
 
     def modify_entries(self, task, modify_options):
+        tag_by_tracker = modify_options.get('tag_by_tracker')
+        replace_trackers = modify_options.get('replace_trackers')
         for entry in task.accepted:
             tags = entry.get('qbittorrent_tags')
             tags_modified = []
             torrent_trackers = entry.get('qbittorrent_trackers')
             for tracker in torrent_trackers:
-                if modify_options.get('tag_by_tracker') and ((site_name := net_utils.get_site_name(
-                        tracker.get('url'))) and site_name not in tags and site_name not in tags_modified):
-                    tags_modified.append(site_name)
-                if replace_trackers := modify_options.get('replace_trackers'):
+                if tag_by_tracker:
+                    site_name = net_utils.get_site_name(tracker.get('url'))
+                    if site_name and site_name not in tags and site_name not in tags_modified:
+                        tags_modified.append(site_name)
+                if replace_trackers:
                     for old_str, new_str in replace_trackers.items():
                         tracker_url = tracker.get('url')
                         if tracker_url.startswith(old_str):
