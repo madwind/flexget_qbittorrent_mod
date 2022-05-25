@@ -5,8 +5,11 @@ from io import BytesIO
 from pathlib import Path
 from urllib.parse import urljoin
 
+from ..base.request import NetworkState, check_network_state
+from ..base.sign_in import SignState, check_sign_in_state, check_final_state
+from ..base.work import Work
 from ..utils import net_utils, baidu_ocr, dmhy_image
-from ..utils.state_checkers import check_network_state
+from ..utils.net_utils import get_module_name
 
 try:
     from fuzzywuzzy import fuzz, process
@@ -17,7 +20,6 @@ except ImportError:
 from loguru import logger
 
 from ..schema.nexusphp import NexusPHP
-from ..base.base import SignState, NetworkState, Work
 
 try:
     from PIL import Image
@@ -51,9 +53,9 @@ class MainClass(NexusPHP):
         self.times = 0
 
     @classmethod
-    def build_sign_in_schema(cls):
+    def sign_in_build_schema(cls):
         return {
-            cls.get_module_name(): {
+            get_module_name(cls): {
                 'type': 'object',
                 'properties': {
                     'username': {'type': 'string'},
@@ -73,32 +75,32 @@ class MainClass(NexusPHP):
             }
         }
 
-    def build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry, config):
         site_config = entry['site_config']
         succeed_regex = [self.USERNAME_REGEX.format(username=site_config.get('username')) + self.SUCCEED_REGEX,
                          '<a href="showup.php">已[签簽]到</a>']
         return [
             Work(
                 url='/showup.php?action=show',
-                method='get',
+                method=self.sign_in_by_get,
                 succeed_regex=succeed_regex,
-                check_state=('sign_in', SignState.NO_SIGN_IN),
+                assert_state=(check_sign_in_state, SignState.NO_SIGN_IN),
                 is_base_content=True
             ),
             Work(
                 url='/showup.php?action=show',
-                method='anime',
+                method=self.sign_in_by_anime,
                 data=self.DATA,
-                check_state=('network', NetworkState.SUCCEED),
+                assert_state=(check_network_state, NetworkState.SUCCEED),
                 img_regex='image\\.php\\?action=adbc2&req=.+?(?=&imagehash)',
                 reload_regex='image\\.php\\?action=reload_adbc2&div=showup&rand=\\d+'
             ),
             Work(
                 url='/showup.php?action=show',
-                method='get',
+                method=self.sign_in_by_get,
                 succeed_regex=succeed_regex,
                 fail_regex='这是一个杯具。<br />验证码已过期。',
-                check_state=('final', SignState.SUCCEED)
+                assert_state=(check_final_state, SignState.SUCCEED)
             )
         ]
 
@@ -276,8 +278,9 @@ class MainClass(NexusPHP):
         if new_image:
             new_image.save('dmhy/' + path)
 
-    def build_selector(self):
-        selector = super().build_selector()
+    @property
+    def details_selector(self) -> dict:
+        selector = super().details_selector
         net_utils.dict_merge(selector, {
             'details': {
                 'points': {

@@ -1,4 +1,6 @@
-from ..base.base import SignState, Work
+from ..base.sign_in import  SignState
+from ..base.work import Work
+from ..base.sign_in import check_final_state
 from ..schema.nexusphp import Visit
 
 
@@ -10,13 +12,13 @@ class MainClass(Visit):
         'days': [168, 336]
     }
 
-    def build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry, config):
         return [
             Work(
                 url='/index.php',
-                method='get',
+                method=self.sign_in_by_get,
                 succeed_regex=['欢迎'],
-                check_state=('final', SignState.SUCCEED),
+                assert_state=(check_final_state, SignState.SUCCEED),
                 is_base_content=True
             )
         ]

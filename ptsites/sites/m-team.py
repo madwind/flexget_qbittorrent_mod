@@ -1,10 +1,11 @@
 import re
 from urllib.parse import urljoin
 
-from ..base.base import SignState, NetworkState, Work
+from ..utils.net_utils import get_module_name
+from ..base.request import check_network_state, NetworkState
+from ..base.sign_in import check_final_state, SignState, Work
 from ..schema.nexusphp import NexusPHP
 from ..utils import net_utils, google_auth
-from ..utils.state_checkers import check_network_state
 
 
 class MainClass(NexusPHP):
@@ -16,9 +17,9 @@ class MainClass(NexusPHP):
     }
 
     @classmethod
-    def build_sign_in_schema(cls):
+    def sign_in_build_schema(cls):
         return {
-            cls.get_module_name(): {
+            get_module_name(cls): {
                 'type': 'object',
                 'properties': {
                     'login': {
@@ -35,20 +36,20 @@ class MainClass(NexusPHP):
             }
         }
 
-    def build_login_workflow(self, entry, config):
+    def sign_in_build_login_workflow(self, entry, config):
         return [
             Work(
                 url='/takelogin.php',
-                method='verify',
+                method=self.sign_in_by_verify,
                 succeed_regex=['歡迎回來'],
-                check_state=('final', SignState.SUCCEED),
+                assert_state=(check_final_state, SignState.SUCCEED),
                 response_urls=['/verify.php?returnto=', '/index.php'],
                 is_base_content=True,
                 verify_url='/verify.php?returnto=',
             )
         ]
 
-    def build_login_data(self, login, last_content):
+    def sign_in_build_login_data(self, login, last_content):
         return {
             'username': login['username'],
             'password': login['password'],
@@ -82,13 +83,14 @@ class MainClass(NexusPHP):
                 entry.fail_with_prefix('Attempts text not found!  with google_auth')
         return login_response
 
-    def get_message(self, entry, config):
-        self.get_nexusphp_message(entry, config)
+    def get_messages(self, entry, config):
+        self.get_nexusphp_messages(entry, config)
         system_message_url = '/messages.php?action=viewmailbox&box=-2'
-        self.get_nexusphp_message(entry, config, messages_url=system_message_url)
+        self.get_nexusphp_messages(entry, config, messages_url=system_message_url)
 
-    def build_selector(self):
-        selector = super().build_selector()
+    @property
+    def details_selector(self) -> dict:
+        selector = super().details_selector
         net_utils.dict_merge(selector, {
             'details': {
                 'hr': None

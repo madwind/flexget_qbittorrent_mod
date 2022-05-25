@@ -2,20 +2,22 @@ from datetime import datetime
 
 from loguru import logger
 
-from ..base.site_base import SiteBase
+from ..base.detail import Detail
+from ..base.sign_in import SignIn
 from ..client.qbittorrent_client import QBittorrentClient
+from ..utils.net_utils import get_module_name
 
 
-class MainClass(SiteBase):
+class MainClass(SignIn, Detail):
 
     def __init__(self):
         super().__init__()
         self.client = None
 
     @classmethod
-    def build_sign_in_schema(cls):
+    def sign_in_build_schema(cls):
         return {
-            cls.get_module_name(): {
+            get_module_name(cls): {
                 'type': 'array',
                 'items': {
                     'type': 'object',
@@ -34,11 +36,7 @@ class MainClass(SiteBase):
         }
 
     @classmethod
-    def build_reseed_schema(cls):
-        return {}
-
-    @classmethod
-    def build_sign_in_entry(cls, entry, config):
+    def sign_in_build_entry(cls, entry, config):
         entry['site_name'] = entry['site_config'].get('name')
         entry['title'] = f"{entry['site_name']} {datetime.now().date()}"
         entry['do_not_count'] = True
@@ -51,17 +49,14 @@ class MainClass(SiteBase):
                 entry['main_data_snapshot'] = self.client.get_main_data_snapshot(id(entry))
                 entry['result'] = 'ok!'
         except Exception as e:
-            entry.fail_with_prefix('error: {}'.format(e))
-
-    def get_message(self, entry, config):
-        pass
+            entry.fail_with_prefix(f'error: {e}')
 
     def get_details(self, entry, config):
         server_state = entry['main_data_snapshot']['server_state']
         torrents = entry['main_data_snapshot']['entry_dict']
         details = {
-            'downloaded': '{} B'.format(server_state['alltime_dl']),
-            'uploaded': '{} B'.format(server_state['alltime_ul']),
+            'downloaded': f'{server_state["alltime_dl"]} B',
+            'uploaded': f'{server_state["alltime_ul"]} B',
             'share_ratio': server_state['global_ratio'],
             'points': 0,
             'leeching': len(

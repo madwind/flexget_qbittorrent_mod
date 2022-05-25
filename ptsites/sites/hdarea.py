@@ -1,4 +1,5 @@
-from ..base.base import SignState, Work
+from ..base.sign_in import check_sign_in_state, SignState, check_final_state
+from ..base.work import Work
 from ..schema.nexusphp import NexusPHP
 from ..utils import net_utils
 
@@ -18,27 +19,28 @@ class MainClass(NexusPHP):
         }
     }
 
-    def build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry, config):
         return [
             Work(
                 url='/',
-                method='get',
+                method=self.sign_in_by_get,
                 succeed_regex=[
                     '<span id="sign_in_done"><font color="green">\\[已签到\\]</font></></font>&nbsp;\\(\\d+\\)'],
-                check_state=('sign_in', SignState.NO_SIGN_IN),
+                assert_state=(check_sign_in_state, SignState.NO_SIGN_IN),
                 is_base_content=True
             ),
             Work(
                 url='/sign_in.php?action=sign_in',
-                method='post',
+                method=self.sign_in_by_post,
                 data=self.DATA,
                 succeed_regex=['已连续签到.*天，此次签到您获得了.*魔力值奖励!|请不要重复签到哦！'],
-                check_state=('final', SignState.SUCCEED)
+                assert_state=(check_final_state, SignState.SUCCEED)
             )
         ]
 
-    def build_selector(self):
-        selector = super().build_selector()
+    @property
+    def details_selector(self) -> dict:
+        selector = super().details_selector
         net_utils.dict_merge(selector, {
             'detail_sources': {
                 'default': {

@@ -1,5 +1,6 @@
-from ..base.base import SignState, Work
-from ..schema.unit3d import Unit3D, handle_points
+from ..base.sign_in import check_final_state, SignState, Work
+from ..utils.net_utils import get_module_name
+from ..schema.unit3d import Unit3D
 from ..utils.value_hanlder import handle_join_date
 
 
@@ -19,9 +20,9 @@ class MainClass(Unit3D):
     URL = 'https://beyond-hd.me/'
 
     @classmethod
-    def build_sign_in_schema(cls):
+    def sign_in_build_schema(cls):
         return {
-            cls.get_module_name(): {
+            get_module_name(cls): {
                 'type': 'object',
                 'properties': {
                     'oneurl': {'type': 'string'},
@@ -31,21 +32,22 @@ class MainClass(Unit3D):
             }
         }
 
-    def build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry, config):
         site_config = entry['site_config']
         oneurl = site_config.get('oneurl')
         return [
             Work(
                 url=oneurl or '/',
-                method='get',
+                method=self.sign_in_by_get,
                 succeed_regex=['<title>BeyondHD | Beyond Your Imagination</title>'],
-                check_state=('final', SignState.SUCCEED),
+                assert_state=(check_final_state, SignState.SUCCEED),
                 is_base_content=True,
                 response_urls=['https://beyond-hd.me']
             )
         ]
 
-    def build_selector(self):
+    @property
+    def details_selector(self) -> dict:
         return {
             'user_id': '/([^.]+\.\d+)/badges"',
             'detail_sources': {
@@ -69,7 +71,7 @@ class MainClass(Unit3D):
                 },
                 'points': {
                     'regex': ('(魔力|BP:).+?(\\d[\\d,. ]*)', 2),
-                    'handle': handle_points
+                    'handle': self.handle_points
                 },
                 'join_date': {
                     'regex': ('(注册日期|Member Since:) (\\d{4}-\\d{2}-\\d{2})', 2),

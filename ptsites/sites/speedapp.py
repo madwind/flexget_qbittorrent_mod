@@ -1,15 +1,13 @@
 import re
 
-from ..base.base import SignState, NetworkState, Work
-from ..base.site_base import SiteBase
+from ..base.request import check_network_state, NetworkState
+from ..base.sign_in import check_final_state, SignState, Work
+from ..utils.net_utils import get_module_name
+from ..schema.private_torrent import PrivateTorrent
 from ..utils.value_hanlder import handle_infinite
 
 
-def handle_join_date(value):
-    return value.translate(str.maketrans('年月', '--', '日'))
-
-
-class MainClass(SiteBase):
+class MainClass(PrivateTorrent):
     URL = 'https://speedapp.io/'
     USER_CLASSES = {
         'uploaded': [109951162777600],
@@ -18,9 +16,9 @@ class MainClass(SiteBase):
     }
 
     @classmethod
-    def build_sign_in_schema(cls):
+    def sign_in_build_schema(cls):
         return {
-            cls.get_module_name(): {
+            get_module_name(cls): {
                 'type': 'object',
                 'properties': {
                     'login': {
@@ -36,24 +34,24 @@ class MainClass(SiteBase):
             }
         }
 
-    def build_login_workflow(self, entry, config):
+    def sign_in_build_login_workflow(self, entry, config):
         return [
             Work(
                 url='/zh/%E7%99%BB%E5%BD%95?locale=zh',
-                method='get',
-                check_state=('network', NetworkState.SUCCEED),
+                method=self.sign_in_by_get,
+                assert_state=(check_network_state, NetworkState.SUCCEED),
             ),
             Work(
                 url='/zh/登录?locale=zh',
-                method='login',
+                method=self.sign_in_by_login,
                 succeed_regex=['logout'],
-                check_state=('final', SignState.SUCCEED),
+                assert_state=(check_final_state, SignState.SUCCEED),
                 is_base_content=True,
                 response_urls=['/'],
             )
         ]
 
-    def build_login_data(self, login, last_content):
+    def sign_in_build_login_data(self, login, last_content):
         return {
             '_csrf_token': re.search(r'(?<=name="_csrf_token" value=").+?(?=")', last_content).group(),
             'username': login['username'],
@@ -61,7 +59,8 @@ class MainClass(SiteBase):
             '_remember_me': 'on',
         }
 
-    def build_selector(self):
+    @property
+    def details_selector(self) -> dict:
         return {
             'detail_sources': {
                 'menu-stats': {
@@ -108,7 +107,7 @@ class MainClass(SiteBase):
                     'regex': r'''(?x)注册日期
                                     \s*
                                     (\d + 年 \d + 月 \d + 日)''',
-                    'handle': handle_join_date
+                    'handle': self.handle_join_date
                 },
                 'seeding': {
                     'regex': r'''(?x)目前正在播种种子">
@@ -131,3 +130,6 @@ class MainClass(SiteBase):
                 }
             }
         }
+
+    def handle_join_date(self, value):
+        return value.translate(str.maketrans('年月', '--', '日'))

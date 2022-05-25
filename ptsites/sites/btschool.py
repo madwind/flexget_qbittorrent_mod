@@ -1,10 +1,12 @@
 import re
 from urllib.parse import urljoin
 
-from ..base.base import SignState, NetworkState, Work
+from ..base.request import check_network_state, NetworkState
+from ..base.sign_in import  SignState
+from ..base.work import Work
+from ..base.sign_in import check_final_state
 from ..schema.nexusphp import NexusPHP
 from ..utils import net_utils
-from ..utils.state_checkers import check_network_state
 
 
 class MainClass(NexusPHP):
@@ -16,19 +18,20 @@ class MainClass(NexusPHP):
         'days': [280, 700]
     }
 
-    def build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry, config):
         return [
             Work(
                 url='/index.php?action=addbonus',
-                method='location',
+                method=self.sign_in_by_location,
                 succeed_regex=['欢迎回来'],
-                check_state=('final', SignState.SUCCEED),
+                assert_state=(check_final_state, SignState.SUCCEED),
                 is_base_content=True
             ),
         ]
 
-    def build_selector(self):
-        selector = super().build_selector()
+    @property
+    def details_selector(self) -> dict:
+        selector = super().details_selector
         net_utils.dict_merge(selector, {
             'detail_sources': {
                 'default': {

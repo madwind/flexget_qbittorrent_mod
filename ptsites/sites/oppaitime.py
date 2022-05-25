@@ -1,4 +1,5 @@
-from ..base.base import SignState, Work
+from ..base.sign_in import check_final_state, SignState, Work
+
 from ..schema.gazelle import Gazelle
 from ..utils import net_utils
 
@@ -12,19 +13,20 @@ class MainClass(Gazelle):
         'points': [10000]
     }
 
-    def build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry, config):
         return [
             Work(
                 url='/',
-                method='get',
+                method=self.sign_in_by_get,
                 succeed_regex=['<h1 class="hidden">Oppaitime</h1>'],
-                check_state=('final', SignState.SUCCEED),
+                assert_state=(check_final_state, SignState.SUCCEED),
                 is_base_content=True
             )
         ]
 
-    def build_selector(self):
-        selector = super().build_selector()
+    @property
+    def details_selector(self) -> dict:
+        selector = super().details_selector
         net_utils.dict_merge(selector, {
             'detail_sources': {
                 'default': {

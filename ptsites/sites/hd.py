@@ -1,6 +1,7 @@
 from urllib.parse import urljoin
 
 from ..schema.nexusphp import Visit
+from ..utils.net_utils import get_module_name
 
 
 class MainClass(Visit):
@@ -15,9 +16,9 @@ class MainClass(Visit):
     }
 
     @classmethod
-    def build_reseed_schema(cls):
+    def reseed_build_schema(cls):
         return {
-            cls.get_module_name(): {
+            get_module_name(cls): {
                 'type': 'object',
                 'properties': {
                     'cookie': {'type': 'string'}
@@ -27,6 +28,6 @@ class MainClass(Visit):
         }
 
     @classmethod
-    def build_reseed_entry(cls, entry, config, site, passkey, torrent_id):
-        cls.build_reseed_from_page(entry, config, passkey, torrent_id, cls.URL, cls.TORRENT_PAGE_URL,
-                                   cls.DOWNLOAD_URL_REGEX)
+    def reseed_build_entry(cls, entry, config, site, passkey, torrent_id):
+        cls.reseed_build_entry_from_page(entry, config, passkey, torrent_id, cls.URL, cls.TORRENT_PAGE_URL,
+                                         cls.DOWNLOAD_URL_REGEX)

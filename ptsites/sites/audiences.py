@@ -1,5 +1,6 @@
 from urllib.parse import urljoin
 
+from ..utils.net_utils import get_module_name
 from ..schema.nexusphp import AttendanceHR
 from ..utils import net_utils
 
@@ -12,8 +13,9 @@ class MainClass(AttendanceHR):
         'days': [560, 784]
     }
 
-    def build_selector(self):
-        selector = super().build_selector()
+    @property
+    def details_selector(self) -> dict:
+        selector = super().details_selector
         net_utils.dict_merge(selector, {
             'detail_sources': {
                 'default': {
@@ -31,9 +33,9 @@ class MainClass(AttendanceHR):
         return selector
 
     @classmethod
-    def build_reseed_schema(cls):
+    def reseed_build_schema(cls):
         return {
-            cls.get_module_name(): {
+            get_module_name(cls): {
                 'type': 'object',
                 'properties': {
                     'cookie': {'type': 'string'}
@@ -43,7 +45,7 @@ class MainClass(AttendanceHR):
         }
 
     @classmethod
-    def build_reseed_entry(cls, entry, config: dict, site, passkey, torrent_id):
+    def reseed_build_entry(cls, entry, config: dict, site, passkey, torrent_id):
         download_page = f'download.php?id={torrent_id}'
         entry['url'] = urljoin(MainClass.URL, download_page)
         entry['cookie'] = passkey['cookie']

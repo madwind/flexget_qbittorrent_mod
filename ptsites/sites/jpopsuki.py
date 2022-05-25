@@ -1,6 +1,10 @@
-from ..base.base import SignState, NetworkState, Work
+from ..base.request import NetworkState
+from ..base.request import check_network_state
+from ..base.sign_in import check_final_state, SignState, Work
+
 from ..schema.gazelle import Gazelle
 from ..utils import net_utils
+from ..utils.net_utils import get_module_name
 
 
 class MainClass(Gazelle):
@@ -12,9 +16,9 @@ class MainClass(Gazelle):
     }
 
     @classmethod
-    def build_sign_in_schema(cls):
+    def sign_in_build_schema(cls):
         return {
-            cls.get_module_name(): {
+            get_module_name(cls): {
                 'type': 'object',
                 'properties': {
                     'cookie': {'type': 'string'},
@@ -31,17 +35,17 @@ class MainClass(Gazelle):
             }
         }
 
-    def build_login_workflow(self, entry, config):
+    def sign_in_build_login_workflow(self, entry, config):
         return [
             Work(
                 url='/login.php',
-                method='login',
-                check_state=('network', NetworkState.SUCCEED),
+                method=self.sign_in_by_login,
+                assert_state=(check_network_state, NetworkState.SUCCEED),
                 response_urls=['/index.php'],
             ),
         ]
 
-    def build_login_data(self, login, last_content):
+    def sign_in_build_login_data(self, login, last_content):
         return {
             'username': login['username'],
             'password': login['password'],
@@ -49,19 +53,20 @@ class MainClass(Gazelle):
             'login': 'Log In!',
         }
 
-    def build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry, config):
         return [
             Work(
                 url='/',
-                method='get',
+                method=self.sign_in_by_get,
                 succeed_regex=['JPopsuki 2.0'],
-                check_state=('final', SignState.SUCCEED),
+                assert_state=(check_final_state, SignState.SUCCEED),
                 is_base_content=True
             )
         ]
 
-    def build_selector(self):
-        selector = super().build_selector()
+    @property
+    def details_selector(self) -> dict:
+        selector = super().details_selector
         net_utils.dict_merge(selector, {
             'user_id': 'user.php\\?id=(\\d+)',
             'detail_sources': {

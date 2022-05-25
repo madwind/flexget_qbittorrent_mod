@@ -2,7 +2,8 @@ import ast
 import hashlib
 from urllib.parse import urljoin
 
-from ..base.base import SignState, NetworkState, Work
+from ..base.request import check_network_state, NetworkState
+from ..base.sign_in import check_final_state, SignState, Work
 from ..schema.xbt import XBT
 
 
@@ -14,23 +15,23 @@ class MainClass(XBT):
         'days': [90],
     }
 
-    def build_login_workflow(self, entry, config):
+    def sign_in_build_login_workflow(self, entry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/login.php?returnto=%2F',
-                method='get',
-                check_state=('network', NetworkState.SUCCEED),
+                method=self.sign_in_by_get,
+                assert_state=(check_network_state, NetworkState.SUCCEED),
             ),
             Work(
                 url='/simpleCaptcha.php',
-                method='get',
-                check_state=('network', NetworkState.SUCCEED),
+                method=self.sign_in_by_get,
+                assert_state=(check_network_state, NetworkState.SUCCEED),
             ),
             Work(
                 url='/takelogin.php',
-                method='login',
+                method=self.sign_in_by_login,
                 succeed_regex=['Logout'],
-                check_state=('final', SignState.SUCCEED),
+                assert_state=(check_final_state, SignState.SUCCEED),
                 is_base_content=True,
                 response_urls=['/']
             )

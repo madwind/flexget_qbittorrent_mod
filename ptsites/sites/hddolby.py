@@ -1,3 +1,4 @@
+from ..utils.net_utils import get_module_name
 from ..schema.nexusphp import AttendanceHR
 
 
@@ -10,9 +11,9 @@ class MainClass(AttendanceHR):
     }
 
     @classmethod
-    def build_reseed_schema(cls):
+    def reseed_build_schema(cls):
         return {
-            cls.get_module_name(): {
+            get_module_name(cls): {
                 'type': 'object',
                 'properties': {
                     'cookie': {'type': 'string'}

@@ -11,8 +11,9 @@ class MainClass(Visit):
         'days': [420, 1050]
     }
 
-    def build_selector(self):
-        selector = super().build_selector()
+    @property
+    def details_selector(self) -> dict:
+        selector = super().details_selector
         net_utils.dict_merge(selector, {
             'detail_sources': {
                 'default': {

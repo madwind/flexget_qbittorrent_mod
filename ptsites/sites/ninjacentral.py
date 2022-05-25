@@ -1,14 +1,15 @@
-from ..base.base import SignState, Work
-from ..base.site_base import SiteBase
+from ..base.sign_in import check_final_state, SignState, Work
+from ..utils.net_utils import get_module_name
+from ..schema.private_torrent import PrivateTorrent
 
 
-class MainClass(SiteBase):
+class MainClass(PrivateTorrent):
     URL = 'https://ninjacentral.co.za/'
 
     @classmethod
-    def build_sign_in_schema(cls):
+    def sign_in_build_schema(cls):
         return {
-            cls.get_module_name(): {
+            get_module_name(cls): {
                 'type': 'object',
                 'properties': {
                     'login': {
@@ -24,19 +25,19 @@ class MainClass(SiteBase):
             }
         }
 
-    def build_login_workflow(self, entry, config):
+    def sign_in_build_login_workflow(self, entry, config):
         return [
             Work(
                 url='/login',
-                method='login',
+                method=self.sign_in_by_login,
                 succeed_regex=['Logout'],
-                check_state=('final', SignState.SUCCEED),
+                assert_state=(check_final_state, SignState.SUCCEED),
                 is_base_content=True,
                 response_urls=['/']
             )
         ]
 
-    def build_login_data(self, login, last_content):
+    def sign_in_build_login_data(self, login, last_content):
         return {
             'redirect': '',
             'username': login['username'],
@@ -44,7 +45,8 @@ class MainClass(SiteBase):
             'rememberme': 'on'
         }
 
-    def build_selector(self):
+    @property
+    def details_selector(self) -> dict:
         return {
             'detail_sources': {
                 'default': {

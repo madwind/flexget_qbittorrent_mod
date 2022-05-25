@@ -1,4 +1,4 @@
-from ..schema.xbtit import XBTIT, handle_join_date
+from ..schema.xbtit import XBTIT
 from ..utils import net_utils
 from ..utils.value_hanlder import handle_infinite
 
@@ -11,8 +11,9 @@ class MainClass(XBTIT):
         'share_ratio': [4.25]
     }
 
-    def build_selector(self):
-        selector = super().build_selector()
+    @property
+    def details_selector(self) -> dict:
+        selector = super().details_selector
         net_utils.dict_merge(selector, {
             'user_id': 'index.php\\?page=usercp&amp;uid=(\\d+)',
             'detail_sources': {
@@ -42,7 +43,7 @@ class MainClass(XBTIT):
                 },
                 'join_date': {
                     'regex': 'Joined on.{5}(.*?\\d{4})',
-                    'handle': handle_join_date
+                    'handle': self.handle_join_date
                 },
                 'seeding': None,
                 'leeching': None,
@@ -52,6 +53,6 @@ class MainClass(XBTIT):
         })
         return selector
 
-    def get_message(self, entry, config):
+    def get_messages(self, entry, config):
         self.get_XBTIT_message(entry, config,
                                MESSAGES_URL_REGEX='index.php\\?page=usercp&amp;uid=\\d+&amp;do=pm&amp;action=list')

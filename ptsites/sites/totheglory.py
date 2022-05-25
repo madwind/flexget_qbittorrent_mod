@@ -1,14 +1,7 @@
-from ..base.base import SignState, Work
+from ..base.sign_in import check_final_state, SignState,  check_sign_in_state
+from ..base.work import Work
 from ..schema.nexusphp import NexusPHP
 from ..utils import net_utils
-
-
-def handle_size(size):
-    return size.upper()
-
-
-def handle_hr(hr):
-    return str(15 - int(hr))
 
 
 class MainClass(NexusPHP):
@@ -29,26 +22,27 @@ class MainClass(NexusPHP):
         entry.fail_with_prefix("公告禁止使用脚本，请移除")
         return
 
-    def build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry, config):
         return [
             Work(
                 url='/',
-                method='get',
+                method=self.sign_in_by_get,
                 succeed_regex=['<b style="color:green;">已签到</b>'],
-                check_state=('sign_in', SignState.NO_SIGN_IN),
+                assert_state=(check_sign_in_state, SignState.NO_SIGN_IN),
                 is_base_content=True
             ),
             Work(
                 url='/signed.php',
-                method='post',
+                method=self.sign_in_by_post,
                 data=self.DATA,
                 succeed_regex=['您已连续签到\\d+天，奖励\\d+积分，明天继续签到将获得\\d+积分奖励。'],
-                check_state=('final', SignState.SUCCEED),
+                assert_state=(check_final_state, SignState.SUCCEED),
             )
         ]
 
-    def build_selector(self):
-        selector = super().build_selector()
+    @property
+    def details_selector(self) -> dict:
+        selector = super().details_selector
         net_utils.dict_merge(selector, {
             'detail_sources': {
                 'default': {
@@ -61,11 +55,11 @@ class MainClass(NexusPHP):
             'details': {
                 'uploaded': {
                     'regex': ('(上[传傳]量|Uploaded).+?([\\d.]+ ?[ZEPTGMk]?i?B)', 2),
-                    'handle': handle_size
+                    'handle': self.handle_size
                 },
                 'downloaded': {
                     'regex': ('(下[载載]量|Downloaded).+?([\\d.]+ ?[ZEPTGMk]?i?B)', 2),
-                    'handle': handle_size
+                    'handle': self.handle_size
                 },
                 'points': {
                     'regex': '积分.*?([\\d,.]+)'
@@ -78,8 +72,14 @@ class MainClass(NexusPHP):
                 },
                 'hr': {
                     'regex': 'HP.*?(\\d+)',
-                    'handle': handle_hr
+                    'handle': self.handle_hr
                 }
             }
         })
         return selector
+
+    def handle_size(self, size):
+        return size.upper()
+
+    def handle_hr(self, hr):
+        return str(15 - int(hr))

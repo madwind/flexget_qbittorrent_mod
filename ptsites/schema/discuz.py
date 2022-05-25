@@ -1,10 +1,11 @@
 from abc import ABC
 
-from ..base.site_base import SiteBase
+from .private_torrent import PrivateTorrent
 
 
-class Discuz(SiteBase, ABC):
-    def build_selector(self):
+class Discuz(PrivateTorrent, ABC):
+    @property
+    def details_selector(self) -> dict:
         return {
             'user_id': r'home\.php\?mod=space&amp;uid=(\d+)',
             'detail_sources': {

@@ -10,8 +10,9 @@ class MainClass(Visit):
         'days': [175, 350]
     }
 
-    def build_selector(self):
-        selector = super().build_selector()
+    @property
+    def details_selector(self) -> dict:
+        selector = super().details_selector
         net_utils.dict_merge(selector, {
             'details': {
                 'points': {

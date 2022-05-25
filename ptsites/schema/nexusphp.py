@@ -7,19 +7,21 @@ from urllib.parse import urljoin
 from flexget.utils.soup import get_soup
 from loguru import logger
 
-from ..base.base import SignState, NetworkState, Work
-from ..base.site_base import SiteBase
+from .private_torrent import PrivateTorrent
+from ..base.request import check_network_state, NetworkState
+from ..base.sign_in import  SignState, check_final_state, check_sign_in_state
+from ..base.work import Work
 from ..utils import net_utils
-from ..utils.state_checkers import check_sign_in_state, check_network_state
 from ..utils.value_hanlder import handle_infinite
 
 
-class NexusPHP(SiteBase, ABC):
+class NexusPHP(PrivateTorrent, ABC):
 
-    def get_message(self, entry, config):
-        self.get_nexusphp_message(entry, config)
+    def get_messages(self, entry, config):
+        self.get_nexusphp_messages(entry, config)
 
-    def build_selector(self):
+    @property
+    def details_selector(self) -> dict:
         return {
             'user_id': r'userdetails\.php\?id=(\d+)',
             'detail_sources': {
@@ -60,8 +62,8 @@ class NexusPHP(SiteBase, ABC):
             }
         }
 
-    def get_nexusphp_message(self, entry, config, messages_url='/messages.php?action=viewmailbox&box=1&unread=yes',
-                             unread_elements_selector='td > img[alt*="Unread"]'):
+    def get_nexusphp_messages(self, entry, config, messages_url='/messages.php?action=viewmailbox&box=1&unread=yes',
+                              unread_elements_selector='td > img[alt*="Unread"]'):
         message_url = urljoin(entry['url'], messages_url)
         message_box_response = self.request(entry, 'get', message_url)
         message_box_network_state = check_network_state(entry, message_url, message_box_response)
@@ -93,24 +95,25 @@ class NexusPHP(SiteBase, ABC):
 
 
 class AttendanceHR(NexusPHP, ABC):
-    def build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry, config):
         return [
             Work(
                 url='/attendance.php',
-                method='get',
+                method=self.sign_in_by_get,
                 succeed_regex=[
                     '这是您的第.*?次签到，已连续签到.*?天，本次签到获得.*?魔力值。|這是您的第.*次簽到，已連續簽到.*?天，本次簽到獲得.*?魔力值。',
                     '[签簽]到已得\\d+',
                     '您今天已经签到过了，请勿重复刷新。|您今天已經簽到過了，請勿重複刷新。'],
-                check_state=('final', SignState.SUCCEED),
+                assert_state=(check_final_state, SignState.SUCCEED),
                 is_base_content=True
             )
         ]
 
 
 class Attendance(AttendanceHR, ABC):
-    def build_selector(self):
-        selector = super().build_selector()
+    @property
+    def details_selector(self) -> dict:
+        selector = super().details_selector
         net_utils.dict_merge(selector, {
             'details': {
                 'hr': None
@@ -120,18 +123,18 @@ class Attendance(AttendanceHR, ABC):
 
 
 class BakatestHR(NexusPHP, ABC):
-    def build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry, config):
         return [
             Work(
                 url='/bakatest.php',
-                method='get',
+                method=self.sign_in_by_get,
                 succeed_regex=['今天已经签过到了\\(已连续.*天签到\\)'],
-                check_state=('sign_in', SignState.NO_SIGN_IN),
+                assert_state=(check_sign_in_state, SignState.NO_SIGN_IN),
                 is_base_content=True
             ),
             Work(
                 url='/bakatest.php',
-                method='question',
+                method=self.sign_in_by_question,
                 succeed_regex=['连续.*天签到,获得.*点魔力值|今天已经签过到了\\(已连续.*天签到\\)'],
                 fail_regex='回答错误,失去 1 魔力值,这道题还会再考一次',
             )
@@ -197,8 +200,9 @@ class BakatestHR(NexusPHP, ABC):
 
 
 class Bakatest(BakatestHR, ABC):
-    def build_selector(self):
-        selector = super().build_selector()
+    @property
+    def details_selector(self) -> dict:
+        selector = super().details_selector
         net_utils.dict_merge(selector, {
             'details': {
                 'hr': None
@@ -210,21 +214,22 @@ class Bakatest(BakatestHR, ABC):
 class VisitHR(NexusPHP, ABC):
     SUCCEED_REGEX = '[欢歡]迎回[来來家]'
 
-    def build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry, config):
         return [
             Work(
                 url='/',
-                method='get',
+                method=self.sign_in_by_get,
                 succeed_regex=[self.SUCCEED_REGEX],
-                check_state=('final', SignState.SUCCEED),
+                assert_state=(check_final_state, SignState.SUCCEED),
                 is_base_content=True
             )
         ]
 
 
 class Visit(VisitHR, ABC):
-    def build_selector(self):
-        selector = super().build_selector()
+    @property
+    def details_selector(self) -> dict:
+        selector = super().details_selector
         net_utils.dict_merge(selector, {
             'details': {
                 'hr': None

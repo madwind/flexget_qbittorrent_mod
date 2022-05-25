@@ -4,25 +4,15 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from flexget.entry import Entry
 
-from ..base.base import SignState, NetworkState, Work
-from ..base.site_base import SiteBase
+from ..base.request import check_network_state, NetworkState
+from ..base.sign_in import  SignState, check_final_state
+from ..base.work import Work
+from ..utils.net_utils import get_module_name
+from ..schema.private_torrent import PrivateTorrent
 from ..utils.value_hanlder import handle_infinite
 
 
-def handle_amount_of_data(value: str) -> str:
-    return value.replace('o', 'B')
-
-
-def handle_join_date(value: str) -> datetime:
-    value_split = value.removeprefix('Il y a ').replace('et', '').replace('seconde', 'second') \
-        .replace('heure', 'hour').replace('journée', 'day').replace('jours', 'days').replace('semaine', 'week') \
-        .replace('mois', 'months').replace('an', 'year').replace('années', 'years').split()
-    return datetime.now() - relativedelta(**dict(
-        (unit if unit.endswith('s') else f'{unit}s', int(amount)) for amount, unit in
-        [value_split[i:i + 2] for i in range(0, len(value_split), 2)]))
-
-
-class MainClass(SiteBase):
+class MainClass(PrivateTorrent):
     URL = 'https://abn.lol/'
     USER_CLASSES = {
         'uploaded': [5368709120000],
@@ -30,9 +20,9 @@ class MainClass(SiteBase):
     }
 
     @classmethod
-    def build_sign_in_schema(cls) -> dict:
+    def sign_in_build_schema(cls) -> dict:
         return {
-            cls.get_module_name(): {
+            get_module_name(cls): {
                 'type': 'object',
                 'properties': {
                     'login': {
@@ -48,24 +38,24 @@ class MainClass(SiteBase):
             }
         }
 
-    def build_login_workflow(self, entry: Entry, config: dict) -> list[Work]:
+    def sign_in_build_login_workflow(self, entry: Entry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/Home/Login?ReturnUrl=%2F',
-                method='get',
-                check_state=('network', NetworkState.SUCCEED),
+                method=self.sign_in_by_get,
+                assert_state=(check_network_state, NetworkState.SUCCEED),
             ),
             Work(
                 url='/Home/Login',
-                method='login',
+                method=self.sign_in_by_login,
                 succeed_regex=[r'Déconnexion'],
-                check_state=('final', SignState.SUCCEED),
+                assert_state=(check_final_state, SignState.SUCCEED),
                 is_base_content=True,
                 response_urls=['/'],
             )
         ]
 
-    def build_login_data(self, login: dict, last_content: str) -> dict:
+    def sign_in_build_login_data(self, login: dict, last_content: str) -> dict:
         return {
             'Username': login['username'],
             'Password': login['password'],
@@ -74,7 +64,8 @@ class MainClass(SiteBase):
                 r'(?<=name="__RequestVerificationToken" type="hidden" value=").*?(?=")', last_content).group(),
         }
 
-    def build_selector(self) -> dict:
+    @property
+    def details_selector(self) -> dict:
         return {
             'detail_sources': {
                 'default': {
@@ -89,12 +80,12 @@ class MainClass(SiteBase):
                 'uploaded': {
                     'regex': r'''(?x)Upload\ :\ 
                                     ([\d.] + \ [ZEPTGMK] ? o)''',
-                    'handle': handle_amount_of_data
+                    'handle': self.handle_amount_of_data
                 },
                 'downloaded': {
                     'regex': r'''(?x)Download\ :\ 
                                     ([\d.] + \ [ZEPTGMK] ? o)''',
-                    'handle': handle_amount_of_data
+                    'handle': self.handle_amount_of_data
                 },
                 'share_ratio': {
                     'regex': r'''(?x)Ratio\ :\ 
@@ -109,10 +100,21 @@ class MainClass(SiteBase):
                     'regex': r'''(?mx)Inscrit\ :\ 
                                     (. +?)
                                     $''',
-                    'handle': handle_join_date
+                    'handle': self.handle_join_date
                 },
                 'seeding': None,
                 'leeching': None,
                 'hr': None
             }
         }
+
+    def handle_amount_of_data(self, value: str) -> str:
+        return value.replace('o', 'B')
+
+    def handle_join_date(self, value: str) -> datetime:
+        value_split = value.removeprefix('Il y a ').replace('et', '').replace('seconde', 'second') \
+            .replace('heure', 'hour').replace('journée', 'day').replace('jours', 'days').replace('semaine', 'week') \
+            .replace('mois', 'months').replace('an', 'year').replace('années', 'years').split()
+        return datetime.now() - relativedelta(**dict(
+            (unit if unit.endswith('s') else f'{unit}s', int(amount)) for amount, unit in
+            [value_split[i:i + 2] for i in range(0, len(value_split), 2)]))

@@ -5,34 +5,19 @@ from urllib.parse import urljoin
 
 from flexget.utils.soup import get_soup
 
-from ..base.base import NetworkState
-from ..base.site_base import SiteBase
+from .private_torrent import PrivateTorrent
+from ..base.request import check_network_state, NetworkState
 from ..utils import net_utils
-from ..utils.state_checkers import check_network_state
 from ..utils.value_hanlder import handle_infinite
 
 
-def handle_join_date(value):
-    year_regex = '(\\d+) (年|years?)'
-    month_regex = '(\\d+) (月|months?)'
-    week_regex = '(\\d+) (周|weeks?)'
-    year = 0
-    month = 0
-    week = 0
-    if year_match := re.search(year_regex, value):
-        year = int(year_match.group(1))
-    if month_match := re.search(month_regex, value):
-        month = int(month_match.group(1))
-    if week_match := re.search(week_regex, value):
-        week = int(week_match.group(1))
-    return (datetime.datetime.now() - datetime.timedelta(days=year * 365 + month * 31 + week * 7)).date()
+class Gazelle(PrivateTorrent, ABC):
 
-
-class Gazelle(SiteBase, ABC):
-    def get_message(self, entry, config):
+    def get_messages(self, entry, config):
         self.get_gazelle_message(entry, config)
 
-    def build_selector(self):
+    @property
+    def details_selector(self) -> dict:
         return {
             'user_id': r'user\.php\?id=(\d+)',
             'detail_sources': {
@@ -57,7 +42,7 @@ class Gazelle(SiteBase, ABC):
                 },
                 'join_date': {
                     'regex': ('(Joined|加入时间).*?(.*?)(ago|前)', 2),
-                    'handle': handle_join_date
+                    'handle': self.handle_join_date
                 },
                 'seeding': {
                     'regex': r'[Ss]eeding.+?([\d,]+)'
@@ -95,3 +80,18 @@ class Gazelle(SiteBase, ABC):
                 '\nTitle: {}\nLink: {}\n{}'.format(title, message_url, message_body))
         if failed:
             entry.fail_with_prefix('Can not read message body!')
+
+    def handle_join_date(self, value):
+        year_regex = '(\\d+) (年|years?)'
+        month_regex = '(\\d+) (月|months?)'
+        week_regex = '(\\d+) (周|weeks?)'
+        year = 0
+        month = 0
+        week = 0
+        if year_match := re.search(year_regex, value):
+            year = int(year_match.group(1))
+        if month_match := re.search(month_regex, value):
+            month = int(month_match.group(1))
+        if week_match := re.search(week_regex, value):
+            week = int(week_match.group(1))
+        return (datetime.datetime.now() - datetime.timedelta(days=year * 365 + month * 31 + week * 7)).date()

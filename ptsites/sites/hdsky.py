@@ -2,11 +2,13 @@ import json
 from io import BytesIO
 from urllib.parse import urljoin
 
-from ..base.base import SignState, NetworkState, Work
+from ..base.request import check_network_state, NetworkState
+from ..base.sign_in import check_final_state, SignState, check_sign_in_state
+from ..base.work import Work
 from ..schema.nexusphp import NexusPHP
 from ..utils import baidu_ocr
 from ..utils import net_utils
-from ..utils.state_checkers import check_network_state
+from ..utils.net_utils import get_module_name
 
 try:
     from PIL import Image
@@ -25,9 +27,9 @@ class MainClass(NexusPHP):
     }
 
     @classmethod
-    def build_reseed_schema(cls):
+    def reseed_build_schema(cls):
         return {
-            cls.get_module_name(): {
+            get_module_name(cls): {
                 'type': 'object',
                 'properties': {
                     'cookie': {'type': 'string'}
@@ -36,21 +38,21 @@ class MainClass(NexusPHP):
             }
         }
 
-    def build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry, config):
         return [
             Work(
                 url='/',
-                method='get',
+                method=self.sign_in_by_get,
                 succeed_regex=['已签到'],
-                check_state=('sign_in', SignState.NO_SIGN_IN),
+                assert_state=(check_sign_in_state, SignState.NO_SIGN_IN),
                 is_base_content=True,
             ),
             Work(
                 url='/showup.php',
-                method='ocr',
+                method=self.sign_in_by_ocr,
                 succeed_regex=['{"success":true,"message":\\d+}'],
                 fail_regex='{"success":false,"message":"invalid_imagehash"}',
-                check_state=('final', SignState.SUCCEED),
+                assert_state=(check_final_state, SignState.SUCCEED),
 
                 image_hash_url='/image_code_ajax.php',
                 image_url='/image.php?action=regimage&imagehash={}',
@@ -90,8 +92,9 @@ class MainClass(NexusPHP):
                 }
                 return self.request(entry, 'post', work.url, files=data)
 
-    def build_selector(self):
-        selector = super().build_selector()
+    @property
+    def details_selector(self) -> dict:
+        selector = super().details_selector
         net_utils.dict_merge(selector, {
             'details': {
                 'hr': None
@@ -100,6 +103,6 @@ class MainClass(NexusPHP):
         return selector
 
     @classmethod
-    def build_reseed_entry(cls, entry, config, site, passkey, torrent_id):
-        cls.build_reseed_from_page(entry, config, passkey, torrent_id, cls.URL, cls.TORRENT_PAGE_URL,
-                                   cls.DOWNLOAD_URL_REGEX)
+    def reseed_build_entry(cls, entry, config, site, passkey, torrent_id):
+        cls.reseed_build_entry_from_page(entry, config, passkey, torrent_id, cls.URL, cls.TORRENT_PAGE_URL,
+                                         cls.DOWNLOAD_URL_REGEX)

@@ -1,4 +1,6 @@
-from ..base.base import SignState, Work
+from ..base.sign_in import  SignState
+from ..base.work import Work
+from ..base.sign_in import check_final_state
 from ..schema.luminance import Luminance
 
 
@@ -10,19 +12,19 @@ class MainClass(Luminance):
         'days': [56]
     }
 
-    def build_login_workflow(self, entry, config):
+    def sign_in_build_login_workflow(self, entry, config):
         return [
             Work(
                 url='/login.php',
-                method='login',
+                method=self.sign_in_by_login,
                 succeed_regex=['Logout'],
-                check_state=('final', SignState.SUCCEED),
+                assert_state=(check_final_state, SignState.SUCCEED),
                 is_base_content=True,
                 response_urls=['/index.php']
             )
         ]
 
-    def build_login_data(self, login, last_content):
+    def sign_in_build_login_data(self, login, last_content):
         return {
             'username': login['username'],
             'password': login['password'],

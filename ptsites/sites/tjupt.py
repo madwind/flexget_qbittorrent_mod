@@ -2,22 +2,10 @@ import re
 
 import requests
 
-from ..base.base import SignState, Work
+from ..base.sign_in import check_final_state, SignState,  check_sign_in_state
+from ..base.work import Work
 from ..schema.nexusphp import NexusPHP
 from ..utils import net_utils
-
-
-def handle_hr(hr):
-    return str(100 - int(hr))
-
-
-def get_answer(config, img_name, answers):
-    for value, answer in answers:
-        movies = requests.get(f'https://movie.douban.com/j/subject_suggest?q={answer}',
-                              headers={'user-agent': config.get('user-agent')}).json()
-        for movie in movies:
-            if img_name in movie.get('img'):
-                return value
 
 
 class MainClass(NexusPHP):
@@ -29,26 +17,27 @@ class MainClass(NexusPHP):
         'days': [336, 924]
     }
 
-    def build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry, config):
         return [
             Work(
                 url='/attendance.php',
-                method='get',
+                method=self.sign_in_by_get,
                 succeed_regex=['今日已签到'],
-                check_state=('sign_in', SignState.NO_SIGN_IN),
+                assert_state=(check_sign_in_state, SignState.NO_SIGN_IN),
                 is_base_content=True
             ),
             Work(
                 url='/attendance.php',
-                method='douban',
+                method=self.sign_in_by_douban,
                 succeed_regex=['这是您的首次签到，本次签到获得.*?个魔力值。',
-                               '今日已签到，已累计签到.*?次，已连续签到.*?天，今日获得了.*?个魔力值。'],
-                check_state=('final', SignState.SUCCEED)
+                               '签到成功，这是您的第.*?次签到，已连续签到.*?天，本次签到获得.*?个魔力值。'],
+                assert_state=(check_final_state, SignState.SUCCEED)
             )
         ]
 
-    def build_selector(self):
-        selector = super().build_selector()
+    @property
+    def details_selector(self) -> dict:
+        selector = super().details_selector
         net_utils.dict_merge(selector, {
             'details': {
                 'downloaded': None,
@@ -61,7 +50,7 @@ class MainClass(NexusPHP):
                 },
                 'hr': {
                     'regex': 'H&R.*?(\\d+)',
-                    'handle': handle_hr
+                    'handle': self.handle_hr
                 }
 
             }
@@ -71,8 +60,19 @@ class MainClass(NexusPHP):
     def sign_in_by_douban(self, entry, config, work, last_content=None):
         img_name = re.search(self.IMG_REGEX, last_content).group(1)
         answers = re.findall(self.ANSWER_REGEX, last_content)
-        answer = get_answer(config, img_name, answers)
+        answer = self.get_answer(config, img_name, answers)
         return self.request(entry, 'post', work.url, data={
             'answer': answer,
             'submit': '提交'
         })
+
+    def get_answer(self, config, img_name, answers):
+        for value, answer in answers:
+            movies = requests.get(f'https://movie.douban.com/j/subject_suggest?q={answer}',
+                                  headers={'user-agent': config.get('user-agent')}).json()
+            for movie in movies:
+                if img_name in movie.get('img'):
+                    return value
+
+    def handle_hr(self, hr):
+        return str(100 - int(hr))

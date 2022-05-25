@@ -1,4 +1,7 @@
-from ..base.base import NetworkState, Work
+from ..base.request import check_network_state, NetworkState
+from ..base.sign_in import Work
+from ..utils.net_utils import get_module_name
+
 from ..schema.nexusphp import AttendanceHR
 from ..utils import google_auth
 
@@ -12,9 +15,9 @@ class MainClass(AttendanceHR):
     }
 
     @classmethod
-    def build_sign_in_schema(cls):
+    def sign_in_build_schema(cls):
         return {
-            cls.get_module_name(): {
+            get_module_name(cls): {
                 'type': 'object',
                 'properties': {
                     'cookie': {'type': 'string'},
@@ -32,17 +35,17 @@ class MainClass(AttendanceHR):
             }
         }
 
-    def build_login_workflow(self, entry, config):
+    def sign_in_build_login_workflow(self, entry, config):
         return [
             Work(
                 url='/takelogin.php',
-                method='login',
-                check_state=('network', NetworkState.SUCCEED),
+                method=self.sign_in_by_login,
+                assert_state=(check_network_state, NetworkState.SUCCEED),
                 response_urls=['/index.php']
             )
         ]
 
-    def build_login_data(self, login, last_content):
+    def sign_in_build_login_data(self, login, last_content):
         return {
             '2fa_code': login.get('secret_key') and google_auth.calc(login['secret_key']) or '',
             'trackerssl': 'yes',

@@ -5,17 +5,13 @@ from urllib.parse import urljoin
 from dateutil.parser import parse
 from flexget.utils.soup import get_soup
 
-from ..base.base import SignState, NetworkState, Work
-from ..base.site_base import SiteBase
+from .private_torrent import PrivateTorrent
+from ..base.request import check_network_state, NetworkState
+from ..base.sign_in import check_final_state, SignState, Work
 from ..utils import net_utils
-from ..utils.state_checkers import check_network_state
 
 
-def handle_join_date(value):
-    return parse(value, dayfirst=True).date()
-
-
-class XBTIT(SiteBase, ABC):
+class XBTIT(PrivateTorrent, ABC):
     SUCCEED_REGEX = None
     USER_CLASSES = {
         'uploaded': [8796093022208],
@@ -23,19 +19,20 @@ class XBTIT(SiteBase, ABC):
         'days': [70]
     }
 
-    def build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry, config):
         return [
             Work(
                 url='/',
-                method='get',
+                method=self.sign_in_by_get,
                 succeed_regex=[self.SUCCEED_REGEX],
-                check_state=('final', SignState.SUCCEED),
+                assert_state=(check_final_state, SignState.SUCCEED),
                 is_base_content=True
             )
         ]
 
-    def build_selector(self):
-        selector = {
+    @property
+    def details_selector(self) -> dict:
+        return {
             'user_id': r'usercp\.php\?uid=(\d+)',
             'detail_sources': {
                 'default': {
@@ -61,7 +58,7 @@ class XBTIT(SiteBase, ABC):
                 },
                 'join_date': {
                     'regex': r'Joined on.*?(\d{2}/\d{2}/\d{4})',
-                    'handle': handle_join_date
+                    'handle': self.handle_join_date
                 },
                 'seeding': {
                     'regex': r'Seeding (\d+)'
@@ -72,7 +69,6 @@ class XBTIT(SiteBase, ABC):
                 'hr': None
             }
         }
-        return selector
 
     def get_XBTIT_message(self, entry, config, MESSAGES_URL_REGEX='usercp\\.php\\?uid=\\d+&do=pm&action=list'):
         if messages_url_match := re.search(MESSAGES_URL_REGEX, entry['base_content']):
@@ -84,7 +80,7 @@ class XBTIT(SiteBase, ABC):
         message_box_response = self.request(entry, 'get', messages_url)
         network_state = check_network_state(entry, messages_url, message_box_response)
         if network_state != NetworkState.SUCCEED:
-            entry.fail_with_prefix('Can not read message box! url:{}'.format(messages_url))
+            entry.fail_with_prefix(f'Can not read message box! url:{messages_url}')
             return
 
         message_elements = get_soup(net_utils.decode(message_box_response)).select(
@@ -111,5 +107,8 @@ class XBTIT(SiteBase, ABC):
         if failed:
             entry.fail_with_prefix('Can not read message body!')
 
-    def get_message(self, entry, config):
+    def get_messages(self, entry, config):
         self.get_XBTIT_message(entry, config)
+
+    def handle_join_date(self, value):
+        return parse(value, dayfirst=True).date()

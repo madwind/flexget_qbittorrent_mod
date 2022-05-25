@@ -1,10 +1,7 @@
-from ..base.base import SignState, Work
+from ..base.sign_in import check_sign_in_state,  check_final_state, SignState
+from ..base.work import Work
 from ..schema.nexusphp import Attendance
 from ..utils import net_utils
-
-
-def handle_points(value):
-    return '0' if value in ['.'] else value
 
 
 class MainClass(Attendance):
@@ -15,31 +12,32 @@ class MainClass(Attendance):
         'days': [364]
     }
 
-    def build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry, config):
         return [
             Work(
                 url='/',
-                method='get',
+                method=self.sign_in_by_get,
                 succeed_regex=['已签到'],
-                check_state=('sign_in', SignState.NO_SIGN_IN),
+                assert_state=(check_sign_in_state, SignState.NO_SIGN_IN),
                 is_base_content=True,
             ),
             Work(
                 url='/attendance.php?action=sign',
-                method='punch_in',
+                method=self.sign_in_by_punch_in,
                 succeed_regex=[
                     '签到成功',
                     '您今天已经签到过了'
                 ],
-                check_state=('final', SignState.SUCCEED),
+                assert_state=(check_final_state, SignState.SUCCEED),
             ),
         ]
 
     def sign_in_by_punch_in(self, entry, config, work, last_content):
         return self.request(entry, 'get', work.url, headers={'accept': 'application/json'})
 
-    def build_selector(self):
-        selector = super().build_selector()
+    @property
+    def details_selector(self) -> dict:
+        selector = super().details_selector
         net_utils.dict_merge(selector, {
             'detail_sources': {
                 'default': {
@@ -54,7 +52,7 @@ class MainClass(Attendance):
             'details': {
                 'points': {
                     'regex': '奶糖.(?:>.*?){4}([\\d,.]+)',
-                    'handle': handle_points
+                    'handle': self.handle_points
                 },
                 'seeding': {
                     'regex': ('(做种中).*?(\\d+)', 2)
@@ -66,3 +64,6 @@ class MainClass(Attendance):
             }
         })
         return selector
+
+    def handle_points(self, value):
+        return '0' if value in ['.'] else value

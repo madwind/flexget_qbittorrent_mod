@@ -2,10 +2,13 @@ from urllib.parse import urljoin
 
 from flexget.utils.soup import get_soup
 
-from ..base.base import SignState, NetworkState, Work
+from ..base.request import NetworkState, check_network_state
+from ..base.sign_in import SignState
+from ..base.sign_in import check_final_state
+from ..base.work import Work
 from ..schema.gazelle import Gazelle
 from ..utils import net_utils
-from ..utils.state_checkers import check_network_state
+from ..utils.net_utils import get_module_name
 from ..utils.value_hanlder import handle_infinite
 
 
@@ -18,34 +21,33 @@ class MainClass(Gazelle):
     }
 
     @classmethod
-    def build_sign_in_schema(cls):
+    def sign_in_build_schema(cls):
         return {
-            cls.get_module_name(): {
-                cls.get_module_name(): {
-                    'type': 'object',
-                    'properties': {
-                        'cookie': {'type': 'string'},
-                        'key': {'type': 'string'},
-                        'name': {'type': 'string'}
-                    },
-                    'additionalProperties': False
-                }
+            get_module_name(cls): {
+                'type': 'object',
+                'properties': {
+                    'cookie': {'type': 'string'},
+                    'key': {'type': 'string'},
+                    'name': {'type': 'string'}
+                },
+                'additionalProperties': False
             }
         }
 
-    def build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry, config):
         return [
             Work(
                 url='/',
-                method='get',
+                method=self.sign_in_by_get,
                 succeed_regex=['Welcome, <a.+?</a>'],
-                check_state=('final', SignState.SUCCEED),
+                assert_state=(check_final_state, SignState.SUCCEED),
                 is_base_content=True
             )
         ]
 
-    def build_selector(self):
-        selector = super().build_selector()
+    @property
+    def details_selector(self) -> dict:
+        selector = super().details_selector
         net_utils.dict_merge(selector, {
             'detail_sources': {
                 'default': {
@@ -103,7 +105,7 @@ class MainClass(Gazelle):
             'hr': str(details_response_json.get('response').get('personal').get('hnrs') or 0).replace(',', '')
         }
 
-    def get_message(self, entry, config):
+    def get_messages(self, entry, config):
         site_config = entry['site_config']
         key = site_config.get('key')
         if not key:

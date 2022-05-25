@@ -1,4 +1,6 @@
-from ..base.base import SignState, Work
+from ..base.sign_in import check_final_state, SignState,  check_sign_in_state
+from ..base.work import Work
+
 from ..schema.nexusphp import NexusPHP
 from ..utils import net_utils
 
@@ -11,29 +13,30 @@ class MainClass(NexusPHP):
         'days': [210, 315]
     }
 
-    def build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry, config):
         return [
             Work(
                 url='/',
-                method='get',
+                method=self.sign_in_by_get,
                 succeed_regex=['签到已得\\d+'],
-                check_state=('sign_in', SignState.NO_SIGN_IN),
+                assert_state=(check_sign_in_state, SignState.NO_SIGN_IN),
                 is_base_content=True
             ),
             Work(
                 url='/attendance-ajax.php',
-                method='get',
+                method=self.sign_in_by_get,
                 succeed_regex=[
                     '这是您的第 .* 次签到，已连续签到 .* 天。.*本次签到获得 .* 克猫粮。',
                     '签到已得\\d+',
                     '您今天已经签到过了，请勿重复刷新。'
                 ],
-                check_state=('final', SignState.SUCCEED),
+                assert_state=(check_final_state, SignState.SUCCEED),
             )
         ]
 
-    def build_selector(self):
-        selector = super().build_selector()
+    @property
+    def details_selector(self) -> dict:
+        selector = super().details_selector
         net_utils.dict_merge(selector, {
             'details': {
                 'points': {

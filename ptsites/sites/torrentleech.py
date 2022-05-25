@@ -1,9 +1,9 @@
-from ..base.base import SignState, Work
-from ..base.site_base import SiteBase
+from ..base.sign_in import check_final_state, SignState, Work
+from ..schema.private_torrent import PrivateTorrent
 from ..utils.value_hanlder import handle_join_date, handle_infinite
 
 
-class MainClass(SiteBase):
+class MainClass(PrivateTorrent):
     URL = 'https://www.torrentleech.org/none.torrent'
     USER_CLASSES = {
         'uploaded': [54975581388800],
@@ -11,19 +11,20 @@ class MainClass(SiteBase):
         'days': [364]
     }
 
-    def build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry, config):
         return [
             Work(
                 url='/',
-                method='get',
+                method=self.sign_in_by_get,
                 succeed_regex=[
                     '<span class="link" style="margin-right: 1em;white-space: nowrap;" onclick="window.location.href=\'.+?\'">.+?</span>'],
-                check_state=('final', SignState.SUCCEED),
+                assert_state=(check_final_state, SignState.SUCCEED),
                 is_base_content=True
             )
         ]
 
-    def build_selector(self):
+    @property
+    def details_selector(self) -> dict:
         return {
             'user_id': '/profile/(.*)?/view',
             'detail_sources': {

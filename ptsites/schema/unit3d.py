@@ -1,15 +1,12 @@
 from abc import ABC
 
-from ..base.site_base import SiteBase
+from .private_torrent import PrivateTorrent
 from ..utils.value_hanlder import handle_join_date
 
 
-def handle_points(value):
-    return value.replace(' ', '')
-
-
-class Unit3D(SiteBase, ABC):
-    def build_selector(self):
+class Unit3D(PrivateTorrent, ABC):
+    @property
+    def details_selector(self) -> dict:
         selector = {
             'user_id': '/users/(.*?)"',
             'detail_sources': {
@@ -33,7 +30,7 @@ class Unit3D(SiteBase, ABC):
                 },
                 'points': {
                     'regex': (r'(魔力|BON).+?(\d[\d,. ]*)', 2),
-                    'handle': handle_points
+                    'handle': self.handle_points
                 },
                 'join_date': {
                     'regex': (r'(注册日期|Registration date) (.*?\d{4})', 2),
@@ -51,3 +48,6 @@ class Unit3D(SiteBase, ABC):
             }
         }
         return selector
+
+    def handle_points(self, value):
+        return value.replace(' ', '')

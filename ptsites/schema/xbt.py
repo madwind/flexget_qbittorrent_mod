@@ -1,15 +1,16 @@
 import re
 from abc import ABC
 
-from ..base.site_base import SiteBase
+from .private_torrent import PrivateTorrent
+from ..utils.net_utils import get_module_name
 from ..utils.value_hanlder import handle_infinite, handle_join_date
 
 
-class XBT(SiteBase, ABC):
+class XBT(PrivateTorrent, ABC):
     @classmethod
-    def build_sign_in_schema(cls):
+    def sign_in_build_schema(cls):
         return {
-            cls.get_module_name(): {
+            get_module_name(cls): {
                 'type': 'object',
                 'properties': {
                     'login': {
@@ -25,7 +26,8 @@ class XBT(SiteBase, ABC):
             }
         }
 
-    def build_selector(self):
+    @property
+    def details_selector(self) -> dict:
         return {
             'user_id': f'{re.escape("userdetails.php?id=")}'r"(\d+)'>Profile",
             'detail_sources': {

@@ -1,12 +1,13 @@
 from abc import ABC
 
-from ..base.site_base import SiteBase
+from .private_torrent import PrivateTorrent
 from ..utils.value_hanlder import handle_infinite
 
 
-class Ocelot(SiteBase, ABC):
+class Ocelot(PrivateTorrent, ABC):
 
-    def build_selector(self):
+    @property
+    def details_selector(self) -> dict:
         return {
             'user_id': r'userdetails\.php\?id=(\d+)',
             'detail_sources': {

@@ -1,6 +1,9 @@
 from urllib.parse import urljoin
 
-from ..base.base import SignState, Work
+from ..base.sign_in import  SignState
+from ..base.work import Work
+from ..base.sign_in import check_final_state
+from ..utils.net_utils import get_module_name
 from ..schema.gazelle import Gazelle
 from ..utils import net_utils
 
@@ -14,9 +17,9 @@ class MainClass(Gazelle):
     }
 
     @classmethod
-    def build_reseed_schema(cls):
+    def reseed_build_schema(cls):
         return {
-            cls.get_module_name(): {
+            get_module_name(cls): {
                 'type': 'object',
                 'properties': {
                     'authkey': {'type': 'string'},
@@ -27,26 +30,27 @@ class MainClass(Gazelle):
             }
         }
 
-    def build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry, config):
         return [
             Work(
                 url='/',
-                method='get',
+                method=self.sign_in_by_get,
                 succeed_regex=['积分 \\(.*?\\)'],
-                check_state=('final', SignState.SUCCEED),
+                assert_state=(check_final_state, SignState.SUCCEED),
                 is_base_content=True
             )
         ]
 
     @classmethod
-    def build_reseed_entry(cls, entry, config, site, passkey, torrent_id):
+    def reseed_build_entry(cls, entry, config, site, passkey, torrent_id):
         download_page = site['download_page'].format(torrent_id=torrent_id,
                                                      authkey=passkey['authkey'],
                                                      torrent_pass=passkey['torrent_pass'])
         entry['url'] = urljoin(MainClass.URL, download_page)
 
-    def build_selector(self):
-        selector = super().build_selector()
+    @property
+    def details_selector(self) -> dict:
+        selector = super().details_selector
         net_utils.dict_merge(selector, {
             'detail_sources': {
                 'default': {

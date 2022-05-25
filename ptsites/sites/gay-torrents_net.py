@@ -1,17 +1,21 @@
 import hashlib
 
-from ..base.base import SignState, NetworkState, Work
-from ..base.site_base import SiteBase
+from ..schema.private_torrent import PrivateTorrent
+from ..base.request import NetworkState, check_network_state
+from ..base.sign_in import  SignState
+from ..base.work import Work
+from ..base.sign_in import check_final_state
+from ..utils.net_utils import get_module_name
 from ..utils.value_hanlder import handle_infinite
 
 
-class MainClass(SiteBase):
+class MainClass(PrivateTorrent):
     URL = 'https://www.gay-torrents.net/'
 
     @classmethod
-    def build_sign_in_schema(cls):
+    def sign_in_build_schema(cls):
         return {
-            cls.get_module_name(): {
+            get_module_name(cls): {
                 'type': 'object',
                 'properties': {
                     'login': {
@@ -27,30 +31,30 @@ class MainClass(SiteBase):
             }
         }
 
-    def build_login_workflow(self, entry, config):
+    def sign_in_build_login_workflow(self, entry, config):
         return [
             Work(
                 url='/login.php?do=login',
-                method='login',
+                method=self.sign_in_by_login,
                 succeed_regex=[r'Thank you for logging in, .*?\.</p>'],
-                check_state=('network', NetworkState.SUCCEED),
+                assert_state=(check_network_state, NetworkState.SUCCEED),
                 response_urls=['/login.php?do=login']
             )
         ]
 
-    def build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry, config):
         return [
             Work(
                 url='/latest/',
-                method='get',
+                method=self.sign_in_by_get,
                 succeed_regex=['Log Out'],
-                check_state=('final', SignState.SUCCEED),
+                assert_state=(check_final_state, SignState.SUCCEED),
                 is_base_content=True,
                 response_urls=['/latest/']
             )
         ]
 
-    def build_login_data(self, login, last_content):
+    def sign_in_build_login_data(self, login, last_content):
         return {
             'do': 'login',
             'vb_login_md5password': hashlib.md5(login['password'].encode()).hexdigest(),
@@ -63,7 +67,8 @@ class MainClass(SiteBase):
             'cookieuser': 1
         }
 
-    def build_selector(self):
+    @property
+    def details_selector(self) -> dict:
         return {
             'user_id': r'<a href="member\.php\?([-\w]+?)">My Profile</a>',
             'detail_sources': {

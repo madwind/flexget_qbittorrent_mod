@@ -1,4 +1,4 @@
-from ..schema.xbtit import XBTIT, handle_join_date
+from ..schema.xbtit import XBTIT
 from ..utils import net_utils
 from ..utils.value_hanlder import handle_infinite
 
@@ -11,8 +11,9 @@ class MainClass(XBTIT):
         'share_ratio': [2]
     }
 
-    def build_selector(self):
-        selector = super().build_selector()
+    @property
+    def details_selector(self) -> dict:
+        selector = super().details_selector
         net_utils.dict_merge(selector, {
             'user_id': r'<li><a href="usercp\.php\?uid=(\d+)">My Panel</a>',
             'detail_sources': {
@@ -41,7 +42,7 @@ class MainClass(XBTIT):
                 },
                 'join_date': {
                     'regex': r'Joined on\s*(\d{2}/\d{2}/\d{4})',
-                    'handle': handle_join_date
+                    'handle': self.handle_join_date
                 },
                 'seeding': {
                     'regex': r'Active:\s*(\d+)\s*/\s*\d+'

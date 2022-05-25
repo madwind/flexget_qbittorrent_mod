@@ -55,7 +55,7 @@ class PluginAutoSignIn:
                 site_configs: list = [site_configs]
             for sub_site_config in site_configs:
                 entry: Entry = Entry(
-                    title='{} {}'.format(site_name, datetime.now().date()),
+                    title=f'{site_name} {datetime.now().date()}',
                     url=''
                 )
                 entry['site_name'] = site_name
@@ -73,9 +73,9 @@ class PluginAutoSignIn:
         date_now: str = str(datetime.now().date())
         for entry in task.all_entries:
             if date_now not in entry['title']:
-                entry.reject('{} out of date!'.format(entry['title']))
-        with ThreadPoolExecutor(max_workers=max_workers) as threadExecutor:
-            for entry, feature in [(entry, threadExecutor.submit(executor.process_sites, entry, config))
+                entry.reject(f'{entry["title"]} out of date!')
+        with ThreadPoolExecutor(max_workers=max_workers) as thread_executor:
+            for entry, feature in [(entry, thread_executor.submit(executor.sign_in, entry, config))
                                    for entry in task.accepted]:
                 try:
                     feature.result()

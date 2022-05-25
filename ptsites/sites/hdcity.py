@@ -1,8 +1,9 @@
 from urllib.parse import urljoin
 
-from ..base.base import SignState, Work
+from ..base.sign_in import check_final_state, SignState, Work
 from ..schema.nexusphp import NexusPHP
 from ..utils import net_utils
+from ..utils.net_utils import get_module_name
 
 
 class MainClass(NexusPHP):
@@ -17,9 +18,9 @@ class MainClass(NexusPHP):
     }
 
     @classmethod
-    def build_reseed_schema(cls):
+    def reseed_build_schema(cls):
         return {
-            cls.get_module_name(): {
+            get_module_name(cls): {
                 'type': 'object',
                 'properties': {
                     'cookie': {'type': 'string'}
@@ -28,24 +29,20 @@ class MainClass(NexusPHP):
             }
         }
 
-    def build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry, config):
         return [
             Work(
                 url='/sign',
-                method='get',
+                method=self.sign_in_by_get,
                 succeed_regex=['本次签到获得魅力\\d+'],
-                check_state=('final', SignState.SUCCEED),
+                assert_state=(check_final_state, SignState.SUCCEED),
                 is_base_content=True
             )
         ]
 
-    @classmethod
-    def build_reseed_entry(cls, entry, config, site, passkey, torrent_id):
-        cls.build_reseed_from_page(entry, config, passkey, torrent_id, cls.DOWNLOAD_BASE_URL, cls.TORRENT_PAGE_URL,
-                                   cls.DOWNLOAD_URL_REGEX)
-
-    def build_selector(self):
-        selector = super().build_selector()
+    @property
+    def details_selector(self) -> dict:
+        selector = super().details_selector
         net_utils.dict_merge(selector, {
             'user_id': None,
             'detail_sources': {
@@ -78,3 +75,9 @@ class MainClass(NexusPHP):
             }
         })
         return selector
+
+    @classmethod
+    def reseed_build_entry(cls, entry, config, site, passkey, torrent_id):
+        cls.reseed_build_entry_from_page(entry, config, passkey, torrent_id, cls.DOWNLOAD_BASE_URL,
+                                         cls.TORRENT_PAGE_URL,
+                                         cls.DOWNLOAD_URL_REGEX)

@@ -2,11 +2,12 @@ import re
 from io import BytesIO
 from urllib.parse import urljoin
 
-from ..base.base import SignState, NetworkState, Work
+from ..base.request import check_network_state, NetworkState
+from ..base.sign_in import check_final_state, SignState,  check_sign_in_state
+from ..base.work import Work
 from ..schema.nexusphp import NexusPHP
 from ..utils import baidu_ocr
 from ..utils import net_utils
-from ..utils.state_checkers import check_network_state
 
 try:
     from PIL import Image
@@ -22,22 +23,22 @@ class MainClass(NexusPHP):
         'days': [175, 210]
     }
 
-    def build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry, config):
         return [
             Work(
                 url='/',
-                method='get',
+                method=self.sign_in_by_get,
                 succeed_regex=['查看簽到記錄'],
-                check_state=('sign_in', SignState.NO_SIGN_IN),
+                assert_state=(check_sign_in_state, SignState.NO_SIGN_IN),
                 is_base_content=True,
             ),
             Work(
                 url='/plugin_sign-in.php',
-                method='ocr',
+                method=self.sign_in_by_ocr,
                 succeed_regex=['{"state":"success","signindays":"\\d+","integral":"\\d+"}'],
                 fail_regex='验证码错误',
                 response_urls=['/plugin_sign-in.php', '/plugin_sign-in.php?cmd=signin'],
-                check_state=('final', SignState.SUCCEED),
+                assert_state=(check_final_state, SignState.SUCCEED),
             ),
         ]
 
@@ -77,8 +78,9 @@ class MainClass(NexusPHP):
                 }
                 return self.request(entry, 'post', work.url, files=data, params=params)
 
-    def build_selector(self):
-        selector = super().build_selector()
+    @property
+    def details_selector(self) -> dict:
+        selector = super().details_selector
         net_utils.dict_merge(selector, {
             'detail_sources': {
                 'default': {

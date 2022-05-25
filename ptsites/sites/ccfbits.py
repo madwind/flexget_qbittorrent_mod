@@ -2,10 +2,6 @@ from ..schema.nexusphp import VisitHR
 from ..utils import net_utils
 
 
-def handle_size(size):
-    return size.upper()
-
-
 class MainClass(VisitHR):
     URL = 'https://ccfbits.org/'
     SUCCEED_REGEX = '欢迎回到CCFBits'
@@ -16,12 +12,13 @@ class MainClass(VisitHR):
         'days': [224]
     }
 
-    def get_nexusphp_message(self, entry, config, **kwargs):
-        super().get_nexusphp_message(entry, config,
-                                     unread_elements_selector='tr:nth-child(4) > td > img[alt*="未读"]')
+    def get_nexusphp_messages(self, entry, config, **kwargs):
+        super().get_nexusphp_messages(entry, config,
+                                      unread_elements_selector='tr:nth-child(4) > td > img[alt*="未读"]')
 
-    def build_selector(self):
-        selector = super().build_selector()
+    @property
+    def details_selector(self) -> dict:
+        selector = super().details_selector
         net_utils.dict_merge(selector, {
             'detail_sources': {
                 'default': {
@@ -34,11 +31,11 @@ class MainClass(VisitHR):
             'details': {
                 'uploaded': {
                     'regex': '上传: ([\\d.]+? [ZEPTGMk]B)',
-                    'handle': handle_size
+                    'handle': self.handle_size
                 },
                 'downloaded': {
                     'regex': '下载: ([\\d.]+? [ZEPTGMk]B)',
-                    'handle': handle_size
+                    'handle': self.handle_size
                 },
                 'points': {
                     'regex': '积分兑换.*?([\\d,.]+)'
@@ -46,3 +43,6 @@ class MainClass(VisitHR):
             }
         })
         return selector
+
+    def handle_size(self, size):
+        return size.upper()

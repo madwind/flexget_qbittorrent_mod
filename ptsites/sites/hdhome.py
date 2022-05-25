@@ -1,3 +1,4 @@
+from ..utils.net_utils import get_module_name
 from ..schema.nexusphp import AttendanceHR
 from ..utils import net_utils
 
@@ -12,9 +13,9 @@ class MainClass(AttendanceHR):
     }
 
     @classmethod
-    def build_reseed_schema(cls):
+    def reseed_build_schema(cls):
         return {
-            cls.get_module_name(): {
+            get_module_name(cls): {
                 'type': 'object',
                 'properties': {
                     'cookie': {'type': 'string'}
@@ -23,8 +24,9 @@ class MainClass(AttendanceHR):
             }
         }
 
-    def build_selector(self):
-        selector = super().build_selector()
+    @property
+    def details_selector(self) -> dict:
+        selector = super().details_selector
         net_utils.dict_merge(selector, {
             'details': {
                 'points': {

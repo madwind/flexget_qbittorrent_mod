@@ -2,19 +2,20 @@ import ast
 import json
 from urllib.parse import urljoin
 
-from ..base.base import SignState, NetworkState, Work
-from ..base.site_base import SiteBase
+from ..base.request import check_network_state, NetworkState
+from ..base.sign_in import check_final_state, SignState, Work
+from ..utils.net_utils import get_module_name
+from ..schema.private_torrent import PrivateTorrent
 from ..utils import net_utils
-from ..utils.state_checkers import check_network_state
 
 
-class MainClass(SiteBase):
+class MainClass(PrivateTorrent):
     URL = 'https://milkie.cc/'
 
     @classmethod
-    def build_sign_in_schema(cls):
+    def sign_in_build_schema(cls):
         return {
-            cls.get_module_name(): {
+            get_module_name(cls): {
                 'type': 'object',
                 'properties': {
                     'login': {
@@ -30,13 +31,13 @@ class MainClass(SiteBase):
             },
         }
 
-    def build_login_workflow(self, entry, config):
+    def sign_in_build_login_workflow(self, entry, config):
         return [
             Work(
                 url='/api/v1/auth/sessions',
-                method='login',
+                method=self.sign_in_by_login,
                 succeed_regex=['{"token":".*"}'],
-                check_state=('final', SignState.SUCCEED),
+                assert_state=(check_final_state, SignState.SUCCEED),
                 is_base_content=True,
                 response_urls=['/api/v1/auth/sessions'],
             )

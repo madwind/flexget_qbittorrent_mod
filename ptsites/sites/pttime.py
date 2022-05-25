@@ -1,4 +1,4 @@
-from ..base.base import SignState, Work
+from ..base.sign_in import check_final_state, SignState, Work
 from ..schema.nexusphp import Attendance
 from ..utils import net_utils
 
@@ -11,22 +11,23 @@ class MainClass(Attendance):
         'days': [112, 364]
     }
 
-    def build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry, config):
         return [
             Work(
                 url='/attendance.php',
-                method='get',
+                method=self.sign_in_by_get,
                 succeed_regex=[
                     '这是你的第.*?次签到，已连续签到.*天，本次签到获得.*个魔力值。',
                     '获得魔力值：\\d+',
                     '你今天已经签到过了，请勿重复刷新。'],
-                check_state=('final', SignState.SUCCEED),
+                assert_state=(check_final_state, SignState.SUCCEED),
                 is_base_content=True
             )
         ]
 
-    def build_selector(self):
-        selector = super().build_selector()
+    @property
+    def details_selector(self) -> dict:
+        selector = super().details_selector
         net_utils.dict_merge(selector, {
             'detail_sources': {
                 'default': {
@@ -39,5 +40,5 @@ class MainClass(Attendance):
         })
         return selector
 
-    def get_nexusphp_message(self, entry, config, **kwargs):
-        super().get_nexusphp_message(entry, config, unread_elements_selector='td > i[alt*="Unread"]')
+    def get_nexusphp_messages(self, entry, config, **kwargs):
+        super().get_nexusphp_messages(entry, config, unread_elements_selector='td > i[alt*="Unread"]')

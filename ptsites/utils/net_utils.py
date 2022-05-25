@@ -4,6 +4,10 @@ from urllib.parse import urlparse, parse_qsl, unquote_plus
 import chardet
 
 
+def get_module_name(cls):
+    return cls.__module__.rsplit('.', maxsplit=1)[-1]
+
+
 def decode(response):
     if response is None:
         return None
