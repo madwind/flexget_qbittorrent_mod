@@ -2,8 +2,8 @@ import re
 
 from ..base.request import check_network_state, NetworkState
 from ..base.sign_in import check_final_state, SignState, Work
-from ..utils.net_utils import get_module_name
 from ..schema.unit3d import Unit3D
+from ..utils.net_utils import get_module_name
 
 
 class MainClass(Unit3D):
@@ -45,7 +45,7 @@ class MainClass(Unit3D):
                 succeed_regex=['Logout'],
                 assert_state=(check_final_state, SignState.SUCCEED),
                 is_base_content=True,
-                response_urls=['/pages/1'],
+                response_urls=['', '/pages/1'],
             )
         ]
 
