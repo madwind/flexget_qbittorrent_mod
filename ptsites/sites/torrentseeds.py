@@ -19,6 +19,7 @@ class MainClass(Unit3D):
             get_module_name(cls): {
                 'type': 'object',
                 'properties': {
+                    'cookie': {'type': 'string'},
                     'login': {
                         'type': 'object',
                         'properties': {
@@ -42,10 +43,20 @@ class MainClass(Unit3D):
             Work(
                 url='/login',
                 method=self.sign_in_by_login,
-                succeed_regex=['Logout'],
-                assert_state=(check_final_state, SignState.SUCCEED),
-                is_base_content=True,
+                assert_state=(check_network_state, NetworkState.SUCCEED),
                 response_urls=['', '/pages/1'],
+            )
+        ]
+
+    def sign_in_build_workflow(self, entry, config: dict) -> list[Work]:
+        return [
+            Work(
+                url='/',
+                method=self.sign_in_by_get,
+                succeed_regex=[('<a href="https://www.torrentseeds.org/users/(.*?)">', 1)],
+                assert_state=(check_final_state, SignState.SUCCEED),
+                response_urls=['', '/pages/1'],
+                is_base_content=True
             )
         ]
 
