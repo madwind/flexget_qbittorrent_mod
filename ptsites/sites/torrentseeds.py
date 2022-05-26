@@ -33,6 +33,18 @@ class MainClass(Unit3D):
             }
         }
 
+    def sign_in_build_login_data(self, login, last_content):
+        m = re.search(r'name="(?P<name>.+?)" value="(?P<value>.+?)" />\s*<button type="submit"', last_content)
+        return {
+            '_token': re.search(r'(?<=name="_token" value=").+?(?=")', last_content).group(),
+            'username': login['username'],
+            'password': login['password'],
+            'remember': 'on',
+            '_captcha': re.search(r'(?<=name="_captcha" value=").+?(?=")', last_content).group(),
+            '_username': '',
+            m.group('name'): m.group('value'),
+        }
+
     def sign_in_build_login_workflow(self, entry, config):
         return [
             Work(
@@ -55,19 +67,8 @@ class MainClass(Unit3D):
                 method=self.sign_in_by_get,
                 succeed_regex=[('<a href="https://www.torrentseeds.org/users/(.*?)">', 1)],
                 assert_state=(check_final_state, SignState.SUCCEED),
-                response_urls=['', '/pages/1'],
-                is_base_content=True
+                use_last_content=True,
+                is_base_content=True,
+                response_urls=['', '/pages/1']
             )
         ]
-
-    def sign_in_build_login_data(self, login, last_content):
-        m = re.search(r'name="(?P<name>.+?)" value="(?P<value>.+?)" />\s*<button type="submit"', last_content)
-        return {
-            '_token': re.search(r'(?<=name="_token" value=").+?(?=")', last_content).group(),
-            'username': login['username'],
-            'password': login['password'],
-            'remember': 'on',
-            '_captcha': re.search(r'(?<=name="_captcha" value=").+?(?=")', last_content).group(),
-            '_username': '',
-            m.group('name'): m.group('value'),
-        }

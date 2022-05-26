@@ -2,7 +2,7 @@ import re
 
 import requests
 
-from ..base.sign_in import check_final_state, SignState,  check_sign_in_state
+from ..base.sign_in import check_final_state, SignState, check_sign_in_state
 from ..base.work import Work
 from ..schema.nexusphp import NexusPHP
 from ..utils import net_utils
@@ -61,10 +61,12 @@ class MainClass(NexusPHP):
         img_name = re.search(self.IMG_REGEX, last_content).group(1)
         answers = re.findall(self.ANSWER_REGEX, last_content)
         answer = self.get_answer(config, img_name, answers)
-        return self.request(entry, 'post', work.url, data={
+        data = {
             'answer': answer,
             'submit': '提交'
-        })
+        }
+        print(data)
+        # return self.request(entry, 'post', work.url, data=data)
 
     def get_answer(self, config, img_name, answers):
         for value, answer in answers:

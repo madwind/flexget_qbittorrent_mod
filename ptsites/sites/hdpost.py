@@ -5,9 +5,9 @@ from flexget.utils.soup import get_soup
 
 from ..base.request import check_network_state, NetworkState
 from ..base.sign_in import check_final_state, SignState, Work
-from ..utils.net_utils import get_module_name
 from ..schema.unit3d import Unit3D
 from ..utils import net_utils
+from ..utils.net_utils import get_module_name
 from ..utils.value_hanlder import handle_join_date, handle_infinite
 
 
@@ -77,8 +77,9 @@ class MainClass(Unit3D):
                 method=self.sign_in_by_get,
                 succeed_regex=[('<a class="top-nav__username" href="https://pt.hdpost.top/users/(.*?)">', 1)],
                 assert_state=(check_final_state, SignState.SUCCEED),
+                use_last_content=True,
                 is_base_content=True,
-                response_urls=['', '/']
+                response_urls=['', '/pages/1'],
             )
         ]
 

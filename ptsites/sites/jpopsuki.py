@@ -35,6 +35,14 @@ class MainClass(Gazelle):
             }
         }
 
+    def sign_in_build_login_data(self, login, last_content):
+        return {
+            'username': login['username'],
+            'password': login['password'],
+            'keeplogged': 1,
+            'login': 'Log In!',
+        }
+
     def sign_in_build_login_workflow(self, entry, config):
         return [
             Work(
@@ -45,21 +53,14 @@ class MainClass(Gazelle):
             ),
         ]
 
-    def sign_in_build_login_data(self, login, last_content):
-        return {
-            'username': login['username'],
-            'password': login['password'],
-            'keeplogged': 1,
-            'login': 'Log In!',
-        }
-
     def sign_in_build_workflow(self, entry, config):
         return [
             Work(
                 url='/',
                 method=self.sign_in_by_get,
-                succeed_regex=['JPopsuki 2.0'],
+                succeed_regex=[r'<a href="user\.php\?id=\d+" class="username">(.*?)</a>'],
                 assert_state=(check_final_state, SignState.SUCCEED),
+                use_last_content=True,
                 is_base_content=True
             )
         ]
@@ -75,7 +76,6 @@ class MainClass(Gazelle):
                     'elements': {
                         'table': '#content > div > div.sidebar > div:nth-last-child(4) > ul',
                         'Community': '#content > div > div.sidebar > div:last-child > ul'
-
                     }
                 }
             }

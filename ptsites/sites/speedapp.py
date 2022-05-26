@@ -2,8 +2,8 @@ import re
 
 from ..base.request import check_network_state, NetworkState
 from ..base.sign_in import check_final_state, SignState, Work
-from ..utils.net_utils import get_module_name
 from ..schema.private_torrent import PrivateTorrent
+from ..utils.net_utils import get_module_name
 from ..utils.value_hanlder import handle_infinite
 
 
@@ -34,6 +34,14 @@ class MainClass(PrivateTorrent):
             }
         }
 
+    def sign_in_build_login_data(self, login, last_content):
+        return {
+            '_csrf_token': re.search(r'(?<=name="_csrf_token" value=").+?(?=")', last_content).group(),
+            'username': login['username'],
+            'password': login['password'],
+            '_remember_me': 'on',
+        }
+
     def sign_in_build_login_workflow(self, entry, config):
         return [
             Work(
@@ -50,14 +58,6 @@ class MainClass(PrivateTorrent):
                 response_urls=['/'],
             )
         ]
-
-    def sign_in_build_login_data(self, login, last_content):
-        return {
-            '_csrf_token': re.search(r'(?<=name="_csrf_token" value=").+?(?=")', last_content).group(),
-            'username': login['username'],
-            'password': login['password'],
-            '_remember_me': 'on',
-        }
 
     @property
     def details_selector(self) -> dict:

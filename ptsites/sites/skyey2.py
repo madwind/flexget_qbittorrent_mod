@@ -3,9 +3,9 @@ from urllib.parse import urljoin
 
 from ..base.request import check_network_state, NetworkState
 from ..base.sign_in import check_final_state, SignState, Work
-from ..utils.net_utils import get_module_name
 from ..schema.discuz import Discuz
 from ..utils import google_auth
+from ..utils.net_utils import get_module_name
 
 
 class MainClass(Discuz):
@@ -56,6 +56,7 @@ class MainClass(Discuz):
                 method=self.sign_in_by_get,
                 succeed_regex=['<a.*?title="访问我的空间">.*?</a>'],
                 assert_state=(check_final_state, SignState.SUCCEED),
+                use_last_content=True,
                 is_base_content=True
             )
         ]

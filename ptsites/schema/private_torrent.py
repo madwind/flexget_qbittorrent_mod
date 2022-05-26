@@ -32,7 +32,6 @@ class PrivateTorrent(Request, SignIn, Detail, Message, Reseed, ABC):
 
     @classmethod
     def sign_in_build_entry(cls, entry: Entry, config: dict) -> None:
-
         entry['url'] = cls.URL
         site_config: Union[str, dict] = entry['site_config']
         headers: dict = {
@@ -67,17 +66,24 @@ class PrivateTorrent(Request, SignIn, Detail, Message, Reseed, ABC):
         if not entry.get('url') or not workflow:
             entry.fail_with_prefix(f"site: {entry['site_name']} url or workflow is empty")
             return
+        last_work: Optional[Work] = None
+        last_response: Optional[Response] = None
         last_content: Optional[str] = None
         for work in workflow:
             work.url = urljoin(entry['url'], work.url)
             work.response_urls = list(map(lambda response_url: urljoin(entry['url'], response_url), work.response_urls))
-            last_response: Response = work.method(entry, config, work, last_content)
-            if last_response == 'skip':
-                continue
-            if (last_content := net_utils.decode(last_response)) and work.is_base_content:
+
+            if work.use_last_content and last_work:
+                work.response_urls = last_work.response_urls
+            else:
+                last_response: Response = work.method(entry, config, work, last_content)
+                last_content = net_utils.decode(last_response)
+
+            if work.is_base_content:
                 entry['base_content'] = last_content
             if not check_state(entry, work, last_response, last_content):
                 return
+            last_work = work
 
     def get_messages(self, entry, config: dict):
         entry['result'] += '(TODO: Message)'

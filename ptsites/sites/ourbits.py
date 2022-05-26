@@ -1,9 +1,8 @@
 from ..base.request import check_network_state, NetworkState
 from ..base.sign_in import Work
-from ..utils.net_utils import get_module_name
-
 from ..schema.nexusphp import AttendanceHR
 from ..utils import google_auth
+from ..utils.net_utils import get_module_name
 
 
 class MainClass(AttendanceHR):
@@ -35,20 +34,26 @@ class MainClass(AttendanceHR):
             }
         }
 
-    def sign_in_build_login_workflow(self, entry, config):
-        return [
-            Work(
-                url='/takelogin.php',
-                method=self.sign_in_by_login,
-                assert_state=(check_network_state, NetworkState.SUCCEED),
-                response_urls=['/index.php']
-            )
-        ]
-
     def sign_in_build_login_data(self, login, last_content):
         return {
             '2fa_code': login.get('secret_key') and google_auth.calc(login['secret_key']) or '',
             'trackerssl': 'yes',
             'username': login['username'],
             'password': login['password'],
+            'returnto': 'attendance.php'
         }
+
+    def sign_in_build_login_workflow(self, entry, config):
+        return [
+            Work(
+                url='/takelogin.php',
+                method=self.sign_in_by_login,
+                assert_state=(check_network_state, NetworkState.SUCCEED),
+                response_urls=['/attendance.php']
+            )
+        ]
+
+    def sign_in_build_workflow(self, entry, config):
+        workflow = super().sign_in_build_workflow(entry, config)
+        workflow[0].use_last_content = True
+        return workflow
