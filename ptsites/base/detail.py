@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from ptsites.base.entry import SignInEntry
+from .entry import SignInEntry
 
 
 class Detail(ABC):
