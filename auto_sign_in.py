@@ -2,12 +2,12 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 
 from flexget import plugin
-from flexget.entry import Entry
 from flexget.event import event
 from flexget.task import Task
 from loguru import logger
 
 from .ptsites import executor
+from .ptsites.base.entry import SignInEntry
 from .ptsites.utils.details_report import DetailsReport
 
 
@@ -44,17 +44,17 @@ class PluginAutoSignIn:
         config.setdefault('sites', {})
         return config
 
-    def on_task_input(self, task: Task, config: dict) -> list[Entry]:
+    def on_task_input(self, task: Task, config: dict) -> list[SignInEntry]:
         config: dict = self.prepare_config(config)
         sites: dict = config.get('sites')
 
-        entries: list[Entry] = []
+        entries: list[SignInEntry] = []
 
         for site_name, site_configs in sites.items():
             if not isinstance(site_configs, list):
                 site_configs: list = [site_configs]
             for sub_site_config in site_configs:
-                entry: Entry = Entry(
+                entry = SignInEntry(
                     title=f'{site_name} {datetime.now().date()}',
                     url=''
                 )

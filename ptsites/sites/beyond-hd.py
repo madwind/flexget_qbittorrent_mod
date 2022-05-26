@@ -1,6 +1,6 @@
 from ..base.sign_in import check_final_state, SignState, Work
-from ..utils.net_utils import get_module_name
 from ..schema.unit3d import Unit3D
+from ..utils.net_utils import get_module_name
 from ..utils.value_hanlder import handle_join_date
 
 
@@ -18,6 +18,7 @@ from ..utils.value_hanlder import handle_join_date
 
 class MainClass(Unit3D):
     URL = 'https://beyond-hd.me/'
+    USER_CLASSES = {}
 
     @classmethod
     def sign_in_build_schema(cls):

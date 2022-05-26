@@ -7,16 +7,10 @@ from flexget.entry import Entry
 from loguru import logger
 
 from .base.detail import Detail
+from .base.entry import SignInEntry
 from .base.message import Message
 from .base.reseed import Reseed
 from .base.sign_in import SignIn
-
-
-def fail_with_prefix(self, reason: str) -> None:
-    self.fail(f"{self.get('prefix')}=> {reason}")
-
-
-Entry.fail_with_prefix = fail_with_prefix
 
 
 def build_sign_in_schema() -> dict:
@@ -32,7 +26,7 @@ def build_sign_in_schema() -> dict:
     return sites_schema
 
 
-def build_sign_in_entry(entry: Entry, config: dict) -> None:
+def build_sign_in_entry(entry: SignInEntry, config: dict) -> None:
     try:
         site_class = get_site_class(entry['class_name'])
         if issubclass(site_class, SignIn):
@@ -41,7 +35,7 @@ def build_sign_in_entry(entry: Entry, config: dict) -> None:
         raise plugin.PluginError(f"site: {entry['site_name']}, error: {e}")
 
 
-def sign_in(entry: Entry, config: dict) -> None:
+def sign_in(entry: SignInEntry, config: dict) -> None:
     try:
         site_class = get_site_class(entry['class_name'])
     except AttributeError as e:
@@ -75,7 +69,7 @@ def sign_in(entry: Entry, config: dict) -> None:
     clean_entry_attr(entry)
 
 
-def clean_entry_attr(entry: Entry) -> None:
+def clean_entry_attr(entry: SignInEntry) -> None:
     for attr in ['base_content', 'prefix']:
         if hasattr(entry, attr):
             del entry[attr]

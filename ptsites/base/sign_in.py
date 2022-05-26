@@ -6,6 +6,7 @@ from typing import Union
 from loguru import logger
 from requests import Response
 
+from .entry import SignInEntry
 from .request import NetworkState, check_network_state
 from .work import Work
 
@@ -26,7 +27,7 @@ class NetworkErrorReason(Enum):
     WEB_SERVER_IS_DOWN = '站点关闭维护中，请稍后再访问...谢谢|站點關閉維護中，請稍後再訪問...謝謝|Web server is down'
 
 
-def check_state(entry, work: Work, response: Response, content: str) -> bool:
+def check_state(entry: SignInEntry, work: Work, response: Response, content: str) -> bool:
     if entry.failed:
         return False
     if not work.assert_state:
@@ -35,7 +36,7 @@ def check_state(entry, work: Work, response: Response, content: str) -> bool:
     return check_method(entry, work, response, content) == state
 
 
-def check_sign_in_state(entry, work: Work, response: Response,
+def check_sign_in_state(entry: SignInEntry, work: Work, response: Response,
                         content: str) -> Union[NetworkState, SignState]:
     network_state = check_network_state(entry, work, response, content=content, check_content=True)
     if network_state != NetworkState.SUCCEED:
@@ -64,7 +65,7 @@ def check_sign_in_state(entry, work: Work, response: Response,
     return SignState.NO_SIGN_IN
 
 
-def check_final_state(entry, work: Work, response: Response, content: str) -> SignState:
+def check_final_state(entry: SignInEntry, work: Work, response: Response, content: str) -> SignState:
     sign_in_state: SignState = check_sign_in_state(entry, work, response, content)
     if sign_in_state == SignState.NO_SIGN_IN:
         entry.fail_with_prefix(SignState.SIGN_IN_FAILED.value.format('no sign in'))
@@ -75,14 +76,14 @@ def check_final_state(entry, work: Work, response: Response, content: str) -> Si
 class SignIn(ABC):
     @classmethod
     @abstractmethod
-    def sign_in_build_schema(cls):
+    def sign_in_build_schema(cls) -> dict:
         pass
 
     @classmethod
     @abstractmethod
-    def sign_in_build_entry(cls, entry, config: dict) -> None:
+    def sign_in_build_entry(cls, entry: SignInEntry, config: dict) -> None:
         pass
 
     @abstractmethod
-    def sign_in(self, entry, config: dict) -> None:
+    def sign_in(self, entry: SignInEntry, config: dict) -> None:
         pass

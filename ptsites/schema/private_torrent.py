@@ -12,6 +12,7 @@ from loguru import logger
 from requests import Response
 
 from ..base.detail import Detail
+from ..base.entry import SignInEntry
 from ..base.message import Message
 from ..base.request import Request, NetworkState, check_network_state
 from ..base.reseed import Reseed
@@ -22,15 +23,15 @@ from ..utils.net_utils import get_module_name, cookie_str_to_dict
 
 class PrivateTorrent(Request, SignIn, Detail, Message, Reseed, ABC):
     URL: str
-    USER_CLASSES = {}
+    USER_CLASSES: dict
     DOWNLOAD_PAGE_TEMPLATE = 'download.php?id={torrent_id}'
 
     @classmethod
-    def sign_in_build_schema(cls):
+    def sign_in_build_schema(cls) -> dict:
         return {get_module_name(cls): {'type': 'string'}}
 
     @classmethod
-    def sign_in_build_entry(cls, entry: Entry, config: dict) -> None:
+    def sign_in_build_entry(cls, entry: SignInEntry, config: dict) -> None:
         entry['url'] = cls.URL
         site_config: Union[str, dict] = entry['site_config']
         headers: dict = {
@@ -48,16 +49,16 @@ class PrivateTorrent(Request, SignIn, Detail, Message, Reseed, ABC):
         entry['headers'] = headers
         entry['user_classes'] = cls.USER_CLASSES
 
-    def sign_in_build_login_data(self, login: dict, last_content) -> dict:
+    def sign_in_build_login_data(self, login: dict, last_content: str) -> dict:
         return {}
 
-    def sign_in_build_login_workflow(self, entry, config: dict) -> list[Work]:
+    def sign_in_build_login_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return []
 
-    def sign_in_build_workflow(self, entry, config: dict) -> list[Work]:
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return []
 
-    def sign_in(self, entry, config: dict) -> None:
+    def sign_in(self, entry: SignInEntry, config: dict) -> None:
         workflow: list[Work] = []
         if not entry.get('cookie'):
             workflow.extend(self.sign_in_build_login_workflow(entry, config))
@@ -84,7 +85,7 @@ class PrivateTorrent(Request, SignIn, Detail, Message, Reseed, ABC):
                 return
             last_work = work
 
-    def get_messages(self, entry, config: dict):
+    def get_messages(self, entry: SignInEntry, config: dict) -> None:
         entry['result'] += '(TODO: Message)'
 
     @property
@@ -114,7 +115,7 @@ class PrivateTorrent(Request, SignIn, Detail, Message, Reseed, ABC):
             detail = handle(detail)
         return str(detail)
 
-    def get_details_base(self, request, entry, config, selector: dict) -> None:
+    def get_details_base(self, entry, config, selector: dict) -> None:
         if not (base_content := entry.get('base_content')):
             entry.fail_with_prefix('base_content is None.')
             return
@@ -126,7 +127,7 @@ class PrivateTorrent(Request, SignIn, Detail, Message, Reseed, ABC):
         for detail_source in selector.get('detail_sources').values():
             if detail_source.get('link'):
                 detail_source['link'] = urljoin(entry['url'], detail_source['link'].format(user_id))
-                detail_response = request(entry, 'get', detail_source['link'])
+                detail_response = self.request(entry, 'get', detail_source['link'])
                 network_state = check_network_state(entry, detail_source['link'], detail_response)
                 if network_state != NetworkState.SUCCEED:
                     return
@@ -162,8 +163,8 @@ class PrivateTorrent(Request, SignIn, Detail, Message, Reseed, ABC):
             details[detail_name] = detail_value
         entry['details'] = details
 
-    def get_details(self, entry, config: dict) -> None:
-        self.get_details_base(self.request, entry, config, self.details_selector)
+    def get_details(self, entry: SignInEntry, config: dict) -> None:
+        self.get_details_base(entry, config, self.details_selector)
 
     @classmethod
     def reseed_build_schema(cls):
@@ -224,7 +225,7 @@ class PrivateTorrent(Request, SignIn, Detail, Message, Reseed, ABC):
     def sign_in_by_get(self, entry, config: dict, work: Work, last_content: str = None) -> Response:
         return self.request(entry, 'get', work.url)
 
-    def sign_in_by_post(self, entry, config: dict, work: Work,
+    def sign_in_by_post(self, entry: SignInEntry, config: dict, work: Work,
                         last_content: str = None) -> Optional[Response]:
         data = {}
         for key, regex in work.data.items():
@@ -239,7 +240,7 @@ class PrivateTorrent(Request, SignIn, Detail, Message, Reseed, ABC):
                     return
         return self.request(entry, 'post', work.url, data=data)
 
-    def sign_in_by_login(self, entry, config: dict, work: Work, last_content: str) -> Optional[Response]:
+    def sign_in_by_login(self, entry: SignInEntry, config: dict, work: Work, last_content: str) -> Optional[Response]:
         if not (login := entry['site_config'].get('login')):
             entry.fail_with_prefix('Login data not found!')
             return
