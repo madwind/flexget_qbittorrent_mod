@@ -1,13 +1,13 @@
 from abc import ABC
 
 from .private_torrent import PrivateTorrent
-from ..base.sign_in import  SignState, check_final_state
+from ..base.sign_in import SignState, check_final_state
 from ..base.work import Work
 from ..utils.value_hanlder import handle_join_date
 
 
 class AvistaZ(PrivateTorrent, ABC):
-    SUCCEED_REGEX = None
+    SUCCEED_REGEX: str
 
     def sign_in_build_workflow(self, entry, config):
         return [
