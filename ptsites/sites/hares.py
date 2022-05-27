@@ -1,18 +1,23 @@
-from ..base.sign_in import check_sign_in_state,  check_final_state, SignState
+from typing import Final
+
+from requests import Response
+
+from ..base.entry import SignInEntry
+from ..base.sign_in import check_sign_in_state, check_final_state, SignState
 from ..base.work import Work
 from ..schema.nexusphp import Attendance
 from ..utils import net_utils
 
 
 class MainClass(Attendance):
-    URL = 'https://club.hares.top/'
-    USER_CLASSES = {
+    URL: Final = 'https://club.hares.top/'
+    USER_CLASSES: Final = {
         'downloaded': [8796093022208],
         'share_ratio': [5.5],
         'days': [364]
     }
 
-    def sign_in_build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/',
@@ -32,7 +37,7 @@ class MainClass(Attendance):
             ),
         ]
 
-    def sign_in_by_punch_in(self, entry, config, work, last_content):
+    def sign_in_by_punch_in(self, entry: SignInEntry, config: dict, work: Work, last_content: str) -> Response:
         return self.request(entry, 'get', work.url, headers={'accept': 'application/json'})
 
     @property
@@ -65,5 +70,5 @@ class MainClass(Attendance):
         })
         return selector
 
-    def handle_points(self, value):
+    def handle_points(self, value: str) -> str:
         return '0' if value in ['.'] else value

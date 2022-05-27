@@ -1,10 +1,13 @@
+from typing import Final
+
+from ..base.entry import SignInEntry
 from ..base.sign_in import check_final_state, SignState, Work
-from ..utils.net_utils import get_module_name
 from ..schema.private_torrent import PrivateTorrent
+from ..utils.net_utils import get_module_name
 
 
 class MainClass(PrivateTorrent):
-    URL = 'https://ninjacentral.co.za/'
+    URL: Final = 'https://ninjacentral.co.za/'
 
     @classmethod
     def sign_in_build_schema(cls):
@@ -25,7 +28,7 @@ class MainClass(PrivateTorrent):
             }
         }
 
-    def sign_in_build_login_workflow(self, entry, config):
+    def sign_in_build_login_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/login',
@@ -37,7 +40,7 @@ class MainClass(PrivateTorrent):
             )
         ]
 
-    def sign_in_build_login_data(self, login, last_content):
+    def sign_in_build_login_data(self, login: dict, last_content: str) -> dict:
         return {
             'redirect': '',
             'username': login['username'],

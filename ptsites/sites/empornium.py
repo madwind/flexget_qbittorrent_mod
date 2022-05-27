@@ -1,19 +1,22 @@
-from ..base.sign_in import  SignState
-from ..base.work import Work
+from typing import Final
+
+from ..base.entry import SignInEntry
+from ..base.sign_in import SignState
 from ..base.sign_in import check_final_state
+from ..base.work import Work
 from ..schema.gazelle import Gazelle
 from ..utils import net_utils
 
 
 class MainClass(Gazelle):
-    URL = 'https://www.empornium.is/'
-    USER_CLASSES = {
+    URL: Final = 'https://www.empornium.is/'
+    USER_CLASSES: Final = {
         'uploaded': [107374182400],
         'share_ratio': [1.05],
         'days': [56]
     }
 
-    def sign_in_build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/',

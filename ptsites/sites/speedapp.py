@@ -1,5 +1,7 @@
 import re
+from typing import Final
 
+from ..base.entry import SignInEntry
 from ..base.request import check_network_state, NetworkState
 from ..base.sign_in import check_final_state, SignState, Work
 from ..schema.private_torrent import PrivateTorrent
@@ -8,8 +10,8 @@ from ..utils.value_hanlder import handle_infinite
 
 
 class MainClass(PrivateTorrent):
-    URL = 'https://speedapp.io/'
-    USER_CLASSES = {
+    URL: Final = 'https://speedapp.io/'
+    USER_CLASSES: Final = {
         'uploaded': [109951162777600],
         'share_ratio': [6],
         'days': [2190],
@@ -34,7 +36,7 @@ class MainClass(PrivateTorrent):
             }
         }
 
-    def sign_in_build_login_data(self, login, last_content):
+    def sign_in_build_login_data(self, login: dict, last_content: str) -> dict:
         return {
             '_csrf_token': re.search(r'(?<=name="_csrf_token" value=").+?(?=")', last_content).group(),
             'username': login['username'],
@@ -42,7 +44,7 @@ class MainClass(PrivateTorrent):
             '_remember_me': 'on',
         }
 
-    def sign_in_build_login_workflow(self, entry, config):
+    def sign_in_build_login_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/zh/%E7%99%BB%E5%BD%95?locale=zh',
@@ -131,5 +133,5 @@ class MainClass(PrivateTorrent):
             }
         }
 
-    def handle_join_date(self, value):
+    def handle_join_date(self, value: str) -> str:
         return value.translate(str.maketrans('年月', '--', '日'))

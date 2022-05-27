@@ -1,12 +1,15 @@
-from ..base.sign_in import check_final_state, SignState,  check_sign_in_state
+from typing import Final
+
+from ..base.entry import SignInEntry
+from ..base.sign_in import check_final_state, SignState, check_sign_in_state
 from ..base.work import Work
 from ..schema.nexusphp import NexusPHP
 from ..utils import net_utils
 
 
 class MainClass(NexusPHP):
-    URL = 'https://totheglory.im/'
-    USER_CLASSES = {
+    URL: Final = 'https://totheglory.im/'
+    USER_CLASSES: Final = {
         'uploaded': [769658139444, 109951162777600],
         'downloaded': [3848290697216, 10995116277760],
         'share_ratio': [5, 6],
@@ -18,11 +21,11 @@ class MainClass(NexusPHP):
         'signed_token': '(?<=signed_token: ").*(?=")'
     }
 
-    def sign_in(self, entry, config):
+    def sign_in(self, entry: SignInEntry, config: dict) -> None:
         entry.fail_with_prefix("公告禁止使用脚本，请移除")
         return
 
-    def sign_in_build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/',
@@ -78,8 +81,8 @@ class MainClass(NexusPHP):
         })
         return selector
 
-    def handle_size(self, size):
+    def handle_size(self, size: str) -> str:
         return size.upper()
 
-    def handle_hr(self, hr):
+    def handle_hr(self, hr: str) -> str:
         return str(15 - int(hr))

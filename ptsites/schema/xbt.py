@@ -8,7 +8,7 @@ from ..utils.value_hanlder import handle_infinite, handle_join_date
 
 class XBT(PrivateTorrent, ABC):
     @classmethod
-    def sign_in_build_schema(cls):
+    def sign_in_build_schema(cls) -> dict:
         return {
             get_module_name(cls): {
                 'type': 'object',

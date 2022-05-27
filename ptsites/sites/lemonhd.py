@@ -1,10 +1,12 @@
+from typing import Final
+
 from ..schema.nexusphp import Attendance
 from ..utils import net_utils
 
 
 class MainClass(Attendance):
-    URL = 'https://lemonhd.org/'
-    USER_CLASSES = {
+    URL: Final = 'https://lemonhd.org/'
+    USER_CLASSES: Final = {
         'downloaded': [2199023255552, 8796093022208],
         'share_ratio': [4, 5.5],
         'days': [175, 364]

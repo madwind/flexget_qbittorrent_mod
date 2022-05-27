@@ -1,5 +1,6 @@
 from flexget import plugin
 from flexget.event import event
+from flexget.task import Task
 from loguru import logger
 
 
@@ -13,7 +14,7 @@ class PluginHtmlRss:
     }
 
     @plugin.priority(plugin.PRIORITY_LAST)
-    def on_task_output(self, task, config):
+    def on_task_output(self, task: Task, config: dict) -> None:
         state = config.get('state')
         attribute = config.get('attribute')
         entries = getattr(task, state)

@@ -1,3 +1,6 @@
+from typing import Final
+
+from ..base.entry import SignInEntry
 from ..base.sign_in import check_final_state, SignState, Work
 from ..schema.private_torrent import PrivateTorrent
 from ..utils.value_hanlder import handle_join_date, handle_infinite
@@ -5,14 +8,14 @@ from ..utils.value_hanlder import handle_join_date, handle_infinite
 
 class MainClass(PrivateTorrent):
     # IPTorrents in list of https://flexget.com/URLRewriters
-    URL = 'https://iptorrents.com/download.php/8/none.torrent'
-    USER_CLASSES = {
+    URL: Final = 'https://iptorrents.com/download.php/8/none.torrent'
+    USER_CLASSES: Final = {
         'uploaded': [53687091200],
         'share_ratio': [1.05],
         'days': [28]
     }
 
-    def sign_in_build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/',

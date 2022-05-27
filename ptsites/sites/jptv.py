@@ -1,15 +1,18 @@
+from typing import Final
+
+from ..base.entry import SignInEntry
 from ..base.sign_in import check_final_state, SignState, Work
 from ..schema.unit3d import Unit3D
 
 
 class MainClass(Unit3D):
-    URL = 'https://jptv.club/'
-    USER_CLASSES = {
+    URL: Final = 'https://jptv.club/'
+    USER_CLASSES: Final = {
         'uploaded': [109951162777600],
         'days': [365]
     }
 
-    def sign_in_build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/',

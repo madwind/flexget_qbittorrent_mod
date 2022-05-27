@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import importlib
 import pathlib
 import pkgutil
@@ -88,7 +90,7 @@ def build_reseed_schema() -> dict:
     return sites_schema
 
 
-def build_reseed_entry(entry: Entry, config: dict, site, passkey, torrent_id) -> None:
+def build_reseed_entry(entry: Entry, config: dict, site: dict, passkey: str | dict, torrent_id: str) -> None:
     try:
         site_class = get_site_class(entry['class_name'])
         if issubclass(site_class, Reseed):

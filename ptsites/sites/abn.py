@@ -1,20 +1,21 @@
 import re
 from datetime import datetime
+from typing import Final
 
 from dateutil.relativedelta import relativedelta
-from flexget.entry import Entry
 
+from ..base.entry import SignInEntry
 from ..base.request import check_network_state, NetworkState
-from ..base.sign_in import  SignState, check_final_state
+from ..base.sign_in import SignState, check_final_state
 from ..base.work import Work
-from ..utils.net_utils import get_module_name
 from ..schema.private_torrent import PrivateTorrent
+from ..utils.net_utils import get_module_name
 from ..utils.value_hanlder import handle_infinite
 
 
 class MainClass(PrivateTorrent):
-    URL = 'https://abn.lol/'
-    USER_CLASSES = {
+    URL: Final = 'https://abn.lol/'
+    USER_CLASSES: Final = {
         'uploaded': [5368709120000],
         'share_ratio': [3.05]
     }
@@ -38,7 +39,7 @@ class MainClass(PrivateTorrent):
             }
         }
 
-    def sign_in_build_login_workflow(self, entry: Entry, config: dict) -> list[Work]:
+    def sign_in_build_login_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/Home/Login?ReturnUrl=%2F',
@@ -113,7 +114,7 @@ class MainClass(PrivateTorrent):
 
     def handle_join_date(self, value: str) -> datetime:
         value_split = value.removeprefix('Il y a ').replace('et', '').replace('seconde', 'second') \
-            .replace('heure', 'hour').replace('journée', 'day').replace('jours', 'days').replace('semaine', 'week') \
+            .replace('heure', 'hour').replace('jour', 'day').replace('semaine', 'week') \
             .replace('mois', 'months').replace('an', 'year').replace('années', 'years').split()
         return datetime.now() - relativedelta(**dict(
             (unit if unit.endswith('s') else f'{unit}s', int(amount)) for amount, unit in

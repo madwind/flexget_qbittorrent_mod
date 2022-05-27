@@ -1,4 +1,5 @@
 import re
+from typing import ClassVar, Final
 
 import requests
 from loguru import logger
@@ -12,18 +13,18 @@ from ..utils import net_utils
 
 
 class MainClass(NexusPHP):
-    URL = 'https://tjupt.org/'
-    IMG_REGEX = r'https://.*\.doubanio\.com/view/photo/s_ratio_poster/public/(p\d+)\.'
-    ANSWER_REGEX = r"<input type='radio' name='answer' value='(.*?)'>(.*?)<br>"
-    BREAK_REGEX = r'已断签.*?天，当前可补签天数为 <b>(\d+)</b> 天'
-    CONFIRM = {'action': 'confirm'}
-    CANCEL = {'action': 'cancel'}
-    USER_CLASSES = {
+    URL: Final = 'https://tjupt.org/'
+    IMG_REGEX: Final = r'https://.*\.doubanio\.com/view/photo/s_ratio_poster/public/(p\d+)\.'
+    ANSWER_REGEX: Final = r"<input type='radio' name='answer' value='(.*?)'>(.*?)<br>"
+    BREAK_REGEX: Final = r'已断签.*?天，当前可补签天数为 <b>(\d+)</b> 天'
+    CONFIRM: ClassVar[dict] = {'action': 'confirm'}
+    CANCEL: ClassVar[dict] = {'action': 'cancel'}
+    USER_CLASSES: Final = {
         'uploaded': [5368709120000, 53687091200000],
         'days': [336, 924]
     }
 
-    def sign_in_build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/attendance.php',
@@ -64,7 +65,7 @@ class MainClass(NexusPHP):
         })
         return selector
 
-    def sign_in_by_douban(self, entry: SignInEntry, config, work, last_content=None):
+    def sign_in_by_douban(self, entry: SignInEntry, config: dict, work: Work, last_content: str):
         if break_match := re.search(self.BREAK_REGEX, last_content):
             if int(break_match.group(1)) > 0:
                 params = self.CONFIRM

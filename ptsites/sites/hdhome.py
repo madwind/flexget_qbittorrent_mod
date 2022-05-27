@@ -1,11 +1,13 @@
-from ..utils.net_utils import get_module_name
+from typing import Final
+
 from ..schema.nexusphp import AttendanceHR
 from ..utils import net_utils
+from ..utils.net_utils import get_module_name
 
 
 class MainClass(AttendanceHR):
-    URL = 'https://hdhome.org/'
-    USER_CLASSES = {
+    URL: Final = 'https://hdhome.org/'
+    USER_CLASSES: Final = {
         'downloaded': [8796093022208],
         'share_ratio': [5.5],
         'points': [1000000],
@@ -13,7 +15,7 @@ class MainClass(AttendanceHR):
     }
 
     @classmethod
-    def reseed_build_schema(cls):
+    def reseed_build_schema(cls) -> dict:
         return {
             get_module_name(cls): {
                 'type': 'object',

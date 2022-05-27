@@ -1,12 +1,14 @@
-from typing import Union
+from __future__ import annotations
+
+from typing import Callable
 
 
 class Work:
-    def __init__(self, url: str = None, method: callable = None, data=None,
-                 succeed_regex: list[Union[str, tuple]] = None, fail_regex: str = None,
-                 assert_state: tuple = None, response_urls=None, use_last_content=False, is_base_content=False,
-                 **kwargs):
-        self.url: str = url
+    def __init__(self, url: str, method: Callable, data: dict | None = None,
+                 succeed_regex: list[str | tuple] | None = None, fail_regex: str | None = None,
+                 assert_state: tuple | None = None, response_urls: list[str] | None = None,
+                 use_last_content=False, is_base_content=False, **kwargs) -> None:
+        self.url = url
         self.method = method
         self.data = data
         self.succeed_regex = succeed_regex

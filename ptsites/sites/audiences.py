@@ -1,13 +1,18 @@
+from __future__ import annotations
+
+from typing import Final
 from urllib.parse import urljoin
 
-from ..utils.net_utils import get_module_name
+from flexget.entry import Entry
+
 from ..schema.nexusphp import AttendanceHR
 from ..utils import net_utils
+from ..utils.net_utils import get_module_name
 
 
 class MainClass(AttendanceHR):
-    URL = 'https://audiences.me/'
-    USER_CLASSES = {
+    URL: Final = 'https://audiences.me/'
+    USER_CLASSES: Final = {
         'downloaded': [2199023255552, 8796093022208],
         'share_ratio': [4.5, 5],
         'days': [560, 784]
@@ -33,7 +38,7 @@ class MainClass(AttendanceHR):
         return selector
 
     @classmethod
-    def reseed_build_schema(cls):
+    def reseed_build_schema(cls) -> dict:
         return {
             get_module_name(cls): {
                 'type': 'object',
@@ -45,7 +50,8 @@ class MainClass(AttendanceHR):
         }
 
     @classmethod
-    def reseed_build_entry(cls, entry, config: dict, site, passkey, torrent_id):
+    def reseed_build_entry(cls, entry: Entry, config: dict, site: dict, passkey: str | dict,
+                           torrent_id: str) -> None:
         download_page = f'download.php?id={torrent_id}'
         entry['url'] = urljoin(MainClass.URL, download_page)
         entry['cookie'] = passkey['cookie']

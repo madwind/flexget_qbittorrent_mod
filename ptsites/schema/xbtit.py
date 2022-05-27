@@ -1,25 +1,32 @@
 import re
-from abc import ABC
+from abc import ABC, abstractmethod
+from datetime import date
+from typing import Final
 from urllib.parse import urljoin
 
 from dateutil.parser import parse
 from flexget.utils.soup import get_soup
 
 from .private_torrent import PrivateTorrent
+from ..base.entry import SignInEntry
 from ..base.request import check_network_state, NetworkState
 from ..base.sign_in import check_final_state, SignState, Work
 from ..utils import net_utils
 
 
 class XBTIT(PrivateTorrent, ABC):
-    SUCCEED_REGEX: str
-    USER_CLASSES = {
+    @property
+    @abstractmethod
+    def SUCCEED_REGEX(self) -> str:
+        pass
+
+    USER_CLASSES: Final = {
         'uploaded': [8796093022208],
         'share_ratio': [5.5],
         'days': [70]
     }
 
-    def sign_in_build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/',
@@ -70,7 +77,8 @@ class XBTIT(PrivateTorrent, ABC):
             }
         }
 
-    def get_XBTIT_message(self, entry, config, MESSAGES_URL_REGEX='usercp\\.php\\?uid=\\d+&do=pm&action=list'):
+    def get_XBTIT_message(self, entry: SignInEntry, config: dict,
+                          MESSAGES_URL_REGEX: str = 'usercp\\.php\\?uid=\\d+&do=pm&action=list') -> None:
         if messages_url_match := re.search(MESSAGES_URL_REGEX, entry['base_content']):
             messages_url = messages_url_match.group()
         else:
@@ -107,8 +115,8 @@ class XBTIT(PrivateTorrent, ABC):
         if failed:
             entry.fail_with_prefix('Can not read message body!')
 
-    def get_messages(self, entry, config):
+    def get_messages(self, entry: SignInEntry, config: dict) -> None:
         self.get_XBTIT_message(entry, config)
 
-    def handle_join_date(self, value):
+    def handle_join_date(self, value: str) -> date:
         return parse(value, dayfirst=True).date()

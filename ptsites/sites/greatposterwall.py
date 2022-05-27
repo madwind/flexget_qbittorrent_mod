@@ -1,23 +1,27 @@
+from __future__ import annotations
+
+from typing import Final
 from urllib.parse import urljoin
 
-from ..base.sign_in import SignState, check_final_state
+from flexget.entry import Entry
 
+from ..base.entry import SignInEntry
+from ..base.sign_in import SignState, check_final_state
 from ..base.work import Work
 from ..schema.gazelle import Gazelle
 from ..utils import net_utils
-from ..utils.net_utils import get_module_name
 
 
 class MainClass(Gazelle):
-    URL = 'https://greatposterwall.com/'
-    USER_CLASSES = {
+    URL: Final = 'https://greatposterwall.com/'
+    USER_CLASSES: Final = {
         'share_ratio': [1.2, 1.2],
         'downloaded': [214748364800, 10995116277760],
         'days': [14, 140]
     }
 
     @classmethod
-    def reseed_build_schema(cls):
+    def reseed_build_schema(cls) -> dict:
         return {
             net_utils.get_module_name(cls): {
                 'type': 'object',
@@ -30,7 +34,7 @@ class MainClass(Gazelle):
             }
         }
 
-    def sign_in_build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/',
@@ -42,7 +46,8 @@ class MainClass(Gazelle):
         ]
 
     @classmethod
-    def reseed_build_entry(cls, entry, config, site, passkey, torrent_id):
+    def reseed_build_entry(cls, entry: Entry, config: dict, site: dict, passkey: str | dict,
+                           torrent_id: str) -> None:
         download_page = site['download_page'].format(torrent_id=torrent_id,
                                                      authkey=passkey['authkey'],
                                                      torrent_pass=passkey['torrent_pass'])

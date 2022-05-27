@@ -3,6 +3,7 @@ from urllib.parse import urljoin
 from flexget import plugin
 from flexget.entry import Entry
 from flexget.event import event
+from flexget.task import Task
 from flexget.utils.soup import get_soup
 from loguru import logger
 from requests import RequestException
@@ -44,7 +45,7 @@ class PluginHtmlRss:
         'additionalProperties': False
     }
 
-    def prepare_config(self, config):
+    def prepare_config(self, config: dict) -> dict:
         config.setdefault('url', '')
         config.setdefault('user-agent', '')
         config.setdefault('cookie', '')
@@ -53,7 +54,7 @@ class PluginHtmlRss:
         config.setdefault('fields', {})
         return config
 
-    def on_task_input(self, task, config):
+    def on_task_input(self, task: Task, config: dict) -> list[Entry]:
         config = self.prepare_config(config)
         url = config.get('url')
         user_agent = config.get('user-agent')

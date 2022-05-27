@@ -2,9 +2,11 @@ import re
 from datetime import datetime
 
 from PIL import Image, ImageDraw, ImageFont
+from PIL.ImageFont import FreeTypeFont
 from dateutil.parser import parse
 from flexget import db_schema
 from flexget.manager import Session
+from flexget.task import Task
 from loguru import logger
 from matplotlib.font_manager import findfont, FontProperties
 from sqlalchemy import Column, String, Integer, Float, Date
@@ -65,7 +67,7 @@ class UserDetailsEntry(UserDetailsBase):
 
 
 class DetailsReport:
-    def build(self, task):
+    def build(self, task: Task) -> None:
         if not (plt and pd):
             logger.warning('Dependency does not exist: [matplotlib, pandas]')
             return
@@ -129,10 +131,8 @@ class DetailsReport:
             if not entry.get('details'):
                 for column in columns:
                     value = getattr(user_details_db, column)
-                    if entry.failed:
-                        data[column].append(self.build_data_text(column, value) + '*')
-                    else:
-                        data[column].append(self.build_data_text(column, value))
+                    failed_suffix = '*' if entry.failed else ''
+                    data[column].append(self.build_data_text(column, value) + failed_suffix)
                     if not entry.get('do_not_count') and column not in ['site']:
                         self.count(total_details, column, value)
                 data['sort_column'].append(0)
@@ -146,14 +146,9 @@ class DetailsReport:
             # changed
             details_changed = {}
             for key, value_now in details_now.items():
-                if value_now != '*' and key not in ['join_date']:
-                    details_changed[key] = value_now - getattr(user_details_db, key)
-                else:
-                    details_changed[key] = '*'
-            if details_changed['uploaded'] == '*':
-                data['sort_column'].append(0)
-            else:
-                data['sort_column'].append(details_changed['uploaded'])
+                details_changed[key] = value_now - getattr(user_details_db, key) if value_now != '*' and key not in [
+                    'join_date'] else '*'
+            data['sort_column'].append(0 if details_changed['uploaded'] == '*' else details_changed['uploaded'])
 
             # append to data
             for column in columns:
@@ -169,7 +164,7 @@ class DetailsReport:
                 if not entry.get('do_not_count') and column not in ['share_ratio', 'points']:
                     total_details[column] = total_details[column] + getattr(user_details_db, column)
                     if details_changed[column] != '*':
-                        total_changed[column] = total_changed[column] + details_changed[column]
+                        total_changed[column] += details_changed[column]
 
             # update db
             for key, value in details_now.items():
@@ -217,7 +212,7 @@ class DetailsReport:
         plt.savefig('details_report.png', bbox_inches='tight', dpi=300)
         self.draw_user_classes(user_classes_dict, session, df)
 
-    def _get_user_details(self, session, site):
+    def _get_user_details(self, session: Session, site):
         user_details = session.query(UserDetailsEntry).filter(
             UserDetailsEntry.site == site).one_or_none()
         return user_details
@@ -226,24 +221,19 @@ class DetailsReport:
         keys = list(suffix.keys())
         keys.reverse()
         for key in keys:
-            found = re.search(key, details_value)
-            if found:
-                num = re.search('[\\d.]+', details_value).group()
-                if num:
-                    return float(num) * suffix[key]
+            if re.search(key, details_value) and (num_match := re.search('[\\d.]+', details_value)):
+                return float(num_match.group()) * suffix[key]
 
     def build_suffix(self, details_value, specifier):
         if details_value == 0:
             return '0'
         for key, value in suffix.items():
-            num = details_value / value
-            if num < 1000:
+            if (num := details_value / value) < 1000:
                 return specifier.format(round(num, 3), key)
 
     def build_math_suffix(self, details_value, specifier):
         for key, value in math_suffix.items():
-            num = details_value / value
-            if num < 1000:
+            if (num := details_value / value) < 1000:
                 return specifier.format(round(num, 3), key).rstrip()
 
     def build_data_text(self, key, value, append=False):
@@ -347,7 +337,7 @@ class DetailsReport:
             i = -i
         return percent, colors[i]
 
-    def find_start_y(self, img, start_x):
+    def find_start_y(self, img: Image.Image, start_x: int) -> tuple[float, int]:
         start_y = 0
         pass_black = True
         cell_height = 0
@@ -364,7 +354,7 @@ class DetailsReport:
                 break
         return start_y + (cell_height / 2), cell_height
 
-    def get_cell_position(self, img, start_x, start_y):
+    def get_cell_position(self, img: Image.Image, start_x, start_y) -> tuple[int, int]:
         y = 0
         to_top = 0
         to_bottom = 0
@@ -384,7 +374,8 @@ class DetailsReport:
                     break
         return y, to_top + to_bottom
 
-    def get_perfect_font(self, bar_height, cell_width, font_path, keys):
+    def get_perfect_font(self, bar_height: float, cell_width: int, font_path: str, keys) -> tuple[
+        FreeTypeFont, int]:
         font_size = float('inf')
         font_height = 0
         for key in keys:
@@ -394,7 +385,7 @@ class DetailsReport:
                 font_height = calc_height
         return ImageFont.truetype(font_path, font_size), font_height
 
-    def calc_font(self, bar_height, cell_width, font_path, test_str, font_size_start):
+    def calc_font(self, bar_height: float, cell_width: int, font_path: str, test_str, font_size_start) -> tuple:
         if font_size_start == float('inf'):
             font_size_start = 0
         perfect_height = bar_height - 4

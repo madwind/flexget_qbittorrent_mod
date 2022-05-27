@@ -1,5 +1,7 @@
+from typing import Final
+
 from ..schema.xwt import XWT
 
 
 class MainClass(XWT):
-    URL = 'https://xwt-classics.net/'
+    URL: Final = 'https://xwt-classics.net/'

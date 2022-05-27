@@ -1,23 +1,29 @@
+from __future__ import annotations
+
 import re
+from typing import Final
 from urllib.parse import urljoin
 
-from ..utils.net_utils import get_module_name
+from requests import Response
+
+from ..base.entry import SignInEntry
 from ..base.request import check_network_state, NetworkState
 from ..base.sign_in import check_final_state, SignState, Work
 from ..schema.nexusphp import NexusPHP
 from ..utils import net_utils, google_auth
+from ..utils.net_utils import get_module_name
 
 
 class MainClass(NexusPHP):
-    URL = 'https://kp.m-team.cc/'
-    USER_CLASSES = {
+    URL: Final = 'https://kp.m-team.cc/'
+    USER_CLASSES: Final = {
         'downloaded': [2147483648000, 3221225472000],
         'share_ratio': [7, 9],
         'days': [168, 224]
     }
 
     @classmethod
-    def sign_in_build_schema(cls):
+    def sign_in_build_schema(cls) -> dict:
         return {
             get_module_name(cls): {
                 'type': 'object',
@@ -36,7 +42,7 @@ class MainClass(NexusPHP):
             }
         }
 
-    def sign_in_build_login_workflow(self, entry, config):
+    def sign_in_build_login_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/takelogin.php',
@@ -49,13 +55,13 @@ class MainClass(NexusPHP):
             )
         ]
 
-    def sign_in_build_login_data(self, login, last_content):
+    def sign_in_build_login_data(self, login: dict, last_content: str) -> dict:
         return {
             'username': login['username'],
             'password': login['password'],
         }
 
-    def sign_in_by_verify(self, entry, config, work, last_content):
+    def sign_in_by_verify(self, entry: SignInEntry, config: dict, work: Work, last_content: str) -> Response | None:
         if not (login := entry['site_config'].get('login')):
             entry.fail_with_prefix('Login data not found!')
             return
@@ -83,7 +89,7 @@ class MainClass(NexusPHP):
                 entry.fail_with_prefix('Attempts text not found!  with google_auth')
         return login_response
 
-    def get_messages(self, entry, config):
+    def get_messages(self, entry: SignInEntry, config: dict) -> None:
         self.get_nexusphp_messages(entry, config)
         system_message_url = '/messages.php?action=viewmailbox&box=-2'
         self.get_nexusphp_messages(entry, config, messages_url=system_message_url)

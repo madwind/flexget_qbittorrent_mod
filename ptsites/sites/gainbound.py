@@ -1,10 +1,12 @@
+from typing import Final
+
 from ..schema.nexusphp import Attendance
 from ..utils.net_utils import dict_merge
 
 
 class MainClass(Attendance):
-    URL = 'https://gainbound.net/'
-    USER_CLASSES = {
+    URL: Final = 'https://gainbound.net/'
+    USER_CLASSES: Final = {
         'uploaded': [805306368000, 3298534883328],
         'share_ratio': [3.05, 4.55],
         'points': [400000, 1000000],

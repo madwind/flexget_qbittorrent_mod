@@ -6,6 +6,7 @@ from urllib.parse import urljoin
 from flexget.utils.soup import get_soup
 
 from .private_torrent import PrivateTorrent
+from ..base.entry import SignInEntry
 from ..base.request import check_network_state, NetworkState
 from ..utils import net_utils
 from ..utils.value_hanlder import handle_infinite
@@ -13,7 +14,7 @@ from ..utils.value_hanlder import handle_infinite
 
 class Gazelle(PrivateTorrent, ABC):
 
-    def get_messages(self, entry, config):
+    def get_messages(self, entry: SignInEntry, config: dict) -> None:
         self.get_gazelle_message(entry, config)
 
     @property
@@ -54,7 +55,8 @@ class Gazelle(PrivateTorrent, ABC):
             }
         }
 
-    def get_gazelle_message(self, entry, config, message_body_selector='div[id*="message"]'):
+    def get_gazelle_message(self, entry: SignInEntry, config: dict,
+                            message_body_selector: str = 'div[id*="message"]') -> None:
         message_url = urljoin(entry['url'], '/inbox.php')
         message_box_response = self.request(entry, 'get', message_url)
         network_state = check_network_state(entry, message_url, message_box_response)
@@ -81,7 +83,7 @@ class Gazelle(PrivateTorrent, ABC):
         if failed:
             entry.fail_with_prefix('Can not read message body!')
 
-    def handle_join_date(self, value):
+    def handle_join_date(self, value: str) -> datetime.date:
         year_regex = '(\\d+) (年|years?)'
         month_regex = '(\\d+) (月|months?)'
         week_regex = '(\\d+) (周|weeks?)'

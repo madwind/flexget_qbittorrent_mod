@@ -1,7 +1,14 @@
+from __future__ import annotations
+
 import json
 from io import BytesIO
+from typing import Final
 from urllib.parse import urljoin
 
+from flexget.entry import Entry
+from requests import Response
+
+from ..base.entry import SignInEntry
 from ..base.request import check_network_state, NetworkState
 from ..base.sign_in import check_final_state, SignState, check_sign_in_state
 from ..base.work import Work
@@ -17,17 +24,17 @@ except ImportError:
 
 
 class MainClass(NexusPHP):
-    URL = 'https://hdsky.me/'
-    TORRENT_PAGE_URL = '/details.php?id={torrent_id}&hit=1'
-    DOWNLOAD_URL_REGEX = '/download\\.php\\?id=\\d+&passkey=.*?(?=")'
-    USER_CLASSES = {
+    URL: Final = 'https://hdsky.me/'
+    TORRENT_PAGE_URL: Final = '/details.php?id={torrent_id}&hit=1'
+    DOWNLOAD_URL_REGEX: Final = '/download\\.php\\?id=\\d+&passkey=.*?(?=")'
+    USER_CLASSES: Final = {
         'downloaded': [8796093022208, 10995116277760],
         'share_ratio': [5, 5.5],
         'days': [315, 455]
     }
 
     @classmethod
-    def reseed_build_schema(cls):
+    def reseed_build_schema(cls) -> dict:
         return {
             get_module_name(cls): {
                 'type': 'object',
@@ -38,7 +45,7 @@ class MainClass(NexusPHP):
             }
         }
 
-    def sign_in_build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/',
@@ -59,7 +66,7 @@ class MainClass(NexusPHP):
             ),
         ]
 
-    def sign_in_by_ocr(self, entry, config, work, last_content):
+    def sign_in_by_ocr(self, entry: SignInEntry, config: dict, work: Work, last_content: str) -> Response | None:
         data = {
             'action': (None, 'new')
         }
@@ -69,28 +76,25 @@ class MainClass(NexusPHP):
         if image_hash_network_state != NetworkState.SUCCEED:
             return
         content = net_utils.decode(image_hash_response)
-        image_hash = json.loads(content)['code']
 
-        if image_hash:
-            image_url = urljoin(entry['url'], work.image_url)
-            img_url = image_url.format(image_hash)
-            img_response = self.request(entry, 'get', img_url)
-            img_network_state = check_network_state(entry, img_url, img_response)
-            if img_network_state != NetworkState.SUCCEED:
-                return
-        else:
+        if not (image_hash := json.loads(content)['code']):
             entry.fail_with_prefix('Cannot find: image_hash')
+            return
+        image_url = urljoin(entry['url'], work.image_url)
+        img_url = image_url.format(image_hash)
+        img_response = self.request(entry, 'get', img_url)
+        img_network_state = check_network_state(entry, img_url, img_response)
+        if img_network_state != NetworkState.SUCCEED:
             return
         img = Image.open(BytesIO(img_response.content))
         code, img_byte_arr = baidu_ocr.get_ocr_code(img, entry, config)
-        if code:
-            if len(code) == 6:
-                data = {
-                    'action': (None, 'showup'),
-                    'imagehash': (None, image_hash),
-                    'imagestring': (None, code)
-                }
-                return self.request(entry, 'post', work.url, files=data)
+        if code and len(code) == 6:
+            data = {
+                'action': (None, 'showup'),
+                'imagehash': (None, image_hash),
+                'imagestring': (None, code)
+            }
+            return self.request(entry, 'post', work.url, files=data)
 
     @property
     def details_selector(self) -> dict:
@@ -103,6 +107,7 @@ class MainClass(NexusPHP):
         return selector
 
     @classmethod
-    def reseed_build_entry(cls, entry, config, site, passkey, torrent_id):
+    def reseed_build_entry(cls, entry: Entry, config: dict, site: dict, passkey: str | dict,
+                           torrent_id: str) -> None:
         cls.reseed_build_entry_from_page(entry, config, passkey, torrent_id, cls.URL, cls.TORRENT_PAGE_URL,
                                          cls.DOWNLOAD_URL_REGEX)

@@ -49,5 +49,5 @@ class Unit3D(PrivateTorrent, ABC):
         }
         return selector
 
-    def handle_points(self, value):
+    def handle_points(self, value: str) -> str:
         return value.replace(' ', '')

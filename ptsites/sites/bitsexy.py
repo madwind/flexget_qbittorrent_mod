@@ -1,20 +1,22 @@
 import re
+from typing import Final
 
-from ..base.sign_in import  check_final_state, SignState
+from ..base.entry import SignInEntry
+from ..base.sign_in import check_final_state, SignState
 from ..base.work import Work
 from ..schema.private_torrent import PrivateTorrent
 from ..utils.value_hanlder import handle_join_date
 
 
 class MainClass(PrivateTorrent):
-    URL = 'https://bitsexy.org/'
-    USER_CLASSES = {
+    URL: Final = 'https://bitsexy.org/'
+    USER_CLASSES: Final = {
         'uploaded': [536_870_912_000],
         'share_ratio': [3.05],
         'days': [28],
     }
 
-    def sign_in_build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/',

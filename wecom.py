@@ -116,7 +116,7 @@ class WeComNotifier:
         except Exception as e:
             raise PluginError(str(e))
 
-    def _parse_config(self, config):
+    def _parse_config(self, config: dict) -> None:
         self._corp_id = config.get(_CORP_ID)
         self._corp_secret = config.get(_CORP_SECRET)
         self._agent_id = config.get(_AGENT_ID)
@@ -127,7 +127,7 @@ class WeComNotifier:
             self._text_limit = 9999
         self.image = config.get(_IMAGE)
 
-    def _save_message(self, msg, session):
+    def _save_message(self, msg: str, session: Session):
         msg_limit, msg_extend = self._get_msg_limit(msg)
 
         message_entry = MessageEntry(
@@ -139,7 +139,7 @@ class WeComNotifier:
         if msg_extend:
             self._save_message(msg_extend, session)
 
-    def _request(self, method, url, **kwargs):
+    def _request(self, method: str, url: str, **kwargs: dict) -> dict:
         try:
             response_json = requests.request(method, url, **kwargs, timeout=60).json()
             if response_json.get('errcode') != 0:
@@ -169,7 +169,7 @@ class WeComNotifier:
         else:
             logger.error(f'request_data: {data}, response_json: {response_json}')
 
-    def _get_msg_limit(self, msg):
+    def _get_msg_limit(self, msg: str) -> tuple:
         msg_encode = msg.encode()
         if len(msg_encode) < self._text_limit:
             return msg, ''
@@ -181,13 +181,12 @@ class WeComNotifier:
             if msg_limit_len == 0 and line_len >= self._text_limit:
                 return msg_encode[:self._text_limit].decode(), msg_encode[self._text_limit:].decode()
 
-            if msg_limit_len + line_len + 1 < self._text_limit:
-                msg_limit_len += line_len + 1
-            else:
+            if msg_limit_len + line_len + 1 >= self._text_limit:
                 return msg_encode[:msg_limit_len].decode('utf-8', 'ignore'), msg_encode[msg_limit_len:].decode('utf-8',
                                                                                                                'ignore')
+            msg_limit_len += line_len + 1
 
-    def _get_access_token(self, session, corp_id, corp_secret):
+    def _get_access_token(self, session: Session, corp_id, corp_secret):
         logger.debug('loading cached access token')
         access_token = self._get_cached_access_token(session, corp_id, corp_secret)
         logger.debug('found cached access token: {0}'.format(access_token))
@@ -213,7 +212,7 @@ class WeComNotifier:
 
         return new_access_token
 
-    def _get_access_token_n_update_db(self, session):
+    def _get_access_token_n_update_db(self, session: Session):
         access_token, has_new_access_token = self._get_access_token(session, self._corp_id, self._corp_secret)
         logger.debug('access_token={}', access_token)
 

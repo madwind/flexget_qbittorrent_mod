@@ -1,11 +1,14 @@
+from typing import Final
+
+from ..base.entry import SignInEntry
 from ..base.sign_in import check_final_state, SignState, Work
 from ..schema.private_torrent import PrivateTorrent
 
 
 class MainClass(PrivateTorrent):
-    URL = 'https://theaudioscene.net/'
+    URL: Final = 'https://theaudioscene.net/'
 
-    def sign_in_build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/',

@@ -2,12 +2,14 @@ import itertools
 import json
 from abc import ABC
 from pathlib import Path
+from typing import ClassVar
 from urllib.parse import urljoin
 
 from flexget.utils.soup import get_soup
 from loguru import logger
 
 from .private_torrent import PrivateTorrent
+from ..base.entry import SignInEntry
 from ..base.request import check_network_state, NetworkState
 from ..base.sign_in import SignState, check_final_state, check_sign_in_state
 from ..base.work import Work
@@ -17,7 +19,7 @@ from ..utils.value_hanlder import handle_infinite
 
 class NexusPHP(PrivateTorrent, ABC):
 
-    def get_messages(self, entry, config):
+    def get_messages(self, entry: SignInEntry, config: dict) -> None:
         self.get_nexusphp_messages(entry, config)
 
     @property
@@ -62,8 +64,9 @@ class NexusPHP(PrivateTorrent, ABC):
             }
         }
 
-    def get_nexusphp_messages(self, entry, config, messages_url='/messages.php?action=viewmailbox&box=1&unread=yes',
-                              unread_elements_selector='td > img[alt*="Unread"]'):
+    def get_nexusphp_messages(self, entry: SignInEntry, config: dict,
+                              messages_url: str = '/messages.php?action=viewmailbox&box=1&unread=yes',
+                              unread_elements_selector: str = 'td > img[alt*="Unread"]') -> None:
         message_url = urljoin(entry['url'], messages_url)
         message_box_response = self.request(entry, 'get', message_url)
         message_box_network_state = check_network_state(entry, message_url, message_box_response)
@@ -95,7 +98,7 @@ class NexusPHP(PrivateTorrent, ABC):
 
 
 class AttendanceHR(NexusPHP, ABC):
-    def sign_in_build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/attendance.php',
@@ -123,7 +126,7 @@ class Attendance(AttendanceHR, ABC):
 
 
 class BakatestHR(NexusPHP, ABC):
-    def sign_in_build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/bakatest.php',
@@ -140,7 +143,7 @@ class BakatestHR(NexusPHP, ABC):
             )
         ]
 
-    def sign_in_by_question(self, entry, config, work, last_content=None):
+    def sign_in_by_question(self, entry: SignInEntry, config: dict, work: Work, last_content: str = None) -> None:
         question_element = get_soup(last_content).select_one('input[name="questionid"]')
         if question_element:
             question_id = question_element.get('value')
@@ -212,9 +215,9 @@ class Bakatest(BakatestHR, ABC):
 
 
 class VisitHR(NexusPHP, ABC):
-    SUCCEED_REGEX = '[欢歡]迎回[来來家]'
+    SUCCEED_REGEX: ClassVar = '[欢歡]迎回[来來家]'
 
-    def sign_in_build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/',

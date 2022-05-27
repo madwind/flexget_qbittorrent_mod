@@ -1,19 +1,21 @@
 import re
+from typing import Final
 
+from ..base.entry import SignInEntry
 from ..base.sign_in import check_final_state, SignState, Work
 from ..schema.private_torrent import PrivateTorrent
 from ..utils.value_hanlder import handle_infinite
 
 
 class MainClass(PrivateTorrent):
-    URL = 'https://scenetime.com/'
-    USER_CLASSES = {
+    URL: Final = 'https://scenetime.com/'
+    USER_CLASSES: Final = {
         'uploaded': [32_212_254_720],
         'share_ratio': [1.05],
         'days': [28],
     }
 
-    def sign_in_build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/',

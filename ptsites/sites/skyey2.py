@@ -1,6 +1,12 @@
+from __future__ import annotations
+
 import re
+from typing import Final
 from urllib.parse import urljoin
 
+from requests import Response
+
+from ..base.entry import SignInEntry
 from ..base.request import check_network_state, NetworkState
 from ..base.sign_in import check_final_state, SignState, Work
 from ..schema.discuz import Discuz
@@ -9,13 +15,13 @@ from ..utils.net_utils import get_module_name
 
 
 class MainClass(Discuz):
-    URL = 'https://skyeysnow.com/'
-    USER_CLASSES = {
+    URL: Final = 'https://skyeysnow.com/'
+    USER_CLASSES: Final = {
         'points': [1000000]
     }
 
     @classmethod
-    def sign_in_build_schema(cls):
+    def sign_in_build_schema(cls) -> dict:
         return {
             get_module_name(cls): {
                 'type': 'object',
@@ -33,7 +39,7 @@ class MainClass(Discuz):
             }
         }
 
-    def sign_in_build_login_workflow(self, entry, config):
+    def sign_in_build_login_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/login.php',
@@ -49,7 +55,7 @@ class MainClass(Discuz):
             )
         ]
 
-    def sign_in_build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/',
@@ -61,10 +67,10 @@ class MainClass(Discuz):
             )
         ]
 
-    def sign_in_by_login(self, entry, config, work, last_content):
+    def sign_in_by_login(self, entry: SignInEntry, config: dict, work: Work, last_content: str) -> Response | None:
         if not (login := entry['site_config'].get('login')):
             entry.fail_with_prefix('Login data not found!')
-            return
+            return None
 
         secret_key = login.get('secret_key')
         username, password = login['username'], login['password']

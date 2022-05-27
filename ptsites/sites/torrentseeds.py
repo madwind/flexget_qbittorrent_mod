@@ -1,5 +1,7 @@
 import re
+from typing import Final
 
+from ..base.entry import SignInEntry
 from ..base.request import check_network_state, NetworkState
 from ..base.sign_in import check_final_state, SignState, Work
 from ..schema.unit3d import Unit3D
@@ -7,14 +9,14 @@ from ..utils.net_utils import get_module_name
 
 
 class MainClass(Unit3D):
-    URL = 'https://www.torrentseeds.org/'
-    USER_CLASSES = {
+    URL: Final = 'https://www.torrentseeds.org/'
+    USER_CLASSES: Final = {
         'uploaded': [109951162777600],
         'days': [365]
     }
 
     @classmethod
-    def sign_in_build_schema(cls):
+    def sign_in_build_schema(cls) -> dict:
         return {
             get_module_name(cls): {
                 'type': 'object',
@@ -33,7 +35,7 @@ class MainClass(Unit3D):
             }
         }
 
-    def sign_in_build_login_data(self, login, last_content):
+    def sign_in_build_login_data(self, login: dict, last_content: str) -> dict:
         m = re.search(r'name="(?P<name>.+?)" value="(?P<value>.+?)" />\s*<button type="submit"', last_content)
         return {
             '_token': re.search(r'(?<=name="_token" value=").+?(?=")', last_content).group(),
@@ -45,7 +47,7 @@ class MainClass(Unit3D):
             m.group('name'): m.group('value'),
         }
 
-    def sign_in_build_login_workflow(self, entry, config):
+    def sign_in_build_login_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/login',
@@ -60,7 +62,7 @@ class MainClass(Unit3D):
             )
         ]
 
-    def sign_in_build_workflow(self, entry, config: dict) -> list[Work]:
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/',

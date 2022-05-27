@@ -1,19 +1,21 @@
-from ..base.sign_in import check_final_state, SignState, Work
+from typing import Final
 
+from ..base.entry import SignInEntry
+from ..base.sign_in import check_final_state, SignState, Work
 from ..schema.gazelle import Gazelle
 from ..utils import net_utils
 
 
 class MainClass(Gazelle):
-    URL = 'https://oppaiti.me/'
-    USER_CLASSES = {
+    URL: Final = 'https://oppaiti.me/'
+    USER_CLASSES: Final = {
         'uploaded': [107374182400],
         'downloaded': [26843545600],
         'share_ratio': [1.1],
         'points': [10000]
     }
 
-    def sign_in_build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/',

@@ -1,10 +1,16 @@
+from __future__ import annotations
+
 import itertools
 import re
 import time
 from io import BytesIO
 from pathlib import Path
+from typing import Final
 from urllib.parse import urljoin
 
+from requests import Response
+
+from ..base.entry import SignInEntry
 from ..base.request import NetworkState, check_network_state
 from ..base.sign_in import SignState, check_sign_in_state, check_final_state
 from ..base.work import Work
@@ -32,10 +38,10 @@ _SCORE = 40
 
 
 class MainClass(NexusPHP):
-    URL = 'https://u2.dmhy.org/'
-    USERNAME_REGEX = '<bdo dir=\'ltr\'>{username}</bdo>'
-    SUCCEED_REGEX = '.{0,500}奖励UCoin: <b>\\d+'
-    USER_CLASSES = {
+    URL: Final = 'https://u2.dmhy.org/'
+    USERNAME_REGEX: Final = '<bdo dir=\'ltr\'>{username}</bdo>'
+    SUCCEED_REGEX: Final = '.{0,500}奖励UCoin: <b>\\d+'
+    USER_CLASSES: Final = {
         'downloaded': [3298534883328],
         'share_ratio': [4.55],
         'days': [700]
@@ -75,7 +81,7 @@ class MainClass(NexusPHP):
             }
         }
 
-    def sign_in_build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         site_config = entry['site_config']
         succeed_regex = [self.USERNAME_REGEX.format(username=site_config.get('username')) + self.SUCCEED_REGEX,
                          '<a href="showup.php">已[签簽]到</a>']
@@ -104,7 +110,7 @@ class MainClass(NexusPHP):
             )
         ]
 
-    def sign_in_by_anime(self, entry, config, work, last_content):
+    def sign_in_by_anime(self, entry: SignInEntry, config: dict, work: Work, last_content: str) -> Response | None:
         if not fuzz or not process:
             entry.fail_with_prefix('Dependency does not exist: [fuzzywuzzy]')
             return None
@@ -114,22 +120,18 @@ class MainClass(NexusPHP):
         ocr_config.setdefault('char_count', _CHAR_COUNT)
         ocr_config.setdefault('score', _SCORE)
 
-        data = self.build_data(entry, config, work, last_content, ocr_config)
-        if not data:
-            if self.times == ocr_config.get('retry'):
-                reason = 'Maximum number of retries reached'
-            else:
-                reason = 'Can not build_data'
-            entry.fail_with_prefix(reason)
+        if not (data := self.build_data(entry, config, work, last_content, ocr_config)):
+            entry.fail_with_prefix('Maximum number of retries reached' if self.times == ocr_config.get('retry')
+                                   else 'Can not build_data')
             return None
         logger.info(data)
         return self.request(entry, 'post', work.url, data=data)
 
-    def build_data(self, entry, config, work, base_content, ocr_config):
+    def build_data(self, entry: SignInEntry, config: dict, work: Work, base_content: str,
+                   ocr_config: dict) -> dict | None:
         if entry.failed:
             return None
-        img_url_match = re.search(work.img_regex, base_content)
-        if not img_url_match:
+        if not (img_url_match := re.search(work.img_regex, base_content)):
             entry.fail_with_prefix('Can not found img_url')
             return None
         img_url = img_url_match.group()
@@ -150,58 +152,52 @@ class MainClass(NexusPHP):
                 for key, regex in work.data.items():
                     if key == 'regex_keys':
                         for regex_key in regex:
-                            regex_key_search = re.findall(regex_key, base_content, re.DOTALL)
                             select = {}
                             ratio_score = 0
-                            if regex_key_search:
-                                for captcha, value in regex_key_search:
-                                    answer_list = list(filter(lambda x2: len(x2) > 0,
-                                                              map(lambda x: str.join('',
-                                                                                     re.findall(r'[\u2E80-\u9FFF]', x)),
-                                                                  value.split('\n'))))
-                                    if answer_list:
-                                        split_value, partial_ratio = process.extractOne(oct_text, answer_list,
-                                                                                        scorer=fuzz.partial_ratio)
-                                    else:
-                                        partial_ratio = 0
-                                    if partial_ratio > ratio_score:
-                                        select = (captcha, value)
-                                        ratio_score = partial_ratio
-                                    logger.debug('value: {}, ratio: {}', value.replace('\n', '\\'), partial_ratio)
-                            else:
+                            if not (regex_key_search := re.findall(regex_key, base_content, re.DOTALL)):
                                 entry.fail_with_prefix(
                                     'Cannot find regex_key: {}, url: {}'.format(regex_key, work.url))
                                 return None
+                            for captcha, value in regex_key_search:
+                                if answer_list := list(filter(lambda x2: len(x2) > 0,
+                                                              map(lambda x: str.join('',
+                                                                                     re.findall(r'[\u2E80-\u9FFF]', x)
+                                                                                     ), value.split('\n')))):
+                                    split_value, partial_ratio = process.extractOne(oct_text, answer_list,
+                                                                                    scorer=fuzz.partial_ratio)
+                                else:
+                                    partial_ratio = 0
+                                if partial_ratio > ratio_score:
+                                    select = (captcha, value)
+                                    ratio_score = partial_ratio
+                                logger.debug('value: {}, ratio: {}', value.replace('\n', '\\'), partial_ratio)
                             if ratio_score and ratio_score > ocr_config.get('score'):
                                 captcha, value = select
                                 data[captcha] = value
                                 found = True
                     else:
-                        value_search = re.search(regex, base_content, re.DOTALL)
-                        if value_search:
-                            data[key] = value_search.group(1)
-                        else:
+                        if not (value_search := re.search(regex, base_content, re.DOTALL)):
                             entry.fail_with_prefix('Cannot find key: {}, url: {}'.format(key, work.url))
                             return None
+                        data[key] = value_search.group(1)
 
         if not found:
-            if self.times < ocr_config.get('retry'):
-                self.times += 1
-                reload_url = re.search(work.reload_regex, base_content).group()
-                real_reload_url = urljoin(entry['url'], reload_url)
-                reload_response = self.request(entry, 'get', real_reload_url)
-                reload__net_state = check_network_state(entry, real_reload_url, reload_response)
-                if reload__net_state != NetworkState.SUCCEED:
-                    return None
-                reload_content = net_utils.decode(reload_response)
-                return self.build_data(entry, config, work, reload_content, ocr_config)
-            else:
+            if self.times >= ocr_config.get('retry'):
                 return None
+            self.times += 1
+            reload_url = re.search(work.reload_regex, base_content).group()
+            real_reload_url = urljoin(entry['url'], reload_url)
+            reload_response = self.request(entry, 'get', real_reload_url)
+            reload__net_state = check_network_state(entry, real_reload_url, reload_response)
+            if reload__net_state != NetworkState.SUCCEED:
+                return None
+            reload_content = net_utils.decode(reload_response)
+            return self.build_data(entry, config, work, reload_content, ocr_config)
         site_config = entry['site_config']
         data['message'] = site_config.get('comment')
         return data
 
-    def get_image(self, entry, config, img_url, char_count):
+    def get_image(self, entry: SignInEntry, config: dict, img_url: str, char_count: int) -> tuple | None:
         image_list = []
         checked_list = []
         images_sort_match = None
@@ -216,8 +212,7 @@ class MainClass(NexusPHP):
             return None
         image_list.append(new_image)
         while not images_sort_match and len(image_list) < 8:
-            new_image = self.get_new_image(entry, img_url)
-            if not new_image:
+            if not (new_image := self.get_new_image(entry, img_url)):
                 return None
             image_list.append(new_image)
             for images in list(itertools.combinations(image_list, 2)):
@@ -265,7 +260,7 @@ class MainClass(NexusPHP):
                 return None
             return question_image
 
-    def get_new_image(self, entry, img_url):
+    def get_new_image(self, entry: SignInEntry, img_url: str) -> Image.Image | None:
         time.sleep(1)
         logger.debug('request image...')
         real_img_url = urljoin(entry['url'], img_url)
@@ -277,7 +272,7 @@ class MainClass(NexusPHP):
         dmhy_image.remove_date_string(new_image)
         return new_image
 
-    def save_iamge(self, new_image, path):
+    def save_iamge(self, new_image: Image.Image | None, path: str) -> None:
         if not Path('dmhy').is_dir():
             return
         if new_image:

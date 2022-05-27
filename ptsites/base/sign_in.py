@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 import re
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Union
 
 from loguru import logger
 from requests import Response
@@ -37,9 +38,9 @@ def check_state(entry: SignInEntry, work: Work, response: Response, content: str
 
 
 def check_sign_in_state(entry: SignInEntry, work: Work, response: Response,
-                        content: str) -> Union[NetworkState, SignState]:
-    network_state = check_network_state(entry, work, response, content=content, check_content=True)
-    if network_state != NetworkState.SUCCEED:
+                        content: str) -> NetworkState | SignState:
+    if (network_state := check_network_state(entry, work, response, content=content,
+                                             check_content=True)) != NetworkState.SUCCEED:
         return network_state
     if not (succeed_regex := work.succeed_regex):
         entry['result'] = SignState.SUCCEED.value
@@ -51,23 +52,20 @@ def check_sign_in_state(entry: SignInEntry, work: Work, response: Response,
         if succeed_msg := re.search(regex, content):
             entry['result'] = re.sub('<.*?>|&shy;|&nbsp;', '', succeed_msg.group(group_index))
             return SignState.SUCCEED
-    if fail_regex := work.fail_regex:
-        if re.search(fail_regex, content):
-            return SignState.WRONG_ANSWER
+    if (fail_regex := work.fail_regex) and re.search(fail_regex, content):
+        return SignState.WRONG_ANSWER
     for reason in NetworkErrorReason:
         if re.search(reason.value, content):
             entry.fail_with_prefix(
                 NetworkState.NETWORK_ERROR.value.format(url=work.url, error=reason.name.title()))
             return NetworkState.NETWORK_ERROR
-    if assert_state := work.assert_state:
-        if assert_state[1] != SignState.NO_SIGN_IN:
-            logger.warning(f'no sign in, regex: {succeed_regex}, content: {content}')
+    if (assert_state := work.assert_state) and assert_state[1] != SignState.NO_SIGN_IN:
+        logger.warning(f'no sign in, regex: {succeed_regex}, content: {content}')
     return SignState.NO_SIGN_IN
 
 
 def check_final_state(entry: SignInEntry, work: Work, response: Response, content: str) -> SignState:
-    sign_in_state: SignState = check_sign_in_state(entry, work, response, content)
-    if sign_in_state == SignState.NO_SIGN_IN:
+    if (sign_in_state := check_sign_in_state(entry, work, response, content)) == SignState.NO_SIGN_IN:
         entry.fail_with_prefix(SignState.SIGN_IN_FAILED.value.format('no sign in'))
         return SignState.SIGN_IN_FAILED
     return sign_in_state

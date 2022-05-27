@@ -1,17 +1,18 @@
 import re
+from typing import Final
 
 from ..schema.luminance import Luminance
 
 
 class MainClass(Luminance):
-    URL = 'https://www.cathode-ray.tube/'
-    USER_CLASSES = {
+    URL: Final = 'https://www.cathode-ray.tube/'
+    USER_CLASSES: Final = {
         'uploaded': [54975581388800],
         'share_ratio': [1],
         'days': [364]
     }
 
-    def sign_in_build_login_data(self, login, last_content):
+    def sign_in_build_login_data(self, login: dict, last_content: str) -> dict:
         return {
             'token': re.search(r'(?<=name="token" value=").*?(?=")', last_content).group(),
             'username': login['username'],

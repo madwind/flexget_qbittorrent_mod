@@ -1,3 +1,10 @@
+from __future__ import annotations
+
+from typing import Final
+
+from flexget.entry import Entry
+
+from ..base.entry import SignInEntry
 from ..base.sign_in import check_sign_in_state, SignState, check_final_state
 from ..base.work import Work
 from ..schema.nexusphp import NexusPHP
@@ -6,20 +13,20 @@ from ..utils.net_utils import get_module_name
 
 
 class MainClass(NexusPHP):
-    URL = 'https://hdchina.org/'
-    TORRENT_PAGE_URL = '/details.php?id={torrent_id}&hit=1'
-    DOWNLOAD_URL_REGEX = '/download\\.php\\?hash=.*?&uid=\\d+'
-    DATA = {
+    URL: Final = 'https://hdchina.org/'
+    TORRENT_PAGE_URL: Final = '/details.php?id={torrent_id}&hit=1'
+    DOWNLOAD_URL_REGEX: Final = '/download\\.php\\?hash=.*?&uid=\\d+'
+    DATA: Final = {
         'csrf': '(?<=x-csrf" content=").*?(?=")',
     }
-    USER_CLASSES = {
+    USER_CLASSES: Final = {
         'downloaded': [5497558138880],
         'share_ratio': [8],
         'days': [350]
     }
 
     @classmethod
-    def reseed_build_schema(cls):
+    def reseed_build_schema(cls) -> dict:
         return {
             get_module_name(cls): {
                 'type': 'object',
@@ -30,7 +37,7 @@ class MainClass(NexusPHP):
             }
         }
 
-    def sign_in_build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/torrents.php',
@@ -73,6 +80,7 @@ class MainClass(NexusPHP):
         return selector
 
     @classmethod
-    def reseed_build_entry(cls, entry, config, site, passkey, torrent_id):
+    def reseed_build_entry(cls, entry: Entry, config: dict, site: dict, passkey: str | dict,
+                           torrent_id: str) -> None:
         cls.reseed_build_entry_from_page(entry, config, passkey, torrent_id, cls.URL, cls.TORRENT_PAGE_URL,
-                                   cls.DOWNLOAD_URL_REGEX)
+                                         cls.DOWNLOAD_URL_REGEX)

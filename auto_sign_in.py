@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 
@@ -45,14 +47,14 @@ class PluginAutoSignIn:
         return config
 
     def on_task_input(self, task: Task, config: dict) -> list[SignInEntry]:
-        config: dict = self.prepare_config(config)
-        sites: dict = config.get('sites')
+        config = self.prepare_config(config)
+        sites: dict = config['sites']
 
         entries: list[SignInEntry] = []
 
         for site_name, site_configs in sites.items():
             if not isinstance(site_configs, list):
-                site_configs: list = [site_configs]
+                site_configs = [site_configs]
             for sub_site_config in site_configs:
                 entry = SignInEntry(
                     title=f'{site_name} {datetime.now().date()}',

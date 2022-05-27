@@ -1,22 +1,24 @@
+from typing import Final
+
+from ..base.entry import SignInEntry
 from ..base.request import NetworkState
 from ..base.request import check_network_state
 from ..base.sign_in import check_final_state, SignState, Work
-
 from ..schema.gazelle import Gazelle
 from ..utils import net_utils
 from ..utils.net_utils import get_module_name
 
 
 class MainClass(Gazelle):
-    URL = 'https://jpopsuki.eu/'
-    USER_CLASSES = {
+    URL: Final = 'https://jpopsuki.eu/'
+    USER_CLASSES: Final = {
         'uploaded': [26843545600],
         'share_ratio': [1.05],
         'days': [14]
     }
 
     @classmethod
-    def sign_in_build_schema(cls):
+    def sign_in_build_schema(cls) -> dict:
         return {
             get_module_name(cls): {
                 'type': 'object',
@@ -35,7 +37,7 @@ class MainClass(Gazelle):
             }
         }
 
-    def sign_in_build_login_data(self, login, last_content):
+    def sign_in_build_login_data(self, login: dict, last_content: str) -> dict:
         return {
             'username': login['username'],
             'password': login['password'],
@@ -43,7 +45,7 @@ class MainClass(Gazelle):
             'login': 'Log In!',
         }
 
-    def sign_in_build_login_workflow(self, entry, config):
+    def sign_in_build_login_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/login.php',
@@ -53,7 +55,7 @@ class MainClass(Gazelle):
             ),
         ]
 
-    def sign_in_build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/',
