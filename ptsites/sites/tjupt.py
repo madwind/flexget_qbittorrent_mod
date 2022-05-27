@@ -1,6 +1,7 @@
 import re
 
 import requests
+from loguru import logger
 
 from ..base.entry import SignInEntry
 from ..base.request import check_network_state, NetworkState
@@ -35,7 +36,8 @@ class MainClass(NexusPHP):
                 url='/attendance.php',
                 method=self.sign_in_by_douban,
                 succeed_regex=['这是您的首次签到，本次签到获得.*?个魔力值。',
-                               '签到成功，这是您的第.*?次签到，已连续签到.*?天，本次签到获得.*?个魔力值。'],
+                               '签到成功，这是您的第.*?次签到，已连续签到.*?天，本次签到获得.*?个魔力值。',
+                               '重新签到成功，本次签到获得.*?个魔力值'],
                 assert_state=(check_final_state, SignState.SUCCEED)
             )
         ]
@@ -79,6 +81,7 @@ class MainClass(NexusPHP):
             answer = self.get_answer(config, img_name, answers)
             if not answer:
                 entry.fail_with_prefix('Cannot find answer')
+                logger.info(f'img_name: {img_name}, answers: {answers}')
                 return
             data = {
                 'answer': answer,
@@ -86,6 +89,7 @@ class MainClass(NexusPHP):
             }
             return self.request(entry, 'post', work.url, data=data)
         entry.fail_with_prefix('Cannot find img_name')
+        logger.info(f'last_content: {last_content}')
         return
 
     def get_answer(self, config, img_name, answers):
