@@ -23,7 +23,7 @@ from ..utils.net_utils import get_module_name, cookie_str_to_dict
 
 class PrivateTorrent(Request, SignIn, Detail, Message, Reseed, ABC):
     URL: str
-    USER_CLASSES: dict
+    USER_CLASSES = {}
     DOWNLOAD_PAGE_TEMPLATE = 'download.php?id={torrent_id}'
 
     @classmethod

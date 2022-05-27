@@ -12,7 +12,7 @@ from ..utils import net_utils
 
 
 class XBTIT(PrivateTorrent, ABC):
-    SUCCEED_REGEX = None
+    SUCCEED_REGEX: str
     USER_CLASSES = {
         'uploaded': [8796093022208],
         'share_ratio': [5.5],

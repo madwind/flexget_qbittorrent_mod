@@ -9,7 +9,7 @@ from loguru import logger
 
 from .private_torrent import PrivateTorrent
 from ..base.request import check_network_state, NetworkState
-from ..base.sign_in import  SignState, check_final_state, check_sign_in_state
+from ..base.sign_in import SignState, check_final_state, check_sign_in_state
 from ..base.work import Work
 from ..utils import net_utils
 from ..utils.value_hanlder import handle_infinite
@@ -148,15 +148,15 @@ class BakatestHR(NexusPHP, ABC):
             local_answer = None
             question_file = Path.cwd().joinpath('nexusphp_question.json')
             if question_file.is_file():
-                question_json = json.loads(question_file.read_text())
+                question_json = json.loads(question_file.read_text(encoding='utf-8'))
             else:
                 question_json = {}
 
             question_extend_file = Path(__file__).with_name('nexusphp_question.json')
             if question_extend_file.is_file():
-                question_extend_json = json.loads(question_extend_file.read_text())
+                question_extend_json = json.loads(question_extend_file.read_text(encoding='utf-8'))
                 net_utils.dict_merge(question_json, question_extend_json)
-                question_file.write_text(json.dumps(question_json))
+                question_file.write_text(json.dumps(question_json), encoding='utf-8')
                 question_extend_file.unlink()
 
             site_question = question_json.get(entry['url'])
@@ -192,7 +192,7 @@ class BakatestHR(NexusPHP, ABC):
                 if state == SignState.SUCCEED:
                     entry['result'] = f"{entry['result']} ( {times} attempts.)"
                     question_json[entry['url']][question_id] = answer
-                    question_file.write_text(json.dumps(question_json))
+                    question_file.write_text(json.dumps(question_json), encoding='utf-8')
                     logger.info(f"{entry['title']}, correct answer: {data}")
                     return
                 times += 1
