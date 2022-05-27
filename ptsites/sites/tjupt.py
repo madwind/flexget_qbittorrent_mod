@@ -2,6 +2,8 @@ import re
 
 import requests
 
+from ..base.entry import SignInEntry
+from ..base.request import check_network_state, NetworkState
 from ..base.sign_in import check_final_state, SignState, check_sign_in_state
 from ..base.work import Work
 from ..schema.nexusphp import NexusPHP
@@ -12,6 +14,9 @@ class MainClass(NexusPHP):
     URL = 'https://tjupt.org/'
     IMG_REGEX = r'https://.*\.doubanio\.com/view/photo/s_ratio_poster/public/(p\d+)\.'
     ANSWER_REGEX = r"<input type='radio' name='answer' value='(.*?)'>(.*?)<br>"
+    BREAK_REGEX = r'已断签.*?天，当前可补签天数为 <b>(\d+)</b> 天'
+    CONFIRM = {'action': 'confirm'}
+    CANCEL = {'action': 'cancel'}
     USER_CLASSES = {
         'uploaded': [5368709120000, 53687091200000],
         'days': [336, 924]
@@ -57,16 +62,31 @@ class MainClass(NexusPHP):
         })
         return selector
 
-    def sign_in_by_douban(self, entry, config, work, last_content=None):
-        img_name = re.search(self.IMG_REGEX, last_content).group(1)
-        answers = re.findall(self.ANSWER_REGEX, last_content)
-        answer = self.get_answer(config, img_name, answers)
-        data = {
-            'answer': answer,
-            'submit': '提交'
-        }
-        print(data)
-        # return self.request(entry, 'post', work.url, data=data)
+    def sign_in_by_douban(self, entry: SignInEntry, config, work, last_content=None):
+        if break_match := re.search(self.BREAK_REGEX, last_content):
+            if int(break_match.group(1)) > 0:
+                params = self.CONFIRM
+            else:
+                params = self.CANCEL
+            response = self.request(entry, 'get', work.url, params=params)
+            network_state = check_network_state(entry, response.url, response)
+            if not network_state == NetworkState.SUCCEED:
+                return
+            last_content = net_utils.decode(response)
+        if img_match := re.search(self.IMG_REGEX, last_content):
+            img_name = img_match.group(1)
+            answers = re.findall(self.ANSWER_REGEX, last_content)
+            answer = self.get_answer(config, img_name, answers)
+            if not answer:
+                entry.fail_with_prefix('Cannot find answer')
+                return
+            data = {
+                'answer': answer,
+                'submit': '提交'
+            }
+            return self.request(entry, 'post', work.url, data=data)
+        entry.fail_with_prefix('Cannot find img_name')
+        return
 
     def get_answer(self, config, img_name, answers):
         for value, answer in answers:
