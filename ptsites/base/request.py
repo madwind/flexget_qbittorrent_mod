@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 from enum import Enum
-from typing import Optional, Union
 
 import requests
 from requests import Response
@@ -15,7 +16,7 @@ class NetworkState(Enum):
     NETWORK_ERROR = 'Network error: url: {url}, error: {error}'
 
 
-def check_network_state(entry, param: Union[Work, str, list[str]], response: Response,
+def check_network_state(entry, param: Work | str | list[str], response: Response,
                         content: str = None, check_content=False) -> NetworkState:
     urls = param
     if isinstance(param, Work):
@@ -37,7 +38,7 @@ class Request:
     def __init__(self):
         self.session = None
 
-    def request(self, entry, method: str, url: str, **kwargs) -> Optional[Response]:
+    def request(self, entry, method: str, url: str, **kwargs) -> Response | None:
         if not self.session:
             self.session = requests.Session()
             if entry_headers := entry.get('headers'):

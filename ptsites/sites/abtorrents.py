@@ -1,15 +1,21 @@
+from __future__ import annotations
+
 import ast
 import hashlib
+from typing import Final
 from urllib.parse import urljoin
 
+from requests import Response
+
+from ..base.entry import SignInEntry
 from ..base.request import check_network_state, NetworkState
 from ..base.sign_in import check_final_state, SignState, Work
 from ..schema.xbt import XBT
 
 
 class MainClass(XBT):
-    URL = 'https://abtorrents.me/'
-    USER_CLASSES = {
+    URL: Final = 'https://abtorrents.me/'
+    USER_CLASSES: Final = {
         'uploaded': [536870912000],
         'share_ratio': [1.5],
         'days': [90],
@@ -37,7 +43,7 @@ class MainClass(XBT):
             )
         ]
 
-    def sign_in_by_login(self, entry, config, work, last_content):
+    def sign_in_by_login(self, entry: SignInEntry, config: dict, work: Work, last_content: str) -> Response | None:
         if not (login := entry['site_config'].get('login')):
             entry.fail_with_prefix('Login data not found!')
             return

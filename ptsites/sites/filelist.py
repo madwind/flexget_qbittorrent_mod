@@ -1,23 +1,25 @@
 import re
+from typing import Final
 
+from ..base.entry import SignInEntry
 from ..base.request import NetworkState, check_network_state
-from ..base.sign_in import  SignState
-from ..base.work import Work
+from ..base.sign_in import SignState
 from ..base.sign_in import check_final_state
-from ..utils.net_utils import get_module_name
+from ..base.work import Work
 from ..schema.ocelot import Ocelot
+from ..utils.net_utils import get_module_name
 
 
 class MainClass(Ocelot):
-    URL = 'https://filelist.io/'
-    USER_CLASSES = {
+    URL: Final = 'https://filelist.io/'
+    USER_CLASSES: Final = {
         'downloaded': [45079976738816],
         'share_ratio': [5],
         'days': [1460]
     }
 
     @classmethod
-    def sign_in_build_schema(cls):
+    def sign_in_build_schema(cls) -> dict:
         return {
             get_module_name(cls): {
                 'type': 'object',
@@ -35,7 +37,7 @@ class MainClass(Ocelot):
             }
         }
 
-    def sign_in_build_login_workflow(self, entry, config):
+    def sign_in_build_login_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/login.php',
@@ -52,7 +54,7 @@ class MainClass(Ocelot):
             )
         ]
 
-    def sign_in_build_login_data(self, login, last_content):
+    def sign_in_build_login_data(self, login: dict, last_content: str) -> dict:
         return {
             'validator': re.search("(?<='validator' value=').*(?=')", last_content).group(),
             'username': login['username'],

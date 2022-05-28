@@ -1,6 +1,8 @@
 import json
+from typing import Final
 from urllib.parse import urljoin
 
+from ..base.entry import SignInEntry
 from ..base.request import NetworkState, check_network_state
 from ..base.sign_in import SignState, check_final_state
 from ..base.work import Work
@@ -9,14 +11,14 @@ from ..utils import net_utils
 
 
 class MainClass(PrivateTorrent):
-    URL = 'https://digitalcore.club/'
-    USER_CLASSES = {
+    URL: Final = 'https://digitalcore.club/'
+    USER_CLASSES: Final = {
         'uploaded': [1_288_490_188_800],
         'share_ratio': [1.1],
         'days': [210],
     }
 
-    def sign_in_build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/api/v1/status?timeSinceLastCheck=0',
@@ -27,7 +29,7 @@ class MainClass(PrivateTorrent):
             ),
         ]
 
-    def get_details(self, entry, config):
+    def get_details(self, entry: SignInEntry, config: dict) -> None:
         link = urljoin(entry['url'],
                        '/api/v1/users/{}'.format(self.get_user_id(entry, '"id":(.+?),', entry['base_content'])))
         detail_response = self.request(entry, 'get', link)

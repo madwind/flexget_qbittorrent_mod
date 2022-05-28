@@ -1,3 +1,6 @@
+from typing import Final
+
+from ..base.entry import SignInEntry
 from ..base.sign_in import check_sign_in_state, SignState, check_final_state
 from ..base.work import Work
 from ..schema.nexusphp import NexusPHP
@@ -5,8 +8,8 @@ from ..utils import net_utils
 
 
 class MainClass(NexusPHP):
-    URL = 'https://www.hdarea.co/'
-    USER_CLASSES = {
+    URL: Final = 'https://www.hdarea.co/'
+    USER_CLASSES: Final = {
         'downloaded': [1099511627776, 10995116277760],
         'share_ratio': [4.5, 6],
         'days': [140, 280]
@@ -19,7 +22,7 @@ class MainClass(NexusPHP):
         }
     }
 
-    def sign_in_build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/',

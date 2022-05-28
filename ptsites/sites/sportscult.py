@@ -1,12 +1,15 @@
+from typing import Final
+
+from ..base.entry import SignInEntry
 from ..schema.xbtit import XBTIT
 from ..utils import net_utils
 from ..utils.value_hanlder import handle_infinite
 
 
 class MainClass(XBTIT):
-    URL = 'https://sportscult.org/'
-    SUCCEED_REGEX = 'Welcome back .*?</b>'
-    USER_CLASSES = {
+    URL: Final = 'https://sportscult.org/'
+    SUCCEED_REGEX: Final = 'Welcome back .*?</b>'
+    USER_CLASSES: Final = {
         'uploaded': [268435456000],
         'share_ratio': [1.8]
     }
@@ -52,6 +55,6 @@ class MainClass(XBTIT):
         })
         return selector
 
-    def get_messages(self, entry, config):
+    def get_messages(self, entry: SignInEntry, config: dict) -> None:
         self.get_XBTIT_message(entry, config,
                                MESSAGES_URL_REGEX='index.php\\?page=usercp&amp;uid=\\d+&amp;do=pm&amp;action=list')

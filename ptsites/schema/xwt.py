@@ -1,7 +1,8 @@
 from abc import ABC
 
 from .private_torrent import PrivateTorrent
-from ..base.sign_in import  check_final_state, SignState
+from ..base.entry import SignInEntry
+from ..base.sign_in import check_final_state, SignState
 from ..base.work import Work
 from ..utils.net_utils import get_module_name
 from ..utils.value_hanlder import handle_infinite
@@ -9,7 +10,7 @@ from ..utils.value_hanlder import handle_infinite
 
 class XWT(PrivateTorrent, ABC):
     @classmethod
-    def sign_in_build_schema(cls):
+    def sign_in_build_schema(cls) -> dict:
         return {
             get_module_name(cls): {
                 'type': 'object',
@@ -27,7 +28,7 @@ class XWT(PrivateTorrent, ABC):
             }
         }
 
-    def sign_in_build_login_workflow(self, entry, config):
+    def sign_in_build_login_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/takelogin.php',
@@ -39,7 +40,7 @@ class XWT(PrivateTorrent, ABC):
             )
         ]
 
-    def sign_in_build_login_data(self, login, last_content):
+    def sign_in_build_login_data(self, login: dict, last_content: str) -> dict:
         return {
             'username': login['username'],
             'password': login['password'],

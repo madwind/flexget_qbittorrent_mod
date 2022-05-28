@@ -1,16 +1,22 @@
+from __future__ import annotations
+
 import ast
 import json
+from typing import Final
 from urllib.parse import urljoin
 
+from requests import Response
+
+from ..base.entry import SignInEntry
 from ..base.request import check_network_state, NetworkState
 from ..base.sign_in import check_final_state, SignState, Work
-from ..utils.net_utils import get_module_name
 from ..schema.private_torrent import PrivateTorrent
 from ..utils import net_utils
+from ..utils.net_utils import get_module_name
 
 
 class MainClass(PrivateTorrent):
-    URL = 'https://milkie.cc/'
+    URL: Final = 'https://milkie.cc/'
 
     @classmethod
     def sign_in_build_schema(cls):
@@ -31,7 +37,7 @@ class MainClass(PrivateTorrent):
             },
         }
 
-    def sign_in_build_login_workflow(self, entry, config):
+    def sign_in_build_login_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/api/v1/auth/sessions',
@@ -43,7 +49,7 @@ class MainClass(PrivateTorrent):
             )
         ]
 
-    def sign_in_by_login(self, entry, config, work, last_content):
+    def sign_in_by_login(self, entry: SignInEntry, config: dict, work: Work, last_content: str) -> Response | None:
         if not (login := entry['site_config'].get('login')):
             entry.fail_with_prefix('Login data not found!')
             return
@@ -55,7 +61,7 @@ class MainClass(PrivateTorrent):
         self.session.headers.update({'authorization': 'Bearer ' + ast.literal_eval(login_response.text)['token']})
         return login_response
 
-    def get_details(self, entry, config):
+    def get_details(self, entry: SignInEntry, config: dict) -> None:
         link = urljoin(entry['url'], '/api/v1/auth')
         detail_response = self.request(entry, 'get', link)
         network_state = check_network_state(entry, link, detail_response)

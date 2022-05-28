@@ -1,5 +1,6 @@
-from flexget.entry import Entry
+from typing import Final
 
+from ..base.entry import SignInEntry
 from ..base.sign_in import check_final_state, SignState
 from ..base.work import Work
 from ..schema.unit3d import Unit3D
@@ -8,13 +9,13 @@ from ..utils.value_hanlder import handle_join_date
 
 
 class MainClass(Unit3D):
-    URL = 'https://aither.cc/'
-    USER_CLASSES = {
+    URL: Final = 'https://aither.cc/'
+    USER_CLASSES: Final = {
         'uploaded': [43980465111040],
         'days': [365]
     }
 
-    def sign_in_build_workflow(self, entry: Entry, config: dict) -> list[Work]:
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/',

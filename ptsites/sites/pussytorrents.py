@@ -1,15 +1,17 @@
-from ..base.sign_in import check_final_state, SignState, Work
-from ..utils.net_utils import get_module_name
-from ..schema.private_torrent import PrivateTorrent
+from typing import Final
 
+from ..base.entry import SignInEntry
+from ..base.sign_in import check_final_state, SignState, Work
+from ..schema.private_torrent import PrivateTorrent
+from ..utils.net_utils import get_module_name
 from ..utils.value_hanlder import handle_infinite, handle_join_date
 
 
 class MainClass(PrivateTorrent):
-    URL = 'https://pussytorrents.org/'
+    URL: Final = 'https://pussytorrents.org/'
 
     @classmethod
-    def sign_in_build_schema(cls):
+    def sign_in_build_schema(cls) -> dict:
         return {
             get_module_name(cls): {
                 'type': 'object',
@@ -27,7 +29,7 @@ class MainClass(PrivateTorrent):
             }
         }
 
-    def sign_in_build_login_workflow(self, entry, config):
+    def sign_in_build_login_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/user/account/login/',
@@ -39,7 +41,7 @@ class MainClass(PrivateTorrent):
             )
         ]
 
-    def sign_in_build_login_data(self, login, last_content):
+    def sign_in_build_login_data(self, login: dict, last_content: str) -> dict:
         return {
             'username': login['username'],
             'password': login['password'],

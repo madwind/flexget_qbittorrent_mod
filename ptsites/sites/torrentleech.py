@@ -1,17 +1,20 @@
+from typing import Final
+
+from ..base.entry import SignInEntry
 from ..base.sign_in import check_final_state, SignState, Work
 from ..schema.private_torrent import PrivateTorrent
 from ..utils.value_hanlder import handle_join_date, handle_infinite
 
 
 class MainClass(PrivateTorrent):
-    URL = 'https://www.torrentleech.org/none.torrent'
-    USER_CLASSES = {
+    URL: Final = 'https://www.torrentleech.org/none.torrent'
+    USER_CLASSES: Final = {
         'uploaded': [54975581388800],
         'share_ratio': [8],
         'days': [364]
     }
 
-    def sign_in_build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/',

@@ -1,19 +1,21 @@
 import hashlib
+from typing import Final
 
-from ..schema.private_torrent import PrivateTorrent
+from ..base.entry import SignInEntry
 from ..base.request import NetworkState, check_network_state
-from ..base.sign_in import  SignState
-from ..base.work import Work
+from ..base.sign_in import SignState
 from ..base.sign_in import check_final_state
+from ..base.work import Work
+from ..schema.private_torrent import PrivateTorrent
 from ..utils.net_utils import get_module_name
 from ..utils.value_hanlder import handle_infinite
 
 
 class MainClass(PrivateTorrent):
-    URL = 'https://www.gay-torrents.net/'
+    URL: Final = 'https://www.gay-torrents.net/'
 
     @classmethod
-    def sign_in_build_schema(cls):
+    def sign_in_build_schema(cls) -> dict:
         return {
             get_module_name(cls): {
                 'type': 'object',
@@ -31,7 +33,7 @@ class MainClass(PrivateTorrent):
             }
         }
 
-    def sign_in_build_login_workflow(self, entry, config):
+    def sign_in_build_login_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/login.php?do=login',
@@ -42,7 +44,7 @@ class MainClass(PrivateTorrent):
             )
         ]
 
-    def sign_in_build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/latest/',
@@ -54,7 +56,7 @@ class MainClass(PrivateTorrent):
             )
         ]
 
-    def sign_in_build_login_data(self, login, last_content):
+    def sign_in_build_login_data(self, login: dict, last_content: str) -> dict:
         return {
             'do': 'login',
             'vb_login_md5password': hashlib.md5(login['password'].encode()).hexdigest(),

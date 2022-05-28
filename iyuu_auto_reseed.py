@@ -8,6 +8,7 @@ from flexget.entry import Entry
 from flexget.event import event
 from flexget.plugins.clients.deluge import OutputDeluge
 from flexget.plugins.clients.transmission import PluginTransmission
+from flexget.task import Task
 from flexget.utils import json
 from loguru import logger
 from requests import RequestException
@@ -16,7 +17,7 @@ from .ptsites import executor
 from .ptsites.utils import net_utils
 
 
-def update_header_cookie(entry, headers, task):
+def update_header_cookie(entry: Entry, headers: dict, task: Task) -> None:
     if entry.get('headers'):
         task.requests.headers.update(entry['headers'])
     else:
@@ -39,7 +40,7 @@ def get_qbittorrent_mod_seeding(client_torrent):
         return True
 
 
-def to_qbittorrent_mod(entry, client_torrent):
+def to_qbittorrent_mod(entry: Entry, client_torrent) -> None:
     entry['savepath'] = client_torrent['reseed'].get('path')
     entry['autoTMM'] = client_torrent['reseed'].get('autoTMM')
     entry['category'] = client_torrent['reseed'].get('category')
@@ -54,12 +55,12 @@ def get_transmission_seeding(client_torrent):
         return client_torrent
 
 
-def to_transmission(entry, client_torrent):
+def to_transmission(entry: Entry, client_torrent):
     entry['path'] = client_torrent['reseed'].get('path')
     entry['add_paused'] = 'Yes'
 
 
-def transmission_on_task_download(self, task, config):
+def transmission_on_task_download(self, task: Task, config: dict) -> None:
     config = self.prepare_config(config)
     if not config['enabled']:
         return
@@ -212,8 +213,7 @@ class PluginIYUUAutoReseed:
             for info_hash, seeds_data in reseed_json.items():
                 client_torrent = torrent_dict[info_hash]
                 for torrent in seeds_data['torrent']:
-                    site = sites_json.get(str(torrent['sid']))
-                    if not site:
+                    if not (site := sites_json.get(str(torrent['sid']))):
                         continue
                     if torrent['info_hash'] in torrent_dict.keys():
                         continue
@@ -288,9 +288,7 @@ class PluginIYUUAutoReseed:
     def _get_site_name(self, base_url):
         domain = base_url.split('.')
         site_name = domain[-2]
-        if site_name == 'edu':
-            site_name = domain[-3]
-        return site_name
+        return site_name if site_name != 'edu' else domain[-3]
 
 
 @event('plugin.register')

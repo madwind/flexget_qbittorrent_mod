@@ -1,3 +1,6 @@
+from typing import Final
+
+from ..base.entry import SignInEntry
 from ..base.sign_in import check_final_state, SignState, Work
 from ..schema.unit3d import Unit3D
 from ..utils.net_utils import get_module_name
@@ -17,8 +20,8 @@ from ..utils.value_hanlder import handle_join_date
 # Then use that link here.
 
 class MainClass(Unit3D):
-    URL = 'https://beyond-hd.me/'
-    USER_CLASSES = {}
+    URL: Final = 'https://beyond-hd.me/'
+    USER_CLASSES: Final = {}
 
     @classmethod
     def sign_in_build_schema(cls):
@@ -33,7 +36,7 @@ class MainClass(Unit3D):
             }
         }
 
-    def sign_in_build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         site_config = entry['site_config']
         oneurl = site_config.get('oneurl')
         return [

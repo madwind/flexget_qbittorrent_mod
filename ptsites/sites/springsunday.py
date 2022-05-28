@@ -1,10 +1,12 @@
+from typing import Final
+
 from ..schema.nexusphp import Visit
 from ..utils import net_utils
 
 
 class MainClass(Visit):
-    URL = 'https://springsunday.net/'
-    USER_CLASSES = {
+    URL: Final = 'https://springsunday.net/'
+    USER_CLASSES: Final = {
         'uploaded': [1832519379627, 109951162777600],
         'downloaded': [2199023255552, 10995116277760],
         'share_ratio': [1.2, 2],

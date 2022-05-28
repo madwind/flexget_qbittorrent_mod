@@ -1,3 +1,6 @@
+from typing import Final
+
+from ..base.entry import SignInEntry
 from ..base.request import check_network_state, NetworkState
 from ..base.sign_in import Work
 from ..schema.nexusphp import AttendanceHR
@@ -6,15 +9,15 @@ from ..utils.net_utils import get_module_name
 
 
 class MainClass(AttendanceHR):
-    URL = 'https://ourbits.club/'
-    USER_CLASSES = {
+    URL: Final = 'https://ourbits.club/'
+    USER_CLASSES: Final = {
         'downloaded': [2199023255552, 8796093022208],
         'share_ratio': [4, 5.5],
         'days': [175, 364]
     }
 
     @classmethod
-    def sign_in_build_schema(cls):
+    def sign_in_build_schema(cls) -> dict:
         return {
             get_module_name(cls): {
                 'type': 'object',
@@ -34,7 +37,7 @@ class MainClass(AttendanceHR):
             }
         }
 
-    def sign_in_build_login_data(self, login, last_content):
+    def sign_in_build_login_data(self, login: dict, last_content: str) -> dict:
         return {
             '2fa_code': login.get('secret_key') and google_auth.calc(login['secret_key']) or '',
             'trackerssl': 'yes',
@@ -43,7 +46,7 @@ class MainClass(AttendanceHR):
             'returnto': 'attendance.php'
         }
 
-    def sign_in_build_login_workflow(self, entry, config):
+    def sign_in_build_login_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/takelogin.php',
@@ -53,7 +56,7 @@ class MainClass(AttendanceHR):
             )
         ]
 
-    def sign_in_build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         workflow = super().sign_in_build_workflow(entry, config)
         workflow[0].use_last_content = True
         return workflow

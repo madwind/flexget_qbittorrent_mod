@@ -1,17 +1,19 @@
 import re
+from typing import Final
 
-from ..base.sign_in import  SignState
-from ..base.work import Work
+from ..base.entry import SignInEntry
+from ..base.sign_in import SignState
 from ..base.sign_in import check_final_state
-from ..utils.net_utils import get_module_name
+from ..base.work import Work
 from ..schema.private_torrent import PrivateTorrent
+from ..utils.net_utils import get_module_name
 from ..utils.value_hanlder import handle_join_date, handle_infinite
 
 
 class MainClass(PrivateTorrent):
-    URL = 'https://ssl.bootytape.com/'
+    URL: Final = 'https://ssl.bootytape.com/'
 
-    USER_CLASSES = {
+    USER_CLASSES: Final = {
         'uploaded': [214748364800],
         'share_ratio': [1],
         'days': [31],
@@ -36,7 +38,7 @@ class MainClass(PrivateTorrent):
             }
         }
 
-    def sign_in_build_login_workflow(self, entry, config):
+    def sign_in_build_login_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/login.php',
@@ -48,7 +50,7 @@ class MainClass(PrivateTorrent):
             )
         ]
 
-    def sign_in_build_login_data(self, login, last_content):
+    def sign_in_build_login_data(self, login: dict, last_content: str) -> dict:
         return {
             'take_login': 1,
             'username': login['username'],
@@ -113,5 +115,5 @@ class MainClass(PrivateTorrent):
             }
         }
 
-    def handle_amount_of_data(self, value):
+    def handle_amount_of_data(self, value: str) -> str:
         return value + 'B'

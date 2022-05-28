@@ -1,21 +1,24 @@
-from ..base.sign_in import  SignState
-from ..base.work import Work
+from typing import Final
+
+from ..base.entry import SignInEntry
+from ..base.sign_in import SignState
 from ..base.sign_in import check_final_state
-from ..utils.net_utils import get_module_name
+from ..base.work import Work
 from ..schema.private_torrent import PrivateTorrent
+from ..utils.net_utils import get_module_name
 from ..utils.value_hanlder import handle_infinite, handle_join_date
 
 
 class MainClass(PrivateTorrent):
-    URL = 'https://www.gaytor.rent/'
-    USER_CLASSES = {
+    URL: Final = 'https://www.gaytor.rent/'
+    USER_CLASSES: Final = {
         'downloaded': [858993459200],
         'share_ratio': [1.05],
         'days': [28]
     }
 
     @classmethod
-    def sign_in_build_schema(cls):
+    def sign_in_build_schema(cls) -> dict:
         return {
             get_module_name(cls): {
                 'type': 'object',
@@ -33,7 +36,7 @@ class MainClass(PrivateTorrent):
             }
         }
 
-    def sign_in_build_login_workflow(self, entry, config):
+    def sign_in_build_login_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/takelogin.php',
@@ -45,7 +48,7 @@ class MainClass(PrivateTorrent):
             )
         ]
 
-    def sign_in_build_login_data(self, login, last_content):
+    def sign_in_build_login_data(self, login: dict, last_content: str) -> dict:
         return {
             'username': login['username'],
             'password': login['password'],

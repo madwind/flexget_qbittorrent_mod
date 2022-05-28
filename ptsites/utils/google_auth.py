@@ -6,7 +6,7 @@ import sys
 import time
 
 
-def calc(secret_key):
+def calc(secret_key: str) -> str:
     input_time = int(time.time()) // 30
     key = base64.b32decode(secret_key)
     msg = struct.pack(">Q", input_time)

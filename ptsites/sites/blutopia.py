@@ -1,4 +1,7 @@
-from ..base.sign_in import  check_final_state, SignState
+from typing import Final
+
+from ..base.entry import SignInEntry
+from ..base.sign_in import check_final_state, SignState
 from ..base.work import Work
 from ..schema.unit3d import Unit3D
 from ..utils import net_utils
@@ -6,13 +9,13 @@ from ..utils.value_hanlder import handle_join_date
 
 
 class MainClass(Unit3D):
-    URL = 'https://blutopia.xyz/'
-    USER_CLASSES = {
+    URL: Final = 'https://blutopia.xyz/'
+    USER_CLASSES: Final = {
         'uploaded': [109951162777600],
         'days': [365]
     }
 
-    def sign_in_build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/',

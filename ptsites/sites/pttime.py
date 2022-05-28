@@ -1,17 +1,20 @@
+from typing import Final
+
+from ..base.entry import SignInEntry
 from ..base.sign_in import check_final_state, SignState, Work
 from ..schema.nexusphp import Attendance
 from ..utils import net_utils
 
 
 class MainClass(Attendance):
-    URL = 'https://www.pttime.org/'
-    USER_CLASSES = {
+    URL: Final = 'https://www.pttime.org/'
+    USER_CLASSES: Final = {
         'downloaded': [3221225472000, 16106127360000],
         'share_ratio': [3.05, 4.55],
         'days': [112, 364]
     }
 
-    def sign_in_build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/attendance.php',
@@ -40,5 +43,5 @@ class MainClass(Attendance):
         })
         return selector
 
-    def get_nexusphp_messages(self, entry, config, **kwargs):
+    def get_nexusphp_messages(self, entry: SignInEntry, config: dict, **kwargs) -> None:
         super().get_nexusphp_messages(entry, config, unread_elements_selector='td > i[alt*="Unread"]')

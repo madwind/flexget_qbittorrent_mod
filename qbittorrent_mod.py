@@ -501,11 +501,10 @@ class PluginQBittorrentMod(QBittorrentModBase):
                     entry_dict.get(torrent_hash).reject(
                         reason='torrents with the same save path are not all tested')
                 continue
-            else:
-                if keep_disk_space > free_space_on_disk + delete_size:
-                    delete_size += torrent_size
-                    self._build_delete_hashes(delete_hashes, torrent_hashes, entry_dict, keep_disk_space,
-                                              free_space_on_disk, delete_size)
+            elif keep_disk_space > free_space_on_disk + delete_size:
+                delete_size += torrent_size
+                self._build_delete_hashes(delete_hashes, torrent_hashes, entry_dict, keep_disk_space,
+                                          free_space_on_disk, delete_size)
 
         self.calc_and_set_dl_limit(keep_disk_space, free_space_on_disk, delete_size, dl_limit_interval,
                                    dl_limit_on_succeeded, dl_rate_limit, dl_limit_mode)
@@ -717,11 +716,10 @@ class PluginQBittorrentMod(QBittorrentModBase):
                         working_hashes.append(entry['torrent_info_hash'])
                     logger.debug(
                         f'{entry["title"]} tags: {entry["qbittorrent_tags"]} tracker is working, set torrent upload limit to {entry_working} B/s')
-            else:
-                if up_limit != not_working_speed:
-                    not_working_hashes.append(entry['torrent_info_hash'])
-                    logger.debug(
-                        f'{entry["title"]} tags: {entry["qbittorrent_tags"]} tracker is not working, set torrent upload limit to {not_working_speed} B/s')
+            elif up_limit != not_working_speed:
+                not_working_hashes.append(entry['torrent_info_hash'])
+                logger.debug(
+                    f'{entry["title"]} tags: {entry["qbittorrent_tags"]} tracker is not working, set torrent upload limit to {not_working_speed} B/s')
         if working_hashes:
             self.client.set_torrent_upload_limit(str.join('|', working_hashes), working_speed)
         if not_working_hashes:
@@ -734,11 +732,11 @@ class PluginQBittorrentMod(QBittorrentModBase):
             for tracker in torrent_trackers:
                 tracker_url = tracker.get('url')
 
-                if not tracker_url.startswith(prefix):
+                if tracker_url.startswith(prefix):
+                    self.client.edit_trackers(entry.get('torrent_info_hash'), tracker_url, tracker_url[len(prefix):])
+                else:
                     self.client.edit_trackers(entry.get('torrent_info_hash'), tracker_url, prefix + tracker_url)
                     self.client.edit_trackers(entry.get('torrent_info_hash'), prefix + tracker_url, tracker_url)
-                else:
-                    self.client.edit_trackers(entry.get('torrent_info_hash'), tracker_url, tracker_url[len(prefix):])
 
     def on_task_learn(self, task, config):
         """ Make sure all temp files are cleaned up when entries are learned """

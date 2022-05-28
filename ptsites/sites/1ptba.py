@@ -1,24 +1,25 @@
+from __future__ import annotations
+
 import re
-from re import Match
-from typing import Optional
+from typing import Final
 from urllib.parse import urljoin
 
-from flexget.entry import Entry
 from requests import Response
 
+from ..base.entry import SignInEntry
 from ..base.sign_in import check_final_state, SignState, Work
 from ..schema.nexusphp import Attendance
 
 
 class MainClass(Attendance):
-    URL = 'https://1ptba.com/'
-    USER_CLASSES = {
+    URL: Final = 'https://1ptba.com/'
+    USER_CLASSES: Final = {
         'downloaded': [805306368000, 3298534883328],
         'share_ratio': [3.05, 4.55],
         'days': [280, 700]
     }
 
-    def sign_in_build_workflow(self, entry: Entry, config: dict) -> list[Work]:
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/attendance.php',
@@ -32,11 +33,10 @@ class MainClass(Attendance):
             )
         ]
 
-    def sign_in_by_param(self, entry: Entry, config: dict, work: Work, last_content: str = None) -> Optional[Response]:
-        response: Response = self.request(entry, 'get', work.url)
-        if response:
-            location_match: Match = re.search('window\\.location="(.*?);</script>', response.text)
-            if location_match:
+    def sign_in_by_param(self, entry: SignInEntry, config: dict, work: Work,
+                         last_content: str = None) -> Response | None:
+        if response := self.request(entry, 'get', work.url):
+            if location_match := re.search('window\\.location="(.*?);</script>', response.text):
                 uri: str = re.sub('["+ ]', '', location_match.group(1))
                 work.url = urljoin(work.url, uri)
                 return self.sign_in_by_get(entry, config, work, last_content)

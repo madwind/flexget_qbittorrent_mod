@@ -1,8 +1,13 @@
+from __future__ import annotations
+
 import re
+from typing import Final
 from urllib.parse import urljoin
 
+from flexget.entry import Entry
 from flexget.utils.soup import get_soup
 
+from ..base.entry import SignInEntry
 from ..base.request import check_network_state, NetworkState
 from ..base.sign_in import check_final_state, SignState, Work
 from ..schema.unit3d import Unit3D
@@ -12,14 +17,14 @@ from ..utils.value_hanlder import handle_join_date, handle_infinite
 
 
 class MainClass(Unit3D):
-    URL = 'https://pt.hdpost.top'
-    USER_CLASSES = {
+    URL: Final = 'https://pt.hdpost.top'
+    USER_CLASSES: Final = {
         'uploaded': [109951162777600],
         'days': [365]
     }
 
     @classmethod
-    def sign_in_build_schema(cls):
+    def sign_in_build_schema(cls) -> dict:
         return {
             get_module_name(cls): {
                 'type': 'object',
@@ -39,7 +44,7 @@ class MainClass(Unit3D):
         }
 
     @classmethod
-    def reseed_build_schema(cls):
+    def reseed_build_schema(cls) -> dict:
         return {
             get_module_name(cls): {
                 'type': 'object',
@@ -51,11 +56,12 @@ class MainClass(Unit3D):
         }
 
     @classmethod
-    def reseed_build_entry(cls, entry, config, site, passkey, torrent_id):
+    def reseed_build_entry(cls, entry: Entry, config: dict, site: dict, passkey: str | dict,
+                           torrent_id: str) -> None:
         download_page = site['download_page'].format(torrent_id=torrent_id, rsskey=passkey['rsskey'])
         entry['url'] = urljoin(MainClass.URL, download_page)
 
-    def sign_in_build_login_workflow(self, entry, config):
+    def sign_in_build_login_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/login',
@@ -70,7 +76,7 @@ class MainClass(Unit3D):
             )
         ]
 
-    def sign_in_build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/',
@@ -83,7 +89,7 @@ class MainClass(Unit3D):
             )
         ]
 
-    def sign_in_build_login_data(self, login, last_content):
+    def sign_in_build_login_data(self, login: dict, last_content: str) -> dict:
         login_page = get_soup(last_content)
         hidden_input = login_page.select_one('#formContent > form > input[type=hidden]:nth-child(7)')
         name = hidden_input.attrs['name']

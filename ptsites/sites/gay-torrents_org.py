@@ -1,12 +1,14 @@
+from typing import Final
+
 from ..schema.xbtit import XBTIT
 from ..utils import net_utils
 from ..utils.value_hanlder import handle_infinite
 
 
 class MainClass(XBTIT):
-    URL = 'https://gay-torrents.org/'
-    SUCCEED_REGEX = 'Logout'
-    USER_CLASSES = {
+    URL: Final = 'https://gay-torrents.org/'
+    SUCCEED_REGEX: Final = 'Logout'
+    USER_CLASSES: Final = {
         'uploaded': [268435456000],
         'share_ratio': [2]
     }

@@ -1,15 +1,19 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 
 from .private_torrent import PrivateTorrent
+from ..base.entry import SignInEntry
 from ..base.sign_in import SignState, check_final_state
 from ..base.work import Work
 from ..utils.value_hanlder import handle_join_date
 
 
 class AvistaZ(PrivateTorrent, ABC):
-    SUCCEED_REGEX: str
+    @property
+    @abstractmethod
+    def SUCCEED_REGEX(self) -> str:
+        pass
 
-    def sign_in_build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/',

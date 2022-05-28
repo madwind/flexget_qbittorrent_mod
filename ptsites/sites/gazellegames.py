@@ -1,7 +1,11 @@
+from __future__ import annotations
+
+from typing import Final
 from urllib.parse import urljoin
 
 from flexget.utils.soup import get_soup
 
+from ..base.entry import SignInEntry
 from ..base.request import NetworkState, check_network_state
 from ..base.sign_in import SignState
 from ..base.sign_in import check_final_state
@@ -13,15 +17,15 @@ from ..utils.value_hanlder import handle_infinite
 
 
 class MainClass(Gazelle):
-    URL = 'https://gazellegames.net/'
-    API_URL = urljoin(URL, '/api.php')
-    MESSAGE_URL = urljoin(URL, '/inbox.php?action=viewconv&id={conv_id}')
-    USER_CLASSES = {
+    URL: Final = 'https://gazellegames.net/'
+    API_URL: Final = urljoin(URL, '/api.php')
+    MESSAGE_URL: Final = urljoin(URL, '/inbox.php?action=viewconv&id={conv_id}')
+    USER_CLASSES: Final = {
         'points': [1200, 6000],
     }
 
     @classmethod
-    def sign_in_build_schema(cls):
+    def sign_in_build_schema(cls) -> dict:
         return {
             get_module_name(cls): {
                 'type': 'object',
@@ -34,7 +38,7 @@ class MainClass(Gazelle):
             }
         }
 
-    def sign_in_build_workflow(self, entry, config):
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
                 url='/',
@@ -76,7 +80,7 @@ class MainClass(Gazelle):
         })
         return selector
 
-    def get_details(self, entry, config):
+    def get_details(self, entry: SignInEntry, config: dict) -> None:
         site_config = entry['site_config']
         key = site_config.get('key')
         name = site_config.get('name')
@@ -105,7 +109,7 @@ class MainClass(Gazelle):
             'hr': str(details_response_json.get('response').get('personal').get('hnrs') or 0).replace(',', '')
         }
 
-    def get_messages(self, entry, config):
+    def get_messages(self, entry: SignInEntry, config: dict) -> None:
         site_config = entry['site_config']
         key = site_config.get('key')
         if not key:
@@ -142,7 +146,7 @@ class MainClass(Gazelle):
         if failed:
             entry.fail_with_prefix('Can not read message body!')
 
-    def get_api_response_json(self, entry, params):
+    def get_api_response_json(self, entry: SignInEntry, params: dict) -> dict | None:
         api_response = self.request(entry, 'get', MainClass.API_URL, params=params)
         network_state = check_network_state(entry, api_response.request.url, api_response)
         if network_state != NetworkState.SUCCEED:

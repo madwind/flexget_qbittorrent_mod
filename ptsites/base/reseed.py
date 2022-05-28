@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Union
 
 from flexget.entry import Entry
 
@@ -12,6 +13,6 @@ class Reseed(ABC):
 
     @classmethod
     @abstractmethod
-    def reseed_build_entry(cls, entry: Entry, config: dict, site: str, passkey: Union[str, dict],
+    def reseed_build_entry(cls, entry: Entry, config: dict, site: dict, passkey: str | dict,
                            torrent_id: str) -> None:
         pass
