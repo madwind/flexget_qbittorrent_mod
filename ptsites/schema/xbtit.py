@@ -1,7 +1,6 @@
 import re
 from abc import ABC, abstractmethod
 from datetime import date
-from typing import Final
 from urllib.parse import urljoin
 
 from dateutil.parser import parse
@@ -19,12 +18,6 @@ class XBTIT(PrivateTorrent, ABC):
     @abstractmethod
     def SUCCEED_REGEX(self) -> str:
         pass
-
-    USER_CLASSES: Final = {
-        'uploaded': [8796093022208],
-        'share_ratio': [5.5],
-        'days': [70]
-    }
 
     def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
