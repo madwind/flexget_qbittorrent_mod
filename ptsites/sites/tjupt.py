@@ -1,5 +1,5 @@
 import re
-from typing import ClassVar, Final
+from typing import Final
 
 import requests
 from loguru import logger
@@ -17,8 +17,8 @@ class MainClass(NexusPHP):
     IMG_REGEX: Final = r'https://.*\.doubanio\.com/view/photo/s_ratio_poster/public/(p\d+)\.'
     ANSWER_REGEX: Final = r"<input type='radio' name='answer' value='(.*?)'>(.*?)<br>"
     BREAK_REGEX: Final = r'已断签.*?天，当前可补签天数为 <b>(\d+)</b> 天'
-    CONFIRM: ClassVar[dict] = {'action': 'confirm'}
-    CANCEL: ClassVar[dict] = {'action': 'cancel'}
+    CONFIRM: Final = {'action': 'confirm'}
+    CANCEL: Final = {'action': 'cancel'}
     USER_CLASSES: Final = {
         'uploaded': [5368709120000, 53687091200000],
         'days': [336, 924]

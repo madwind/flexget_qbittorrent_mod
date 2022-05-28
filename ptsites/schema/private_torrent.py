@@ -3,7 +3,6 @@ from __future__ import annotations
 import datetime
 import re
 from abc import ABC, abstractmethod
-from typing import ClassVar
 from urllib.parse import urljoin
 
 import requests
@@ -29,7 +28,10 @@ class PrivateTorrent(Request, SignIn, Detail, Message, Reseed, ABC):
     def URL(self) -> str:
         pass
 
-    USER_CLASSES: ClassVar[dict[str, list[float]]] = {}
+    @property
+    def USER_CLASSES(self) -> dict[str, list[float]]:
+        return {}
+
     DOWNLOAD_PAGE_TEMPLATE = 'download.php?id={torrent_id}'
 
     @classmethod
