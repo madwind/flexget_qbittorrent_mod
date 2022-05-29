@@ -2,7 +2,6 @@ import itertools
 import json
 from abc import ABC
 from pathlib import Path
-from typing import ClassVar
 from urllib.parse import urljoin
 
 from flexget.utils.soup import get_soup
@@ -215,7 +214,9 @@ class Bakatest(BakatestHR, ABC):
 
 
 class VisitHR(NexusPHP, ABC):
-    SUCCEED_REGEX: ClassVar = '[欢歡]迎回[来來家]'
+    @property
+    def SUCCEED_REGEX(self) -> str:
+        return '[欢歡]迎回[来來家]'
 
     def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
