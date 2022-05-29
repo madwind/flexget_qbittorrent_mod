@@ -150,9 +150,9 @@ class MainClass(Gazelle):
         api_response = self.request(entry, 'get', MainClass.API_URL, params=params)
         network_state = check_network_state(entry, api_response.request.url, api_response)
         if network_state != NetworkState.SUCCEED:
-            return
+            return None
         api_response_json = api_response.json()
         if not api_response_json.get('status') == 'success':
             entry.fail_with_prefix(api_response_json)
-            return
+            return None
         return api_response_json

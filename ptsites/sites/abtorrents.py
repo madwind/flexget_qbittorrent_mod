@@ -46,11 +46,11 @@ class MainClass(XBT):
     def sign_in_by_login(self, entry: SignInEntry, config: dict, work: Work, last_content: str) -> Response | None:
         if not (login := entry['site_config'].get('login')):
             entry.fail_with_prefix('Login data not found!')
-            return
-        last_content = ast.literal_eval(last_content)
+            return None
+        last_content_json = ast.literal_eval(last_content)
         target = {'light bulb': '44c7285b', 'house': 'b9a403b9', 'musical note': '3a8441da', 'key': '2faefa2b', 'bug':
-            'c2ba10a5', 'heart': 'bed5a0e2', 'clock': '99d86267', 'world': 'ededf171'}[last_content['text']]
-        for hash in last_content['images']:
+            'c2ba10a5', 'heart': 'bed5a0e2', 'clock': '99d86267', 'world': 'ededf171'}[last_content_json['text']]
+        for hash in last_content_json['images']:
             if hashlib.shake_128(self.request(entry, 'get', urljoin(entry['url'], '/simpleCaptcha.php?hash=' + hash))
                                          .content).hexdigest(4) == target:
                 break

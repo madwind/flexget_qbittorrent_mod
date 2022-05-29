@@ -55,7 +55,7 @@ class PrivateTorrent(Request, SignIn, Detail, Message, Reseed, ABC):
         if cookie:
             entry['cookie'] = cookie
         entry['headers'] = headers
-        entry['user_classes'] = cls.USER_CLASSES
+        entry['user_classes'] = cls().USER_CLASSES
 
     def sign_in_build_login_data(self, login: dict, last_content: str) -> dict:
         return {}
@@ -103,9 +103,9 @@ class PrivateTorrent(Request, SignIn, Detail, Message, Reseed, ABC):
     def get_user_id(self, entry: SignInEntry, user_id_selector: str, base_content: str) -> str | None:
         if user_id_match := re.search(user_id_selector, base_content):
             return user_id_match.group(1)
-        else:
-            entry.fail_with_prefix('User id not found.')
-            logger.error(f'site: {entry["site_name"]} User id not found. content: {base_content}')
+        entry.fail_with_prefix('User id not found.')
+        logger.error(f'site: {entry["site_name"]} User id not found. content: {base_content}')
+        return None
 
     def get_detail_value(self, content: str, detail_config: dict) -> str | None:
         if detail_config is None:
@@ -132,7 +132,7 @@ class PrivateTorrent(Request, SignIn, Detail, Message, Reseed, ABC):
                 user_id := self.get_user_id(entry, user_id_selector, base_content)):
             return
         details_text = ''
-        for detail_source in selector.get('detail_sources').values():
+        for detail_source in selector['detail_sources'].values():
             if detail_source.get('link'):
                 detail_source['link'] = urljoin(entry['url'], detail_source['link'].format(user_id))
                 detail_response = self.request(entry, 'get', detail_source['link'])
@@ -182,9 +182,9 @@ class PrivateTorrent(Request, SignIn, Detail, Message, Reseed, ABC):
     def reseed_build_entry_from_url(cls, entry: Entry, config: dict, site: dict, passkey: dict | str,
                                     torrent_id) -> None:
         if isinstance(passkey, dict):
-            user_agent: str = config.get('user-agent')
-            cookie: str = passkey.get('cookie')
-            entry['headers']: dict = {
+            user_agent = config.get('user-agent')
+            cookie = passkey.get('cookie')
+            entry['headers'] = {
                 'user-agent': user_agent,
             }
             entry['cookie'] = cookie
@@ -230,7 +230,7 @@ class PrivateTorrent(Request, SignIn, Detail, Message, Reseed, ABC):
     def reseed_build_entry(cls, entry: Entry, config: dict, site, passkey, torrent_id) -> None:
         cls.reseed_build_entry_from_url(entry, config, site, passkey, torrent_id)
 
-    def sign_in_by_get(self, entry: SignInEntry, config: dict, work: Work, last_content: str = None) -> Response:
+    def sign_in_by_get(self, entry: SignInEntry, config: dict, work: Work, last_content: str = None) -> Response | None:
         return self.request(entry, 'get', work.url)
 
     def sign_in_by_post(self, entry: SignInEntry, config: dict, work: Work,

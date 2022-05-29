@@ -148,7 +148,7 @@ class MainClass(NexusPHP):
                 return None
             oct_text = ocr_text1 if len(ocr_text1) > len(ocr_text2) else ocr_text2
             logger.debug('jap_ocr: {}', oct_text)
-            if oct_text and len(oct_text) > ocr_config.get('char_count'):
+            if oct_text and len(oct_text) > ocr_config['char_count']:
                 for key, regex in work.data.items():
                     if key == 'regex_keys':
                         for regex_key in regex:
@@ -171,7 +171,7 @@ class MainClass(NexusPHP):
                                     select = (captcha, value)
                                     ratio_score = partial_ratio
                                 logger.debug('value: {}, ratio: {}', value.replace('\n', '\\'), partial_ratio)
-                            if ratio_score and ratio_score > ocr_config.get('score'):
+                            if ratio_score and ratio_score > ocr_config['score']:
                                 captcha, value = select
                                 data[captcha] = value
                                 found = True
@@ -259,6 +259,7 @@ class MainClass(NexusPHP):
                 logger.debug('compare_images: no Content')
                 return None
             return question_image
+        return None
 
     def get_new_image(self, entry: SignInEntry, img_url: str) -> Image.Image | None:
         time.sleep(1)

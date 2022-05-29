@@ -56,18 +56,18 @@ class PluginHtmlRss:
 
     def on_task_input(self, task: Task, config: dict) -> list[Entry]:
         config = self.prepare_config(config)
-        url = config.get('url')
+        url = config['url']
         user_agent = config.get('user-agent')
         cookie = config.get('cookie')
         root_element_selector = config.get('root_element_selector')
-        fields = config.get('fields')
-        params = config.get('params')
+        fields = config['fields']
+        params = config['params']
         headers = {
             'accept-encoding': 'gzip, deflate, br',
             'user-agent': user_agent
         }
 
-        entries = []
+        entries: list[Entry] = []
 
         try:
             task.requests.headers.update(headers)

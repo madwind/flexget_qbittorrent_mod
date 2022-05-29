@@ -15,7 +15,7 @@ class PluginHtmlRss:
 
     @plugin.priority(plugin.PRIORITY_LAST)
     def on_task_output(self, task: Task, config: dict) -> None:
-        state = config.get('state')
+        state = config['state']
         attribute = config.get('attribute')
         entries = getattr(task, state)
         for entry in entries:

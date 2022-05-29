@@ -74,18 +74,18 @@ class MainClass(NexusPHP):
         image_hash_response = self.request(entry, 'post', image_hash_url, files=data)
         image_hash_network_state = check_network_state(entry, image_hash_url, image_hash_response)
         if image_hash_network_state != NetworkState.SUCCEED:
-            return
+            return None
         content = net_utils.decode(image_hash_response)
 
         if not (image_hash := json.loads(content)['code']):
             entry.fail_with_prefix('Cannot find: image_hash')
-            return
+            return None
         image_url = urljoin(entry['url'], work.image_url)
         img_url = image_url.format(image_hash)
         img_response = self.request(entry, 'get', img_url)
         img_network_state = check_network_state(entry, img_url, img_response)
         if img_network_state != NetworkState.SUCCEED:
-            return
+            return None
         img = Image.open(BytesIO(img_response.content))
         code, img_byte_arr = baidu_ocr.get_ocr_code(img, entry, config)
         if code and len(code) == 6:
@@ -95,6 +95,7 @@ class MainClass(NexusPHP):
                 'imagestring': (None, code)
             }
             return self.request(entry, 'post', work.url, files=data)
+        return None
 
     @property
     def details_selector(self) -> dict:
