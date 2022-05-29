@@ -21,7 +21,6 @@ from ..utils.value_hanlder import handle_join_date
 
 class MainClass(Unit3D):
     URL: Final = 'https://beyond-hd.me/'
-    USER_CLASSES: Final = {}
 
     @classmethod
     def sign_in_build_schema(cls):

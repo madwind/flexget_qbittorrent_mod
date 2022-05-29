@@ -52,7 +52,7 @@ class MainClass(PrivateTorrent):
     def sign_in_by_login(self, entry: SignInEntry, config: dict, work: Work, last_content: str) -> Response | None:
         if not (login := entry['site_config'].get('login')):
             entry.fail_with_prefix('Login data not found!')
-            return
+            return None
         data = {
             'email': login['username'],
             'password': login['password'],

@@ -64,13 +64,13 @@ class MainClass(NexusPHP):
     def sign_in_by_verify(self, entry: SignInEntry, config: dict, work: Work, last_content: str) -> Response | None:
         if not (login := entry['site_config'].get('login')):
             entry.fail_with_prefix('Login data not found!')
-            return
+            return None
 
         login_response = self.sign_in_by_login(entry, config, work, last_content)
 
         login_network_state = check_network_state(entry, work, login_response)
         if login_network_state != NetworkState.SUCCEED:
-            return
+            return None
         verify_url = urljoin(entry['url'], work.verify_url)
         if login_response.url.startswith(verify_url):
             content = net_utils.decode(login_response)

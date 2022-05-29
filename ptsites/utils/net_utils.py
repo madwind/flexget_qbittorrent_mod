@@ -10,7 +10,7 @@ def get_module_name(cls) -> str:
     return cls.__module__.rsplit('.', maxsplit=1)[-1]
 
 
-def decode(response: Response) -> str | None:
+def decode(response: Response | None) -> str | None:
     if response is None:
         return None
     content = response.content

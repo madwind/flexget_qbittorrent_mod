@@ -53,7 +53,7 @@ class MainClass(NexusPHP):
         image_hash_network_state = check_network_state(entry, work, image_hash_response)
         if image_hash_network_state != NetworkState.SUCCEED:
             entry.fail_with_prefix('Get image hash failed.')
-            return
+            return None
         image_hash_content = net_utils.decode(image_hash_response)
         image_hash_re = re.search('(?<=imagehash=).*?(?=")', image_hash_content)
         img_src_re = re.search('(?<=img src=").*?(?=")', image_hash_content)
@@ -66,10 +66,10 @@ class MainClass(NexusPHP):
             img_network_state = check_network_state(entry, img_url, img_response)
             if img_network_state != NetworkState.SUCCEED:
                 entry.fail_with_prefix('Get image failed.')
-                return
+                return None
         else:
             entry.fail_with_prefix('Cannot find key: image_hash')
-            return
+            return None
 
         img = Image.open(BytesIO(img_response.content))
         code, img_byte_arr = baidu_ocr.get_ocr_code(img, entry, config)
