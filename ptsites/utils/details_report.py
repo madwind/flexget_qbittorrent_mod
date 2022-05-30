@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import re
 from datetime import datetime
 
@@ -9,6 +11,7 @@ from flexget.manager import Session
 from flexget.task import Task
 from loguru import logger
 from matplotlib.font_manager import findfont, FontProperties
+from pandas import DataFrame
 from sqlalchemy import Column, String, Integer, Float, Date
 
 try:
@@ -217,26 +220,29 @@ class DetailsReport:
             UserDetailsEntry.site == site).one_or_none()
         return user_details
 
-    def convert_suffix(self, details_value):
+    def convert_suffix(self, details_value: str) -> float | None:
         keys = list(suffix.keys())
         keys.reverse()
         for key in keys:
             if re.search(key, details_value) and (num_match := re.search('[\\d.]+', details_value)):
                 return float(num_match.group()) * suffix[key]
+        return None
 
-    def build_suffix(self, details_value, specifier):
+    def build_suffix(self, details_value, specifier: str) -> str | None:
         if details_value == 0:
             return '0'
         for key, value in suffix.items():
             if (num := details_value / value) < 1000:
                 return specifier.format(round(num, 3), key)
+        return None
 
-    def build_math_suffix(self, details_value, specifier):
+    def build_math_suffix(self, details_value, specifier: str) -> str | None:
         for key, value in math_suffix.items():
             if (num := details_value / value) < 1000:
                 return specifier.format(round(num, 3), key).rstrip()
+        return None
 
-    def build_data_text(self, key, value, append=False):
+    def build_data_text(self, key: str, value, append=False) -> str | None:
         if key == 'site':
             if len(value) > 12:
                 str_list = list(value)
@@ -255,18 +261,18 @@ class DetailsReport:
             return self.build_math_suffix(value, specifier)
         return '\n{:+g}'.format(value) if append else '{:g}'.format(value)
 
-    def transfer_data(self, key, value):
+    def transfer_data(self, key: str, value) -> float:
         if value == '*' or key in ['join_date']:
             return value
         if key in ['uploaded', 'downloaded']:
             return float(self.convert_suffix(value))
         return float(value)
 
-    def count(self, count_dict, key, value):
+    def count(self, count_dict: dict, key, value) -> None:
         if key not in ['share_ratio', 'points']:
             count_dict[key] = count_dict[key] + value
 
-    def draw_user_classes(self, user_classes_dict, session, df):
+    def draw_user_classes(self, user_classes_dict: dict, session: Session, df: DataFrame) -> None:
         img = Image.open('details_report.png').convert("RGBA")
         tmp = Image.new('RGBA', img.size, (0, 0, 0, 0))
         draw = ImageDraw.Draw(tmp)
@@ -295,7 +301,8 @@ class DetailsReport:
                         j += 1
         Image.alpha_composite(img, tmp).convert("RGB").quantize(colors=256).save('details_report.png')
 
-    def build_user_classes_data(self, user_classes, site_details, colors):
+    def build_user_classes_data(self, user_classes: dict, site_details,
+                                colors: list[tuple[int, int, int, int]]) -> None:
         data = {}
         if (downloaded_class := user_classes.get('downloaded')) and (
                 share_ratio_class := user_classes.get('share_ratio')) and not user_classes.get(
@@ -325,7 +332,8 @@ class DetailsReport:
         else:
             return data
 
-    def build_single_data(self, value_tuple, value, colors):
+    def build_single_data(self, value_tuple, value, colors: list[tuple[int, int, int, int]]) -> tuple[
+        float, tuple[int, int, int, int]]:
         percent = 1 if (max_value := value_tuple[-1]) == 0 else value / max_value
         if percent > 1:
             percent = 1

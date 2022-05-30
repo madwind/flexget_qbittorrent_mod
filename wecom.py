@@ -92,7 +92,7 @@ class WeComNotifier:
         'additionalProperties': False,
     }
 
-    def notify(self, title, message, config):
+    def notify(self, title, message: str, config: dict):
         if not message.strip():
             return
         self._parse_config(config)
@@ -272,5 +272,5 @@ class WeComNotifier:
 
 
 @event('plugin.register')
-def register_plugin():
+def register_plugin() -> None:
     plugin.register(WeComNotifier, _PLUGIN_NAME, api_ver=2, interfaces=['notifiers'])

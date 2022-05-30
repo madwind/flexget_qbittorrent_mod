@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import copy
 import math
 import os
@@ -6,9 +8,10 @@ from datetime import datetime
 from flexget import plugin
 from flexget.entry import Entry
 from flexget.event import event
+from flexget.task import Task
 from loguru import logger
 
-from .ptsites.client.qbittorrent_client import QBittorrentClientFactory
+from .ptsites.client.qbittorrent_client import QBittorrentClientFactory, QBittorrentClient
 from .ptsites.utils import net_utils
 
 
@@ -16,7 +19,7 @@ class QBittorrentModBase:
     def __init__(self):
         self.client = None
 
-    def prepare_config(self, config):
+    def prepare_config(self, config: dict) -> dict:
         if isinstance(config, bool):
             config = {'enabled': config}
         config.setdefault('enabled', True)
@@ -26,11 +29,11 @@ class QBittorrentModBase:
         config.setdefault('verify_cert', True)
         return config
 
-    def create_client(self, config):
+    def create_client(self, config: dict) -> QBittorrentClient:
         client = QBittorrentClientFactory().get_client(config)
         return client
 
-    def on_task_start(self, task, config):
+    def on_task_start(self, task: Task, config: dict) -> None:
         self.client = None
         config = self.prepare_config(config)
         if config['enabled']:
@@ -60,14 +63,14 @@ class PluginQBittorrentModInput(QBittorrentModBase):
         'additionalProperties': False
     }
 
-    def prepare_config(self, config):
+    def prepare_config(self, config: dict) -> dict:
         config = QBittorrentModBase.prepare_config(self, config)
         return config
 
-    def on_task_input(self, task, config):
+    def on_task_input(self, task: Task, config: dict) -> list | None:
         config = self.prepare_config(config)
         if not config['enabled']:
-            return
+            return None
         server_state = config.get('server_state')
         if server_state:
             entry = Entry(
@@ -248,13 +251,13 @@ class PluginQBittorrentMod(QBittorrentModBase):
         'additionalProperties': False
     }
 
-    def prepare_config(self, config):
+    def prepare_config(self, config: dict) -> dict:
         config = super().prepare_config(config)
         config.setdefault('fail_html', True)
         return config
 
     @plugin.priority(120)
-    def on_task_download(self, task, config):
+    def on_task_download(self, task: Task, config: dict) -> None:
         config = self.prepare_config(config)
         add_options = config.get('action', {}).get('add')
         if not add_options or not task.accepted:
@@ -328,7 +331,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
             download.get_temp_file(task, entry, handle_magnets=True, fail_html=config['fail_html'])
 
     @plugin.priority(135)
-    def on_task_output(self, task, config):
+    def on_task_output(self, task: Task, config: dict) -> None:
         config = self.prepare_config(config)
         action_config = config.get('action', {})
         if len(action_config) != 1:
@@ -350,7 +353,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
         else:
             raise plugin.PluginError('Unknown action.')
 
-    def add_entries(self, task, add_options):
+    def add_entries(self, task: Task, add_options: dict) -> None:
         add_option_str_list = ['savepath',
                                'cookie',
                                'category',
@@ -416,7 +419,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
             else:
                 self.client.add_torrent_url(entry['url'], options)
 
-    def remove_entries(self, task, remove_options):
+    def remove_entries(self, task: Task, remove_options: dict) -> None:
         (mode_name, option), = remove_options.items()
         mode = getattr(self, 'remove_entries_' + mode_name, None)
         if mode:
@@ -424,7 +427,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
         else:
             raise plugin.PluginError('Unknown mode.')
 
-    def remove_entries_keeper(self, task, keeper_options):
+    def remove_entries_keeper(self, task: Task, keeper_options: dict) -> None:
         delete_files = keeper_options.get('delete_files')
         check_reseed = keeper_options.get('check_reseed')
         keep_disk_space = keeper_options.get('keep_disk_space')
@@ -545,7 +548,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                 entry['qbittorrent_last_activity'],
                 entry['qbittorrent_tags'])
 
-    def remove_entries_cleaner(self, task, cleaner_options):
+    def remove_entries_cleaner(self, task: Task, cleaner_options: dict) -> None:
         delete_files = cleaner_options.get('delete_files')
         delete_hashes = []
         delete_files_hashes = []
@@ -581,7 +584,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
             self.client.delete_torrents(str.join('|', delete_files_hashes), delete_files)
             self.print_clean_log(entry_dict, delete_files_hashes, delete_files)
 
-    def print_clean_log(self, entry_dict, hashes, delete_files):
+    def print_clean_log(self, entry_dict: dict, hashes, delete_files) -> None:
         for torrent_hash in hashes:
             entry = entry_dict.get(torrent_hash)
             logger.info(
@@ -596,7 +599,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                 delete_files
             )
 
-    def resume_entries(self, task, resume_options):
+    def resume_entries(self, task: Task, resume_options: dict) -> None:
         recheck_torrents = resume_options.get('recheck_torrents')
         main_data_snapshot = self.client.get_main_data_snapshot(id(task))
         reseed_dict = main_data_snapshot.get('reseed_dict')
@@ -626,7 +629,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                 hashes.append(entry['torrent_info_hash'])
         self.client.resume_torrents(str.join('|', hashes))
 
-    def pause_entries(self, task, pause_options):
+    def pause_entries(self, task: Task, pause_options: dict) -> None:
         if not pause_options:
             return
         hashes = []
@@ -635,7 +638,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
             logger.info('pause: {}', entry['title'])
         self.client.pause_torrents(str.join('|', hashes))
 
-    def modify_entries(self, task, modify_options):
+    def modify_entries(self, task: Task, modify_options: dict) -> None:
         tag_by_tracker = modify_options.get('tag_by_tracker')
         replace_trackers = modify_options.get('replace_trackers')
         for entry in task.accepted:
@@ -664,7 +667,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                 self.client.add_torrent_tags(entry['torrent_info_hash'], str.join(',', tags_modified))
                 logger.info(f"{entry.get('title')} add tags {tags_modified}")
 
-    def manage_conn_entries(self, task, manage_conn_options):
+    def manage_conn_entries(self, task: Task, manage_conn_options: dict) -> None:
         min_conn = manage_conn_options.get('min')
         max_conn = manage_conn_options.get('max')
         for entry in task.accepted:
@@ -689,7 +692,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                 logger.debug('queued_io_jobs: {} , total_peer_connections: {}, set max_connec to {}',
                              server_queued_io_jobs, server_total_peer_connections, max_connect_changed)
 
-    def limit_upload_by_tracker_entries(self, task, limit_when_not_working_options):
+    def limit_upload_by_tracker_entries(self, task: Task, limit_when_not_working_options: dict) -> None:
         working_speed = limit_when_not_working_options.get('working')
         not_working_speed = limit_when_not_working_options.get('not_working')
         working_hashes = []
@@ -725,7 +728,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
         if not_working_hashes:
             self.client.set_torrent_upload_limit(str.join('|', not_working_hashes), not_working_speed)
 
-    def refresh_tracker_entries(self, task, refresh_tracker_options):
+    def refresh_tracker_entries(self, task: Task, refresh_tracker_options: dict) -> None:
         prefix = 'refresh:'
         for entry in task.accepted:
             torrent_trackers = entry.get('qbittorrent_trackers')
@@ -738,7 +741,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                     self.client.edit_trackers(entry.get('torrent_info_hash'), tracker_url, prefix + tracker_url)
                     self.client.edit_trackers(entry.get('torrent_info_hash'), prefix + tracker_url, tracker_url)
 
-    def on_task_learn(self, task, config):
+    def on_task_learn(self, task: Task, config: dict) -> None:
         """ Make sure all temp files are cleaned up when entries are learned """
         # If download plugin is enabled, it will handle cleanup.
         if 'download' not in task.config:
@@ -749,6 +752,6 @@ class PluginQBittorrentMod(QBittorrentModBase):
 
 
 @event('plugin.register')
-def register_plugin():
+def register_plugin() -> None:
     plugin.register(PluginQBittorrentMod, 'qbittorrent_mod', api_ver=2)
     plugin.register(PluginQBittorrentModInput, 'from_qbittorrent_mod', api_ver=2)

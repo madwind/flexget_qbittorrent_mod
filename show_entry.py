@@ -26,5 +26,5 @@ class PluginHtmlRss:
 
 
 @event('plugin.register')
-def register_plugin():
+def register_plugin() -> None:
     plugin.register(PluginHtmlRss, 'show_entry', api_ver=2)

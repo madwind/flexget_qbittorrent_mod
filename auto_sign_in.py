@@ -89,5 +89,5 @@ class PluginAutoSignIn:
 
 
 @event('plugin.register')
-def register_plugin():
+def register_plugin() -> None:
     plugin.register(PluginAutoSignIn, 'auto_sign_in', api_ver=2)

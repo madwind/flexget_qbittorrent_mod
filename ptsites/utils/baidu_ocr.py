@@ -42,7 +42,7 @@ def get_client(entry: SignInEntry, config: dict) -> AipOcr | None:
 
 def get_jap_ocr(img: Image.Image, entry: SignInEntry, config: dict) -> str | None:
     if not (client := get_client(entry, config)):
-        return
+        return None
     img_byte_arr = BytesIO()
 
     if img.mode == "P":
@@ -54,11 +54,11 @@ def get_jap_ocr(img: Image.Image, entry: SignInEntry, config: dict) -> str | Non
             result = client.basicAccurate(img_byte_arr.getvalue(), {'language_type': 'JAP'})
     except Exception as e:
         entry.fail_with_prefix(f'baidu ocr error: {e}')
-        return
+        return None
     logger.info(result)
     if result.get('error_msg'):
         entry.fail_with_prefix(result.get('error_msg'))
-        return
+        return None
     text = ''
     for words_list in result.get('words_result'):
         text += words_list.get('words')

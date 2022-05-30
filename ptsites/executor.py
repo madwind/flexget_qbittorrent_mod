@@ -99,6 +99,6 @@ def build_reseed_entry(entry: Entry, config: dict, site: dict, passkey: str | di
         raise plugin.PluginError(f"site: {entry['site_name']}, error: {e}")
 
 
-def get_site_class(class_name: str):
+def get_site_class(class_name: str) -> type:
     site_module = importlib.import_module(f'flexget.plugins.ptsites.sites.{class_name.lower()}')
     return getattr(site_module, 'MainClass')
