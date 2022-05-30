@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import time
 from datetime import timedelta, datetime
@@ -40,7 +42,7 @@ class AccessTokenEntry(AccessTokenBase):
     expires_in = Column(Integer, index=True, nullable=True)
     gmt_modify = Column(DateTime, index=True, nullable=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         x = ['id={0}'.format(self.id)]
         if self.corp_id:
             x.append('corp_id={0}'.format(self.corp_id))
@@ -62,7 +64,7 @@ class MessageEntry(MessageBase):
     content = Column(String, index=True, nullable=True)
     sent = Column(Boolean, index=True, nullable=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         x = ['id={0}'.format(self.id)]
         if self.content:
             x.append('content={0}'.format(self.content))
@@ -92,7 +94,7 @@ class WeComNotifier:
         'additionalProperties': False,
     }
 
-    def notify(self, title, message: str, config: dict):
+    def notify(self, title, message: str, config: dict) -> None:
         if not message.strip():
             return
         self._parse_config(config)
@@ -127,12 +129,12 @@ class WeComNotifier:
             self._text_limit = 9999
         self.image = config.get(_IMAGE)
 
-    def _save_message(self, msg: str, session: Session):
+    def _save_message(self, msg: str, session: Session) -> None:
         msg_limit, msg_extend = self._get_msg_limit(msg)
 
         message_entry = MessageEntry(
             content=msg_limit,
-            sent=False
+            sent=False,
         )
         session.add(message_entry)
 
@@ -148,7 +150,7 @@ class WeComNotifier:
         except Exception as e:
             raise PluginError(str(e))
 
-    def _send_msgs(self, message_entry, access_token):
+    def _send_msgs(self, message_entry: MessageEntry, access_token: AccessTokenEntry) -> None:
         if self._type == 'text':
             data = {
                 'touser': self._to_user,
@@ -162,14 +164,15 @@ class WeComNotifier:
             }
         else:
             data = json.loads(message_entry.content)
-        response_json = self._request('post', _POST_MESSAGE_URL.format(access_token=access_token.access_token),
+        response_json = self._request('post',
+                                      _POST_MESSAGE_URL.format(access_token=access_token.access_token),
                                       json=data)
         if response_json.get('errcode') == 0:
             message_entry.sent = True
         else:
             logger.error(f'request_data: {data}, response_json: {response_json}')
 
-    def _get_msg_limit(self, msg: str) -> tuple:
+    def _get_msg_limit(self, msg: str) -> tuple[str, str]:
         msg_encode = msg.encode()
         if len(msg_encode) < self._text_limit:
             return msg, ''
@@ -186,7 +189,11 @@ class WeComNotifier:
                                                                                                                'ignore')
             msg_limit_len += line_len + 1
 
-    def _get_access_token(self, session: Session, corp_id, corp_secret):
+    def _get_access_token(self,
+                          session: Session,
+                          corp_id,
+                          corp_secret
+                          ):
         logger.debug('loading cached access token')
         access_token = self._get_cached_access_token(session, corp_id, corp_secret)
         logger.debug('found cached access token: {0}'.format(access_token))
@@ -212,30 +219,29 @@ class WeComNotifier:
 
         return new_access_token
 
-    def _get_access_token_n_update_db(self, session: Session):
+    def _get_access_token_n_update_db(self, session: Session) -> AccessTokenEntry:
         access_token, has_new_access_token = self._get_access_token(session, self._corp_id, self._corp_secret)
         logger.debug('access_token={}', access_token)
 
         if not access_token:
-            raise PluginError(
-                'no access token found'
-            )
+            raise PluginError('no access token found')
         else:
             if not access_token.access_token:
-                logger.warning('no access_token found for corp_id: {} and corp_secret: {}', self._corp_id,
+                logger.warning('no access_token found for corp_id: {} and corp_secret: {}',
+                               self._corp_id,
                                self._corp_secret)
             if has_new_access_token:
                 self._update_db(session, access_token)
 
         return access_token
 
-    def _get_cached_access_token(self, session, corp_id, corp_secret):
+    def _get_cached_access_token(self, session: Session, corp_id, corp_secret):
         access_token = session.query(AccessTokenEntry).filter(
             AccessTokenEntry.id == '{}{}'.format(corp_id, corp_secret)).one_or_none()
 
         return access_token
 
-    def _get_new_access_token(self, corp_id, corp_secret):
+    def _get_new_access_token(self, corp_id, corp_secret) -> AccessTokenEntry:
         response_json = self._request('get',
                                       _GET_ACCESS_TOKEN_URL.format(corp_id=corp_id, corp_secret=corp_secret))
 
@@ -245,17 +251,18 @@ class WeComNotifier:
             corp_secret=corp_secret,
             access_token=response_json.get('access_token'),
             expires_in=response_json.get('expires_in'),
-            gmt_modify=datetime.now()
+            gmt_modify=datetime.now(),
         )
         return entry
 
-    def _get_media_id(self, access_token):
+    def _get_media_id(self, access_token: AccessTokenEntry):
         file = ('images', ('flexget.png', open(self.image, 'rb'), 'image/png')),
-        response_json = self._request('post', _UPLOAD_IMAGE.format(access_token=access_token.access_token),
+        response_json = self._request('post',
+                                      _UPLOAD_IMAGE.format(access_token=access_token.access_token),
                                       files=file)
         return response_json.get('media_id')
 
-    def _send_images(self, access_token):
+    def _send_images(self, access_token: AccessTokenEntry) -> None:
         media_id = self._get_media_id(access_token)
         if media_id is None:
             return
@@ -267,7 +274,8 @@ class WeComNotifier:
                 "media_id": media_id
             }
         }
-        self._request('post', _POST_MESSAGE_URL.format(access_token=access_token.access_token),
+        self._request('post',
+                      _POST_MESSAGE_URL.format(access_token=access_token.access_token),
                       json=data)
 
 

@@ -386,7 +386,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                     if tracker_options.get('tag_by_tracker'):
                         if original_tags := entry_add_option.get('tags'):
                             tags.append(original_tags)
-                        entry_add_option['tags'] = str.join(',', list(set(tags)))
+                        entry_add_option['tags'] = ','.join(set(tags))
 
             options = {}
 
@@ -394,7 +394,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                 entry_attr = entry.get(attr_str)
                 add_options_attr = entry_add_option.get(attr_str)
                 if attr_str == 'tags' and entry_attr and add_options_attr:
-                    attr = str.join(',', [entry_attr, add_options_attr])
+                    attr = ','.join([entry_attr, add_options_attr])
                 else:
                     attr = entry_attr if entry_attr is not None else add_options_attr
                 if attr is not None:
@@ -512,7 +512,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
         self.calc_and_set_dl_limit(keep_disk_space, free_space_on_disk, delete_size, dl_limit_interval,
                                    dl_limit_on_succeeded, dl_rate_limit, dl_limit_mode)
         if len(delete_hashes) > 0:
-            self.client.delete_torrents(str.join('|', delete_hashes), delete_files)
+            self.client.delete_torrents('|'.join(delete_hashes), delete_files)
 
     def calc_and_set_dl_limit(self, keep_disk_space, free_space_on_disk, delete_size, dl_limit_interval,
                               dl_limit_on_succeeded, dl_rate_limit, dl_limit_mode):
@@ -578,13 +578,13 @@ class PluginQBittorrentMod(QBittorrentModBase):
             else:
                 delete_files_hashes.extend(torrent_hashes)
         if len(delete_hashes) > 0:
-            self.client.delete_torrents(str.join('|', delete_hashes), False)
+            self.client.delete_torrents('|'.join(delete_hashes), False)
             self.print_clean_log(entry_dict, delete_hashes, False)
         if len(delete_files_hashes) > 0:
-            self.client.delete_torrents(str.join('|', delete_files_hashes), delete_files)
+            self.client.delete_torrents('|'.join(delete_files_hashes), delete_files)
             self.print_clean_log(entry_dict, delete_files_hashes, delete_files)
 
-    def print_clean_log(self, entry_dict: dict, hashes, delete_files) -> None:
+    def print_clean_log(self, entry_dict: dict, hashes: list[str], delete_files) -> None:
         for torrent_hash in hashes:
             entry = entry_dict.get(torrent_hash)
             logger.info(
@@ -623,11 +623,11 @@ class PluginQBittorrentMod(QBittorrentModBase):
                     recheck_hashes.append(entry['torrent_info_hash'])
             if len(recheck_hashes) > 0:
                 logger.info('recheck {}', recheck_hashes)
-                self.client.recheck_torrents(str.join('|', recheck_hashes))
+                self.client.recheck_torrents('|'.join(recheck_hashes))
         else:
             for entry in task.accepted:
                 hashes.append(entry['torrent_info_hash'])
-        self.client.resume_torrents(str.join('|', hashes))
+        self.client.resume_torrents('|'.join(hashes))
 
     def pause_entries(self, task: Task, pause_options: dict) -> None:
         if not pause_options:
@@ -636,7 +636,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
         for entry in task.accepted:
             hashes.append(entry['torrent_info_hash'])
             logger.info('pause: {}', entry['title'])
-        self.client.pause_torrents(str.join('|', hashes))
+        self.client.pause_torrents('|'.join(hashes))
 
     def modify_entries(self, task: Task, modify_options: dict) -> None:
         tag_by_tracker = modify_options.get('tag_by_tracker')
@@ -664,7 +664,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                                 logger.info('{} remove tracker {}', entry.get('title'), tracker_url)
                                 self.client.remove_trackers(entry.get('torrent_info_hash'), tracker_url)
             if tags_modified:
-                self.client.add_torrent_tags(entry['torrent_info_hash'], str.join(',', tags_modified))
+                self.client.add_torrent_tags(entry['torrent_info_hash'], ','.join(tags_modified))
                 logger.info(f"{entry.get('title')} add tags {tags_modified}")
 
     def manage_conn_entries(self, task: Task, manage_conn_options: dict) -> None:
@@ -724,9 +724,9 @@ class PluginQBittorrentMod(QBittorrentModBase):
                 logger.debug(
                     f'{entry["title"]} tags: {entry["qbittorrent_tags"]} tracker is not working, set torrent upload limit to {not_working_speed} B/s')
         if working_hashes:
-            self.client.set_torrent_upload_limit(str.join('|', working_hashes), working_speed)
+            self.client.set_torrent_upload_limit('|'.join(working_hashes), working_speed)
         if not_working_hashes:
-            self.client.set_torrent_upload_limit(str.join('|', not_working_hashes), not_working_speed)
+            self.client.set_torrent_upload_limit('|'.join(not_working_hashes), not_working_speed)
 
     def refresh_tracker_entries(self, task: Task, refresh_tracker_options: dict) -> None:
         prefix = 'refresh:'

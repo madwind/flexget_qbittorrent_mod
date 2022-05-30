@@ -28,7 +28,11 @@ class NetworkErrorReason(Enum):
     WEB_SERVER_IS_DOWN = '站点关闭维护中，请稍后再访问...谢谢|站點關閉維護中，請稍後再訪問...謝謝|Web server is down'
 
 
-def check_state(entry: SignInEntry, work: Work, response: Response | None, content: str | None) -> bool:
+def check_state(entry: SignInEntry,
+                work: Work,
+                response: Response | None,
+                content: str | None,
+                ) -> bool:
     if entry.failed:
         return False
     if not work.assert_state:
@@ -37,8 +41,11 @@ def check_state(entry: SignInEntry, work: Work, response: Response | None, conte
     return check_method(entry, work, response, content) == state
 
 
-def check_sign_in_state(entry: SignInEntry, work: Work, response: Response | None,
-                        content: str | None) -> NetworkState | SignState:
+def check_sign_in_state(entry: SignInEntry,
+                        work: Work,
+                        response: Response | None,
+                        content: str | None,
+                        ) -> NetworkState | SignState:
     if (network_state := check_network_state(entry, work, response, content=content,
                                              check_content=True)) != NetworkState.SUCCEED:
         return network_state
@@ -64,7 +71,11 @@ def check_sign_in_state(entry: SignInEntry, work: Work, response: Response | Non
     return SignState.NO_SIGN_IN
 
 
-def check_final_state(entry: SignInEntry, work: Work, response: Response, content: str) -> SignState:
+def check_final_state(entry: SignInEntry,
+                      work: Work,
+                      response: Response,
+                      content: str,
+                      ) -> SignState:
     if (sign_in_state := check_sign_in_state(entry, work, response, content)) == SignState.NO_SIGN_IN:
         entry.fail_with_prefix(SignState.SIGN_IN_FAILED.value.format('no sign in'))
         return SignState.SIGN_IN_FAILED

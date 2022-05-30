@@ -62,7 +62,7 @@ def get_jap_ocr(img: Image.Image, entry: SignInEntry, config: dict) -> str | Non
     text = ''
     for words_list in result.get('words_result'):
         text += words_list.get('words')
-    return str.join('', re.findall(r'[\u2E80-\u9FFF]', text))
+    return ''.join(re.findall(r'[\u2E80-\u9FFF]', text))
 
 
 def get_ocr_code(img: Image.Image, entry: SignInEntry, config: dict) -> tuple:

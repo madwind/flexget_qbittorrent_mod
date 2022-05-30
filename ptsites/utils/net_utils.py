@@ -35,7 +35,7 @@ def cookie_to_str(cookie_items: list) -> str:
     cookie_array = []
     for k, v in cookie_items:
         cookie_array.append(f'{k}={v}')
-    return str.join('; ', cookie_array).strip()
+    return '; '.join(cookie_array).strip()
 
 
 def dict_merge(dict1: dict, dict2: dict) -> None:
