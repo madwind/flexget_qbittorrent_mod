@@ -39,7 +39,7 @@ class MainClass(Gazelle):
             Work(
                 url='/',
                 method=self.sign_in_by_get,
-                succeed_regex=[('class="HeaderProfile-name">(.+?)</a>', 1)],
+                succeed_regex=[('class="HeaderProfile-name.*?">\n(.+?)</a>', 1)],
                 assert_state=(check_final_state, SignState.SUCCEED),
                 is_base_content=True
             )
