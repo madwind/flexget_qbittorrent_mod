@@ -16,8 +16,12 @@ class NetworkState(Enum):
     NETWORK_ERROR = 'Network error: url: {url}, error: {error}'
 
 
-def check_network_state(entry, param: Work | str | list[str], response: Response | None,
-                        content: str | None = None, check_content=False) -> NetworkState:
+def check_network_state(entry,
+                        param: Work | str | list[str],
+                        response: Response | None,
+                        content: str | None = None,
+                        check_content=False,
+                        ) -> NetworkState:
     urls = param
     if isinstance(param, Work):
         urls = param.response_urls
@@ -38,7 +42,12 @@ class Request:
     def __init__(self):
         self.session = None
 
-    def request(self, entry, method: str, url: str, **kwargs) -> Response | None:
+    def request(self,
+                entry,
+                method: str,
+                url: str,
+                **kwargs,
+                ) -> Response | None:
         if not self.session:
             self.session = requests.Session()
             if entry_headers := entry.get('headers'):

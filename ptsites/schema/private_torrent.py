@@ -100,7 +100,11 @@ class PrivateTorrent(Request, SignIn, Detail, Message, Reseed, ABC):
     def details_selector(self) -> dict:
         return {}
 
-    def get_user_id(self, entry: SignInEntry, user_id_selector: str, base_content: str) -> str | None:
+    def get_user_id(self,
+                    entry: SignInEntry,
+                    user_id_selector: str,
+                    base_content: str
+                    ) -> str | None:
         if user_id_match := re.search(user_id_selector, base_content):
             return user_id_match.group(1)
         entry.fail_with_prefix('User id not found.')
@@ -179,8 +183,13 @@ class PrivateTorrent(Request, SignIn, Detail, Message, Reseed, ABC):
         return {get_module_name(cls): {'type': 'string'}}
 
     @classmethod
-    def reseed_build_entry_from_url(cls, entry: Entry, config: dict, site: dict, passkey: dict | str,
-                                    torrent_id) -> None:
+    def reseed_build_entry_from_url(cls,
+                                    entry: Entry,
+                                    config: dict,
+                                    site: dict,
+                                    passkey: dict | str,
+                                    torrent_id
+                                    ) -> None:
         if isinstance(passkey, dict):
             user_agent = config.get('user-agent')
             cookie = passkey.get('cookie')
@@ -194,8 +203,15 @@ class PrivateTorrent(Request, SignIn, Detail, Message, Reseed, ABC):
         entry['url'] = f"https://{site['base_url']}/{download_page}"
 
     @classmethod
-    def reseed_build_entry_from_page(cls, entry: Entry, config: dict, passkey, torrent_id, base_url,
-                                     torrent_page_url, url_regex) -> None:
+    def reseed_build_entry_from_page(cls,
+                                     entry: Entry,
+                                     config: dict,
+                                     passkey,
+                                     torrent_id,
+                                     base_url,
+                                     torrent_page_url,
+                                     url_regex
+                                     ) -> None:
         record = url_recorder.load_record(entry['class_name'])
         now = datetime.datetime.now()
         expire = datetime.timedelta(days=7)
@@ -227,14 +243,29 @@ class PrivateTorrent(Request, SignIn, Detail, Message, Reseed, ABC):
         url_recorder.save_record(entry['class_name'], record)
 
     @classmethod
-    def reseed_build_entry(cls, entry: Entry, config: dict, site, passkey, torrent_id) -> None:
+    def reseed_build_entry(cls,
+                           entry: Entry,
+                           config: dict,
+                           site: dict,
+                           passkey: dict | str,
+                           torrent_id,
+                           ) -> None:
         cls.reseed_build_entry_from_url(entry, config, site, passkey, torrent_id)
 
-    def sign_in_by_get(self, entry: SignInEntry, config: dict, work: Work, last_content: str = None) -> Response | None:
+    def sign_in_by_get(self,
+                       entry: SignInEntry,
+                       config: dict,
+                       work: Work,
+                       last_content: str = None,
+                       ) -> Response | None:
         return self.request(entry, 'get', work.url)
 
-    def sign_in_by_post(self, entry: SignInEntry, config: dict, work: Work,
-                        last_content: str = None) -> Response | None:
+    def sign_in_by_post(self,
+                        entry: SignInEntry,
+                        config: dict,
+                        work: Work,
+                        last_content: str = None,
+                        ) -> Response | None:
         data = {}
         for key, regex in work.data.items():
             if key == 'fixed':
@@ -246,7 +277,12 @@ class PrivateTorrent(Request, SignIn, Detail, Message, Reseed, ABC):
                 return None
         return self.request(entry, 'post', work.url, data=data)
 
-    def sign_in_by_login(self, entry: SignInEntry, config: dict, work: Work, last_content: str) -> Response | None:
+    def sign_in_by_login(self,
+                         entry: SignInEntry,
+                         config: dict,
+                         work: Work,
+                         last_content: str,
+                         ) -> Response | None:
         if not (login := entry['site_config'].get('login')):
             entry.fail_with_prefix('Login data not found!')
             return None

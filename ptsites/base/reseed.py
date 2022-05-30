@@ -13,6 +13,11 @@ class Reseed(ABC):
 
     @classmethod
     @abstractmethod
-    def reseed_build_entry(cls, entry: Entry, config: dict, site: dict, passkey: str | dict,
-                           torrent_id: str) -> None:
+    def reseed_build_entry(cls,
+                           entry: Entry,
+                           config: dict,
+                           site: dict,
+                           passkey: str | dict,
+                           torrent_id: str,
+                           ) -> None:
         pass

@@ -1,11 +1,21 @@
 from __future__ import annotations
 
+from collections.abc import Callable
+
 
 class Work:
-    def __init__(self, url: str, method: callable, data: dict | None = None,
-                 succeed_regex: list[str | tuple] | None = None, fail_regex: str | None = None,
-                 assert_state: tuple | None = None, response_urls: list[str] | None = None,
-                 use_last_content=False, is_base_content=False, **kwargs) -> None:
+    def __init__(self,
+                 url: str,
+                 method: Callable,
+                 data: dict | None = None,
+                 succeed_regex: list[str | tuple] | None = None,
+                 fail_regex: str | None = None,
+                 assert_state: tuple | None = None,
+                 response_urls: list[str] | None = None,
+                 use_last_content=False,
+                 is_base_content=False,
+                 **kwargs,
+                 ) -> None:
         self.url = url
         self.method = method
         self.data = data

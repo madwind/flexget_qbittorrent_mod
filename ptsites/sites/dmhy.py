@@ -160,9 +160,8 @@ class MainClass(NexusPHP):
                                 return None
                             for captcha, value in regex_key_search:
                                 if answer_list := list(filter(lambda x2: len(x2) > 0,
-                                                              map(lambda x: str.join('',
-                                                                                     re.findall(r'[\u2E80-\u9FFF]', x)
-                                                                                     ), value.split('\n')))):
+                                                              map(lambda x: ''.join(re.findall(r'[\u2E80-\u9FFF]', x)
+                                                                                    ), value.split('\n')))):
                                     split_value, partial_ratio = process.extractOne(oct_text, answer_list,
                                                                                     scorer=fuzz.partial_ratio)
                                 else:
