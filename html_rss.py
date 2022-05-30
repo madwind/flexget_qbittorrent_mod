@@ -108,5 +108,5 @@ class PluginHtmlRss:
 
 
 @event('plugin.register')
-def register_plugin():
+def register_plugin() -> None:
     plugin.register(PluginHtmlRss, 'html_rss', api_ver=2)

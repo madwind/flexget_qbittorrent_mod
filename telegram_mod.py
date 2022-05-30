@@ -2,7 +2,7 @@ import copy
 
 from PIL import Image
 from flexget import plugin
-from flexget.components.notify.notifiers.telegram import TelegramNotifier
+from flexget.components.notify.notifiers.telegram import TelegramNotifier, ChatIdEntry
 from flexget.event import event
 from flexget.manager import Session
 from flexget.plugin import PluginWarning
@@ -21,7 +21,7 @@ _TEXT_LIMIT = 4096
 _PLUGIN_NAME = 'telegram_mod'
 
 
-def dict_merge(dict1, dict2):
+def dict_merge(dict1: dict, dict2: dict) -> dict:
     for i in dict2:
         if isinstance(dict1.get(i), dict) and isinstance(dict2.get(i), dict):
             dict_merge(dict1[i], dict2[i])
@@ -37,7 +37,7 @@ class TelegramNotifierMod(TelegramNotifier):
         }
     })
 
-    def notify(self, title, message, config):
+    def notify(self, title, message: str, config) -> None:
         if not message.strip():
             return
         session = Session()
@@ -56,7 +56,7 @@ class TelegramNotifierMod(TelegramNotifier):
 
         self._image = config.get(_IMAGE_ATTR)
 
-    def _get_msg_limits(self, msg):
+    def _get_msg_limits(self, msg: str) -> list[str]:
         msg_limits = ['']
         if len(msg) < _TEXT_LIMIT:
             return [msg]
@@ -67,7 +67,7 @@ class TelegramNotifierMod(TelegramNotifier):
             msg_limits[-1] = msg_limits[-1] + line
         return msg_limits
 
-    def _send_photo(self, image, chat_ids, session):
+    def _send_photo(self, image: str, chat_ids: list[ChatIdEntry], session: Session) -> None:
         for chat_id in (x.id for x in chat_ids):
             try:
                 photo = Image.open(image)
@@ -97,5 +97,5 @@ class TelegramNotifierMod(TelegramNotifier):
 
 
 @event('plugin.register')
-def register_plugin():
+def register_plugin() -> None:
     plugin.register(TelegramNotifierMod, _PLUGIN_NAME, api_ver=2, interfaces=['notifiers'])

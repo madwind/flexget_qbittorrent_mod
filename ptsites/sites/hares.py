@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Final
 
 from requests import Response
@@ -37,7 +39,7 @@ class MainClass(Attendance):
             ),
         ]
 
-    def sign_in_by_punch_in(self, entry: SignInEntry, config: dict, work: Work, last_content: str) -> Response:
+    def sign_in_by_punch_in(self, entry: SignInEntry, config: dict, work: Work, last_content: str) -> Response | None:
         return self.request(entry, 'get', work.url, headers={'accept': 'application/json'})
 
     @property

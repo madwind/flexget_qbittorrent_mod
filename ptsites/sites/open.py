@@ -83,6 +83,7 @@ class MainClass(NexusPHP):
                     'imagestring': (None, code)
                 }
                 return self.request(entry, 'post', work.url, files=data, params=params)
+        return None
 
     @property
     def details_selector(self) -> dict:
