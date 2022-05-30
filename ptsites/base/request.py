@@ -6,6 +6,7 @@ import requests
 from requests import Response
 from requests.adapters import HTTPAdapter
 
+from .entry import SignInEntry
 from .work import Work
 from ..utils import net_utils
 
@@ -16,7 +17,7 @@ class NetworkState(Enum):
     NETWORK_ERROR = 'Network error: url: {url}, error: {error}'
 
 
-def check_network_state(entry,
+def check_network_state(entry: SignInEntry,
                         param: Work | str | list[str],
                         response: Response | None,
                         content: str | None = None,
@@ -43,7 +44,7 @@ class Request:
         self.session = None
 
     def request(self,
-                entry,
+                entry: SignInEntry,
                 method: str,
                 url: str,
                 **kwargs,
