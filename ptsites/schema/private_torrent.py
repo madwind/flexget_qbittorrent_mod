@@ -206,11 +206,11 @@ class PrivateTorrent(Request, SignIn, Detail, Message, Reseed, ABC):
     def reseed_build_entry_from_page(cls,
                                      entry: Entry,
                                      config: dict,
-                                     passkey,
+                                     passkey: dict | str,
                                      torrent_id,
-                                     base_url,
-                                     torrent_page_url,
-                                     url_regex
+                                     base_url: str,
+                                     torrent_page_url: str,
+                                     url_regex: str,
                                      ) -> None:
         record = url_recorder.load_record(entry['class_name'])
         now = datetime.datetime.now()
