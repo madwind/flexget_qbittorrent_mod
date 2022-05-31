@@ -6,12 +6,28 @@ import threading
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from json import JSONDecodeError
-from typing import ParamSpec, TypeVar
+from typing import TypeVar
 
 from flexget import plugin
 from flexget.entry import Entry
 from loguru import logger
 from requests import RequestException, Session, Response
+
+try:
+    from typing import ParamSpec
+except ImportError:
+    logger.opt(colors=True).warning('Failed to <fg 100,100,255>import ParamSpec from typing</fg 100,100,255>, '
+                                    'falling back to <fg 100,100,255>import ParamSpec from typing_extensions'
+                                    '</fg 100,100,255>. Upgrade to a newer Python version to get rid of this warning.')
+    try:
+        from typing_extensions import ParamSpec
+    except ImportError:
+        logger.opt(colors=True).error('Failed to <fg 100,100,255>import ParamSpec from typing_extensions'
+                                      '</fg 100,100,255>.')
+        logger.opt(colors=True).error('You have to upgrade to a newer Python version, '
+                                      'or run <fg 0,255,255>pip install -U typing_extensions</fg 0,255,255> '
+                                      'to get the backports of the typing module in a newer Python version.')
+        raise
 
 logger = logger.bind(name='qbittorrent_client')
 
