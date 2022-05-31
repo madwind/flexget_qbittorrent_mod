@@ -6,7 +6,7 @@ import threading
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from json import JSONDecodeError
-from typing import ParamSpec, TypeVar
+from typing import TypeVar
 
 from flexget import plugin
 from flexget.entry import Entry
@@ -16,13 +16,12 @@ from requests import RequestException, Session, Response
 logger = logger.bind(name='qbittorrent_client')
 
 T = TypeVar('T')
-P = ParamSpec('P')
 
 
-def singleton(cls: type[T]) -> Callable[P, T]:
+def singleton(cls: type[T]) -> Callable[..., T]:
     instances: dict[type[T], T] = {}
 
-    def getinstance(*args: P.args, **kwargs: P.kwargs) -> T:
+    def getinstance(*args, **kwargs) -> T:
         if cls not in instances:
             instances[cls] = cls(*args, **kwargs)
         return instances[cls]
