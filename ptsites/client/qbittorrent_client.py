@@ -294,11 +294,9 @@ class QBittorrentClient:
             ).json()
             return main_data
         except JSONDecodeError as e:
-            msg = str(e)
+            logger.debug(f'get_main_data: {e}')
             self.reset_rid(reason='get_main_data JSONDecodeError')
-        raise plugin.PluginError(
-            'get_main_data failed.{}'.format(msg)
-        )
+        raise plugin.PluginError('get_main_data failed.')
 
     def get_application_preferences(self) -> dict:
         return self._request(
