@@ -122,9 +122,10 @@ class PrivateTorrent(Request, SignIn, Detail, Message, Reseed, ABC):
             return None
         if not (detail := detail_match.group(group_index)):
             return None
-        detail = detail.replace(',', '')
         if handle := detail_config.get('handle'):
             detail = handle(detail)
+        if type(detail) == str:
+            detail = detail.replace(',', '')
         return str(detail)
 
     def get_details_base(self, entry: SignInEntry, config, selector: dict) -> None:

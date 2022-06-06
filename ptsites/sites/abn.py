@@ -80,22 +80,23 @@ class MainClass(PrivateTorrent):
             'details': {
                 'uploaded': {
                     'regex': r'''(?x)Upload\ :\ 
-                                    ([\d.] + \ [ZEPTGMK] ? o)''',
+                                    ([\d,.] + \ [ZEPTGMK] ? o)''',
                     'handle': self.handle_amount_of_data
                 },
                 'downloaded': {
                     'regex': r'''(?x)Download\ :\ 
-                                    ([\d.] + \ [ZEPTGMK] ? o)''',
+                                    ([\d,.] + \ [ZEPTGMK] ? o)''',
                     'handle': self.handle_amount_of_data
                 },
                 'share_ratio': {
                     'regex': r'''(?x)Ratio\ :\ 
                                     (∞ | [\d,.] +)''',
-                    'handle': handle_infinite
+                    'handle': self.handle_amount_of_data
                 },
                 'points': {
                     'regex': r'''(?x)Choco's\ :\ 
-                                    ([\d,.] +)'''
+                                    ([\d,.] +)''',
+                    'handle': self.handle_amount_of_data
                 },
                 'join_date': {
                     'regex': r'''(?mx)Inscrit\ :\ 
@@ -110,7 +111,7 @@ class MainClass(PrivateTorrent):
         }
 
     def handle_amount_of_data(self, value: str) -> str:
-        return value.replace('o', 'B')
+        return value.replace('o', 'B').replace(',', '.')
 
     def handle_join_date(self, value: str) -> datetime:
         value_split = value.removeprefix('Il y a ').replace('et', '').replace('seconde', 'second') \
