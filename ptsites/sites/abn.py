@@ -91,12 +91,12 @@ class MainClass(PrivateTorrent):
                 'share_ratio': {
                     'regex': r'''(?x)Ratio\ :\ 
                                     (∞ | [\d,.] +)''',
-                    'handle': handle_amount_of_data
+                    'handle': self.handle_amount_of_data
                 },
                 'points': {
                     'regex': r'''(?x)Choco's\ :\ 
                                     ([\d,.] +)''',
-                    'handle': handle_amount_of_data
+                    'handle': self.handle_amount_of_data
                 },
                 'join_date': {
                     'regex': r'''(?mx)Inscrit\ :\ 

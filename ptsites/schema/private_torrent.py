@@ -126,7 +126,6 @@ class PrivateTorrent(Request, SignIn, Detail, Message, Reseed, ABC):
             detail = handle(detail)
         if type(detail) == str:
             detail = detail.replace(',', '')
-
         return str(detail)
 
     def get_details_base(self, entry: SignInEntry, config, selector: dict) -> None:
