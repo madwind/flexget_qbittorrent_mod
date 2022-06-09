@@ -9,6 +9,7 @@ from ..utils import net_utils
 
 class MainClass(NexusPHP):
     URL: Final = 'https://pterclub.com/'
+    IGNORE_TITLE = '认领种子获得猫粮60000克'
     USER_CLASSES: Final = {
         'downloaded': [805306368000, 3298534883328],
         'share_ratio': [3.05, 4.55],
@@ -47,3 +48,6 @@ class MainClass(NexusPHP):
             }
         })
         return selector
+
+    def get_messages(self, entry: SignInEntry, config: dict) -> None:
+        self.get_nexusphp_messages(entry, config, ignore_title=self.IGNORE_TITLE)

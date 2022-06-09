@@ -1,5 +1,6 @@
 import itertools
 import json
+import re
 from abc import ABC
 from pathlib import Path
 from urllib.parse import urljoin
@@ -65,7 +66,8 @@ class NexusPHP(PrivateTorrent, ABC):
 
     def get_nexusphp_messages(self, entry: SignInEntry, config: dict,
                               messages_url: str = '/messages.php?action=viewmailbox&box=1&unread=yes',
-                              unread_elements_selector: str = 'td > img[alt*="Unread"]') -> None:
+                              unread_elements_selector: str = 'td > img[alt*="Unread"]',
+                              ignore_title: str | None = None) -> None:
         message_url = urljoin(entry['url'], messages_url)
         message_box_response = self.request(entry, 'get', message_url)
         message_box_network_state = check_network_state(entry, message_url, message_box_response)
@@ -91,6 +93,9 @@ class NexusPHP(PrivateTorrent, ABC):
                     message_body = body_element.text.strip()
                 else:
                     message_body = 'Can not find message body element!'
+            if ignore_title and re.match(ignore_title, title):
+                logger.info(f'\nIgnore Title: {title}\nLink: {message_url}\n{message_body}')
+                continue
             entry['messages'] = entry['messages'] + f'\nTitle: {title}\nLink: {message_url}\n{message_body}'
         if failed:
             entry.fail_with_prefix('Can not read message body!')

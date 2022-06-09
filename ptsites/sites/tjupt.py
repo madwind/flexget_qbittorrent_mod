@@ -19,6 +19,7 @@ class MainClass(NexusPHP):
     BREAK_REGEX: Final = r'已断签.*?天，当前可补签天数为 <b>(\d+)</b> 天'
     CONFIRM: Final = {'action': 'confirm'}
     CANCEL: Final = {'action': 'cancel'}
+    IGNORE_TITLE = '您正在下载或做种的种子被删除'
     USER_CLASSES: Final = {
         'uploaded': [5368709120000, 53687091200000],
         'days': [336, 924]
@@ -100,6 +101,9 @@ class MainClass(NexusPHP):
             for movie in movies:
                 if img_name in movie.get('img'):
                     return value
+
+    def get_messages(self, entry: SignInEntry, config: dict) -> None:
+        self.get_nexusphp_messages(entry, config, ignore_title=self.IGNORE_TITLE)
 
     def handle_hr(self, hr):
         return str(100 - int(hr))
