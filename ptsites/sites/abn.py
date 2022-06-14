@@ -10,7 +10,6 @@ from ..base.sign_in import SignState, check_final_state
 from ..base.work import Work
 from ..schema.private_torrent import PrivateTorrent
 from ..utils.net_utils import get_module_name
-from ..utils.value_hanlder import handle_infinite
 
 
 class MainClass(PrivateTorrent):
@@ -91,12 +90,12 @@ class MainClass(PrivateTorrent):
                 'share_ratio': {
                     'regex': r'''(?x)Ratio\ :\ 
                                     (∞ | [\d,.] +)''',
-                    'handle': self.handle_amount_of_data
+                    'handle': self.handle_share_ratio
                 },
                 'points': {
                     'regex': r'''(?x)Choco's\ :\ 
                                     ([\d,.] +)''',
-                    'handle': self.handle_amount_of_data
+                    'handle': self.handle_points
                 },
                 'join_date': {
                     'regex': r'''(?mx)Inscrit\ :\ 
@@ -112,6 +111,12 @@ class MainClass(PrivateTorrent):
 
     def handle_amount_of_data(self, value: str) -> str:
         return value.replace('o', 'B').replace(',', '.')
+
+    def handle_share_ratio(self, value: str) -> str:
+        return '0' if value == '∞' else value.replace(',', '.')
+
+    def handle_points(self, value: str) -> str:
+        return value.replace(',', '.')
 
     def handle_join_date(self, value: str) -> datetime:
         value_split = value.removeprefix('Il y a ').replace('et', '').replace('seconde', 'second') \
