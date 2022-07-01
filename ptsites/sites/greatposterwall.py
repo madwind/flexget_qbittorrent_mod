@@ -15,8 +15,8 @@ from ..utils import net_utils
 class MainClass(Gazelle):
     URL: Final = 'https://greatposterwall.com/'
     USER_CLASSES: Final = {
-        'share_ratio': [1.2, 1.2],
         'downloaded': [214748364800, 10995116277760],
+        'share_ratio': [1.2, 1.2],
         'days': [14, 140]
     }
 
