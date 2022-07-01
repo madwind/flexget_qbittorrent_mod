@@ -38,6 +38,10 @@ def check_network_state(entry: SignInEntry,
     return NetworkState.SUCCEED
 
 
+def cf_detected(response: Response):
+    return response is not None and response.text.find('<title>Please Wait... | Cloudflare</title>') > 0
+
+
 class Request:
 
     def __init__(self):
@@ -59,7 +63,9 @@ class Request:
             self.session.mount('https://', HTTPAdapter(max_retries=2))
         try:
             response: Response = self.session.request(method, url, timeout=60, **kwargs)
-            if response is not None and response.status_code != 200:
+            if cf_detected:
+                entry.fail_with_prefix('Defected CloudFlare DDoS-GUARD')
+            elif response is not None and response.status_code != 200:
                 entry.fail_with_prefix(f'response.status_code={response.status_code}')
             return response
         except Exception as e:
