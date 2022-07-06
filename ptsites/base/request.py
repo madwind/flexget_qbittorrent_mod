@@ -39,7 +39,9 @@ def check_network_state(entry: SignInEntry,
 
 
 def cf_detected(response: Response) -> bool:
-    return response is not None and response.text.find('<title>Please Wait... | Cloudflare</title>') > 0
+    if response is not None:
+        return response.text.find('<title>Please Wait... | Cloudflare</title>') > 0 or \
+               response.text.find('DDoS protection by <a rel="noopener noreferrer" href="https://www.cloudflare.com/5xx-error-landing/" target="_blank">Cloudflare</a>') > 0
 
 
 class Request:
