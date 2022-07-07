@@ -156,10 +156,11 @@ variables:
         password: 'xxxxxxxx'
     lemonhd: 'xxxxxxxx'
     m-team:
-      login:
-        username: 'xxxxxxxx'
-        password: 'xxxxxxxx'
-        secret_key: 'xxxxxxxx'
+      cookie: 'xxxxxxxx'
+      secret_key: 'xxxxxxxx'
+      #login:
+      #  username: 'xxxxxxxx'
+      #  password: 'xxxxxxxx'
     milkie:
       login:
         username: 'xxxxxxxx'
