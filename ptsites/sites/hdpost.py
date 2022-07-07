@@ -121,10 +121,10 @@ class MainClass(Unit3D):
             },
             'details': {
                 'uploaded': {
-                    'regex': '上传.+?([\\d.]+ ?[ZEPTGMK]?iB)'
+                    'regex': '上传.+?([\\d.]+ [ZEPTGMK]?iB)'
                 },
                 'downloaded': {
-                    'regex': '下载.+?([\\d.]+ ?[ZEPTGMK]?iB)'
+                    'regex': '下载.+?([\\d.]+ [ZEPTGMK]?iB)'
                 },
                 'share_ratio': {
                     'regex': '分享率.+?([\\d.]+)',
