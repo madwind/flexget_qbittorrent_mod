@@ -64,7 +64,7 @@ class MainClass(NexusPHP):
                 method=self.sign_in_by_get,
                 succeed_regex=[self.SUCCEED_REGEX],
                 assert_state=(check_final_state, SignState.SUCCEED),
-                response_urls=['/verify.php?returnto=%2F', '/'],
+                response_urls=['/verify.php?returnto=%2F', '/', '/index.php'],
                 is_base_content=True
             )
         ]
