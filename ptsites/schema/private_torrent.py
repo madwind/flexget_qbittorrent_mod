@@ -274,7 +274,7 @@ class PrivateTorrent(Request, SignIn, Detail, Message, Reseed, ABC):
             elif value_search := re.search(regex, last_content):
                 data[key] = value_search.group()
             else:
-                entry.fail_with_prefix('Cannot find key: {}, url: {}'.format(key, work.url))
+                entry.fail_with_prefix(f'Cannot find key: {key}, url: {work.url}')
                 return None
         return self.request(entry, 'post', work.url, data=data)
 
