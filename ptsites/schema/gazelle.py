@@ -42,7 +42,7 @@ class Gazelle(PrivateTorrent, ABC):
                     'regex': (r'(Gold|积分|Bonus|Credits|Nips).*?([\d,.]+)', 2)
                 },
                 'join_date': {
-                    'regex': ('(Joined|加入时间).*?(.*?)(ago|前)', 2),
+                    'regex': ('(Joined|加入时间).*?(.*?)(ago|前|Last seen)', 2),
                     'handle': self.handle_join_date
                 },
                 'seeding': {
