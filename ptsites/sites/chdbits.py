@@ -1,5 +1,6 @@
 from typing import Final
 
+from ..base.entry import SignInEntry
 from ..schema.nexusphp import BakatestHR
 
 
@@ -11,3 +12,7 @@ class MainClass(BakatestHR):
         'points': [3500000, 5000000],
         'days': [280, 364]
     }
+
+    def sign_in(self, entry: SignInEntry, config: dict) -> None:
+        entry.fail_with_prefix("公告禁止使用脚本，请移除")
+        return
