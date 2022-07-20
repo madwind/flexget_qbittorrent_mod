@@ -9,7 +9,7 @@ from ..utils.net_utils import get_module_name
 
 
 class MainClass(Unit3D):
-    URL: Final = 'https://www.torrentseeds.org/'
+    URL: Final = 'https://www.torrentseeds.org'
     USER_CLASSES: Final = {
         'uploaded': [109951162777600],
         'days': [365]
