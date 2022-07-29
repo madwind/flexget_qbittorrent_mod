@@ -42,6 +42,9 @@ class MainClass(Unit3D):
                 }
             },
             'details': {
+                'uploaded': {
+                    'regex': 'title="Upload".*?</i>.+?([\d.]+.?[ZEPTGMK]?iB)',
+                },
                 'points': {
                     'regex': 'title="My Bonus Points".*?</i>.+?(\\d[\\d,. ]*)',
                 },
