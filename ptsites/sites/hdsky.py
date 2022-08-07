@@ -1,14 +1,19 @@
 from __future__ import annotations
 
+import json
+from io import BytesIO
 from typing import Final
+from urllib.parse import urljoin
 
 from flexget.entry import Entry
+from requests import Response
 
 from ..base.entry import SignInEntry
+from ..base.request import check_network_state, NetworkState
 from ..base.sign_in import check_final_state, SignState, check_sign_in_state
 from ..base.work import Work
 from ..schema.nexusphp import NexusPHP
-from ..utils import net_utils
+from ..utils import net_utils, baidu_ocr
 from ..utils.net_utils import get_module_name
 
 try:
@@ -19,6 +24,8 @@ except ImportError:
 
 class MainClass(NexusPHP):
     URL: Final = 'https://hdsky.me/'
+    IMAGE_HASH_URL: Final = '/image_code_ajax.php'
+    IMAGE_URL: Final = '/image.php?action=regimage&imagehash={}'
     TORRENT_PAGE_URL: Final = '/details.php?id={torrent_id}&hit=1'
     DOWNLOAD_URL_REGEX: Final = '/download\\.php\\?id=\\d+&passkey=.*?(?=")'
     USER_CLASSES: Final = {
@@ -50,47 +57,43 @@ class MainClass(NexusPHP):
             ),
             Work(
                 url='/showup.php',
-                method=self.sign_in_by_post,
-                data={
-                    'fixed': {
-                        'action': 'showup'
-                    }
-                },
+                method=self.sign_in_by_ocr,
                 succeed_regex=['{"success":true,"message":\\d+}'],
+                fail_regex='{"success":false,"message":"invalid_imagehash"}',
                 assert_state=(check_final_state, SignState.SUCCEED),
             ),
         ]
 
-    # def sign_in_by_ocr(self, entry: SignInEntry, config: dict, work: Work, last_content: str) -> Response | None:
-    #     data = {
-    #         'action': (None, 'new')
-    #     }
-    #     image_hash_url = urljoin(entry['url'], work.image_hash_url)
-    #     image_hash_response = self.request(entry, 'post', image_hash_url, files=data)
-    #     image_hash_network_state = check_network_state(entry, image_hash_url, image_hash_response)
-    #     if image_hash_network_state != NetworkState.SUCCEED:
-    #         return None
-    #     content = net_utils.decode(image_hash_response)
-    #
-    #     if not (image_hash := json.loads(content)['code']):
-    #         entry.fail_with_prefix('Cannot find: image_hash')
-    #         return None
-    #     image_url = urljoin(entry['url'], work.image_url)
-    #     img_url = image_url.format(image_hash)
-    #     img_response = self.request(entry, 'get', img_url)
-    #     img_network_state = check_network_state(entry, img_url, img_response)
-    #     if img_network_state != NetworkState.SUCCEED:
-    #         return None
-    #     img = Image.open(BytesIO(img_response.content))
-    #     code, img_byte_arr = baidu_ocr.get_ocr_code(img, entry, config)
-    #     if code and len(code) == 6:
-    #         data = {
-    #             'action': (None, 'showup'),
-    #             'imagehash': (None, image_hash),
-    #             'imagestring': (None, code)
-    #         }
-    #         return self.request(entry, 'post', work.url, files=data)
-    #     return None
+    def sign_in_by_ocr(self, entry: SignInEntry, config: dict, work: Work, last_content: str) -> Response | None:
+        data = {
+            'action': (None, 'new')
+        }
+        image_hash_url = urljoin(entry['url'], self.IMAGE_HASH_URL)
+        image_hash_response = self.request(entry, 'post', image_hash_url, files=data)
+        image_hash_network_state = check_network_state(entry, image_hash_url, image_hash_response)
+        if image_hash_network_state != NetworkState.SUCCEED:
+            return None
+        content = net_utils.decode(image_hash_response)
+
+        if not (image_hash := json.loads(content)['code']):
+            entry.fail_with_prefix('Cannot find: image_hash')
+            return None
+        image_url = urljoin(entry['url'], self.IMAGE_URL)
+        img_url = image_url.format(image_hash)
+        img_response = self.request(entry, 'get', img_url)
+        img_network_state = check_network_state(entry, img_url, img_response)
+        if img_network_state != NetworkState.SUCCEED:
+            return None
+        img = Image.open(BytesIO(img_response.content))
+        code, img_byte_arr = baidu_ocr.get_ocr_code(img, entry, config)
+        if code and len(code) == 6:
+            data = {
+                'action': (None, 'showup'),
+                'imagehash': (None, image_hash),
+                'imagestring': (None, code)
+            }
+            return self.request(entry, 'post', work.url, files=data)
+        return None
 
     @property
     def details_selector(self) -> dict:
