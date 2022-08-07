@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from enum import Enum
 
 import requests
@@ -40,7 +41,7 @@ def check_network_state(entry: SignInEntry,
 
 def cf_detected(response: Response) -> bool:
     if response is not None:
-        return response.text.find(r'https://www.cloudflare.com/5xx-error-landing') > 0
+        return bool(re.search(r'security by.*Cloudflare</a>', response.text, flags=re.DOTALL))
 
 
 class Request:
