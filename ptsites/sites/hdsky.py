@@ -31,7 +31,7 @@ class MainClass(NexusPHP):
     USER_CLASSES: Final = {
         'downloaded': [8796093022208, 10995116277760],
         'share_ratio': [5, 5.5],
-        'days': [315, 455]
+        # 'days': [315, 455]
     }
 
     @classmethod
@@ -99,7 +99,18 @@ class MainClass(NexusPHP):
     def details_selector(self) -> dict:
         selector = super().details_selector
         net_utils.dict_merge(selector, {
+            'user_id': None,
+            'detail_sources': {
+                'default': {
+                    'link': None,
+                    'elements': {
+                        'bar': '#info_block > tbody > tr > td > table > tbody > tr > td:nth-child(1) > span',
+                        'table': None
+                    }
+                }
+            },
             'details': {
+                'join_date': None,
                 'hr': None
             }
         })
