@@ -136,7 +136,9 @@ variables:
       login:
         username: 'xxxxxxxx'
         password: 'xxxxxxxx'
-    hdsky: 'xxxxxxxx'
+    hdsky:
+      cookie: 'xxxxxxxx'
+      join_date: 'yyyy-MM-dd'
     hdtime: 'xxxxxxxx'
     hdupt: 'xxxxxxxx'
     hdzone: 'xxxxxxxx'
@@ -560,7 +562,7 @@ tasks:
         hdpost:
           rsskey: 'xxxxxxxx'
         hdsky:
-          cookie: '{? sites.hdsky ?}'
+          cookie: '{? sites.hdsky.cookie ?}'
         hdtime: 'xxxxxxxx'
         hdupt: 'xxxxxxxx'
         hdzone: 'xxxxxxxx'

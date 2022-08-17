@@ -31,8 +31,21 @@ class MainClass(NexusPHP):
     USER_CLASSES: Final = {
         'downloaded': [8796093022208, 10995116277760],
         'share_ratio': [5, 5.5],
-        # 'days': [315, 455]
+        'days': [315, 455]
     }
+
+    @classmethod
+    def sign_in_build_schema(cls) -> dict:
+        return {
+            get_module_name(cls): {
+                'type': 'object',
+                'properties': {
+                    'cookie': {'type': 'string'},
+                    'join_date': {'type': 'string', 'format': 'date'}
+                },
+                'additionalProperties': False
+            }
+        }
 
     @classmethod
     def reseed_build_schema(cls) -> dict:
