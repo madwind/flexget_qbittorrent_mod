@@ -174,9 +174,10 @@ class PrivateTorrent(Request, SignIn, Detail, Message, Reseed, ABC):
                     f"Details=> site: {entry['site_name']}, regex: {detail_config['regex']}，details_text: {details_text}")
                 return
             details[detail_name] = detail_value
-        for key, value in details.items():
-            if value == '*':
-                details[key] = entry['site_config'].get(key, '*')
+        if isinstance(entry['site_config'], dict):
+            for key, value in details.items():
+                if value == '*':
+                    details[key] = entry['site_config'].get(key, '*')
         entry['details'] = details
 
     def get_details(self, entry: SignInEntry, config: dict) -> None:
