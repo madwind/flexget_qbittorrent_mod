@@ -1,9 +1,9 @@
 from typing import Final
 
-from ..schema.nexusphp import AttendanceHR
+from ..schema.nexusphp import Attendance
 
 
-class MainClass(AttendanceHR):
+class MainClass(Attendance):
     URL: Final = 'https://ptchina.org/'
     USER_CLASSES: Final = {
         'downloaded': [805_306_368_000, 3_298_534_883_328],
