@@ -31,7 +31,7 @@ class MainClass(NexusPHP):
     USER_CLASSES: Final = {
         'downloaded': [351843720888320, 549755813888000],
         'share_ratio': [8, 10],
-        'point': [8000000, 10000000],
+        'points': [8000000, 10000000],
         'days': [315, 455]
     }
 
