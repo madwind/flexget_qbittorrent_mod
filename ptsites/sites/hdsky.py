@@ -29,10 +29,9 @@ class MainClass(NexusPHP):
     TORRENT_PAGE_URL: Final = '/details.php?id={torrent_id}&hit=1'
     DOWNLOAD_URL_REGEX: Final = '/download\\.php\\?id=\\d+&passkey=.*?(?=")'
     USER_CLASSES: Final = {
-        'downloaded': [351843720888320, 549755813888000],
-        'share_ratio': [8, 10],
-        'points': [8000000, 10000000],
-        'days': [315, 455]
+        'downloaded': [10995116277760],
+        'share_ratio': [5.5],
+        'days': [455]
     }
 
     @classmethod
