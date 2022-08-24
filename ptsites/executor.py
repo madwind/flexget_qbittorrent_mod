@@ -3,6 +3,8 @@ from __future__ import annotations
 import importlib
 import pathlib
 import pkgutil
+import threading
+import os
 
 from flexget import plugin
 from flexget.entry import Entry
@@ -13,6 +15,8 @@ from .base.entry import SignInEntry
 from .base.message import Message
 from .base.reseed import Reseed
 from .base.sign_in import SignIn
+
+lock = threading.Semaphore(1)
 
 
 def build_sign_in_schema() -> dict:
@@ -35,6 +39,33 @@ def build_sign_in_entry(entry: SignInEntry, config: dict) -> None:
             site_class.sign_in_build_entry(entry, config)
     except AttributeError as e:
         raise plugin.PluginError(f"site: {entry['site_name']}, error: {e}")
+
+
+def save_cookie(entry):
+    file_name = 'cookies.bak'
+    site_name = entry['site_name']
+    session_cookie = entry.get('session_cookie')
+    if not session_cookie:
+        return
+    with lock:
+        mode = 'r+'
+        if not os.path.exists(file_name):
+            mode = 'w+'
+
+        with open(file_name, mode, encoding='utf-8') as f:
+            lines = f.readlines()
+            updated = False
+            cookie = f"{site_name}: '{session_cookie}'\n"
+            for i in range(len(lines)):
+                if lines[i].startswith(f'{site_name}:'):
+                    lines[i] = cookie
+                    updated = True
+                    break
+            if not updated:
+                lines.append(cookie)
+            lines.sort()
+            f.seek(0)
+            f.writelines(lines)
 
 
 def sign_in(entry: SignInEntry, config: dict) -> None:
@@ -68,6 +99,11 @@ def sign_in(entry: SignInEntry, config: dict) -> None:
             return
         if entry['details']:
             logger.info(f"site_name: {entry['site_name']}, details: {entry['details']}")
+
+    if config.get('cookie_backup', True):
+        if entry.failed:
+            return
+        save_cookie(entry)
     clean_entry_attr(entry)
 
 

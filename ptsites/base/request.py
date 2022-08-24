@@ -69,6 +69,7 @@ class Request:
                 entry.fail_with_prefix('Detected CloudFlare DDoS-GUARD')
             elif response is not None and response.status_code != 200:
                 entry.fail_with_prefix(f'response.status_code={response.status_code}')
+            entry['session_cookie'] = (' '.join(list(map(lambda x: f'{x[0]}={x[1]};', self.session.cookies.items()))))
             return response
         except Exception as e:
             entry.fail_with_prefix(NetworkState.NETWORK_ERROR.value.format(url=url, error=e))

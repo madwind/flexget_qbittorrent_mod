@@ -21,6 +21,7 @@ class PluginAutoSignIn:
             'max_workers': {'type': 'integer'},
             'get_messages': {'type': 'boolean', 'default': True},
             'get_details': {'type': 'boolean', 'default': True},
+            'cookie_backup': {'type': 'boolean', 'default': True},
             'aipocr': {
                 'type': 'object',
                 'properties': {
