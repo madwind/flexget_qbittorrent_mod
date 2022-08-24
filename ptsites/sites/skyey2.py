@@ -32,7 +32,7 @@ class MainClass(Discuz):
                             'username': {'type': 'string'},
                             'password': {'type': 'string'},
                         },
-                        'additionalProperties': False
+                        'additionalProperties': True
                     }
                 },
                 'additionalProperties': False
