@@ -31,8 +31,9 @@ class MainClass(Discuz):
                         'properties': {
                             'username': {'type': 'string'},
                             'password': {'type': 'string'},
+                            'secret_key': {'type': 'string'},
                         },
-                        'additionalProperties': True
+                        'additionalProperties': False
                     }
                 },
                 'additionalProperties': False
