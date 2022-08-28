@@ -68,6 +68,7 @@ variables:
         username: 'xxxxxxxx'
         password: 'xxxxxxxx'
     btschool: 'xxxxxxxx'
+    byr: 'xxxxxx'
     carpt: 'xxxxxxxx'
     cathode-ray:
       login:
@@ -488,6 +489,44 @@ tasks:
       - qbittorrent_base_template
       - qbittorrent_add_template
       #- show_entry_template
+
+  byr:
+    html_rss:
+      url: https://byr.pt/torrents.php
+      user-agent: '{? headers.user_agent ?}'
+      cookie: '{? sites.byr ?}'
+      params: '&passkey=xxxxxxxx'
+      root_element_selector: '#outer > table.main > tbody > tr > td > table > tbody > tr:not(:first-child)'
+      fields:
+        title:
+          element_selector: 'a[href*="details.php"]'
+          attribute: textContent
+        url:
+          element_selector: 'a[href*="download.php"]'
+          attribute: href
+        promotion:
+          element_selector: 'tbody > tr'
+          attribute: class
+        promotion_time:
+          element_selector: "table.torrentname"
+          attribute: title
+        seeders:
+          element_selector: "td:nth-child(6) > b"
+          attribute: textContent
+        leechers:
+          element_selector: "td:nth-child(7) > b"
+          attribute: textContent
+    no_entries_ok: yes
+    limit_new: 2
+    if:
+      - "promotion in ['twoup_bg','free_bg','twoupfree_bg','twouphalfdown_bg']": accept # accept 2x, free, 2xfree, 2x 50%
+      #- "('BDMV' in title) or ('BDISO' in title) or ('DVDISO' in title) or leechers|int < 1": reject
+    content_size:
+      strict: true
+      max: 307200
+    template:
+      - qbittorrent_base_template
+      - qbittorrent_add_template
 
   rss_download:
     inputs:
