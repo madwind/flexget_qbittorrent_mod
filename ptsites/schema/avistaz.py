@@ -4,7 +4,7 @@ from .private_torrent import PrivateTorrent
 from ..base.entry import SignInEntry
 from ..base.sign_in import SignState, check_final_state
 from ..base.work import Work
-from ..utils.value_hanlder import handle_join_date
+from ..utils.value_handler import handle_join_date
 
 
 class AvistaZ(PrivateTorrent, ABC):

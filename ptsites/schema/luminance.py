@@ -7,7 +7,7 @@ from ..base.request import NetworkState, check_network_state
 from ..base.sign_in import SignState, check_final_state
 from ..base.work import Work
 from ..utils.net_utils import get_module_name
-from ..utils.value_hanlder import handle_infinite, handle_join_date
+from ..utils.value_handler import handle_infinite, handle_join_date
 
 
 class Luminance(PrivateTorrent, ABC):

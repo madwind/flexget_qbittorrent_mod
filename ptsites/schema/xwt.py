@@ -5,7 +5,7 @@ from ..base.entry import SignInEntry
 from ..base.sign_in import check_final_state, SignState
 from ..base.work import Work
 from ..utils.net_utils import get_module_name
-from ..utils.value_hanlder import handle_infinite
+from ..utils.value_handler import handle_infinite
 
 
 class XWT(PrivateTorrent, ABC):

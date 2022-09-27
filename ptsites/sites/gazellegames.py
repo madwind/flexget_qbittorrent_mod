@@ -13,7 +13,7 @@ from ..base.work import Work
 from ..schema.gazelle import Gazelle
 from ..utils import net_utils
 from ..utils.net_utils import get_module_name
-from ..utils.value_hanlder import handle_infinite
+from ..utils.value_handler import handle_infinite
 
 
 class MainClass(Gazelle):

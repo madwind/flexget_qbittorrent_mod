@@ -3,7 +3,7 @@ from typing import Final
 from ..base.entry import SignInEntry
 from ..schema.xbtit import XBTIT
 from ..utils import net_utils
-from ..utils.value_hanlder import handle_infinite
+from ..utils.value_handler import handle_infinite
 
 
 class MainClass(XBTIT):

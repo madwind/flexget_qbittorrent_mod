@@ -16,7 +16,7 @@ from ..base.request import check_network_state, NetworkState
 from ..base.sign_in import SignState, check_final_state, check_sign_in_state
 from ..base.work import Work
 from ..utils import net_utils
-from ..utils.value_hanlder import handle_infinite
+from ..utils.value_handler import handle_infinite
 
 
 class NexusPHP(PrivateTorrent, ABC):

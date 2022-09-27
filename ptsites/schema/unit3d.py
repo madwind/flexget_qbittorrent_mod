@@ -1,7 +1,7 @@
 from abc import ABC
 
 from .private_torrent import PrivateTorrent
-from ..utils.value_hanlder import handle_join_date
+from ..utils.value_handler import handle_join_date
 
 
 class Unit3D(PrivateTorrent, ABC):

@@ -9,7 +9,7 @@ from .private_torrent import PrivateTorrent
 from ..base.entry import SignInEntry
 from ..base.request import check_network_state, NetworkState
 from ..utils import net_utils
-from ..utils.value_hanlder import handle_infinite
+from ..utils.value_handler import handle_infinite
 
 
 class Gazelle(PrivateTorrent, ABC):

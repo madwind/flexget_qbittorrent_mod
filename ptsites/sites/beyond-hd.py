@@ -4,7 +4,7 @@ from ..base.entry import SignInEntry
 from ..base.sign_in import check_final_state, SignState, Work
 from ..schema.unit3d import Unit3D
 from ..utils.net_utils import get_module_name
-from ..utils.value_hanlder import handle_join_date
+from ..utils.value_handler import handle_join_date
 
 
 # site_config

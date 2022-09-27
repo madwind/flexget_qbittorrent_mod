@@ -3,7 +3,7 @@ from typing import Final
 from ..base.entry import SignInEntry
 from ..base.sign_in import check_final_state, SignState, Work
 from ..schema.private_torrent import PrivateTorrent
-from ..utils.value_hanlder import handle_join_date, handle_infinite
+from ..utils.value_handler import handle_join_date, handle_infinite
 
 
 class MainClass(PrivateTorrent):
