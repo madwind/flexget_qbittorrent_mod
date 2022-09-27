@@ -261,7 +261,7 @@ class MainClass(NexusPHP):
         return None
 
     def get_new_image(self, entry: SignInEntry, img_url: str) -> Image.Image | None:
-        time.sleep(1)
+        time.sleep(3)
         logger.debug('request image...')
         real_img_url = urljoin(entry['url'], img_url)
         base_img_response = self.request(entry, 'get', real_img_url)
