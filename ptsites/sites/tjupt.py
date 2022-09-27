@@ -1,7 +1,15 @@
+import json
 import re
+from io import BytesIO
+from pathlib import Path
+from time import sleep
 from typing import Final
+from urllib.parse import urljoin
 
+import numpy as np
 import requests
+from PIL import Image
+from flexget.utils.soup import get_soup
 from loguru import logger
 
 from ..base.entry import SignInEntry
@@ -17,6 +25,8 @@ class MainClass(NexusPHP):
     IMG_REGEX: Final = r'https://.*\.doubanio\.com/view/photo/s_ratio_poster/public/(p\d+)\.'
     ANSWER_REGEX: Final = r"<input type='radio' name='answer' value='(.*?)'>(.*?)<br>"
     BREAK_REGEX: Final = r'已断签.*?天，当前可补签天数为 <b>(\d+)</b> 天'
+    IMG_SELECTOR: Final = 'table.captcha img'
+    ANSWER_SELECTOR: Final = 'table.captcha form > table > tbody > tr:nth-child(2) > td'
     CONFIRM: Final = {'action': 'confirm'}
     CANCEL: Final = {'action': 'cancel'}
     IGNORE_TITLE = '您正在下载或做种的种子被删除'
@@ -77,33 +87,102 @@ class MainClass(NexusPHP):
             if not network_state == NetworkState.SUCCEED:
                 return
             last_content = net_utils.decode(response)
-        if img_match := re.search(self.IMG_REGEX, last_content):
-            img_name = img_match.group(1)
-            answers = re.findall(self.ANSWER_REGEX, last_content)
-            answer = self.get_answer(config, img_name, answers)
-            if not answer:
-                entry.fail_with_prefix('Cannot find answer')
-                logger.info(f'img_name: {img_name}, answers: {answers}')
-                return
-            data = {
-                'answer': answer,
-                'submit': '提交'
-            }
-            return self.request(entry, 'post', work.url, data=data)
-        entry.fail_with_prefix('Cannot find img_name')
-        logger.info(f'last_content: {last_content}')
-        return
+        captcha_el = get_soup(last_content).select_one(self.IMG_SELECTOR)
+        answer_el = get_soup(last_content).select_one(self.ANSWER_SELECTOR)
+        value = list(map(lambda x: x['value'], answer_el.select('input')))
+        answer = get_soup(str(answer_el).replace('<br/>', '|')).text.split('|')[0:-1]
 
-    def get_answer(self, config, img_name, answers):
+        answers = list(zip(value, answer))
+
+        captcha_img_url = urljoin(self.URL, captcha_el['src'])
+
+        answer = self.get_answer(entry, config, captcha_img_url, answers)
+        if not answer:
+            logger.info(f'img_name: {captcha_img_url}, answers: {answers}')
+            return
+        data = {
+            'answer': answer,
+            'submit': '提交'
+        }
+        return self.request(entry, 'post', work.url, data=data)
+
+    def get_answer(self, entry, config, captcha_img_url, answers):
+        question_file = Path.cwd().joinpath('ptsites/data/tjupt.json')
+        if question_file.is_file():
+            question_json = json.loads(question_file.read_text(encoding='utf-8'))
+        else:
+            question_json = {}
+        img_name = captcha_img_url.split('/')[-1]
+        cache_question = question_json.get(img_name)
+        if cache_question:
+            cache_answer = cache_question.get('answer')
+            for value, answer in answers:
+                if cache_answer == answer:
+                    return value
+            entry.fail_with_prefix('cache error!')
+            return None
+
+        captcha_img_response = self.request(entry, 'get', captcha_img_url)
+        if captcha_img_response is None or captcha_img_response.status_code != 200:
+            entry.fail_with_prefix('Can not get captcha_img')
+            return None
+        captcha_img = Image.open(BytesIO(captcha_img_response.content))
+        captcha_img_hash = toHash(captcha_img)
+
         for value, answer in answers:
+            logger.info((value, answer))
             movies = requests.get(f'https://movie.douban.com/j/subject_suggest?q={answer}',
                                   headers={'user-agent': config.get('user-agent')}).json()
             for movie in movies:
-                if img_name in movie.get('img'):
+                movie_img_response = requests.get(movie.get('img'))
+                if movie_img_response is None or movie_img_response.status_code != 200:
+                    entry.fail_with_prefix('douban error!')
+                    return None
+                movie_img = Image.open(BytesIO(movie_img_response.content))
+                movie_img_hash = toHash(movie_img)
+                logger.info(compareHash(captcha_img_hash, movie_img_hash))
+                if compareHash(captcha_img_hash, movie_img_hash) > 0.9:
+                    question_json[img_name] = {
+                        'hash': captcha_img_hash,
+                        'answer': answer
+                    }
+                    question_file.write_text(json.dumps(question_json), encoding='utf-8')
                     return value
+                sleep(1)
+            sleep(1)
 
+        entry.fail_with_prefix('Cannot find answer')
+        return None
     def get_messages(self, entry: SignInEntry, config: dict) -> None:
         self.get_nexusphp_messages(entry, config, ignore_title=self.IGNORE_TITLE)
 
     def handle_hr(self, hr):
         return str(100 - int(hr))
+
+
+def toHash(img, shape=(10, 10)):
+    img = img.resize(shape)
+    gray = np.asarray(img.convert('L'))
+    s = 0
+    hash_str = ''
+    for i in range(shape[0]):
+        for j in range(shape[1]):
+            s = s + gray[i, j]
+    avg = s / 100
+    for i in range(shape[0]):
+        for j in range(shape[1]):
+            if gray[i, j] > avg:
+                hash_str = hash_str + '1'
+            else:
+                hash_str = hash_str + '0'
+    return hash_str
+
+
+def compareHash(hash1, hash2, shape=(10, 10)):
+    n = 0
+    if len(hash1) != len(hash2):
+        return -1
+    for i in range(len(hash1)):
+        if hash1[i] == hash2[i]:
+            n = n + 1
+    return n / (shape[0] * shape[1])
