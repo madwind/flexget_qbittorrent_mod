@@ -22,8 +22,6 @@ from ..utils import net_utils
 
 class MainClass(NexusPHP):
     URL: Final = 'https://tjupt.org/'
-    IMG_REGEX: Final = r'https://.*\.doubanio\.com/view/photo/s_ratio_poster/public/(p\d+)\.'
-    ANSWER_REGEX: Final = r"<input type='radio' name='answer' value='(.*?)'>(.*?)<br>"
     BREAK_REGEX: Final = r'已断签.*?天，当前可补签天数为 <b>(\d+)</b> 天'
     IMG_SELECTOR: Final = 'table.captcha img'
     ANSWER_SELECTOR: Final = 'table.captcha form > table > tbody > tr:nth-child(2) > td'
@@ -98,7 +96,6 @@ class MainClass(NexusPHP):
 
         answer = self.get_answer(entry, config, captcha_img_url, answers)
         if not answer:
-            logger.info(f'img_name: {captcha_img_url}, answers: {answers}')
             return
         data = {
             'answer': answer,
@@ -133,6 +130,8 @@ class MainClass(NexusPHP):
             logger.info((value, answer))
             movies = requests.get(f'https://movie.douban.com/j/subject_suggest?q={answer}',
                                   headers={'user-agent': config.get('user-agent')}).json()
+            if len(movies) == 0:
+                logger.info(f'https://movie.douban.com/j/subject_suggest?q={answer} length: 0')
             for movie in movies:
                 movie_img_response = requests.get(movie.get('img'))
                 if movie_img_response is None or movie_img_response.status_code != 200:
@@ -140,19 +139,26 @@ class MainClass(NexusPHP):
                     return None
                 movie_img = Image.open(BytesIO(movie_img_response.content))
                 movie_img_hash = toHash(movie_img)
-                logger.info(compareHash(captcha_img_hash, movie_img_hash))
-                if compareHash(captcha_img_hash, movie_img_hash) > 0.9:
+                score = compareHash(captcha_img_hash, movie_img_hash)
+                logger.info(f'{movie.get("title")} url:{movie.get("img")} score: {score}')
+                if score > 0.9:
                     question_json[img_name] = {
                         'hash': captcha_img_hash,
                         'answer': answer
                     }
-                    question_file.write_text(json.dumps(question_json), encoding='utf-8')
+                    question_file.write_text(json.dumps(question_json, indent=4, ensure_ascii=False), encoding='utf-8')
                     return value
-                sleep(1)
-            sleep(1)
-
+                sleep(5)
+        logger.info(f'img_name: {captcha_img_url}, answers: {answers}')
+        logger.info(json.dumps({
+            img_name: {
+                'hash': captcha_img_hash,
+                'answer': ''
+            }
+        }, indent=4, ensure_ascii=False))
         entry.fail_with_prefix('Cannot find answer')
         return None
+
     def get_messages(self, entry: SignInEntry, config: dict) -> None:
         self.get_nexusphp_messages(entry, config, ignore_title=self.IGNORE_TITLE)
 
