@@ -101,7 +101,7 @@ class MainClass(NexusPHP):
             'answer': answer,
             'submit': '提交'
         }
-        # return self.request(entry, 'post', work.url, data=data)
+        return self.request(entry, 'post', work.url, data=data)
 
     def get_answer(self, entry, config, captcha_img_url, answers):
         question_file = Path(__file__).parent.parent.joinpath('data/tjupt.json')
