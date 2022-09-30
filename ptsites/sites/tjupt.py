@@ -104,7 +104,7 @@ class MainClass(NexusPHP):
         return self.request(entry, 'post', work.url, data=data)
 
     def get_answer(self, entry, config, captcha_img_url, answers):
-        question_file = Path(__file__).parent.parent.joinpath('data/tjupt.json')
+        question_file = Path(__file__).parent.parent.joinpath(f'data/{entry["site_name"]}.json')
         if question_file.is_file():
             question_json = json.loads(question_file.read_text(encoding='utf-8'))
         else:
@@ -128,6 +128,13 @@ class MainClass(NexusPHP):
 
         for value, answer in answers:
             logger.info((value, answer))
+            skip = False
+            for q in question_json.values():
+                if q['answer'] == answer:
+                    skip = True
+            if skip:
+                logger.info('skip')
+                continue
             movies = requests.get(f'https://movie.douban.com/j/subject_suggest?q={answer}',
                                   headers={'user-agent': config.get('user-agent')}).json()
             if len(movies) == 0:

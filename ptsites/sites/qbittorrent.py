@@ -71,7 +71,6 @@ class MainClass(SignIn, Detail):
             'hr': 0
         }
         entry['details'] = details
-        logger.info('site_name: {}, details: {}', entry['site_name'], entry['details'])
 
     def prepare_config(self, site_config: dict) -> dict:
         site_config.setdefault('enabled', True)
