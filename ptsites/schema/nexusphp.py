@@ -181,7 +181,8 @@ class BakatestHR(NexusPHP, ABC):
                     if list(arr) not in answer_list:
                         answer_list.append(list(arr))
             answer_list.reverse()
-            if local_answer and local_answer in choices and len(local_answer) <= choice_range:
+            if local_answer and len(local_answer) == len([i for i in local_answer if i in choices]) and len(
+                    local_answer) <= choice_range:
                 answer_list.insert(0, local_answer)
             times = 0
             for answer in answer_list:
