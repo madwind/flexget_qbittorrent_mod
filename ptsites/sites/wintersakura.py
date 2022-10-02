@@ -17,6 +17,13 @@ class MainClass(Attendance):
     def details_selector(self) -> dict:
         selector = super().details_selector
         net_utils.dict_merge(selector, {
+            'detail_sources': {
+                'default': {
+                    'elements': {
+                        'table': '#outer > div > table:last-of-type'
+                    }
+                }
+            },
             'details': {
                 'points': {
                     'regex': (r'(做种积分).*?([\d,.]+)', 2)
