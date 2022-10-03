@@ -191,10 +191,11 @@ class BakatestHR(NexusPHP, ABC):
                 state = check_sign_in_state(entry, work, response, net_utils.decode(response))
                 if state == SignState.SUCCEED:
                     entry['result'] = f"{entry['result']} ( {times} attempts.)"
-                    question_json[question_id] = answer
-                    question_file.write_text(
-                        json.dumps({int(x): question_json[x] for x in question_json.keys()}, indent=4),
-                        encoding='utf-8')
+                    if question_json.get(question_id) != answer:
+                        question_json[question_id] = answer
+                        question_file.write_text(
+                            json.dumps({int(x): question_json[x] for x in question_json.keys()}, indent=4),
+                            encoding='utf-8')
                     logger.info(f"{entry['title']}, correct answer: {data}")
                     return
                 times += 1
