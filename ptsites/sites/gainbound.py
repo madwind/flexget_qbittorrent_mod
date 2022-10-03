@@ -1,7 +1,7 @@
 from typing import Final
 
 from ..schema.nexusphp import Attendance
-from ..utils.net_utils import dict_merge
+from ..utils.net_utils import dict_merge, get_module_name
 
 
 class MainClass(Attendance):
@@ -12,6 +12,18 @@ class MainClass(Attendance):
         'points': [400000, 1000000],
         'days': [280, 700]
     }
+
+    @classmethod
+    def reseed_build_schema(cls) -> dict:
+        return {
+            get_module_name(cls): {
+                'type': 'object',
+                'properties': {
+                    'cookie': {'type': 'string'}
+                },
+                'additionalProperties': False
+            }
+        }
 
     @property
     def details_selector(self) -> dict:
