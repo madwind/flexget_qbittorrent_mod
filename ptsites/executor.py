@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import importlib
+import json
 import pathlib
 import pkgutil
 import threading
-import os
 
 from flexget import plugin
 from flexget.entry import Entry
@@ -42,30 +42,22 @@ def build_sign_in_entry(entry: SignInEntry, config: dict) -> None:
 
 
 def save_cookie(entry):
-    file_name = 'cookies.bak'
+    file_name = 'cookies_backup.json'
     site_name = entry['site_name']
     session_cookie = entry.get('session_cookie')
     if not session_cookie:
         return
     with lock:
-        mode = 'r+'
-        if not os.path.exists(file_name):
-            mode = 'w+'
-
-        with open(file_name, mode, encoding='utf-8') as f:
-            lines = f.readlines()
-            updated = False
-            cookie = f"{site_name}: '{session_cookie}'\n"
-            for i in range(len(lines)):
-                if lines[i].startswith(f'{site_name}:'):
-                    lines[i] = cookie
-                    updated = True
-                    break
-            if not updated:
-                lines.append(cookie)
-            lines.sort()
-            f.seek(0)
-            f.writelines(lines)
+        cookies_backup_file = pathlib.Path.cwd().joinpath(file_name)
+        if cookies_backup_file.is_file():
+            cookies_backup_json = json.loads(cookies_backup_file.read_text(encoding='utf-8'))
+        else:
+            cookies_backup_json = {}
+        if cookies_backup_json.get(site_name) != session_cookie:
+            cookies_backup_json[site_name] = session_cookie
+            cookies_backup_file.write_text(
+                json.dumps(cookies_backup_json, indent=4),
+                encoding='utf-8')
 
 
 def sign_in(entry: SignInEntry, config: dict) -> None:
