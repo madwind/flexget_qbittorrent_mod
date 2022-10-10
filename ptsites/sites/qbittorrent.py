@@ -1,7 +1,5 @@
 from datetime import datetime
 
-from loguru import logger
-
 from ..base.detail import Detail
 from ..base.entry import SignInEntry
 from ..base.sign_in import SignIn
@@ -58,7 +56,7 @@ class MainClass(SignIn, Detail):
         details = {
             'downloaded': f'{server_state["alltime_dl"]} B',
             'uploaded': f'{server_state["alltime_ul"]} B',
-            'share_ratio': server_state['global_ratio'],
+            'share_ratio': server_state['global_ratio'] if server_state['global_ratio'] != '-' else 0,
             'points': 0,
             'leeching': len(
                 list(filter(lambda torrent: ('dl' in torrent['qbittorrent_state'].lower() or 'downloading' in torrent[
