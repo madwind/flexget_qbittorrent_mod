@@ -17,6 +17,12 @@ class MainClass(VisitHR):
         selector = super().details_selector
         net_utils.dict_merge(selector, {
             'details': {
+                'uploaded': {
+                    'regex': r'上传量:  ([\d,.]+ [ZEPTGMK]?B)'
+                },
+                'downloaded': {
+                    'regex': r'下载量:  ([\d,.]+ [ZEPTGMK]?B)'
+                },
                 'points': {
                     'regex': '魔力值.*?：([\\d,.]+)'
                 }
