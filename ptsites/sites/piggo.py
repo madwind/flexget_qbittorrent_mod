@@ -8,12 +8,13 @@ from requests.adapters import HTTPAdapter
 
 from ..base.entry import SignInEntry
 from ..base.request import cf_detected, NetworkState
+from ..base.reseed import ReseedPasskey
 from ..schema.nexusphp import AttendanceHR
 from ..utils import net_utils
 from ..utils.value_handler import size
 
 
-class MainClass(AttendanceHR):
+class MainClass(AttendanceHR, ReseedPasskey):
     URL: Final = 'https://piggo.me/'
     USER_CLASSES: Final = {
         'downloaded': [size(2, 'TiB'), size(6, 'TiB')],

@@ -1,10 +1,11 @@
 from typing import Final
 
+from ..base.reseed import ReseedPasskey
 from ..schema.nexusphp import Visit
 from ..utils import net_utils
 
 
-class MainClass(Visit):
+class MainClass(Visit, ReseedPasskey):
     URL: Final = 'https://springsunday.net/'
     USER_CLASSES: Final = {
         'uploaded': [1832519379627, 109951162777600],

@@ -3,13 +3,12 @@ from __future__ import annotations
 from typing import Final
 from urllib.parse import urljoin
 
-from flexget.entry import Entry
-
+from ..base.reseed import ReseedPage
 from ..schema.nexusphp import Visit
 from ..utils.net_utils import get_module_name
 
 
-class MainClass(Visit):
+class MainClass(Visit, ReseedPage):
     URL: Final = 'https://www.hd.ai/'
     SUCCEED_REGEX: Final = '(?<=<i class="layui-icon layui-icon-username">)</i>.*?(?=</a>)'
     TORRENT_PAGE_URL: Final = urljoin(URL, '/details.php?id={torrent_id}&hit=1')
@@ -31,9 +30,3 @@ class MainClass(Visit):
                 'additionalProperties': False
             }
         }
-
-    @classmethod
-    def reseed_build_entry(cls, entry: Entry, config: dict, site: dict, passkey: str | dict,
-                           torrent_id: str) -> None:
-        cls.reseed_build_entry_from_page(entry, config, passkey, torrent_id, cls.URL, cls.TORRENT_PAGE_URL,
-                                         cls.DOWNLOAD_URL_REGEX)

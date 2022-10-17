@@ -14,13 +14,14 @@ from loguru import logger
 
 from ..base.entry import SignInEntry
 from ..base.request import check_network_state, NetworkState
+from ..base.reseed import ReseedPasskey
 from ..base.sign_in import check_final_state, SignState, check_sign_in_state
 from ..base.work import Work
 from ..schema.nexusphp import NexusPHP
 from ..utils import net_utils
 
 
-class MainClass(NexusPHP):
+class MainClass(NexusPHP, ReseedPasskey):
     URL: Final = 'https://tjupt.org/'
     BREAK_REGEX: Final = r'已断签.*?天，当前可补签天数为 <b>(\d+)</b> 天'
     IMG_SELECTOR: Final = 'table.captcha img'

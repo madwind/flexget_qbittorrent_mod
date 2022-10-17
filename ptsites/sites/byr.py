@@ -1,13 +1,14 @@
 from typing import Final
 
 from ..base.entry import SignInEntry
+from ..base.reseed import ReseedPasskey
 from ..base.sign_in import SignState
 from ..base.sign_in import check_final_state
 from ..base.work import Work
 from ..schema.nexusphp import Visit
 
 
-class MainClass(Visit):
+class MainClass(Visit, ReseedPasskey):
     URL: Final = 'https://byr.pt/'
     USER_CLASSES: Final = {
         'uploaded': [4398046511104, 140737488355328],

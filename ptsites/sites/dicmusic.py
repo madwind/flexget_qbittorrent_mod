@@ -6,6 +6,7 @@ from urllib.parse import urljoin
 from flexget.entry import Entry
 
 from ..base.entry import SignInEntry
+from ..base.reseed import Reseed
 from ..base.sign_in import SignState
 from ..base.sign_in import check_final_state
 from ..base.work import Work
@@ -14,7 +15,7 @@ from ..utils import net_utils
 from ..utils.net_utils import get_module_name
 
 
-class MainClass(Gazelle):
+class MainClass(Gazelle, Reseed):
     URL: Final = 'https://dicmusic.club/'
     USER_CLASSES: Final = {
         'uploaded': [26843545600, 1319413953331],
@@ -47,14 +48,6 @@ class MainClass(Gazelle):
             )
         ]
 
-    @classmethod
-    def reseed_build_entry(cls, entry: Entry, config: dict, site: dict, passkey: str | dict,
-                           torrent_id: str) -> None:
-        download_page = site['download_page'].format(torrent_id=torrent_id,
-                                                     authkey=passkey['authkey'],
-                                                     torrent_pass=passkey['torrent_pass'])
-        entry['url'] = urljoin(MainClass.URL, download_page)
-
     @property
     def details_selector(self) -> dict:
         selector = super().details_selector
@@ -69,3 +62,11 @@ class MainClass(Gazelle):
             }
         })
         return selector
+
+    @classmethod
+    def reseed_build_entry(cls, entry: Entry, config: dict, site: dict, passkey: str | dict,
+                           torrent_id: str) -> None:
+        download_page = site['download_page'].format(torrent_id=torrent_id,
+                                                     authkey=passkey['authkey'],
+                                                     torrent_pass=passkey['torrent_pass'])
+        entry['url'] = urljoin(MainClass.URL, download_page)

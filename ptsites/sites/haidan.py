@@ -1,12 +1,13 @@
 from typing import Final
 
 from ..base.entry import SignInEntry
+from ..base.reseed import ReseedPasskey
 from ..base.sign_in import check_sign_in_state, SignState, check_final_state, Work
 from ..schema.nexusphp import NexusPHP
 from ..utils import net_utils
 
 
-class MainClass(NexusPHP):
+class MainClass(NexusPHP, ReseedPasskey):
     URL: Final = 'https://www.haidan.video/'
     USER_CLASSES: Final = {
         'downloaded': [2199023255552, 8796093022208],

@@ -1,10 +1,11 @@
 from typing import Final
 
 from ..base.entry import SignInEntry
+from ..base.reseed import ReseedPasskey
 from ..schema.nexusphp import BakatestHR
 
 
-class MainClass(BakatestHR):
+class MainClass(BakatestHR, ReseedPasskey):
     URL: Final = 'https://chdbits.co/'
     USER_CLASSES: Final = {
         'downloaded': [3298534883328, 4398046511104],

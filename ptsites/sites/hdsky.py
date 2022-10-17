@@ -5,11 +5,11 @@ from io import BytesIO
 from typing import Final
 from urllib.parse import urljoin
 
-from flexget.entry import Entry
 from requests import Response
 
 from ..base.entry import SignInEntry
 from ..base.request import check_network_state, NetworkState
+from ..base.reseed import ReseedPage
 from ..base.sign_in import check_final_state, SignState, check_sign_in_state
 from ..base.work import Work
 from ..schema.nexusphp import NexusPHP
@@ -22,7 +22,7 @@ except ImportError:
     Image = None
 
 
-class MainClass(NexusPHP):
+class MainClass(NexusPHP, ReseedPage):
     URL: Final = 'https://hdsky.me/'
     IMAGE_HASH_URL: Final = '/image_code_ajax.php'
     IMAGE_URL: Final = '/image.php?action=regimage&imagehash={}'
@@ -128,9 +128,3 @@ class MainClass(NexusPHP):
             }
         })
         return selector
-
-    @classmethod
-    def reseed_build_entry(cls, entry: Entry, config: dict, site: dict, passkey: str | dict,
-                           torrent_id: str) -> None:
-        cls.reseed_build_entry_from_page(entry, config, passkey, torrent_id, cls.URL, cls.TORRENT_PAGE_URL,
-                                         cls.DOWNLOAD_URL_REGEX)

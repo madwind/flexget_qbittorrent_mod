@@ -1,13 +1,9 @@
 from __future__ import annotations
 
-import datetime
 import re
 from abc import ABC, abstractmethod
 from urllib.parse import urljoin
 
-import requests
-from dateutil.parser import parse
-from flexget.entry import Entry
 from flexget.utils.soup import get_soup
 from loguru import logger
 from requests import Response
@@ -16,13 +12,12 @@ from ..base.detail import Detail
 from ..base.entry import SignInEntry
 from ..base.message import Message
 from ..base.request import Request, NetworkState, check_network_state
-from ..base.reseed import Reseed
 from ..base.sign_in import Work, check_state, SignIn
-from ..utils import net_utils, url_recorder
-from ..utils.net_utils import get_module_name, cookie_str_to_dict
+from ..utils import net_utils
+from ..utils.net_utils import get_module_name
 
 
-class PrivateTorrent(Request, SignIn, Detail, Message, Reseed, ABC):
+class PrivateTorrent(Request, SignIn, Detail, Message, ABC):
     @property
     @abstractmethod
     def URL(self) -> str:
@@ -182,80 +177,6 @@ class PrivateTorrent(Request, SignIn, Detail, Message, Reseed, ABC):
 
     def get_details(self, entry: SignInEntry, config: dict) -> None:
         self.get_details_base(entry, config, self.details_selector)
-
-    @classmethod
-    def reseed_build_schema(cls):
-        return {get_module_name(cls): {'type': 'string'}}
-
-    @classmethod
-    def reseed_build_entry_from_url(cls,
-                                    entry: Entry,
-                                    config: dict,
-                                    site: dict,
-                                    passkey: dict | str,
-                                    torrent_id
-                                    ) -> None:
-        if isinstance(passkey, dict):
-            user_agent = config.get('user-agent')
-            cookie = passkey.get('cookie')
-            entry['headers'] = {
-                'user-agent': user_agent,
-            }
-            entry['cookie'] = cookie
-            download_page = cls.DOWNLOAD_PAGE_TEMPLATE.format(torrent_id=torrent_id)
-        else:
-            download_page = site['download_page'].format(torrent_id=torrent_id, passkey=passkey)
-        entry['url'] = f"https://{site['base_url']}/{download_page}"
-
-    @classmethod
-    def reseed_build_entry_from_page(cls,
-                                     entry: Entry,
-                                     config: dict,
-                                     passkey: dict | str,
-                                     torrent_id,
-                                     base_url: str,
-                                     torrent_page_url: str,
-                                     url_regex: str,
-                                     ) -> None:
-        record = url_recorder.load_record(entry['class_name'])
-        now = datetime.datetime.now()
-        expire = datetime.timedelta(days=7)
-        if (torrent := record.get(torrent_id)) and parse(torrent['expire']) > now - expire:
-            entry['url'] = torrent['url']
-            return
-        download_url = ''
-        try:
-            torrent_page_url = urljoin(base_url, torrent_page_url.format(torrent_id=torrent_id))
-            session = requests.Session()
-            user_agent = config.get('user-agent')
-            cookie = passkey.get('cookie')
-            headers = {
-                'user-agent': user_agent,
-                'referer': base_url
-            }
-            session.headers.update(headers)
-            session.cookies.update(cookie_str_to_dict(cookie))
-            response = session.get(torrent_page_url, timeout=60)
-            if response is not None and response.status_code == 200 and (
-                    re_search := re.search(url_regex, response.text)):
-                download_url = urljoin(base_url, re_search.group())
-        except Exception as e:
-            logger.warning(e)
-        if not download_url:
-            entry.fail(f"site:{entry['class_name']} can not found download url from {torrent_page_url}")
-        entry['url'] = download_url
-        record[torrent_id] = {'url': download_url, 'expire': (now + expire).strftime('%Y-%m-%d')}
-        url_recorder.save_record(entry['class_name'], record)
-
-    @classmethod
-    def reseed_build_entry(cls,
-                           entry: Entry,
-                           config: dict,
-                           site: dict,
-                           passkey: dict | str,
-                           torrent_id,
-                           ) -> None:
-        cls.reseed_build_entry_from_url(entry, config, site, passkey, torrent_id)
 
     def sign_in_by_get(self,
                        entry: SignInEntry,

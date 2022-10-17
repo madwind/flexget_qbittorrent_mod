@@ -8,13 +8,14 @@ from requests import Response
 
 from ..base.entry import SignInEntry
 from ..base.request import check_network_state, NetworkState
+from ..base.reseed import ReseedPasskey
 from ..base.sign_in import check_final_state, SignState, Work
 from ..schema.nexusphp import NexusPHP
 from ..utils import net_utils, google_auth
 from ..utils.net_utils import get_module_name
 
 
-class MainClass(NexusPHP):
+class MainClass(NexusPHP, ReseedPasskey):
     URL: Final = 'https://kp.m-team.cc/'
     VERIFY_URL: Final = '/verify.php?returnto='
     SUCCEED_REGEX = '歡迎回來'

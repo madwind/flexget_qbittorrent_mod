@@ -5,13 +5,14 @@ from typing import Final
 from requests import Response
 
 from ..base.entry import SignInEntry
+from ..base.reseed import ReseedPasskey
 from ..base.sign_in import check_sign_in_state, check_final_state, SignState
 from ..base.work import Work
 from ..schema.nexusphp import Attendance
 from ..utils import net_utils
 
 
-class MainClass(Attendance):
+class MainClass(Attendance, ReseedPasskey):
     URL: Final = 'https://club.hares.top/'
     USER_CLASSES: Final = {
         'downloaded': [8796093022208],

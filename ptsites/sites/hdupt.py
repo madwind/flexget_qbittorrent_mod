@@ -1,13 +1,14 @@
 from typing import Final
 
 from ..base.entry import SignInEntry
+from ..base.reseed import ReseedPasskey
 from ..base.sign_in import check_final_state, SignState, check_sign_in_state
 from ..base.work import Work
 from ..schema.nexusphp import NexusPHP
 from ..utils import net_utils
 
 
-class MainClass(NexusPHP):
+class MainClass(NexusPHP, ReseedPasskey):
     URL: Final = 'https://pt.hdupt.com/'
     USER_CLASSES: Final = {
         'downloaded': [805306368000, 3298534883328],

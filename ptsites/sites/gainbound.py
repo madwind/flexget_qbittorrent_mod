@@ -1,10 +1,11 @@
 from typing import Final
 
+from ..base.reseed import ReseedPasskey
 from ..schema.nexusphp import Attendance
 from ..utils.net_utils import dict_merge, get_module_name
 
 
-class MainClass(Attendance):
+class MainClass(Attendance, ReseedPasskey):
     URL: Final = 'https://gainbound.net/'
     USER_CLASSES: Final = {
         'downloaded': [805306368000, 3298534883328],

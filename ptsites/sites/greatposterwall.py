@@ -6,13 +6,14 @@ from urllib.parse import urljoin
 from flexget.entry import Entry
 
 from ..base.entry import SignInEntry
+from ..base.reseed import Reseed
 from ..base.sign_in import SignState, check_final_state
 from ..base.work import Work
 from ..schema.gazelle import Gazelle
 from ..utils import net_utils
 
 
-class MainClass(Gazelle):
+class MainClass(Gazelle, Reseed):
     URL: Final = 'https://greatposterwall.com/'
     USER_CLASSES: Final = {
         'downloaded': [214748364800, 10995116277760],
@@ -45,14 +46,6 @@ class MainClass(Gazelle):
             )
         ]
 
-    @classmethod
-    def reseed_build_entry(cls, entry: Entry, config: dict, site: dict, passkey: str | dict,
-                           torrent_id: str) -> None:
-        download_page = site['download_page'].format(torrent_id=torrent_id,
-                                                     authkey=passkey['authkey'],
-                                                     torrent_pass=passkey['torrent_pass'])
-        entry['url'] = urljoin(MainClass.URL, download_page)
-
     @property
     def details_selector(self) -> dict:
         selector = super().details_selector
@@ -70,3 +63,11 @@ class MainClass(Gazelle):
             }
         })
         return selector
+
+    @classmethod
+    def reseed_build_entry(cls, entry: Entry, config: dict, site: dict, passkey: str | dict,
+                           torrent_id: str) -> None:
+        download_page = site['download_page'].format(torrent_id=torrent_id,
+                                                     authkey=passkey['authkey'],
+                                                     torrent_pass=passkey['torrent_pass'])
+        entry['url'] = urljoin(MainClass.URL, download_page)

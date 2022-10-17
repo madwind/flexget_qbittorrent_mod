@@ -7,11 +7,12 @@ from urllib.parse import urljoin
 from requests import Response
 
 from ..base.entry import SignInEntry
+from ..base.reseed import ReseedPasskey
 from ..base.sign_in import check_final_state, SignState, Work
 from ..schema.nexusphp import Attendance
 
 
-class MainClass(Attendance):
+class MainClass(Attendance, ReseedPasskey):
     URL: Final = 'https://1ptba.com/'
     USER_CLASSES: Final = {
         'downloaded': [805306368000, 3298534883328],

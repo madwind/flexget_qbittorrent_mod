@@ -12,6 +12,7 @@ from requests import Response
 
 from ..base.entry import SignInEntry
 from ..base.request import NetworkState, check_network_state
+from ..base.reseed import ReseedPasskey
 from ..base.sign_in import SignState, check_sign_in_state, check_final_state
 from ..base.work import Work
 from ..utils import net_utils, baidu_ocr, dmhy_image
@@ -37,7 +38,7 @@ _CHAR_COUNT = 4
 _SCORE = 40
 
 
-class MainClass(NexusPHP):
+class MainClass(NexusPHP, ReseedPasskey):
     URL: Final = 'https://u2.dmhy.org/'
     USERNAME_REGEX: Final = '<bdo dir=\'ltr\'>{username}</bdo>'
     SUCCEED_REGEX: Final = '.{0,500}奖励UCoin: <b>\\d+'

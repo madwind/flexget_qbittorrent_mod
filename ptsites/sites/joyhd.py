@@ -1,10 +1,11 @@
 from typing import Final
 
+from ..base.reseed import ReseedPasskey
 from ..schema.nexusphp import Visit
 from ..utils import net_utils
 
 
-class MainClass(Visit):
+class MainClass(Visit, ReseedPasskey):
     URL: Final = 'https://www.joyhd.net/'
     USER_CLASSES: Final = {
         'downloaded': [644245094400, 5368709120000],

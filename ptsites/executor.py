@@ -122,9 +122,10 @@ def build_reseed_entry(entry: Entry, config: dict, site: dict, passkey: str | di
     try:
         site_class = get_site_class(entry['class_name'])
         if issubclass(site_class, Reseed):
-            site_class.reseed_build_entry(entry, config, site, passkey, torrent_id)
+            site_object = site_class()
+            site_object.reseed_build_entry(entry, config, site, passkey, torrent_id)
     except AttributeError as e:
-        raise plugin.PluginError(f"site: {entry['site_name']}, error: {e}")
+        raise plugin.PluginError(f"site: {entry['class_name']}, error: {e}")
 
 
 def get_site_class(class_name: str) -> type:

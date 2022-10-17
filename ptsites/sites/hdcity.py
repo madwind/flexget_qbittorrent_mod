@@ -3,16 +3,15 @@ from __future__ import annotations
 from typing import Final
 from urllib.parse import urljoin
 
-from flexget.entry import Entry
-
 from ..base.entry import SignInEntry
+from ..base.reseed import ReseedPage
 from ..base.sign_in import check_final_state, SignState, Work
 from ..schema.nexusphp import NexusPHP
 from ..utils import net_utils
 from ..utils.net_utils import get_module_name
 
 
-class MainClass(NexusPHP):
+class MainClass(NexusPHP, ReseedPage):
     URL: Final = 'https://hdcity.work/'
     TORRENT_PAGE_URL: Final = urljoin(URL, '/t-{torrent_id}')
     DOWNLOAD_BASE_URL: Final = 'https://assets.hdcity.work/'
@@ -81,10 +80,3 @@ class MainClass(NexusPHP):
             }
         })
         return selector
-
-    @classmethod
-    def reseed_build_entry(cls, entry: Entry, config: dict, site: dict, passkey: str | dict,
-                           torrent_id: str) -> None:
-        cls.reseed_build_entry_from_page(entry, config, passkey, torrent_id, cls.DOWNLOAD_BASE_URL,
-                                         cls.TORRENT_PAGE_URL,
-                                         cls.DOWNLOAD_URL_REGEX)

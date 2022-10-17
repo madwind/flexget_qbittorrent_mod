@@ -1,9 +1,10 @@
 from typing import Final
 
+from ..base.reseed import ReseedPasskey
 from ..schema.nexusphp import Visit
 
 
-class MainClass(Visit):
+class MainClass(Visit, ReseedPasskey):
     URL: Final = 'https://pt.hdbd.us/'
     SUCCEED_REGEX: Final = '伊甸园 PT Torrents'
     USER_CLASSES: Final = {

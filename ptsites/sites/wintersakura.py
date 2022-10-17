@@ -1,11 +1,12 @@
 from typing import Final
 
+from ..base.reseed import ReseedPasskey
 from ..schema.nexusphp import Attendance
 from ..utils import net_utils
 from ..utils.value_handler import size
 
 
-class MainClass(Attendance):
+class MainClass(Attendance, ReseedPasskey):
     URL: Final = 'https://wintersakura.net/'
     USER_CLASSES: Final = {
         'downloaded': [size(10, 'TiB')],

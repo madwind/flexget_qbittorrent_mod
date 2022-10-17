@@ -9,6 +9,7 @@ from requests import Response
 
 from ..base.entry import SignInEntry
 from ..base.request import check_network_state, NetworkState
+from ..base.reseed import ReseedPasskey
 from ..base.sign_in import check_final_state, SignState, check_sign_in_state
 from ..base.work import Work
 from ..schema.nexusphp import NexusPHP
@@ -21,7 +22,7 @@ except ImportError:
     Image = None
 
 
-class MainClass(NexusPHP):
+class MainClass(NexusPHP, ReseedPasskey):
     URL: Final = 'https://open.cd/'
     IGNORE_TITLE = '種子被刪除'
     USER_CLASSES: Final = {

@@ -8,13 +8,14 @@ from requests import Response
 
 from ..base.entry import SignInEntry
 from ..base.request import check_network_state, NetworkState
+from ..base.reseed import ReseedPasskey
 from ..base.sign_in import check_final_state, SignState, Work
 from ..schema.discuz import Discuz
 from ..utils import google_auth
 from ..utils.net_utils import get_module_name
 
 
-class MainClass(Discuz):
+class MainClass(Discuz, ReseedPasskey):
     URL: Final = 'https://skyeysnow.com/'
     USER_CLASSES: Final = {
         'points': [1000000]

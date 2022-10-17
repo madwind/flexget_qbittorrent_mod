@@ -1,12 +1,13 @@
 from typing import Final
 
 from ..base.entry import SignInEntry
+from ..base.reseed import ReseedPasskey
 from ..base.sign_in import check_final_state, SignState, Work
 from ..schema.nexusphp import Attendance
 from ..utils import net_utils
 
 
-class MainClass(Attendance):
+class MainClass(Attendance, ReseedPasskey):
     URL: Final = 'https://www.pttime.org/'
     USER_CLASSES: Final = {
         'downloaded': [3221225472000, 16106127360000],

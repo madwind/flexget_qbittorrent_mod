@@ -1,11 +1,12 @@
 from typing import Final
 
 from ..base.entry import SignInEntry
+from ..base.reseed import ReseedPasskey
 from ..schema.nexusphp import VisitHR
 from ..utils import net_utils
 
 
-class MainClass(VisitHR):
+class MainClass(VisitHR, ReseedPasskey):
     URL: Final = 'https://ccfbits.org/'
     SUCCEED_REGEX: Final = '欢迎回到CCFBits'
     USER_CLASSES: Final = {

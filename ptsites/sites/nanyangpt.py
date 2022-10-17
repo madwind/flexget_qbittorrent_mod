@@ -1,10 +1,11 @@
 from typing import Final
 
+from ..base.reseed import ReseedPasskey
 from ..schema.nexusphp import Visit
 from ..utils import net_utils
 
 
-class MainClass(Visit):
+class MainClass(Visit, ReseedPasskey):
     URL: Final = 'https://nanyangpt.com/'
     SUCCEED_REGEX: Final = '魔力豆 \\(.*?\\)'
     USER_CLASSES: Final = {

@@ -9,6 +9,7 @@ from flexget.utils.soup import get_soup
 
 from ..base.entry import SignInEntry
 from ..base.request import check_network_state, NetworkState
+from ..base.reseed import Reseed
 from ..base.sign_in import check_final_state, SignState, Work
 from ..schema.unit3d import Unit3D
 from ..utils import net_utils
@@ -16,7 +17,7 @@ from ..utils.net_utils import get_module_name
 from ..utils.value_handler import handle_join_date, handle_infinite
 
 
-class MainClass(Unit3D):
+class MainClass(Unit3D, Reseed):
     URL: Final = 'https://pt.hdpost.top'
     USER_CLASSES: Final = {
         'uploaded': [109951162777600],
@@ -54,12 +55,6 @@ class MainClass(Unit3D):
                 'additionalProperties': False
             }
         }
-
-    @classmethod
-    def reseed_build_entry(cls, entry: Entry, config: dict, site: dict, passkey: str | dict,
-                           torrent_id: str) -> None:
-        download_page = site['download_page'].format(torrent_id=torrent_id, rsskey=passkey['rsskey'])
-        entry['url'] = urljoin(MainClass.URL, download_page)
 
     def sign_in_build_login_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
@@ -150,3 +145,9 @@ class MainClass(Unit3D):
             }
         })
         return selector
+
+    @classmethod
+    def reseed_build_entry(cls, entry: Entry, config: dict, site: dict, passkey: str | dict,
+                           torrent_id: str) -> None:
+        download_page = site['download_page'].format(torrent_id=torrent_id, rsskey=passkey['rsskey'])
+        entry['url'] = urljoin(MainClass.URL, download_page)

@@ -1,9 +1,10 @@
 from typing import Final
 
+from ..base.reseed import ReseedPasskey
 from ..schema.nexusphp import Visit
 
 
-class MainClass(Visit):
+class MainClass(Visit, ReseedPasskey):
     URL: Final = 'https://www.hitpt.com/'
     USER_CLASSES: Final = {
         'downloaded': [805306368000, 2199023255552],
