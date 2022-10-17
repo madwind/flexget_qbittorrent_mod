@@ -167,25 +167,25 @@ class QBittorrentClient:
 
     def delete_torrents(self, hashes: str, delete_files) -> None:
         data = {'hashes': hashes, 'deleteFiles': delete_files}
-        if self._check_action('delete_torrents', hashes):
-            self._request(
-                'post',
-                self.url + self.API_URL_DELETE_TORRENTS,
-                data=data,
-                msg_on_fail='delete_torrents failed.',
-                verify=self._verify,
-            )
+        self._request(
+            'post',
+            self.url + self.API_URL_DELETE_TORRENTS,
+            data=data,
+            msg_on_fail='delete_torrents failed.',
+            verify=self._verify,
+        )
+        self._check_action('delete_torrents', hashes)
 
     def recheck_torrents(self, hashes: str) -> None:
         data = {'hashes': hashes}
-        if self._check_action('recheck_torrents', hashes):
-            self._request(
-                'post',
-                self.url + self.API_URL_RECHECK_TORRENTS,
-                data=data,
-                msg_on_fail='recheck_torrents failed.',
-                verify=self._verify,
-            )
+        self._request(
+            'post',
+            self.url + self.API_URL_RECHECK_TORRENTS,
+            data=data,
+            msg_on_fail='recheck_torrents failed.',
+            verify=self._verify,
+        )
+        self._check_action('recheck_torrents', hashes)
 
     def get_torrent_generic_properties(self, torrent_hash) -> dict:
         data = {'hash': torrent_hash}
@@ -210,25 +210,25 @@ class QBittorrentClient:
 
     def resume_torrents(self, hashes: str) -> None:
         data = {'hashes': hashes}
-        if self._check_action('resume_torrents', hashes):
-            self._request(
-                'post',
-                self.url + self.API_URL_RESUME,
-                data=data,
-                msg_on_fail='resume_torrents failed.',
-                verify=self._verify,
-            )
+        self._request(
+            'post',
+            self.url + self.API_URL_RESUME,
+            data=data,
+            msg_on_fail='resume_torrents failed.',
+            verify=self._verify,
+        )
+        self._check_action('resume_torrents', hashes)
 
     def pause_torrents(self, hashes: str) -> None:
         data = {'hashes': hashes}
-        if self._check_action('pause_torrents', hashes):
-            self._request(
-                'post',
-                self.url + self.API_URL_PAUSE,
-                data=data,
-                msg_on_fail='pause_torrents failed.',
-                verify=self._verify,
-            )
+        self._request(
+            'post',
+            self.url + self.API_URL_PAUSE,
+            data=data,
+            msg_on_fail='pause_torrents failed.',
+            verify=self._verify,
+        )
+        self._check_action('pause_torrents', hashes)
 
     def edit_trackers(self, torrent_hash: str, origurl: str, newurl: str) -> None:
         data = {'hash': torrent_hash, 'origUrl': origurl, 'newUrl': newurl}
@@ -244,16 +244,16 @@ class QBittorrentClient:
 
     def remove_trackers(self, torrent_hash: str, urls: str) -> None:
         data = {'hash': torrent_hash, 'urls': urls}
-        if self._check_action('edit_trackers', torrent_hash):
-            response = self._request(
-                'post',
-                self.url + self.API_URL_REMOVE_TRACKERS,
-                data=data,
-                msg_on_fail='remove_trackers failed.',
-                verify=self._verify,
-            )
-            if response.status_code == 200:
-                self._update_entry_trackers(torrent_hash)
+        response = self._request(
+            'post',
+            self.url + self.API_URL_REMOVE_TRACKERS,
+            data=data,
+            msg_on_fail='remove_trackers failed.',
+            verify=self._verify,
+        )
+        if response.status_code == 200:
+            self._update_entry_trackers(torrent_hash)
+        self._check_action('edit_trackers', torrent_hash)
 
     def add_torrent_tags(self, hashes: str, tags: str) -> None:
         data = {'hashes': hashes, 'tags': tags}
