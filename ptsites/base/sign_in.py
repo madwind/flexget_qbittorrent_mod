@@ -26,6 +26,7 @@ class NetworkErrorReason(Enum):
     CONNECTION_TIMED_OUT = r'<h2 class="text-gray-600 leading-1\.3 text-3xl font-light">Connection timed out</h2>'
     THE_WEB_SERVER_REPORTED_A_BAD_GATEWAY_ERROR = r'<p>The web server reported a bad gateway error\.</p>'
     WEB_SERVER_IS_DOWN = '站点关闭维护中，请稍后再访问...谢谢|站點關閉維護中，請稍後再訪問...謝謝|Web server is down'
+    INCORRECT_CSRF_TOKEN = 'Incorrect CSRF token'
 
 
 def check_state(entry: SignInEntry,
