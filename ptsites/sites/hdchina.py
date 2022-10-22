@@ -25,6 +25,19 @@ class MainClass(NexusPHP, ReseedPage):
     }
 
     @classmethod
+    def sign_in_build_entry(cls, entry: SignInEntry, config: dict) -> None:
+        entry['url'] = cls.URL
+        cookie: str = entry['site_config']
+        headers: dict = {
+            'user-agent': config.get('user-agent'),
+            'referer': entry['url'],
+            'accept-encoding': 'gzip, deflate, br',
+        }
+        entry['headers'] = headers
+        entry['cookie'] = ' '.join(list(filter(lambda x: not x.startswith('PHPSESSID'), cookie.split(' '))))
+        entry['user_classes'] = cls.USER_CLASSES
+
+    @classmethod
     def reseed_build_schema(cls) -> dict:
         return {
             get_module_name(cls): {
