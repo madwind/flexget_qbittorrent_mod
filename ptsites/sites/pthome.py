@@ -3,13 +3,14 @@ from typing import Final
 from ..base.reseed import ReseedCookie
 from ..schema.nexusphp import AttendanceHR
 from ..utils import net_utils
+from ..utils.value_handler import size
 
 
 class MainClass(AttendanceHR, ReseedCookie):
     URL: Final = 'https://www.pthome.net/'
     USER_CLASSES: Final = {
-        'downloaded': [1073741824000, 3221225472000],
-        'share_ratio': [6, 9],
+        'downloaded': [size(2, 'TiB'), size(6, 'TiB')],
+        'share_ratio': [1.5, 1.8],
         'points': [600000, 1200000],
         'days': [280, 700]
     }
