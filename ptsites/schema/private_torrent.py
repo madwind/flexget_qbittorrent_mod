@@ -50,7 +50,7 @@ class PrivateTorrent(Request, SignIn, Detail, Message, ABC):
         if cookie:
             entry['cookie'] = cookie
         entry['headers'] = headers
-        entry['user_classes'] = cls().USER_CLASSES
+        entry['user_classes'] = cls.USER_CLASSES
 
     def sign_in_build_login_data(self, login: dict, last_content: str) -> dict:
         return {}
