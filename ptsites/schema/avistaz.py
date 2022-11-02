@@ -13,6 +13,8 @@ class AvistaZ(PrivateTorrent, ABC):
     def SUCCEED_REGEX(self) -> str:
         pass
 
+    USER_CLASSES = {}
+
     def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
