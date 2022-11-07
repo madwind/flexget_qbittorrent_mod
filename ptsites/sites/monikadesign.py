@@ -20,7 +20,7 @@ class MainClass(Unit3D):
             Work(
                 url='/',
                 method=self.sign_in_by_get,
-                succeed_regex=[(r'<a href="https://monikadesign.uk/users/(.*?)">个人资料</a>',1)],
+                succeed_regex=[(r'<a href="https://monikadesign.uk/users/(.*?)">个人资料</a>', 1)],
                 assert_state=(check_final_state, SignState.SUCCEED),
                 is_base_content=True
             )
@@ -43,6 +43,9 @@ class MainClass(Unit3D):
                 }
             },
             'details': {
+                'leeching': {
+                    'regex': (r'(下载).+?(\d+)', 2)
+                },
                 'points': {
                     'regex': 'title="我的魔力".*?</i>.+?(\\d[\\d,. ]*)',
                 },
