@@ -23,9 +23,7 @@ class PrivateTorrent(Request, SignIn, Detail, Message, ABC):
     def URL(self) -> str:
         pass
 
-    @property
-    def USER_CLASSES(self) -> dict[str, list[float]]:
-        return {}
+    USER_CLASSES = {}
 
     DOWNLOAD_PAGE_TEMPLATE = 'download.php?id={torrent_id}'
 
