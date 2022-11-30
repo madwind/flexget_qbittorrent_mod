@@ -46,12 +46,6 @@ class MainClass(NexusPHP, ReseedPasskey):
     def details_selector(self) -> dict:
         selector = super().details_selector
         net_utils.dict_merge(selector, {
-            'detail_sources': {
-                'default': {
-                    'elements': {
-                        'table': '#outer > table.main'
-                    }
-                }},
             'details': {
                 'hr': None
             }
