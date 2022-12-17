@@ -9,7 +9,7 @@ from ..utils.value_handler import handle_join_date
 
 
 class MainClass(Unit3D):
-    URL: Final = 'https://blutopia.xyz/'
+    URL: Final = 'https://blutopia.cc/'
     USER_CLASSES: Final = {
         'uploaded': [109951162777600],
         'days': [365]
