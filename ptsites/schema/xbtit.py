@@ -45,10 +45,10 @@ class XBTIT(PrivateTorrent, ABC):
             },
             'details': {
                 'uploaded': {
-                    'regex': r'↑.([\d.]+ [ZEPTGMK]?iB)'
+                    'regex': r'↑.([\d,.]+ [ZEPTGMK]?iB)'
                 },
                 'downloaded': {
-                    'regex': r'↓.([\d.]+ [ZEPTGMK]?iB)'
+                    'regex': r'↓.([\d,.]+ [ZEPTGMK]?iB)'
                 },
                 'share_ratio': {
                     'regex': r'Ratio: ([\d.]+)'
