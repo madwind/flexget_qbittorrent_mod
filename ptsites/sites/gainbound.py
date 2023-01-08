@@ -32,7 +32,7 @@ class MainClass(Attendance, ReseedPasskey):
         dict_merge(selector, {
             'details': {
                 'points': {
-                    'regex': r'做种积分: ([\d.]+)'
+                    'regex': r'做种积分([\d,.]+)'
                 }
             }
         })
