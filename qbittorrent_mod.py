@@ -218,6 +218,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                         'type': 'object',
                         'properties': {
                             'tag_by_tracker': {'type': 'boolean'},
+                            'tag_single_tracker_only': {'type': 'boolean'},
                             'replace_trackers': {
                                 'type': 'object',
                                 'properties': {
@@ -641,15 +642,20 @@ class PluginQBittorrentMod(QBittorrentModBase):
     def modify_entries(self, task: Task, modify_options: dict) -> None:
         tag_by_tracker = modify_options.get('tag_by_tracker')
         replace_trackers = modify_options.get('replace_trackers')
+        tag_single_tracker_only = modify_options.get('tag_single_tracker_only')
         for entry in task.accepted:
             tags = entry.get('qbittorrent_tags')
             tags_modified = []
             torrent_trackers = entry.get('qbittorrent_trackers')
+            torrent_trackers_count = len(torrent_trackers)
             for tracker in torrent_trackers:
                 if tag_by_tracker:
-                    site_name = net_utils.get_site_name(tracker.get('url'))
-                    if site_name and site_name not in tags and site_name not in tags_modified:
-                        tags_modified.append(site_name)
+                    if tag_single_tracker_only and torrent_trackers_count!=1:
+                        pass
+                    else:
+                        site_name = net_utils.get_site_name(tracker.get('url'))
+                        if site_name and site_name not in tags and site_name not in tags_modified:
+                            tags_modified.append(site_name)
                 if replace_trackers:
                     for old_str, new_str in replace_trackers.items():
                         tracker_url = tracker.get('url')
