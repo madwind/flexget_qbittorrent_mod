@@ -20,7 +20,7 @@ class MainClass(AttendanceHR, ReseedPasskey):
         net_utils.dict_merge(selector, {
             'details': {
                 'points': {
-                    'regex': '憨值.*?([\\d,.]+)'
+                    'regex': '憨豆.*?([\\d,.]+)'
                 }
             }
         })

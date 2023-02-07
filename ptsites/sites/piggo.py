@@ -27,6 +27,13 @@ class MainClass(AttendanceHR, ReseedPasskey):
     def details_selector(self) -> dict:
         selector = super().details_selector
         net_utils.dict_merge(selector, {
+            'detail_sources': {
+                'default': {
+                    'elements': {
+                        'bar': '#info_block > tbody > tr > td > table > tbody > tr > td:nth-child(2) > span',
+                    }
+                }
+            },
             'details': {
                 'points': {
                     'regex': (r'(做种积分).*?([\d,.]+)', 2)
