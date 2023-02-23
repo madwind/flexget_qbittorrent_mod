@@ -38,7 +38,15 @@ class MainClass(Attendance, ReseedPasskey):
                     'elements': {
                         'bar': '#info_block',
                     }
-                }
+                },
+            },
+            'details': {
+                'seeding': {
+                    'regex': (r'(活动:)(\d+)', 2)
+                },
+                'leeching': {
+                    'regex': (r'活动:(\d+).*?(\d+)', 2)
+                },
             }
         })
         return selector
