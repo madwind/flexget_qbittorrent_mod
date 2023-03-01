@@ -42,10 +42,10 @@ class MainClass(Attendance, ReseedPasskey):
             },
             'details': {
                 'seeding': {
-                    'regex': (r'(活动:)(\d+)', 2)
+                    'regex': r'活动:.*?(\d+)'
                 },
                 'leeching': {
-                    'regex': (r'活动:(\d+).*?(\d+)', 2)
+                    'regex': (r'活动:.*?(\d+).*?(\d+)', 2)
                 },
             }
         })
