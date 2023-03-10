@@ -57,6 +57,13 @@ class MainClass(NexusPHP, ReseedPasskey):
     def details_selector(self) -> dict:
         selector = super().details_selector
         net_utils.dict_merge(selector, {
+            'detail_sources': {
+                'default': {
+                    'elements': {
+                        'bar': '#info_block > tbody > tr > td',
+                    }
+                }
+            },
             'details': {
                 'downloaded': None,
                 'share_ratio': None,
