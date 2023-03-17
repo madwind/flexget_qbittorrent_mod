@@ -89,20 +89,20 @@ class MainClass(PrivateTorrent):
             },
             'details': {
                 'uploaded': {
-                    'regex': 'Uploaded.+?([\\d.]+ [ZEPTGMK]?B)'
+                    'regex': 'Uploaded\s+?([\d.]+ [ZEPTGMK]i?B)'
                 },
                 'downloaded': {
-                    'regex': 'Downloaded.+?([\\d.]+ [ZEPTGMK]?B)'
+                    'regex': 'Downloaded\s+?([\d.]+ [ZEPTGMK]i?B)'
                 },
                 'share_ratio': {
-                    'regex': 'Share ratio.*?(∞|[\\d,.]+)',
+                    'regex': 'Share Ratio.*?(∞|[\d,.]+)',
                     'handle': handle_infinite
                 },
                 'points': {
                     'regex': r'Bonus:\s+([\d,.]+)'
                 },
                 'join_date': {
-                    'regex': 'Join date\\s*?(\\d{4}-\\d{2}-\\d{2})',
+                    'regex': 'Join date\s*?(\d{4}-\d{2}-\d{2})',
                     'handle': handle_join_date
                 },
                 'seeding': None,
