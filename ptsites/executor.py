@@ -5,6 +5,7 @@ import json
 import pathlib
 import pkgutil
 import threading
+from datetime import datetime
 
 from flexget import plugin
 from flexget.entry import Entry
@@ -53,11 +54,8 @@ def save_cookie(entry):
             cookies_backup_json = json.loads(cookies_backup_file.read_text(encoding='utf-8'))
         else:
             cookies_backup_json = {}
-        if cookies_backup_json.get(site_name) != session_cookie:
-            cookies_backup_json[site_name] = session_cookie
-            cookies_backup_file.write_text(
-                json.dumps(cookies_backup_json, indent=4),
-                encoding='utf-8')
+        cookies_backup_json[site_name] = {'date': str(datetime.now().date()), 'cookie': session_cookie}
+        cookies_backup_file.write_text(json.dumps(cookies_backup_json, indent=4), encoding='utf-8')
 
 
 def sign_in(entry: SignInEntry, config: dict) -> None:
