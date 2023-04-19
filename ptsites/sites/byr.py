@@ -6,6 +6,7 @@ from ..base.sign_in import SignState
 from ..base.sign_in import check_final_state
 from ..base.work import Work
 from ..schema.nexusphp import Visit
+from ..utils import net_utils
 
 
 class MainClass(Visit, ReseedPasskey):
@@ -26,3 +27,17 @@ class MainClass(Visit, ReseedPasskey):
                 is_base_content=True
             )
         ]
+
+    @property
+    def details_selector(self) -> dict:
+        selector = super().details_selector
+        net_utils.dict_merge(selector, {
+            'detail_sources': {
+                'default': {
+                    'elements': {
+                        'bar': '#info_block td.bottom[style*=left]',
+                    }
+                }
+            }
+        })
+        return selector
