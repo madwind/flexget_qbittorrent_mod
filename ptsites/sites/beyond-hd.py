@@ -45,7 +45,7 @@ class MainClass(Unit3D):
                 succeed_regex=['<title>BeyondHD | Beyond Your Imagination</title>'],
                 assert_state=(check_final_state, SignState.SUCCEED),
                 is_base_content=True,
-                response_urls=['https://beyond-hd.me/']
+                response_urls=['https://beyond-hd.me', 'https://beyond-hd.me/']
             )
         ]
 
