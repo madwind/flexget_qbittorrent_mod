@@ -20,7 +20,7 @@ from ..utils.value_handler import handle_join_date
 # Then use that link here.
 
 class MainClass(Unit3D):
-    URL: Final = 'https://beyond-hd.me/'
+    URL: Final = 'https://beyond-hd.me'
 
     @classmethod
     def sign_in_build_schema(cls):
