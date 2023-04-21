@@ -81,10 +81,10 @@ class MainClass(Unit3D):
                     'handle': handle_join_date
                 },
                 'seeding': {
-                    'regex': ('(\\d+)\\s*?(做种|Active Seeds)', 1)
+                    'regex': ('(\d+)\s*?\d*%\s*?(做种|Active Seeds)', 1)
                 },
                 'leeching': {
-                    'regex': ('(\\d+)\\s*?(吸血|Active Downloads)', 1)
+                    'regex': ('(\d+)\s*?(吸血|Active Downloads)', 1)
                 },
                 'hr': {
                     'regex': ('(警告|Warnings).+?(\\d+)', 2)
