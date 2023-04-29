@@ -55,7 +55,7 @@ class MainClass(Unit3D):
                     'regex': 'title="Ratio".*?</i>.+?(\\d[\\d,. ]*)',
                 },
                 'join_date': {
-                    'regex': 'Registration date (.*?\\d{4})',
+                    'regex': 'Registration date:.*?(\d{4}-\d{2}-\d{2})',
                     'handle': handle_join_date
                 },
                 'hr': {
