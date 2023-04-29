@@ -31,7 +31,7 @@ class Ocelot(PrivateTorrent, ABC):
                     'handle': handle_infinite
                 },
                 'points': {
-                    'regex': (r'Hello.+?(\d+).*?(Inf\.|[\d.]+)', 2)
+                    'regex': (r'Hello.+?\[.+?\][\s\S]+?(\d+)[\s\S]*?(Inf\.|[\d,.]+)', 2)
                 },
                 'join_date': {
                     'regex': r'Join.date.*?(\d{4}-\d{2}-\d{2})',
