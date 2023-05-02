@@ -36,7 +36,7 @@ class MainClass(Unit3D):
                     'do_not_strip': True,
                     'elements': {
                         'bar': 'ul.top-nav__ratio-bar',
-                        'header': 'time.profile__registered',
+                        'header': 'time.profile__registration',
                         'data_table': 'dl.key-value'
                     }
                 }
