@@ -18,6 +18,9 @@ class MainClass(AttendanceHR):
         selector = super().details_selector
         net_utils.dict_merge(selector, {
             'details': {
+                'points': {
+                    'regex': (r'(杏仁值).*?([\d,.]+)', 2)
+                },
                 'hr': {
                     'regex': r'\d+/(\d+)/\d'
                 }
