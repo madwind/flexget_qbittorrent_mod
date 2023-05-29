@@ -36,8 +36,9 @@ class MainClass(Unit3D):
                     'do_not_strip': True,
                     'elements': {
                         'bar': 'ul.top-nav__ratio-bar',
-                        'header': '.header',
-                        'data_table': '.user-info'
+                        'registration_date': 'article > time',
+                        'warnings': 'article > aside > section:nth-child(1)',
+                        'data_table': 'article > aside > section:nth-child(4)'
                     }
                 }
             },
@@ -49,11 +50,11 @@ class MainClass(Unit3D):
                     'regex': 'title="Ratio".*?</i>.+?(\\d[\\d,. ]*)',
                 },
                 'join_date': {
-                    'regex': 'Registration date (.*?\\d{4})',
+                    'regex': r'Registration date: (\d{4}-\d{2}-\d{2})',
                     'handle': handle_join_date
                 },
                 'hr': {
-                    'regex': 'Active Warnings.+?(\\d+)'
+                    'regex': r'Active Warnings.+?(\d+)'
                 }
             }
         })
