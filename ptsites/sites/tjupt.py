@@ -37,7 +37,8 @@ class MainClass(NexusPHP, ReseedPasskey):
     def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
-                url='/attendance.php',
+                # url='/attendance.php',
+                url='/',
                 method=self.sign_in_by_get,
                 # succeed_regex=['今日已签到'],
                 succeed_regex=['欢迎'],

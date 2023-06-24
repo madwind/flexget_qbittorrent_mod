@@ -1,10 +1,10 @@
 from typing import Final
 
-from ..schema.nexusphp import Attendance
+from ..schema.nexusphp import Visit
 from ..utils.value_handler import size
 
 
-class MainClass(Attendance):
+class MainClass(Visit):
     URL: Final = 'https://leaves.red/'
     USER_CLASSES: Final = {
         'downloaded': [size(750, 'GiB'), size(3, 'TiB')],

@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Final
 
 from ..schema.nexusphp import Attendance
+from ..utils import net_utils
 from ..utils.value_handler import size
 
 
@@ -14,3 +15,21 @@ class MainClass(Attendance):
         'points': [400000, 1000000],
         'days': [280, 700]
     }
+
+    @property
+    def details_selector(self) -> dict:
+        selector = super().details_selector
+        net_utils.dict_merge(selector, {
+            'detail_sources': {
+                'default': {
+                    'elements': {
+                        'bar': 'body > div.head > div.right > div.top > span',
+                        'table': '#info_block > div.info_block_main > div.main > table'
+                    }
+                }
+            },
+            'details': {
+                'hr': None
+            }
+        })
+        return selector
