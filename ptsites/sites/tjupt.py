@@ -35,6 +35,7 @@ class MainClass(NexusPHP, ReseedPasskey):
     }
 
     def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
+        entry['extra_msg'] = f'未签到: {urljoin(self.URL, "/attendance.php")}'
         return [
             Work(
                 # url='/attendance.php',

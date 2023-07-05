@@ -1,4 +1,5 @@
 from typing import Final
+from urllib.parse import urljoin
 
 from ..base.entry import SignInEntry
 from ..base.request import check_network_state, NetworkState
@@ -58,6 +59,7 @@ class MainClass(VisitHR, ReseedPasskey):
         ]
 
     def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
+        entry['extra_msg'] = f'未签到: {urljoin(self.URL, "/attendance.php")}'
         workflow = super().sign_in_build_workflow(entry, config)
         workflow[0].use_last_content = True
         return workflow

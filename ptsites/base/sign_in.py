@@ -51,14 +51,15 @@ def check_sign_in_state(entry: SignInEntry,
                                              check_content=True)) != NetworkState.SUCCEED:
         return network_state
     if not (succeed_regex := work.succeed_regex):
-        entry['result'] = SignState.SUCCEED.value
+        entry['result'] = SignState.SUCCEED.value + entry.get('extra_msg', '')
         return SignState.SUCCEED
     for regex in succeed_regex:
         if isinstance(regex, str):
             regex = (regex, 0)
         regex, group_index = regex
         if succeed_msg := re.search(regex, content):
-            entry['result'] = re.sub('<.*?>|&shy;|&nbsp;', '', succeed_msg.group(group_index))
+            entry['result'] = re.sub('<.*?>|&shy;|&nbsp;', '', succeed_msg.group(group_index)) + entry[
+                'result'] + entry.get('extra_msg', '')
             return SignState.SUCCEED
     if (fail_regex := work.fail_regex) and re.search(fail_regex, content):
         return SignState.WRONG_ANSWER

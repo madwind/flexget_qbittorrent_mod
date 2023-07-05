@@ -1,10 +1,10 @@
 from typing import Final
 
 from ..base.reseed import ReseedPasskey
-from ..schema.nexusphp import Visit
+from ..schema.nexusphp import Attendance
 
 
-class MainClass(Visit, ReseedPasskey):
+class MainClass(Attendance, ReseedPasskey):
     URL: Final = 'https://www.oshen.win/'
     USER_CLASSES: Final = {
         'downloaded': [805306368000, 3298534883328],
