@@ -9,7 +9,7 @@ from ..utils import net_utils
 
 
 class MainClass(NexusPHP, ReseedPasskey):
-    URL: Final = 'https://www.hdarea.co/'
+    URL: Final = 'https://hdarea.club/'
     USER_CLASSES: Final = {
         'downloaded': [1099511627776, 10995116277760],
         'share_ratio': [4.5, 6],
