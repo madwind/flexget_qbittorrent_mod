@@ -16,7 +16,7 @@ from ..utils.net_utils import get_module_name
 
 
 class MainClass(Gazelle, Reseed):
-    URL: Final = 'https://dicmusic.club/'
+    URL: Final = 'https://dicmusic.com/'
     USER_CLASSES: Final = {
         'uploaded': [26843545600, 1319413953331],
         'share_ratio': [1.05, 1.05],

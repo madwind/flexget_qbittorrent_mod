@@ -71,6 +71,6 @@ class MainClass(Unit3D):
                 assert_state=(check_final_state, SignState.SUCCEED),
                 use_last_content=True,
                 is_base_content=True,
-                response_urls=['', '/pages/1']
+                response_urls=['', '/', '/pages/1']
             )
         ]
