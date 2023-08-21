@@ -5,7 +5,6 @@ from ..base.reseed import ReseedPasskey
 from ..base.sign_in import check_final_state, SignState
 from ..base.work import Work
 from ..schema.nexusphp import AttendanceHR
-from ..utils import net_utils
 from ..utils.value_handler import size, handle_infinite
 
 
@@ -13,10 +12,10 @@ class MainClass(AttendanceHR, ReseedPasskey):
     URL: Final = 'https://hhanclub.top/'
     USER_CLASSES: Final = {
         'downloaded': [size(750, 'GiB'), size(3, 'TiB')],
-        'share_ratio': [3.05, 4.45],
+        'points': [900000, 1500000],
+        'share_ratio': [3.05, 4.55],
         'days': [280, 700]
     }
-
 
     @property
     def details_selector(self) -> dict:
@@ -43,7 +42,7 @@ class MainClass(AttendanceHR, ReseedPasskey):
                     'handle': handle_infinite
                 },
                 'points': {
-                    'regex': r'憨豆：.*?([\d,.]+)'
+                    'regex': r'做种积分：.*?([\d,.]+)'
                 },
                 'join_date': {
                     'regex': r'加入日期.*?(\d{4}-\d{2}-\d{2})',
@@ -59,7 +58,6 @@ class MainClass(AttendanceHR, ReseedPasskey):
                 }
             }
         }
-
 
     def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
