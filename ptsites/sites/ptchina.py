@@ -1,9 +1,10 @@
 from typing import Final
 
+from ..base.reseed import ReseedCookie
 from ..schema.nexusphp import AttendanceHR
 
 
-class MainClass(AttendanceHR):
+class MainClass(AttendanceHR, ReseedCookie):
     URL: Final = 'https://ptchina.org/'
     USER_CLASSES: Final = {
         'downloaded': [805_306_368_000, 3_298_534_883_328],

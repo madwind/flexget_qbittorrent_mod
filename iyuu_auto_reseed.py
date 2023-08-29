@@ -226,7 +226,8 @@ class PluginIYUUAutoReseed:
                     if not passkey:
                         if show_detail:
                             logger.info(
-                                'no passkey, skip site: {}, title: {}'.format(site_name, client_torrent['title']))
+                                'no passkey, skip site: {}, title: {}'.format(site['base_url'],
+                                                                              client_torrent['title']))
                         continue
                     if not site_limit.get(site_name):
                         site_limit[site_name] = 1

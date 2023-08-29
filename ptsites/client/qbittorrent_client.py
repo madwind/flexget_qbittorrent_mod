@@ -119,11 +119,6 @@ class QBittorrentClient:
         raise plugin.PluginError(f'Error when trying to send request to qbittorrent: {msg}')
 
     def connect(self) -> None:
-        """
-        Connect to qBittorrent Web UI. Username and password not necessary
-        if 'Bypass authentication for localhost' is checked and host is
-        'localhost'.
-        """
         self.session = Session()
         self._verify = self._config.get('verify_cert', True)
 
@@ -131,7 +126,7 @@ class QBittorrentClient:
         self.check_api_version('Check API version failed.')
         if self._config.get('username') and self._config.get('password'):
             data = {'username': self._config['username'], 'password': self._config['password']}
-            response = self._request(
+            self._request(
                 'post',
                 self.url + self.API_URL_LOGIN,
                 data=data,

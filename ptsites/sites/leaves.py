@@ -2,12 +2,13 @@ from typing import Final
 from urllib.parse import urljoin
 
 from ..base.entry import SignInEntry
+from ..base.reseed import ReseedCookie
 from ..base.work import Work
 from ..schema.nexusphp import Visit
 from ..utils.value_handler import size
 
 
-class MainClass(Visit):
+class MainClass(Visit, ReseedCookie):
     URL: Final = 'https://leaves.red/'
     USER_CLASSES: Final = {
         'downloaded': [size(750, 'GiB'), size(3, 'TiB')],
