@@ -1,11 +1,11 @@
 from typing import Final
 
 from ..base.entry import SignInEntry
-from ..base.reseed import ReseedCookie
+from ..base.reseed import ReseedPasskey
 from ..schema.nexusphp import AttendanceHR
 
 
-class MainClass(AttendanceHR, ReseedCookie):
+class MainClass(AttendanceHR, ReseedPasskey):
     URL: Final = 'https://carpt.net/'
     IGNORE_TITLE = r'H&R\(ID: \d+\) 已达标'
     USER_CLASSES: Final = {
