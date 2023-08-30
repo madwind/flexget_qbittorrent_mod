@@ -32,6 +32,9 @@ class MainClass(Attendance, ReseedPasskey):
                 'leeching': {
                     'regex': r'当前下载.*?(\d+)'
                 },
+                'points': {
+                    'regex': r'做种积分([\d.,]+)',
+                }
             }
         })
         return selector

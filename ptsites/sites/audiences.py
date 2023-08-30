@@ -12,6 +12,7 @@ class MainClass(AttendanceHR, ReseedCookie):
     USER_CLASSES: Final = {
         'downloaded': [2199023255552, 8796093022208],
         'share_ratio': [4.5, 5],
+        'points': [1200000, 1800000],
         'days': [560, 784]
     }
 
