@@ -1,8 +1,8 @@
 from typing import Final
 
-from ptsites.base.reseed import ReseedPasskey
-from ptsites.schema.nexusphp import Attendance
-from ptsites.utils import net_utils
+from ..base.reseed import ReseedPasskey
+from ..schema.nexusphp import Attendance
+from ..utils import net_utils
 
 
 class MainClass(Attendance, ReseedPasskey):
