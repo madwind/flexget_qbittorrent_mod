@@ -22,7 +22,7 @@ class MainClass(Attendance, ReseedPasskey):
             'details': {
                 'points': {
                     'regex': (r'(做种积分).*?([\d,.]+)', 2)
-                },
+                }
             }
         })
         return selector
