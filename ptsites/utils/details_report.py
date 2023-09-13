@@ -395,20 +395,20 @@ class DetailsReport:
 
     def calc_font(self, bar_height: float, cell_width: int, font_path: str, test_str, font_size_start) -> tuple:
         if font_size_start == float('inf'):
-            font_size_start = 0
+            font_size_start = 1
         perfect_height = bar_height - 4
         font_size = font_size_start
         font_tmp = ImageFont.truetype(font_path, font_size)
-        width, height = font_tmp.getsize(test_str)
+        _, _, width, height = font_tmp.getbbox(test_str)
         if height > perfect_height or width > cell_width - 20:
             while height > perfect_height or width > cell_width - 20:
                 font_size += -1
                 font_tmp = ImageFont.truetype(font_path, font_size)
-                width, height = font_tmp.getsize(test_str)
+                _, _, width, height = font_tmp.getbbox(test_str)
         else:
             while height < perfect_height and width < cell_width - 20:
                 font_size += 1
                 font_tmp = ImageFont.truetype(font_path, font_size)
-                width, height = font_tmp.getsize(test_str)
+                _, _, width, height = font_tmp.getbbox(test_str)
 
         return font_size, height
