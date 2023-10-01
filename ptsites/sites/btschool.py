@@ -42,7 +42,7 @@ class MainClass(NexusPHP, ReseedPasskey):
         net_utils.dict_merge(selector, {
             'details': {
                 'points': {
-                    'regex': '做种积分:.*?([\d.,]+)',
+                    'regex': r'做种积分:.*?([\d.,]+)',
                 }
             }
         })

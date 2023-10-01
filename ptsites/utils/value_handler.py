@@ -16,5 +16,5 @@ suffix_dict = {'BiB': 1, 'KiB': 1024, 'MiB': 1048576, 'GiB': 1073741824, 'TiB': 
                'EiB': 1152921504606846976, 'ZiB': 1180591620717411303424}
 
 
-def size(value: int, suffix: str) -> int:
+def size(value: float, suffix: str) -> float:
     return value * suffix_dict.get(suffix)

@@ -21,7 +21,7 @@ class MainClass(AttendanceHR, ReseedPasskey):
         net_utils.dict_merge(selector, {
             'details': {
                 'points': {
-                    'regex': (r'(做种积分).*?([\d,.]+)', 2)
+                    'regex': r'做种积分.*?([\d,.]+)'
                 },
             }
         })
