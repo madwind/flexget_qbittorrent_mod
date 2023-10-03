@@ -1,5 +1,6 @@
 from typing import Final
 
+from ..base.entry import SignInEntry
 from ..base.reseed import ReseedPasskey
 from ..schema.nexusphp import AttendanceHR
 from ..utils import net_utils
@@ -8,6 +9,7 @@ from ..utils.value_handler import size
 
 class MainClass(AttendanceHR, ReseedPasskey):
     URL: Final = 'https://ubits.club/'
+    IGNORE_TITLE = r'H&R\(ID: \d+\) 已达标'
     USER_CLASSES: Final = {
         'downloaded': [size(1.5, 'TiB'), size(4, 'TiB')],
         'share_ratio': [6, 10],
@@ -26,3 +28,6 @@ class MainClass(AttendanceHR, ReseedPasskey):
             }
         })
         return selector
+
+    def get_messages(self, entry: SignInEntry, config: dict) -> None:
+        self.get_nexusphp_messages(entry, config, ignore_title=self.IGNORE_TITLE)

@@ -43,6 +43,14 @@ class MainClass(Unit3D):
                 }
             },
             'details': {
+                'uploaded': {
+                    'regex': r'Upload.+?([\d.]+.?¬†G[ZEPTGMK]?iB)',
+                    'handle': self.remove_symbol
+                },
+                'downloaded': {
+                    'regex': r'Download.+?([\d.]+.?¬†G[ZEPTGMK]?iB)',
+                    'handle': self.remove_symbol
+                },
                 'points': {
                     'regex': 'title="My Bonus Points".*?</i>.+?(\\d[\\d,. ]*)',
                 },
@@ -59,3 +67,6 @@ class MainClass(Unit3D):
             }
         })
         return selector
+
+    def remove_symbol(self, value: str):
+        return value.replace('¬†', '')
