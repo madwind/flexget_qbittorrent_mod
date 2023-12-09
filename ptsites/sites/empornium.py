@@ -9,7 +9,7 @@ from ..utils import net_utils
 
 
 class MainClass(Gazelle):
-    URL: Final = 'https://www.empornium.is/'
+    URL: Final = 'https://www.empornium.sx/'
     USER_CLASSES: Final = {
         'uploaded': [107374182400],
         'share_ratio': [1.05],
