@@ -37,7 +37,7 @@ class MainClass(Unit3D):
                     'elements': {
                         'bar': 'ul.top-nav__ratio-bar',
                         'header': 'time.profile__registration',
-                        'data_table': 'dl.key-value'
+                        'data_table': 'dl.key-value:nth-of-type(2)'
                     }
                 }
             },
