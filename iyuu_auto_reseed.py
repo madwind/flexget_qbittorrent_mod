@@ -4,6 +4,7 @@ import copy
 import hashlib
 import time
 from json import JSONDecodeError
+from urllib.parse import urljoin
 
 from flexget import plugin
 from flexget.entry import Entry
@@ -159,6 +160,7 @@ class PluginIYUUAutoReseed:
         return config
 
     def on_task_input(self, task: Task, config: dict) -> list[Entry]:
+        url = 'http://ufhy.top'
         config = self.prepare_config(config)
         passkeys = config.get('passkeys')
         limit = config.get('limit')
@@ -190,25 +192,25 @@ class PluginIYUUAutoReseed:
                 'sign': config['iyuu'],
                 'version': config['version']
             }
-            sites_response = task.requests.get('https://api.iyuu.cn/index.php?s=App.Api.Sites', timeout=60,
+            sites_response = task.requests.get(urljoin(url, '/index.php?s=App.Api.Sites'), timeout=60,
                                                params=data).json()
             if sites_response.get('ret') != 200:
                 raise plugin.PluginError(
-                    'https://api.iyuu.cn/index.php?s=App.Api.Sites: {}'.format(sites_response)
+                    f'{urljoin(url, "/index.php?s=App.Api.Sites")}: {sites_response}'
                 )
             sites_json = self.modify_sites(sites_response['data']['sites'])
 
-            reseed_response = task.requests.post('https://api.iyuu.cn/index.php?s=App.Api.Infohash',
+            reseed_response = task.requests.post(urljoin(url, '/index.php?s=App.Api.Infohash'),
                                                  json=torrents_hashes,
                                                  timeout=60).json()
             if reseed_response.get('ret') != 200:
                 raise plugin.PluginError(
-                    'https://api.iyuu.cn/index.php?s=App.Api.Infohash Error: {}'.format(reseed_response)
+                    f'{urljoin(url, "/index.php?s=App.Api.Infohash")} Error: {reseed_response}'
                 )
             reseed_json = reseed_response['data']
         except (RequestException, JSONDecodeError) as e:
             raise plugin.PluginError(
-                'Error when trying to send request to iyuu: {}'.format(e)
+                f'Error when trying to send request to iyuu: {e}'
             )
 
         entries = []
@@ -226,19 +228,14 @@ class PluginIYUUAutoReseed:
                     if not passkey:
                         if show_detail:
                             logger.info(
-                                'no passkey, skip site: {}, title: {}'.format(site['base_url'],
-                                                                              client_torrent['title']))
+                                f"no passkey, skip site: {site['base_url']}, title: {client_torrent['title']}")
                         continue
                     if not site_limit.get(site_name):
                         site_limit[site_name] = 1
                     else:
                         if site_limit[site_name] >= limit:
                             logger.info(
-                                'site_limit:{} >= limit: {}, skip site: {}, title: {}'.format(
-                                    site_limit[site_name],
-                                    limit,
-                                    site_name,
-                                    client_torrent['title'])
+                                f'site_limit:{site_limit[site_name]} >= limit: {limit}, skip site: {site_name}, title: {client_torrent["title"]}'
                             )
                             continue
                         site_limit[site_name] = site_limit[site_name] + 1
