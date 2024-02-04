@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import re
-from datetime import datetime
-
 from PIL import Image, ImageDraw, ImageFont
 from PIL.ImageFont import FreeTypeFont
+from datetime import datetime
 from dateutil.parser import parse
 from flexget import db_schema
 from flexget.manager import Session
@@ -410,5 +409,5 @@ class DetailsReport:
                 font_size += 1
                 font_tmp = ImageFont.truetype(font_path, font_size)
                 _, _, width, height = font_tmp.getbbox(test_str)
-
+        font_size = font_size if font_size > 0 else 1
         return font_size, height

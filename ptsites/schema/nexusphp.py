@@ -33,7 +33,7 @@ class NexusPHP(PrivateTorrent, ABC):
                 'default': {
                     'link': '/userdetails.php?id={}',
                     'elements': {
-                        'bar': '#info_block > tbody > tr > td > table > tbody > tr > td:nth-child(1) > span',
+                        'bar': '#info_block',
                         'table': '#outer table.main:last-child'
                     }
                 }
