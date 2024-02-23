@@ -116,10 +116,12 @@ class MainClass(Unit3D, Reseed):
             },
             'details': {
                 'uploaded': {
-                    'regex': '上传.+?([\\d.]+ [ZEPTGMK]?iB)'
+                    'regex': '上传.+?([\\d.]+ [ZEPTGMK]?iB)',
+                             'handle': self.remove_symbol
                 },
                 'downloaded': {
-                    'regex': '下载.+?([\\d.]+ [ZEPTGMK]?iB)'
+                    'regex': '下载.+?([\\d.]+ [ZEPTGMK]?iB)',
+                    'handle': self.remove_symbol
                 },
                 'share_ratio': {
                     'regex': '分享率.+?([\\d.]+)',
@@ -151,3 +153,6 @@ class MainClass(Unit3D, Reseed):
                            torrent_id: str) -> None:
         download_page = site['download_page'].format(torrent_id=torrent_id, rsskey=passkey['rsskey'])
         entry['url'] = urljoin(MainClass.URL, download_page)
+
+    def remove_symbol(self, value: str):
+        return value.replace('\xa0', '')
