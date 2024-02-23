@@ -17,7 +17,7 @@ def decode(response: Response | None) -> str | None:
     charset_encoding = chardet.detect(content).get('encoding')
     if charset_encoding == 'ascii':
         charset_encoding = 'unicode_escape'
-    elif charset_encoding == 'Windows-1254':
+    elif charset_encoding in ['Windows-1254','MacRoman']:
         charset_encoding = 'utf-8'
     return content.decode(charset_encoding if charset_encoding else 'utf-8', 'ignore')
 
