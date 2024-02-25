@@ -3,16 +3,15 @@ from typing import Final
 from ..base.reseed import ReseedPasskey
 from ..schema.nexusphp import Visit
 from ..utils import net_utils
+from ..utils.value_handler import size
 
 
 class MainClass(Visit, ReseedPasskey):
     URL: Final = 'https://springsunday.net/'
     USER_CLASSES: Final = {
-        'uploaded': [1832519379627, 109951162777600],
-        'downloaded': [2199023255552, 10995116277760],
+        'downloaded': [size(2, 'TiB'), size(11.5, 'TiB')],
         'share_ratio': [1.2, 2],
-        'points': [400000, 2000000],
-        'days': [35, 35]
+        'points': [400000, 2300000],
     }
 
     @property
@@ -21,6 +20,7 @@ class MainClass(Visit, ReseedPasskey):
         net_utils.dict_merge(selector, {
             'detail_sources': {
                 'default': {
+                    'do_not_strip': True,
                     'elements': {
                         'bar': '#info_block > div:nth-child(1) > span',
                     }
@@ -28,7 +28,7 @@ class MainClass(Visit, ReseedPasskey):
             },
             'details': {
                 'points': {
-                    'regex': '做种积分: ([\\d.,]+)',
+                    'regex': r'做种积分.*?([\d.,]+)',
                 }
             }
         })
