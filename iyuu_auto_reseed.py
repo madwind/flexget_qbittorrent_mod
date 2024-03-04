@@ -160,7 +160,7 @@ class PluginIYUUAutoReseed:
         return config
 
     def on_task_input(self, task: Task, config: dict) -> list[Entry]:
-        url = 'http://ufhy.top'
+        url = 'http://api.bolahg.cn'
         config = self.prepare_config(config)
         passkeys = config.get('passkeys')
         limit = config.get('limit')
