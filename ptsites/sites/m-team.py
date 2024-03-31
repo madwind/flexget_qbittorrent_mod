@@ -4,12 +4,12 @@ import json
 from typing import Final
 from urllib.parse import urljoin
 
-from ptsites.utils.value_handler import handle_infinite
 from ..base.entry import SignInEntry
 from ..base.reseed import ReseedPasskey
 from ..base.sign_in import check_final_state, SignState, Work
 from ..schema.nexusphp import NexusPHP
 from ..utils.net_utils import get_module_name
+from ..utils.value_handler import handle_infinite
 
 
 class MainClass(NexusPHP, ReseedPasskey):
