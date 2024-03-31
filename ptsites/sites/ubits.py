@@ -25,6 +25,7 @@ class MainClass(AttendanceHR, ReseedPasskey):
                 'points': {
                     'regex': r'做种积分.*?([\d,.]+)'
                 },
+                'hr': None
             }
         })
         return selector
