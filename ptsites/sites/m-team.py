@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import json
 from typing import Final
 from urllib.parse import urljoin
+
+from requests import Response
 
 from ..base.entry import SignInEntry
 from ..base.reseed import ReseedPasskey
@@ -13,7 +16,6 @@ from ..utils.value_handler import handle_infinite
 
 class MainClass(NexusPHP, ReseedPasskey):
     URL: Final = 'https://kp.m-team.cc/'
-    UPDATE_LAST_BROWSE = '/api/member/updateLastBrowse'
     PROFILE_URL = '/api/member/profile'
     MY_PEER_STATUS = '/api/tracker/myPeerStatus'
     SUCCEED_REGEX = 'SUCCESS'
@@ -29,24 +31,14 @@ class MainClass(NexusPHP, ReseedPasskey):
             get_module_name(cls): {
                 'type': 'object',
                 'properties': {
-                    'cookie': {'type': 'string'},
-                    'secret_key': {'type': 'string'},
-                    'login': {
-                        'type': 'object',
-                        'properties': {
-                            'username': {'type': 'string'},
-                            'password': {'type': 'string'}
-                        },
-                        'additionalProperties': False
-                    }
+                    'key': {'type': 'string'}
                 },
                 'additionalProperties': False
             }
         }
 
     def get_details(self, entry: SignInEntry, config: dict) -> None:
-        details_response_json = self.request(entry, 'POST', urljoin(self.URL, self.PROFILE_URL)).json()
-        print(details_response_json)
+        details_response_json = json.loads(entry['base_content'])
         if not details_response_json:
             return
         my_peer_status_response = self.request(entry, 'POST', urljoin(self.URL, self.MY_PEER_STATUS))
@@ -69,7 +61,7 @@ class MainClass(NexusPHP, ReseedPasskey):
     def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
-                url=self.UPDATE_LAST_BROWSE,
+                url=self.PROFILE_URL,
                 method=self.sign_in_by_post,
                 data={},
                 succeed_regex=[self.SUCCEED_REGEX],
@@ -77,6 +69,15 @@ class MainClass(NexusPHP, ReseedPasskey):
                 is_base_content=True
             )
         ]
+
+    def request(self,
+                entry: SignInEntry,
+                method: str,
+                url: str,
+                **kwargs,
+                ) -> Response | None:
+        key = entry.get('site_config').get('key')
+        return super().request(entry, 'POST', url, headers={'x-api-key': key})
 
     def get_messages(self, entry: SignInEntry, config: dict) -> None:
         return
