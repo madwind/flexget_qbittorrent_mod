@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime
 from typing import Final
 from urllib.parse import urljoin
 
@@ -69,6 +70,22 @@ class MainClass(NexusPHP, ReseedPasskey):
                 is_base_content=True
             )
         ]
+
+    def sign_in_by_post(self,
+                        entry: SignInEntry,
+                        config: dict,
+                        work: Work,
+                        last_content: str = None,
+                        ) -> Response | None:
+        response = super().sign_in_by_post(entry, config, work, last_content)
+        response_json = response.json()
+        last_browse = response_json.get('data').get('memberStatus').get('lastBrowse')
+        target_date = datetime.strptime(last_browse, '%Y-%m-%d %H:%M:%S')
+        days = (datetime.now() - target_date).days
+        if days > 29:
+            entry.fail_with_prefix(f'last browse: {days} days, {self.URL}')
+            return
+        return response
 
     def request(self,
                 entry: SignInEntry,
