@@ -284,6 +284,14 @@ class MainClass(NexusPHP, ReseedPasskey):
         selector = super().details_selector
         net_utils.dict_merge(selector, {
             'details': {
+                'uploaded': {
+                    'regex': (r'(上[传傳]量|Uploaded).+?([\d.]+ ?[ZEP烫GMK]?i?B)', 2),
+                    'handle': self.handle_suffix
+                },
+                'downloaded': {
+                    'regex': (r'(下[载載]量|Downloaded).+?([\d.]+ ?[ZEP烫GMK]?i?B)', 2),
+                    'handle': self.handle_suffix
+                },
                 'points': {
                     'regex': ('UCoin.*?([\\d,.]+)\\(([\\d,.]+)\\)', 2)
                 },
@@ -297,3 +305,6 @@ class MainClass(NexusPHP, ReseedPasskey):
             }
         })
         return selector
+
+    def handle_suffix(self, value: str):
+        return value.replace('烫', 'T')
