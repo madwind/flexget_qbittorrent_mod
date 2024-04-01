@@ -56,7 +56,8 @@ class MainClass(NexusPHP, ReseedPasskey):
                 ',', ''),
             'seeding': str(my_peer_status_response_json.get('data').get('seeder') or 0).replace(',', ''),
             'leeching': str(my_peer_status_response_json.get('data').get('leecher') or 0).replace(',',
-                                                                                                  '')
+                                                                                                  ''),
+            'hr': '*'
         }
 
     def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
