@@ -285,21 +285,21 @@ class MainClass(NexusPHP, ReseedPasskey):
         net_utils.dict_merge(selector, {
             'details': {
                 'uploaded': {
-                    'regex': (r'(上[传傳]量|Uploaded).+?([\d.]+ ?[ZEP烫GMK]?i?B)', 2),
+                    'regex': r'上传量:  ([\d.]+ 烫)',
                     'handle': self.handle_suffix
                 },
                 'downloaded': {
-                    'regex': (r'(下[载載]量|Downloaded).+?([\d.]+ ?[ZEP烫GMK]?i?B)', 2),
+                    'regex': r'下载量:  ([\d.]+ 烫)',
                     'handle': self.handle_suffix
                 },
                 'points': {
-                    'regex': ('UCoin.*?([\\d,.]+)\\(([\\d,.]+)\\)', 2)
+                    'regex': r'UCoin.*?\d+\(([\d,.]+)'
                 },
                 'seeding': {
-                    'regex': ('客[户戶]端.*?(\\d+).*?(\\d+).*?(\\d+)', 2)
+                    'regex': r'\[清除\]: \d+ \((\d+)'
                 },
                 'leeching': {
-                    'regex': ('客[户戶]端.*?(\\d+).*?(\\d+).*?(\\d+)', 3)
+                    'regex': r'\[清除\]: \d+ \(\d+ (\d+)'
                 },
                 'hr': None
             }
@@ -307,4 +307,4 @@ class MainClass(NexusPHP, ReseedPasskey):
         return selector
 
     def handle_suffix(self, value: str):
-        return value.replace('烫', 'T')
+        return value.replace('烫', 'TiB')
