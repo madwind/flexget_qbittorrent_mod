@@ -285,12 +285,12 @@ class MainClass(NexusPHP, ReseedPasskey):
         net_utils.dict_merge(selector, {
             'details': {
                 'uploaded': {
-                    'regex': r'上传量:  ([\d.]+ 烫)',
-                    'handle': self.handle_suffix
+                    'regex': r'上传量:  ([\d.]+ [ZEPTGMK]?i?B)'
+                    # 'handle': self.handle_suffix
                 },
                 'downloaded': {
-                    'regex': r'下载量:  ([\d.]+ 烫)',
-                    'handle': self.handle_suffix
+                    'regex': r'下载量:  ([\d.]+ [ZEPTGMK]?i?B)'
+                    # 'handle': self.handle_suffix
                 },
                 'points': {
                     'regex': r'UCoin.*?\d+\(([\d,.]+)'
@@ -306,5 +306,5 @@ class MainClass(NexusPHP, ReseedPasskey):
         })
         return selector
 
-    def handle_suffix(self, value: str):
-        return value.replace('烫', 'TiB')
+    # def handle_suffix(self, value: str):
+    #     return value.replace('烫', 'TiB')

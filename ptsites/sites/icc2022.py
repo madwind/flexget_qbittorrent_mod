@@ -23,8 +23,8 @@ class MainClass(Attendance):
             'detail_sources': {
                 'default': {
                     'elements': {
-                        'bar': 'body > div.head > div.right > div.top > span',
-                        'table': '#info_block > div.info_block_main > div.main > table'
+                        'bar': '.medium',
+                        'table': '#outer .embedded'
                     }
                 }
             },

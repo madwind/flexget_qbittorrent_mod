@@ -23,7 +23,7 @@ class MainClass(Attendance, ReseedPasskey):
                 succeed_regex=[
                     '这是你的第.*?次签到，已连续签到.*天，本次签到获得.*个魔力值。',
                     '获得魔力值：\\d+',
-                    '你今天已经签到过了，请勿重复刷新'],
+                    '今天已签到，请勿重复刷新'],
                 assert_state=(check_final_state, SignState.SUCCEED),
                 is_base_content=True
             )
