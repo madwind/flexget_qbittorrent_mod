@@ -5,20 +5,22 @@ from datetime import datetime
 from typing import Final
 from urllib.parse import urljoin
 
-from requests import Response
+from flexget.entry import Entry
+from requests import Response, request
 
 from ..base.entry import SignInEntry
-from ..base.reseed import ReseedPasskey
+from ..base.reseed import Reseed
 from ..base.sign_in import check_final_state, SignState, Work
 from ..schema.nexusphp import NexusPHP
 from ..utils.net_utils import get_module_name
 from ..utils.value_handler import handle_infinite
 
 
-class MainClass(NexusPHP, ReseedPasskey):
+class MainClass(NexusPHP, Reseed):
     URL: Final = 'https://kp.m-team.cc/'
     PROFILE_URL = '/api/member/profile'
     MY_PEER_STATUS = '/api/tracker/myPeerStatus'
+    GEN_DL_TOKEN = '/api/torrent/genDlToken'
     SUCCEED_REGEX = 'SUCCESS'
     USER_CLASSES: Final = {
         'downloaded': [2147483648000, 3221225472000],
@@ -99,3 +101,22 @@ class MainClass(NexusPHP, ReseedPasskey):
 
     def get_messages(self, entry: SignInEntry, config: dict) -> None:
         return
+
+    @classmethod
+    def reseed_build_schema(cls) -> dict:
+        return {
+            get_module_name(cls): {
+                'type': 'object',
+                'properties': {
+                    'key': {'type': 'string'}
+                },
+                'additionalProperties': False
+            }
+        }
+
+    def reseed_build_entry(self, entry: Entry, config: dict, site: dict, passkey: dict, torrent_id: str) -> None:
+        key = passkey.get('key')
+        response = request('POST', urljoin(self.URL, self.GEN_DL_TOKEN), headers={'x-api-key': key},
+                           data={'id': torrent_id})
+        if response.status_code == 200:
+            entry['url'] = response.json().get('data')
