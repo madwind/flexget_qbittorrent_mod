@@ -7,9 +7,13 @@ schedules:
     interval:
       minutes: 1
 
-  - tasks: [ reseed, resume, delete, clean ]
+  - tasks: [ resume, delete, clean ]
     interval:
       minutes: 2
+
+  - tasks: [ reseed ]
+    interval:
+      minutes: 240
 
   - tasks: [ skyey2, opencd, refresh_tracker ]
     interval:
@@ -158,11 +162,7 @@ variables:
         password: 'xxxxxxxx'
     lemonhd: 'xxxxxxxx'
     m-team:
-      cookie: 'xxxxxxxx'
-      secret_key: 'xxxxxxxx'
-      #login:
-      #  username: 'xxxxxxxx'
-      #  password: 'xxxxxxxx'
+      key: 'xxxxxxxx'
     milkie:
       login:
         username: 'xxxxxxxx'
@@ -178,10 +178,10 @@ variables:
     open: 'xxxxxxxx'
     oshen: 'xxxxxxxx'
     ourbits:
-      #cookie: 'xxxxxxxx'
-      login:
-        username: 'xxxxxxxx'
-        password: 'xxxxxxxx'
+      cookie: 'xxxxxxxx'
+      #login:
+      #  username: 'xxxxxxxx'
+      #  password: 'xxxxxxxx'
     ptchina: 'xxxxxxxx'
     pterclub: 'xxxxxxxx'
     pthome: 'xxxxxxxx'
@@ -571,7 +571,8 @@ tasks:
         keepfrds: 'xxxxxxxx'
         lemonhd: 'xxxxxxxx'
         msg: 'xxxxxxxx'
-        m-team: 'xxxxxxxx'
+        m-team:
+          key: 'xxxxxxxx'
         nicept: 'xxxxxxxx'
         nanyangpt: 'xxxxxxxx'
         open: 'xxxxxxxx'
@@ -676,12 +677,14 @@ tasks:
     regexp:
       accept:
         - '[Tt]orrent not registered with this tracker'
-        - 'Torrent banned'
+        - '[Bb]anned'
+        - 'deleted'
         - 'Unregistered torrent'
         - '006-种子尚未上传或者已经被删除'
-        - 'Torrent is not authorized for use on this tracker.'
+        - 'Torrent is not authorized for use on this tracker\.'
+        - '此种子没有在 ptsbao\.club 注册'
         #dmhy
-        - '该种子已被禁止。'
+        - 该种子已被禁止。
       from: qbittorrent_tracker_msg
     template:
       - from_qbittorrent_template
