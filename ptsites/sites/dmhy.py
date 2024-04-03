@@ -296,10 +296,10 @@ class MainClass(NexusPHP, ReseedPasskey):
                     'regex': r'UCoin.*?\d+\(([\d,.]+)'
                 },
                 'seeding': {
-                    'regex': r'\[清除\]: \d+ \((\d+)'
+                    'regex': r'客户端.*?: \d+ \((\d+)'
                 },
                 'leeching': {
-                    'regex': r'\[清除\]: \d+ \(\d+ (\d+)'
+                    'regex': r'客户端.*?: \d+ \(\d+ (\d+)'
                 },
                 'hr': None
             }
