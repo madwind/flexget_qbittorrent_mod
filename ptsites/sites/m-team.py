@@ -79,10 +79,11 @@ class MainClass(NexusPHP, Reseed):
                         work: Work,
                         last_content: str = None,
                         ) -> Response | None:
-        # update_last_browse_response = self.request(entry, 'POST', urljoin(self.URL, self.GEN_DL_TOKEN))
+        # update_last_browse_response = self.request(entry, 'POST', urljoin(self.URL, '/api/member/updateLastBrowse'))
         # if update_last_browse_response.status_code != 200 or update_last_browse_response.json().get(
         #         'message') != 'SUCCESS':
         #     entry.fail_with_prefix(f'update_last_browse failed!')
+        #     return
 
         response = super().sign_in_by_post(entry, config, work, last_content)
         response_json = response.json()
