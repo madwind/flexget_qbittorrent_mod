@@ -23,6 +23,7 @@ class MainClass(Visit, ReseedPasskey):
                     'do_not_strip': True,
                     'elements': {
                         'bar': '#info_block > div:nth-child(1) > span',
+                        'table': '#outer div.main:last-child'
                     }
                 }
             },
