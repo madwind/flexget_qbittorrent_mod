@@ -2,12 +2,12 @@ from typing import Final
 
 from ..base.entry import SignInEntry
 from ..base.reseed import ReseedPasskey
-from ..schema.nexusphp import AttendanceHR
+from ..schema.nexusphp import Attendance
 from ..utils import net_utils
 from ..utils.value_handler import size
 
 
-class MainClass(AttendanceHR, ReseedPasskey):
+class MainClass(Attendance, ReseedPasskey):
     URL: Final = 'https://ubits.club/'
     IGNORE_TITLE = r'H&R\(ID: \d+\) 已达标'
     USER_CLASSES: Final = {
@@ -24,8 +24,7 @@ class MainClass(AttendanceHR, ReseedPasskey):
             'details': {
                 'points': {
                     'regex': r'做种积分.*?([\d,.]+)'
-                },
-                'hr': None
+                }
             }
         })
         return selector
