@@ -1,7 +1,7 @@
 from typing import Final
 
 from ..base.entry import SignInEntry
-from ..base.reseed import ReseedPasskey
+from ..base.reseed import ReseedCookie
 from ..base.sign_in import check_final_state, SignState
 from ..base.work import Work
 from ..schema.nexusphp import AttendanceHR
@@ -9,7 +9,7 @@ from ..utils import net_utils
 from ..utils.value_handler import size
 
 
-class MainClass(AttendanceHR, ReseedPasskey):
+class MainClass(AttendanceHR, ReseedCookie):
     URL: Final = 'https://www.hddolby.com/'
     USER_CLASSES: Final = {
         'downloaded': [size(2, 'TiB'), size(8, 'TiB')],
