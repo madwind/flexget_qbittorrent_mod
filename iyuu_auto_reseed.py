@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-import copy
-import hashlib
 import time
 from json import JSONDecodeError
-from urllib.parse import urljoin
 
+import copy
+import hashlib
 from flexget import plugin
 from flexget.entry import Entry
 from flexget.event import event
@@ -15,6 +14,7 @@ from flexget.task import Task
 from flexget.utils import json
 from loguru import logger
 from requests import RequestException
+from urllib.parse import urljoin
 
 from .ptsites import executor
 from .ptsites.utils import net_utils
@@ -126,6 +126,8 @@ client_map = {
     'deluge': to_deluge,
 }
 
+last_hashes = []
+
 
 class PluginIYUUAutoReseed:
     schema = {
@@ -139,7 +141,7 @@ class PluginIYUUAutoReseed:
                 ]
             },
             'to': {'type': 'string', 'enum': list(filter(lambda x: not x.startswith('from'), client_map.keys()))},
-            'iyuu': {'type': 'string'},
+            'token': {'type': 'string'},
             'user-agent': {'type': 'string'},
             'show_detail': {'type': 'boolean'},
             'limit': {'type': 'integer'},
@@ -152,16 +154,17 @@ class PluginIYUUAutoReseed:
     }
 
     def prepare_config(self, config: dict) -> dict:
-        config.setdefault('iyuu', '')
-        config.setdefault('version', '1.10.9')
+        config.setdefault('token', '')
         config.setdefault('limit', 999)
         config.setdefault('show_detail', False)
         config.setdefault('passkeys', {})
+        config.setdefault('version', '8.2.0')
         return config
 
     def on_task_input(self, task: Task, config: dict) -> list[Entry]:
-        url = 'http://api.bolahg.cn'
+        url = 'https://dev.iyuu.cn'
         config = self.prepare_config(config)
+        token = config.get('token')
         passkeys = config.get('passkeys')
         limit = config.get('limit')
         show_detail = config.get('show_detail')
@@ -188,26 +191,35 @@ class PluginIYUUAutoReseed:
             return []
 
         try:
-            data = {
-                'sign': config['iyuu'],
-                'version': config['version']
-            }
-            sites_response = task.requests.get(urljoin(url, '/index.php?s=App.Api.Sites'), timeout=60,
-                                               params=data).json()
-            if sites_response.get('ret') != 200:
+            sites_response = task.requests.get(urljoin(url, '/reseed/sites/index'), timeout=60,
+                                               headers={'token': token}).json()
+            if sites_response.get('code') != 0:
                 raise plugin.PluginError(
-                    f'{urljoin(url, "/index.php?s=App.Api.Sites")}: {sites_response}'
+                    f'{urljoin(url, "/reseed/sites/index")}: {sites_response}'
                 )
             sites_json = self.modify_sites(sites_response['data']['sites'])
 
-            reseed_response = task.requests.post(urljoin(url, '/index.php?s=App.Api.Infohash'),
-                                                 json=torrents_hashes,
-                                                 timeout=60).json()
-            if reseed_response.get('ret') != 200:
+            sid_list = {"sid_list": [int(key) for key in sites_json.keys()]}
+            report_response = task.requests.post(urljoin(url, '/reseed/sites/reportExisting'), timeout=60,
+                                                 headers={'token': token},
+                                                 json=sid_list).json()
+            if report_response.get('code') != 0:
                 raise plugin.PluginError(
-                    f'{urljoin(url, "/index.php?s=App.Api.Infohash")} Error: {reseed_response}'
+                    f'{urljoin(url, "/reseed/sites/reportExisting")}: {report_response}'
+                )
+            sid_sha1 = report_response['data']['sid_sha1']
+            torrents_hashes['sid_sha1'] = sid_sha1
+
+            reseed_response = task.requests.post(urljoin(url, '/reseed/index/index'),
+                                                 headers={'token': token},
+                                                 data=torrents_hashes,
+                                                 timeout=60).json()
+            if reseed_response.get('code') != 0:
+                raise plugin.PluginError(
+                    f'{urljoin(url, "/reseed/index/index")} Error: {reseed_response}'
                 )
             reseed_json = reseed_response['data']
+
         except (RequestException, JSONDecodeError) as e:
             raise plugin.PluginError(
                 f'Error when trying to send request to iyuu: {e}'
@@ -258,21 +270,25 @@ class PluginIYUUAutoReseed:
         torrent_dict = {}
         torrents_hashes = {}
         hashes = []
+        global last_hashes
 
         for client_torrent in result:
             if from_client_method(client_torrent):
                 torrent_info_hash = client_torrent['torrent_info_hash'].lower()
                 torrent_dict[torrent_info_hash] = client_torrent
                 hashes.append(torrent_info_hash)
-
         list.sort(hashes)
-        hashes_json = json.dumps(hashes, separators=(',', ':'))
+
+        if len(last_hashes) == 0:
+            last_hashes = hashes
+
+        hashes_json = json.dumps(last_hashes[:500], separators=(',', ':'))
+        last_hashes = last_hashes[500:]
         sha1 = hashlib.sha1(hashes_json.encode("utf-8")).hexdigest()
 
         torrents_hashes['hash'] = hashes_json
         torrents_hashes['sha1'] = sha1
 
-        torrents_hashes['sign'] = config['iyuu']
         torrents_hashes['timestamp'] = int(time.time())
         torrents_hashes['version'] = config['version']
 
