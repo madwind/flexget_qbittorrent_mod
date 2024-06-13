@@ -13,7 +13,7 @@ schedules:
 
   - tasks: [ reseed ]
     interval:
-      minutes: 240
+      minutes: 5
 
   - tasks: [ skyey2, opencd, refresh_tracker ]
     interval:
@@ -37,192 +37,6 @@ variables:
         bot_token: 'xxxxxxxx'
         recipients:
           - username: 'xxxxxxxx'
-  sites: &sites_setting
-    qbittorrent:
-      - name: qbittorrent
-        host: qbittorrent.example.com
-        port: 443
-        use_ssl: yes
-        username: xxxxxxxx
-        password: xxxxxxxx
-      - name: qbittorrent2
-        host: qbittorrent2.example.com
-        port: 443
-        use_ssl: yes
-        username: xxxxxxxx
-        password: xxxxxxxx
-    1ptba: 'xxxxxxxx'
-    3wmg: 'xxxxxxxx'
-    52pt: 'xxxxxxxx'
-    abn:
-      login:
-        username: 'xxxxxxxx'
-        password: 'xxxxxxxx'
-    abtorrents:
-      login:
-        username: 'xxxxxxxx'
-        password: 'xxxxxxxx'
-    avgv: 'xxxxxxxx'
-    avistaz: 'xxxxxxxx'
-    beitai: 'xxxxxxxx'
-    bitbr: 'xxxxxxxx'
-    bitsexy: 'xxxxxxxx'
-    bootytape:
-      login:
-        username: 'xxxxxxxx'
-        password: 'xxxxxxxx'
-    btschool: 'xxxxxxxx'
-    carpt: 'xxxxxxxx'
-    cathode-ray:
-      login:
-        username: 'xxxxxxxx'
-        password: 'xxxxxxxx'
-    ccfbits: 'xxxxxxxx'
-    chdbits: 'xxxxxxxx'
-    cinemaz: 'xxxxxxxx'
-    dicmusic: 'xxxxxxxx'
-    digitalcore: 'xxxxxxxx'
-    discfan: 'xxxxxxxx'
-    dmhy:
-      cookie: 'xxxxxxxx'
-      username: 'xxxxxxxx'
-      comment: 'xxxxxxxx'
-      ocr_config:
-        retry: 20
-        char_count: 3
-        score: 40
-    dragonhd: 'xxxxxxxx'
-    eastgame: 'xxxxxxxx'
-    et8: 'xxxxxxxx'
-    exoticaz: 'xxxxxxxx'
-    femdomcult:
-      login:
-        username: 'xxxxxxxx'
-        password: 'xxxxxxxx'
-    filelist:
-      login:
-        username: 'xxxxxxxx'
-        password: 'xxxxxxxx'
-    gay-torrents_net:
-      login:
-        username: 'xxxxxxxx'
-        password: 'xxxxxxxx'
-    gay-torrents_org: 'xxxxxxxx'
-    gaytor:
-      login:
-        username: 'xxxxxxxx'
-        password: 'xxxxxxxx'
-    gazellegames:
-      cookie: 'xxxxxxxx'
-      key: 'xxxxxxxx'
-      name: 'xxxxxxxx'
-    greatposterwall: 'xxxxxxxx'
-    haidan: 'xxxxxxxx'
-    happyfappy:
-      login:
-        username: 'xxxxxxxx'
-        password: 'xxxxxxxx'
-    hares: 'xxxxxxxx'
-    hd: 'xxxxxxxx'
-    hd-space: 'xxxxxxxx'
-    hd-torrents: 'xxxxxxxx'
-    hd4fans: 'xxxxxxxx'
-    hdarea: 'xxxxxxxx'
-    hdatmos: 'xxxxxxxx'
-    hdbd: 'xxxxxxxx'
-    hdchina: 'xxxxxxxx'
-    hdcity: 'xxxxxxxx'
-    hddolby: 'xxxxxxxx'
-    hdfans: 'xxxxxxxx'
-    hdhome: 'xxxxxxxx'
-    hdmayi: 'xxxxxxxx'
-    hdpost:
-      login:
-        username: 'xxxxxxxx'
-        password: 'xxxxxxxx'
-    hdsky:
-      cookie: 'xxxxxxxx'
-      join_date: 'yyyy-MM-dd'
-    hdtime: 'xxxxxxxx'
-    hdupt: 'xxxxxxxx'
-    hdzone: 'xxxxxxxx'
-    hitpt: 'xxxxxxxx'
-    htpt: 'xxxxxxxx'
-    iptorrents: 'xxxxxxxx'
-    joyhd: 'xxxxxxxx'
-    jpopsuki:
-      login:
-        username: 'xxxxxxxx'
-        password: 'xxxxxxxx'
-    jptv: 'xxxxxxxx'
-    keepfrds: 'xxxxxxxx'
-    kufirc:
-      login:
-        username: 'xxxxxxxx'
-        password: 'xxxxxxxx'
-    lemonhd: 'xxxxxxxx'
-    m-team:
-      key: 'xxxxxxxx'
-    milkie:
-      login:
-        username: 'xxxxxxxx'
-        password: 'xxxxxxxx'
-    msg: 'xxxxxxxx'
-    nanyangpt: 'xxxxxxxx'
-    napqaq: 'xxxxxxxx'
-    nicept: 'xxxxxxxx'
-    ninjacentral:
-      login:
-        username: 'xxxxxxxx'
-        password: 'xxxxxxxx'
-    open: 'xxxxxxxx'
-    oshen: 'xxxxxxxx'
-    ourbits:
-      cookie: 'xxxxxxxx'
-      #login:
-      #  username: 'xxxxxxxx'
-      #  password: 'xxxxxxxx'
-    ptchina: 'xxxxxxxx'
-    pterclub: 'xxxxxxxx'
-    pthome: 'xxxxxxxx'
-    pttime: 'xxxxxxxx'
-    ptsbao: 'xxxxxxxx'
-    pussytorrents:
-      login:
-        username: 'xxxxxxxx'
-        password: 'xxxxxxxx'
-    scenetime: 'xxxxxxxx'
-    skyey2:
-      login:
-        username: 'xxxxxxxx'
-        password: 'xxxxxxxx'
-    soulvoice: 'xxxxxxxx'
-    speedapp:
-      login:
-        username: 'xxxxxxxx'
-        password: 'xxxxxxxx'
-    springsunday: 'xxxxxxxx'
-    sjtu: 'xxxxxxxx'
-    theaudioscene: 'xxxxxxxx'
-    tjupt: 'xxxxxxxx'
-    torrentdb:
-      login:
-        username: 'xxxxxxxx'
-        password: 'xxxxxxxx'
-    torrentleech: 'xxxxxxxx'
-    torrentseeds:
-      login:
-        username: 'xxxxxxxx'
-        password: 'xxxxxxxx'
-    ultrahd: 'xxxxxxxx'
-    xtremewrestlingtorrents:
-      login:
-        username: 'xxxxxxxx'
-        password: 'xxxxxxxx'
-    xwt-classics:
-      login:
-        username: 'xxxxxxxx'
-        password: 'xxxxxxxx'
 
 templates:
   from_qbittorrent_template:
@@ -358,7 +172,7 @@ tasks:
     html_rss:
       url: https://springsunday.net/torrents.php?incldead=0&spstate=4&pick=0&inclbookmarked=0&exclusive=0&search=&search_area=0&search_mode=0&sort=8&type=desc
       user-agent: '{? headers.user_agent ?}'
-      cookie: '{? sites.springsunday ?}'
+      cookie: 'xxxxxxxx'
       params: '&passkey=xxxxxxxx'
       root_element_selector: '.torrents > tbody > tr:not(:first-child)'
       fields:
@@ -421,7 +235,7 @@ tasks:
     html_rss:
       url: https://open.cd/torrents.php?seeders=4
       user-agent: '{? headers.user_agent ?}'
-      cookie: '{? sites.open ?}'
+      cookie: 'xxxxxxxx'
       params: '&passkey=xxxxxxxx'
       root_element_selector: '#form_torrent > table > tbody > tr:not(:first-child)'
       fields:
@@ -448,7 +262,7 @@ tasks:
     html_rss:
       url: https://u2.dmhy.org/torrents.php?sort=8&type=desc
       user-agent: '{? headers.user_agent ?}'
-      cookie: '{? sites.dmhy.cookie ?}'
+      cookie: 'xxxxxxxx'
       params: '&passkey=xxxxxxxx'
       root_element_selector: '#outer > table.main > tbody > tr > td > table > tbody > tr:not(:first-child)'
       fields:
@@ -519,7 +333,7 @@ tasks:
     iyuu_auto_reseed:
       from:
         from_qbittorrent_mod: *qbittorrent_setting
-      iyuu: xxxxxxxx
+      token: xxxxxxxx
       user-agent: '{? headers.user_agent ?}'
       show_detail: no
       passkeys:
@@ -543,26 +357,26 @@ tasks:
           torrent_pass: 'xxxxxxxx'
         haidan: 'xxxxxxxx'
         hd:
-          cookie: '{? sites.hd ?}'
+          cookie: 'xxxxxxxx'
         hd-torrents: 'xxxxxxxx'
         hd4fans: 'xxxxxxxx'
         hdarea: 'xxxxxxxx'
         hdatmos: 'xxxxxxxx'
         hdbd: 'xxxxxxxx'
         hdchina:
-          cookie: '{? sites.hdchina ?}'
+          cookie: 'xxxxxxxx'
         hdcity:
-          cookie: '{? sites.hdcity ?}'
+          cookie: 'xxxxxxxx'
         hddisk: 'xxxxxxxx'
         hddolby:
-          cookie: '{? sites.hddolby ?}'
+          cookie: 'xxxxxxxx'
         hdfans: 'xxxxxxxx'
         hdhome:
-          cookie: '{? sites.hdhome ?}'
+          cookie: 'xxxxxxxx'
         hdpost:
           rsskey: 'xxxxxxxx'
         hdsky:
-          cookie: '{? sites.hdsky.cookie ?}'
+          cookie: 'xxxxxxxx'
         hdtime: 'xxxxxxxx'
         hdupt: 'xxxxxxxx'
         hdzone: 'xxxxxxxx'
@@ -580,7 +394,7 @@ tasks:
         ourbits: 'xxxxxxxx'
         pterclub: 'xxxxxxxx'
         pthome:
-          cookie: '{? sites.pthome ?}'
+          cookie: 'xxxxxxxx'
         ptsbao: 'xxxxxxxx'
         pttime: 'xxxxxxxx'
         skyey2: 'xxxxxxxx'
@@ -744,7 +558,192 @@ tasks:
         app_id: 'xxxxxxxx'
         api_key: 'xxxxxxxx'
         secret_key: 'xxxxxxxx'
-      sites: *sites_setting
+      sites:
+        qbittorrent:
+          - name: qbittorrent
+            host: qbittorrent.example.com
+            port: 443
+            use_ssl: yes
+            username: xxxxxxxx
+            password: xxxxxxxx
+          - name: qbittorrent2
+            host: qbittorrent2.example.com
+            port: 443
+            use_ssl: yes
+            username: xxxxxxxx
+            password: xxxxxxxx
+        1ptba: 'xxxxxxxx'
+        3wmg: 'xxxxxxxx'
+        52pt: 'xxxxxxxx'
+        abn:
+          login:
+            username: 'xxxxxxxx'
+            password: 'xxxxxxxx'
+        abtorrents:
+          login:
+            username: 'xxxxxxxx'
+            password: 'xxxxxxxx'
+        avgv: 'xxxxxxxx'
+        avistaz: 'xxxxxxxx'
+        beitai: 'xxxxxxxx'
+        bitbr: 'xxxxxxxx'
+        bitsexy: 'xxxxxxxx'
+        bootytape:
+          login:
+            username: 'xxxxxxxx'
+            password: 'xxxxxxxx'
+        btschool: 'xxxxxxxx'
+        carpt: 'xxxxxxxx'
+        cathode-ray:
+          login:
+            username: 'xxxxxxxx'
+            password: 'xxxxxxxx'
+        ccfbits: 'xxxxxxxx'
+        chdbits: 'xxxxxxxx'
+        cinemaz: 'xxxxxxxx'
+        dicmusic: 'xxxxxxxx'
+        digitalcore: 'xxxxxxxx'
+        discfan: 'xxxxxxxx'
+        dmhy:
+          cookie: 'xxxxxxxx'
+          username: 'xxxxxxxx'
+          comment: 'xxxxxxxx'
+          ocr_config:
+            retry: 20
+            char_count: 3
+            score: 40
+        dragonhd: 'xxxxxxxx'
+        eastgame: 'xxxxxxxx'
+        et8: 'xxxxxxxx'
+        exoticaz: 'xxxxxxxx'
+        femdomcult:
+          login:
+            username: 'xxxxxxxx'
+            password: 'xxxxxxxx'
+        filelist:
+          login:
+            username: 'xxxxxxxx'
+            password: 'xxxxxxxx'
+        gay-torrents_net:
+          login:
+            username: 'xxxxxxxx'
+            password: 'xxxxxxxx'
+        gay-torrents_org: 'xxxxxxxx'
+        gaytor:
+          login:
+            username: 'xxxxxxxx'
+            password: 'xxxxxxxx'
+        gazellegames:
+          cookie: 'xxxxxxxx'
+          key: 'xxxxxxxx'
+          name: 'xxxxxxxx'
+        greatposterwall: 'xxxxxxxx'
+        haidan: 'xxxxxxxx'
+        happyfappy:
+          login:
+            username: 'xxxxxxxx'
+            password: 'xxxxxxxx'
+        hares: 'xxxxxxxx'
+        hd: 'xxxxxxxx'
+        hd-space: 'xxxxxxxx'
+        hd-torrents: 'xxxxxxxx'
+        hd4fans: 'xxxxxxxx'
+        hdarea: 'xxxxxxxx'
+        hdatmos: 'xxxxxxxx'
+        hdbd: 'xxxxxxxx'
+        hdchina: 'xxxxxxxx'
+        hdcity: 'xxxxxxxx'
+        hddolby: 'xxxxxxxx'
+        hdfans: 'xxxxxxxx'
+        hdhome: 'xxxxxxxx'
+        hdmayi: 'xxxxxxxx'
+        hdpost:
+          login:
+            username: 'xxxxxxxx'
+            password: 'xxxxxxxx'
+        hdsky:
+          cookie: 'xxxxxxxx'
+          join_date: 'yyyy-MM-dd'
+        hdtime: 'xxxxxxxx'
+        hdupt: 'xxxxxxxx'
+        hdzone: 'xxxxxxxx'
+        hitpt: 'xxxxxxxx'
+        htpt: 'xxxxxxxx'
+        iptorrents: 'xxxxxxxx'
+        joyhd: 'xxxxxxxx'
+        jpopsuki:
+          login:
+            username: 'xxxxxxxx'
+            password: 'xxxxxxxx'
+        jptv: 'xxxxxxxx'
+        keepfrds: 'xxxxxxxx'
+        kufirc:
+          login:
+            username: 'xxxxxxxx'
+            password: 'xxxxxxxx'
+        lemonhd: 'xxxxxxxx'
+        m-team:
+          key: 'xxxxxxxx'
+        milkie:
+          login:
+            username: 'xxxxxxxx'
+            password: 'xxxxxxxx'
+        msg: 'xxxxxxxx'
+        nanyangpt: 'xxxxxxxx'
+        napqaq: 'xxxxxxxx'
+        nicept: 'xxxxxxxx'
+        ninjacentral:
+          login:
+            username: 'xxxxxxxx'
+            password: 'xxxxxxxx'
+        open: 'xxxxxxxx'
+        oshen: 'xxxxxxxx'
+        ourbits:
+          cookie: 'xxxxxxxx'
+          #login:
+          #  username: 'xxxxxxxx'
+          #  password: 'xxxxxxxx'
+        ptchina: 'xxxxxxxx'
+        pterclub: 'xxxxxxxx'
+        pthome: 'xxxxxxxx'
+        pttime: 'xxxxxxxx'
+        ptsbao: 'xxxxxxxx'
+        pussytorrents:
+          login:
+            username: 'xxxxxxxx'
+            password: 'xxxxxxxx'
+        scenetime: 'xxxxxxxx'
+        skyey2:
+          login:
+            username: 'xxxxxxxx'
+            password: 'xxxxxxxx'
+        soulvoice: 'xxxxxxxx'
+        speedapp:
+          login:
+            username: 'xxxxxxxx'
+            password: 'xxxxxxxx'
+        springsunday: 'xxxxxxxx'
+        sjtu: 'xxxxxxxx'
+        theaudioscene: 'xxxxxxxx'
+        tjupt: 'xxxxxxxx'
+        torrentdb:
+          login:
+            username: 'xxxxxxxx'
+            password: 'xxxxxxxx'
+        torrentleech: 'xxxxxxxx'
+        torrentseeds:
+          login:
+            username: 'xxxxxxxx'
+            password: 'xxxxxxxx'
+        ultrahd: 'xxxxxxxx'
+        xtremewrestlingtorrents:
+          login:
+            username: 'xxxxxxxx'
+            password: 'xxxxxxxx'
+        xwt-classics:
+          login:
+            username: 'xxxxxxxx'
+            password: 'xxxxxxxx'
     accept_all: yes
     seen:
       fields:

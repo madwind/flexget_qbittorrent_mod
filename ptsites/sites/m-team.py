@@ -124,4 +124,7 @@ class MainClass(NexusPHP, Reseed):
         response = request('POST', urljoin(self.URL, self.GEN_DL_TOKEN), headers={'x-api-key': key},
                            data={'id': torrent_id})
         if response.status_code == 200:
-            entry['url'] = response.json().get('data')
+            if response.json().get('code') != 0:
+                entry.fail(response.json().get('message'))
+            else:
+                entry['url'] = response.json().get('data')
