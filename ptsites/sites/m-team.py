@@ -7,7 +7,7 @@ from requests import Response, request
 from typing import Final
 from urllib.parse import urljoin
 
-from ptsites.base.request import NetworkState
+from ..base.request import NetworkState
 from ..base.entry import SignInEntry
 from ..base.reseed import Reseed
 from ..base.sign_in import check_final_state, SignState, Work
