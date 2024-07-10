@@ -20,7 +20,7 @@ class MainClass(XBTIT, ReseedPasskey):
             'detail_sources': {
                 'default': {
                     'elements': {
-                        'bar': 'body > div.mainmenu > table:nth-child(3)',
+                        'bar': 'body > div.mainmenu > table:nth-child(4)',
                     }
                 }
             }
