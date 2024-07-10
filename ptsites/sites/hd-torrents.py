@@ -2,6 +2,7 @@ from typing import Final
 
 from ..base.reseed import ReseedPasskey
 from ..schema.xbtit import XBTIT
+from ..utils import net_utils
 
 
 class MainClass(XBTIT, ReseedPasskey):
