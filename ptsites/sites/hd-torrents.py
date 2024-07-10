@@ -11,3 +11,17 @@ class MainClass(XBTIT, ReseedPasskey):
         'uploaded': [1099511627776],
         'share_ratio': [4]
     }
+    
+    @property
+    def details_selector(self) -> dict:
+        selector = super().details_selector
+        net_utils.dict_merge(selector, {
+            'detail_sources': {
+                'default': {
+                    'elements': {
+                        'bar': 'body > div.mainmenu > table:nth-child(3)',
+                    }
+                }
+            }
+        })
+        return selector
