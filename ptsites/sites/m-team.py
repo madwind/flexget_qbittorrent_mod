@@ -17,7 +17,7 @@ from ..utils.value_handler import handle_infinite
 
 
 class MainClass(NexusPHP, Reseed):
-    URL: Final = 'https://api.m-team.cc/'
+    URL: Final = 'https://api.m-team.io/'
     PROFILE_URL = '/api/member/profile'
     MY_PEER_STATUS = '/api/tracker/myPeerStatus'
     GEN_DL_TOKEN = '/api/torrent/genDlToken'
