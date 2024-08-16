@@ -23,7 +23,7 @@ class MainClass(Luminance):
                 succeed_regex=['Logout'],
                 assert_state=(check_final_state, SignState.SUCCEED),
                 is_base_content=True,
-                response_urls=['/index.php']
+                response_urls=['/index.php', '/']
             )
         ]
 

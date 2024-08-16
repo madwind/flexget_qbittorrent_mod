@@ -1,12 +1,11 @@
 from typing import Final
 
-from flask_restx.utils import merge
-
 from ..base.entry import SignInEntry
 from ..base.reseed import ReseedPasskey
 from ..base.sign_in import check_final_state, SignState
 from ..base.work import Work
 from ..schema.nexusphp import AttendanceHR
+from ..utils import net_utils
 
 
 class MainClass(AttendanceHR, ReseedPasskey):
@@ -33,7 +32,8 @@ class MainClass(AttendanceHR, ReseedPasskey):
 
     @property
     def details_selector(self) -> dict:
-        return merge(super().details_selector, {
+        selector = super().details_selector
+        net_utils.dict_merge(selector, {
             'details': {
                 'points': {
                     'regex': r'Seed points([\d,.]+)'
@@ -49,3 +49,4 @@ class MainClass(AttendanceHR, ReseedPasskey):
                 }
             }
         })
+        return selector
