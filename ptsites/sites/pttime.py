@@ -1,8 +1,11 @@
+import re
 from typing import Final
+
+from requests import Response
 
 from ..base.entry import SignInEntry
 from ..base.reseed import ReseedPasskey
-from ..base.sign_in import check_final_state, SignState, Work
+from ..base.sign_in import check_final_state, SignState, Work, check_sign_in_state
 from ..schema.nexusphp import Attendance
 from ..utils import net_utils
 
@@ -18,16 +21,33 @@ class MainClass(Attendance, ReseedPasskey):
     def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
-                url='/attendance.php',
+                url='/',
                 method=self.sign_in_by_get,
+                succeed_regex=['签到详情'],
+                assert_state=(check_sign_in_state, SignState.NO_SIGN_IN),
+                is_base_content=True
+            ),
+            Work(
+                url='/attendance.php?type=sign',
+                method=self.sign_in_by_userid,
                 succeed_regex=[
                     '这是你的第.*?次签到，已连续签到.*天，本次签到获得.*个魔力值。',
-                    '获得魔力值：\\d+',
                     '今天已签到，请勿重复刷新'],
                 assert_state=(check_final_state, SignState.SUCCEED),
-                is_base_content=True
             )
         ]
+
+    def sign_in_by_userid(self,
+                          entry: SignInEntry,
+                          config: dict,
+                          work: Work,
+                          last_content: str = None,
+                          ) -> Response | None:
+        if useridMatch := re.search(r'userdetails\.php\?id=(\d+)', last_content):
+            userid = useridMatch.group(1)
+            work.url = work.url + f'&uid={userid}'
+            work.response_urls = [work.url]
+            return super().sign_in_by_get(entry, config, work, last_content)
 
     @property
     def details_selector(self) -> dict:
