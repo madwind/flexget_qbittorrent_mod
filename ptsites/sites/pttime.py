@@ -31,7 +31,7 @@ class MainClass(Attendance, ReseedPasskey):
                 url='/attendance.php?type=sign',
                 method=self.sign_in_by_userid,
                 succeed_regex=[
-                    '这是你的第.*?次签到，已连续签到.*天，本次签到获得.*个魔力值。',
+                    '签到成功',
                     '今天已签到，请勿重复刷新'],
                 assert_state=(check_final_state, SignState.SUCCEED),
             )

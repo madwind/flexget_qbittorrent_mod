@@ -119,7 +119,7 @@ class MainClass(NexusPHP, Reseed):
     def reseed_build_entry(self, entry: Entry, config: dict, site: dict, passkey: dict, torrent_id: str) -> None:
         key = passkey.get('key')
         response = request('POST', urljoin(self.URL, self.GEN_DL_TOKEN), headers={'x-api-key': key},
-                           data={'id': torrent_id})
+                           data={'id': torrent_id},timeout=60)
         if response.status_code == 200:
             if response.json().get('code') != 0:
                 entry.fail(response.json().get('message'))
