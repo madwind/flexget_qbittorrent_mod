@@ -6,6 +6,7 @@ from urllib.parse import urljoin
 from flexget.entry import Entry
 
 from ..base.entry import SignInEntry
+from ..base.request import check_network_state, NetworkState
 from ..base.reseed import Reseed
 from ..base.sign_in import SignState
 from ..base.sign_in import check_final_state
@@ -22,6 +23,27 @@ class MainClass(Gazelle, Reseed):
         'share_ratio': [1.05, 1.05],
         'days': [14, 112]
     }
+
+    @classmethod
+    def sign_in_build_schema(cls) -> dict:
+        return {
+            get_module_name(cls): {
+                'type': 'object',
+                'properties': {
+                    'cookie': {'type': 'string'},
+                    'login': {
+                        'type': 'object',
+                        'properties': {
+                            'username': {'type': 'string'},
+                            'password': {'type': 'string'},
+                            'secret_key': {'type': 'string'}
+                        },
+                        'additionalProperties': False
+                    }
+                },
+                'additionalProperties': False
+            }
+        }
 
     @classmethod
     def reseed_build_schema(cls):
@@ -47,6 +69,24 @@ class MainClass(Gazelle, Reseed):
                 is_base_content=True
             )
         ]
+
+    def sign_in_build_login_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
+        return [
+            Work(
+                url='/login.php',
+                method=self.sign_in_by_login,
+                assert_state=(check_network_state, NetworkState.SUCCEED),
+                response_urls=['/index.php']
+            )
+        ]
+
+    def sign_in_build_login_data(self, login: dict, last_content: str) -> dict:
+        return {
+            'username': login['username'],
+            'password': login['password'],
+            'keeplogged': 1,
+            'login': '登录',
+        }
 
     @property
     def details_selector(self) -> dict:
