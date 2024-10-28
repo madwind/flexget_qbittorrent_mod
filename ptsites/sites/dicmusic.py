@@ -6,6 +6,7 @@ from urllib.parse import urljoin
 from flexget.entry import Entry
 
 from ..base.entry import SignInEntry
+from ..base.request import check_network_state, NetworkState
 from ..base.reseed import Reseed
 from ..base.sign_in import SignState
 from ..base.sign_in import check_final_state
@@ -24,7 +25,7 @@ class MainClass(Gazelle, Reseed):
     }
 
     @classmethod
-    def sign_in_build_schema(cls):
+    def sign_in_build_schema(cls) -> dict:
         return {
             get_module_name(cls): {
                 'type': 'object',
@@ -34,7 +35,8 @@ class MainClass(Gazelle, Reseed):
                         'type': 'object',
                         'properties': {
                             'username': {'type': 'string'},
-                            'password': {'type': 'string'}
+                            'password': {'type': 'string'},
+                            'secret_key': {'type': 'string'}
                         },
                         'additionalProperties': False
                     }
@@ -60,11 +62,20 @@ class MainClass(Gazelle, Reseed):
     def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
             Work(
-                url='/login.php',
-                method=self.sign_in_by_login,
+                url='/',
+                method=self.sign_in_by_get,
                 succeed_regex=['积分 \\(.*?\\)'],
                 assert_state=(check_final_state, SignState.SUCCEED),
-                is_base_content=True,
+                is_base_content=True
+            )
+        ]
+
+    def sign_in_build_login_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
+        return [
+            Work(
+                url='/login.php',
+                method=self.sign_in_by_login,
+                assert_state=(check_network_state, NetworkState.SUCCEED),
                 response_urls=['/index.php']
             )
         ]
