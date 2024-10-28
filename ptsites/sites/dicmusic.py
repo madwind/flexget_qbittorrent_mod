@@ -29,6 +29,7 @@ class MainClass(Gazelle, Reseed):
             get_module_name(cls): {
                 'type': 'object',
                 'properties': {
+                    'cookie': {'type': 'string'},
                     'login': {
                         'type': 'object',
                         'properties': {
