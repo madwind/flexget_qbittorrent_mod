@@ -35,8 +35,7 @@ class MainClass(Gazelle, Reseed):
                         'type': 'object',
                         'properties': {
                             'username': {'type': 'string'},
-                            'password': {'type': 'string'},
-                            'secret_key': {'type': 'string'}
+                            'password': {'type': 'string'}
                         },
                         'additionalProperties': False
                     }
