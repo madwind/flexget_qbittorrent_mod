@@ -572,9 +572,11 @@ tasks:
             use_ssl: yes
             username: xxxxxxxx
             password: xxxxxxxx
+        # 站名: cookie
         1ptba: 'xxxxxxxx'
         3wmg: 'xxxxxxxx'
         52pt: 'xxxxxxxx'
+        # 部分站点 cookie 过期太快，使用模拟登陆
         abn:
           login:
             username: 'xxxxxxxx'
@@ -612,10 +614,14 @@ tasks:
         dmhy:
           cookie: 'xxxxxxxx'
           username: 'xxxxxxxx'
+          # 留言至少5个字符
           comment: 'xxxxxxxx'
           ocr_config:
+            # 重试次数
             retry: 20
+            # 最低识别字符数
             char_count: 3
+            # 最低匹配分数
             score: 40
         dragonhd: 'xxxxxxxx'
         eastgame: 'xxxxxxxx'
@@ -782,6 +788,7 @@ tasks:
           {% endif %}
           {%- endfor -%}
           {%- endfor -%}
+        # 填写要使用的推送渠道，删去不需要的
         via:
           - wecom:
               corp_id: 'xxxxxxxx'
@@ -793,6 +800,7 @@ tasks:
               bot_token: 'xxxxxxxx'
               image: 'details_report.png'
               recipients:
+                # 用户名，非昵称，无@
                 - username: 'xxxxxxxx'
 
   warner:
