@@ -33,7 +33,7 @@ class Reseed(ABC):
 
 class ReseedPasskey(Reseed, ABC):
     @classmethod
-    def reseed_build_schema(cls):
+    def reseed_build_schema(cls) -> dict:
         return {get_module_name(cls): {'type': 'string'}}
 
     def reseed_build_entry(self, entry: Entry, config: dict, site: dict, passkey: str, torrent_id: str) -> None:
