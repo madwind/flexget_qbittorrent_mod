@@ -45,7 +45,7 @@ class MainClass(Gazelle, Reseed):
         }
 
     @classmethod
-    def reseed_build_schema(cls):
+    def reseed_build_schema(cls) -> dict:
         return {
             get_module_name(cls): {
                 'type': 'object',
