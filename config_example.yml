@@ -601,7 +601,12 @@ tasks:
         ccfbits: 'xxxxxxxx'
         chdbits: 'xxxxxxxx'
         cinemaz: 'xxxxxxxx'
-        dicmusic: 'xxxxxxxx'
+        # 即使同时使用了 cookie 和 login，程序也只会使用 cookie。如果担心 cookie 失效则应只使用 login，不使用 cookie
+        dicmusic:
+          cookie: 'xxxxxxxx'
+          login:
+            username: 'xxxxxxxx'
+            password: 'xxxxxxxx'
         digitalcore: 'xxxxxxxx'
         discfan: 'xxxxxxxx'
         dmhy:
@@ -698,11 +703,12 @@ tasks:
             password: 'xxxxxxxx'
         open: 'xxxxxxxx'
         oshen: 'xxxxxxxx'
+        # 即使同时使用了 cookie 和 login，程序也只会使用 cookie。如果担心 cookie 失效则应只使用 login，不使用 cookie
         ourbits:
           cookie: 'xxxxxxxx'
-          #login:
-          #  username: 'xxxxxxxx'
-          #  password: 'xxxxxxxx'
+          login:
+            username: 'xxxxxxxx'
+            password: 'xxxxxxxx'
         ptchina: 'xxxxxxxx'
         pterclub: 'xxxxxxxx'
         pthome: 'xxxxxxxx'
