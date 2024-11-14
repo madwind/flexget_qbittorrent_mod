@@ -162,7 +162,7 @@ class PluginIYUUAutoReseed:
         return config
 
     def on_task_input(self, task: Task, config: dict) -> list[Entry]:
-        url = 'https://dev.iyuu.cn'
+        url = 'https://2025.iyuu.cn'
         config = self.prepare_config(config)
         token = config.get('token')
         passkeys = config.get('passkeys')
@@ -282,8 +282,8 @@ class PluginIYUUAutoReseed:
         if len(last_hashes) == 0:
             last_hashes = hashes
 
-        hashes_json = json.dumps(last_hashes[:500], separators=(',', ':'))
-        last_hashes = last_hashes[500:]
+        hashes_json = json.dumps(last_hashes[:300], separators=(',', ':'))
+        last_hashes = last_hashes[300:]
         sha1 = hashlib.sha1(hashes_json.encode("utf-8")).hexdigest()
 
         torrents_hashes['hash'] = hashes_json
