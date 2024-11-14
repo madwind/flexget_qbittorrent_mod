@@ -84,7 +84,7 @@ def transmission_on_task_download(self, task: Task, config: dict) -> None:
 PluginTransmission.on_task_download = transmission_on_task_download
 
 
-def get_deluge_seeding(client_torrent: dict):
+def get_deluge_seeding(client_torrent: dict) -> dict:
     if 'seeding' in client_torrent['deluge_state'].lower():
         client_torrent['reseed'] = {
             'path': client_torrent['deluge_save_path'],

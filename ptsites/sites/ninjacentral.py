@@ -10,7 +10,7 @@ class MainClass(PrivateTorrent):
     URL: Final = 'https://ninjacentral.co.za/'
 
     @classmethod
-    def sign_in_build_schema(cls):
+    def sign_in_build_schema(cls) -> dict:
         return {
             get_module_name(cls): {
                 'type': 'object',

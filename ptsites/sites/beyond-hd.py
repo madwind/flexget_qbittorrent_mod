@@ -23,7 +23,7 @@ class MainClass(Unit3D):
     URL: Final = 'https://beyond-hd.me/'
 
     @classmethod
-    def sign_in_build_schema(cls):
+    def sign_in_build_schema(cls) -> dict:
         return {
             get_module_name(cls): {
                 'type': 'object',
