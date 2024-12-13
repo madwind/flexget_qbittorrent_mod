@@ -37,7 +37,7 @@ class MainClass(Unit3D):
                     'elements': {
                         'bar': 'ul.top-nav__ratio-bar',
                         'registration_date': 'article > time',
-                        'warnings': 'article > aside > section:nth-child(1)',
+                        'warnings': 'article > aside > section:nth-child(2)',
                         'data_table': 'article > aside > section:nth-child(4)'
                     }
                 }
