@@ -135,11 +135,8 @@ templates:
       action:
         modify:
           tag_by_tracker: yes
-          replace_trackers:
-            'http://daydream.dmhy.best/': 'https://daydream.dmhy.best/'
-            'http://announce.leaguehd.com/': 'https://announce.leaguehd.com/'
-            'http://tracker.m-team.cc/': 'https://tracker.m-team.cc/'
-            'http://tracker.pterclub.com/': 'https://tracker.pterclub.com/'
+          modify_trackers:
+            '^http://': 'https://'
 
   show_entry_template:
     show_entry:

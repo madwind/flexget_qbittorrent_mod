@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import math
 import os
+import re
 from datetime import datetime
 
 from flexget import plugin
@@ -218,7 +219,7 @@ class PluginQBittorrentMod(QBittorrentModBase):
                         'type': 'object',
                         'properties': {
                             'tag_by_tracker': {'type': 'boolean'},
-                            'replace_trackers': {
+                            'modify_trackers': {
                                 'type': 'object',
                                 'properties': {
                                 }
@@ -640,7 +641,8 @@ class PluginQBittorrentMod(QBittorrentModBase):
 
     def modify_entries(self, task: Task, modify_options: dict) -> None:
         tag_by_tracker = modify_options.get('tag_by_tracker')
-        replace_trackers = modify_options.get('replace_trackers')
+        modify_trackers = modify_options.get('modify_trackers')
+
         for entry in task.accepted:
             tags = entry.get('qbittorrent_tags')
             tags_modified = []
@@ -650,14 +652,15 @@ class PluginQBittorrentMod(QBittorrentModBase):
                     site_name = net_utils.get_site_name(tracker.get('url'))
                     if site_name and site_name not in tags and site_name not in tags_modified:
                         tags_modified.append(site_name)
-                if replace_trackers:
-                    for old_str, new_str in replace_trackers.items():
+                if modify_trackers:
+                    for regex, new_str in modify_trackers.items():
                         tracker_url = tracker.get('url')
-                        if tracker_url.startswith(old_str):
+                        if re.match(regex, tracker_url):
                             if new_str:
-                                if old_str in new_str:
-                                    raise plugin.PluginError(f'{old_str} in {new_str}, this may cause a loop problem')
-                                tracker_url_new = f"{new_str}{tracker_url[len(old_str):]}"
+                                if re.match(regex, new_str):
+                                    raise plugin.PluginError(
+                                        f'{regex} matches {new_str}, this may cause a loop problem')
+                                tracker_url_new = re.sub(regex, new_str, tracker_url)
                                 self.client.edit_trackers(entry.get('torrent_info_hash'), tracker_url, tracker_url_new)
                                 logger.info('{} update tracker {}', entry.get('title'), tracker_url_new)
                             else:
