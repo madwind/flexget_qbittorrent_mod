@@ -1,17 +1,20 @@
 from __future__ import annotations
 
+import datetime
 import json
-from datetime import datetime
-from flexget.entry import Entry
-from requests import Response, request
 from typing import Final
 from urllib.parse import urljoin
 
-from ..base.request import NetworkState
+from dateutil.parser import parse
+from flexget.entry import Entry
+from requests import Response, request
+
 from ..base.entry import SignInEntry
+from ..base.request import NetworkState
 from ..base.reseed import Reseed
 from ..base.sign_in import check_final_state, SignState, Work
 from ..schema.nexusphp import NexusPHP
+from ..utils import url_recorder
 from ..utils.net_utils import get_module_name
 from ..utils.value_handler import handle_infinite
 
@@ -83,8 +86,8 @@ class MainClass(NexusPHP, Reseed):
         response = super().sign_in_by_post(entry, config, work, last_content)
         response_json = response.json()
         last_browse = response_json.get('data').get('memberStatus').get('lastBrowse')
-        target_date = datetime.strptime(last_browse, '%Y-%m-%d %H:%M:%S')
-        days = (datetime.now() - target_date).days
+        target_date = datetime.datetime.strptime(last_browse, '%Y-%m-%d %H:%M:%S')
+        days = (datetime.datetime.now() - target_date).days
         if days > 29:
             entry.fail_with_prefix(f'last browse: {days} days, {self.URL}')
             return
@@ -101,6 +104,7 @@ class MainClass(NexusPHP, Reseed):
             return super().request(entry, 'POST', url, headers={'x-api-key': key})
         except Exception as e:
             entry.fail_with_prefix(NetworkState.NETWORK_ERROR.value.format(url=url, error=e))
+
     def get_messages(self, entry: SignInEntry, config: dict) -> None:
         return
 
@@ -117,11 +121,20 @@ class MainClass(NexusPHP, Reseed):
         }
 
     def reseed_build_entry(self, entry: Entry, config: dict, site: dict, passkey: dict, torrent_id: str) -> None:
+        record = url_recorder.load_record(entry['class_name'])
+        now = datetime.datetime.now()
+        expire = datetime.timedelta(days=7)
+        if (torrent := record.get(torrent_id)) and parse(torrent['expire']) > now - expire:
+            entry['url'] = torrent['url']
+            return
+
         key = passkey.get('key')
         response = request('POST', urljoin(self.URL, self.GEN_DL_TOKEN), headers={'x-api-key': key},
-                           data={'id': torrent_id},timeout=60)
+                           data={'id': torrent_id}, timeout=60)
         if response.status_code == 200:
             if response.json().get('code') != 0:
                 entry.fail(response.json().get('message'))
             else:
                 entry['url'] = response.json().get('data')
+                record[torrent_id] = {'url': entry['url'], 'expire': (now + expire).strftime('%Y-%m-%d')}
+                url_recorder.save_record(entry['class_name'], record)
