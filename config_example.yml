@@ -33,10 +33,13 @@ variables:
         corp_secret: 'xxxxxxxx'
         agent_id: 'xxxxxxxx'
         to_user: 'xxxxxxxx'
-    - telegram_mod:
+    # Telegram 配置参见 https://flexget.com/en/Plugins/Notifiers/telegram
+    - telegram:
         bot_token: 'xxxxxxxx'
         recipients:
-          - username: 'xxxxxxxx'
+          # Chat ID 通过 @raw_data_bot (https://t.me/raw_data_bot) 获取
+          - chat_id: 1694213419
+        socks_proxy: socks5://user:pass@host:port
 
 templates:
   from_qbittorrent_template:
@@ -796,12 +799,15 @@ tasks:
               agent_id: 'xxxxxxxx'
               to_user: 'xxxxxxxx'
               image: 'details_report.png'
-          - telegram_mod:
+          # Telegram 配置参见 https://flexget.com/en/Plugins/Notifiers/telegram
+          - telegram:
               bot_token: 'xxxxxxxx'
-              image: 'details_report.png'
+              images:
+                - 'details_report.png'
               recipients:
-                # 用户名，非昵称，无@
-                - username: 'xxxxxxxx'
+                # Chat ID 通过 @raw_data_bot (https://t.me/raw_data_bot) 获取
+                - chat_id: 1694213419
+              socks_proxy: socks5://user:pass@host:port
 
   warner:
     disable: [ seen, seen_info_hash, retry_failed, history ]
