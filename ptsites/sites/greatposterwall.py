@@ -52,7 +52,10 @@ class MainClass(Gazelle, Reseed):
         net_utils.dict_merge(selector, {
             'detail_sources': {
                 'default': {
-                    'elements': {'table': 'div.SidebarItemStats.SidebarItem > ul'}
+                    'elements': {
+                        'table': 'div.SidebarItemStats.SidebarItem > ul',
+                        'joindate': '#join-date-value'
+                    }
                 },
                 'extend': {
                     'link': '/ajax.php?action=community_stats&userid={}'
