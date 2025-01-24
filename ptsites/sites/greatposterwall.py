@@ -54,7 +54,7 @@ class MainClass(Gazelle, Reseed):
                 'default': {
                     'elements': {
                         'table': 'div.SidebarItemStats.SidebarItem > ul',
-                        'joindate': '#join-date-value'
+                        'join_date': '#join-date-value'
                     }
                 },
                 'extend': {
