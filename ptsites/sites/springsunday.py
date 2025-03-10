@@ -29,7 +29,7 @@ class MainClass(Visit, ReseedPasskey):
             },
             'details': {
                 'points': {
-                    'regex': r'做种积分.*?([\d.,]+)',
+                    'regex': r'做种积分.*?([\d.,]+?[ZEPTGMK])',
                 }
             }
         })
