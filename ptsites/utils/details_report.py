@@ -219,7 +219,7 @@ class DetailsReport:
             UserDetailsEntry.site == site).one_or_none()
         return user_details
 
-    def convert_suffix(self, details_value: str) -> float | None:
+    def convert_suffix(self, details_value: str, suffix: dict) -> float | None:
         keys = list(suffix.keys())
         keys.reverse()
         for key in keys:
@@ -263,9 +263,12 @@ class DetailsReport:
     def transfer_data(self, key: str, value) -> float:
         if value == '*' or key in ['join_date']:
             return value
-        if key in ['uploaded', 'downloaded']:
-            return float(self.convert_suffix(value))
-        return float(value)
+        elif key in ['uploaded', 'downloaded']:
+            return float(self.convert_suffix(value, suffix))
+        elif key in ['points']:
+            return float(self.convert_suffix(value, math_suffix))
+        else:
+            return float(value)
 
     def count(self, count_dict: dict, key, value) -> None:
         if key not in ['share_ratio', 'points']:
