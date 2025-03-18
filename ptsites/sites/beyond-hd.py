@@ -52,7 +52,7 @@ class MainClass(Unit3D):
     @property
     def details_selector(self) -> dict:
         return {
-            'user_id': '/([^.]+\.\d+)/badges"',
+            'user_id': '/([^.]+\.\d+)">My Profile',
             'detail_sources': {
                 'default': {
                     'link': '/{}',

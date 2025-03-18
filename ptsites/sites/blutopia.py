@@ -20,7 +20,7 @@ class MainClass(Unit3D):
             Work(
                 url='/',
                 method=self.sign_in_by_get,
-                succeed_regex=['<title>Blutopia - Where Quality Matters</title>'],
+                succeed_regex=['<title>Blutopia - Where quality matters</title>'],
                 assert_state=(check_final_state, SignState.SUCCEED),
                 is_base_content=True
             )
@@ -49,7 +49,7 @@ class MainClass(Unit3D):
                     'regex': 'title="Download".*?</i>.+?([\d.]+.*?[ZEPTGMK]?iB)',
                 },
                 'points': {
-                    'regex': 'title="My Bonus Points".*?</i>.+?(\\d[\\d,. ]*)',
+                    'regex': 'title="Bonus Points".*?</i>.+?(\\d[\\d,. ]*)',
                 },
                 'share_ratio': {
                     'regex': 'title="Ratio".*?</i>.+?(\\d[\\d,. ]*)',
