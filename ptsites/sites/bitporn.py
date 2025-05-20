@@ -34,15 +34,24 @@ class MainClass(AttendanceHR, ReseedPasskey):
     def details_selector(self) -> dict:
         selector = super().details_selector
         net_utils.dict_merge(selector, {
+            'detail_sources': {
+                'default': {
+                    'link': '/userdetails.php?id={}',
+                    'elements': {
+                        'bar': '.tracker-stats',
+                        'table': '#outer table.main:last-child'
+                    }
+                }
+            },
             'details': {
                 'points': {
                     'regex': r'Seed points([\d,.]+)'
                 },
                 'seeding': {
-                    'regex': r'Active: (\d+)'
+                    'regex': r'Active.*?(\d+)'
                 },
                 'leeching': {
-                    'regex': r'Active: \d+  (\d+)'
+                    'regex': r'Active.*?\d+.*?(\d+)'
                 },
                 'hr': {
                     'regex': r'H&R.*?(\d+)'
