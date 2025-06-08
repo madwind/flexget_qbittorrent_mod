@@ -1,14 +1,11 @@
 from typing import Final
 
-from ..base.entry import SignInEntry
 from ..base.reseed import ReseedPasskey
-from ..base.sign_in import check_final_state, SignState
-from ..base.work import Work
-from ..schema.nexusphp import AttendanceHR
+from ..schema.nexusphp import VisitHR
 from ..utils.value_handler import size, handle_infinite
 
 
-class MainClass(AttendanceHR, ReseedPasskey):
+class MainClass(VisitHR, ReseedPasskey):
     URL: Final = 'https://hhanclub.top/'
     USER_CLASSES: Final = {
         'downloaded': [size(750, 'GiB'), size(3, 'TiB')],
@@ -59,13 +56,13 @@ class MainClass(AttendanceHR, ReseedPasskey):
             }
         }
 
-    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
-        return [
-            Work(
-                url='/attendance.php',
-                method=self.sign_in_by_get,
-                succeed_regex=[r'这是您的第\d+次签到，已连续签到\d+天，本次签到获得\d+个憨豆。'],
-                assert_state=(check_final_state, SignState.SUCCEED),
-                is_base_content=True
-            )
-        ]
+    # def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
+    #     return [
+    #         Work(
+    #             url='/attendance.php',
+    #             method=self.sign_in_by_get,
+    #             succeed_regex=[r'这是您的第\d+次签到，已连续签到\d+天，本次签到获得\d+个憨豆。'],
+    #             assert_state=(check_final_state, SignState.SUCCEED),
+    #             is_base_content=True
+    #         )
+    #     ]
