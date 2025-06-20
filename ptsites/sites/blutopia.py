@@ -49,7 +49,7 @@ class MainClass(Unit3D):
                     'regex': 'title="Download".*?</i>.+?([\d.]+.*?[ZEPTGMK]?iB)',
                 },
                 'points': {
-                    'regex': 'title="Bonus Points".*?</i>.+?(\\d[\\d,. ]*)',
+                    'regex': 'title="Bonus points".*?</i>.+?(\\d[\\d,. ]*)',
                 },
                 'share_ratio': {
                     'regex': 'title="Ratio".*?</i>.+?(\\d[\\d,. ]*)',
@@ -59,7 +59,7 @@ class MainClass(Unit3D):
                     'handle': handle_join_date
                 },
                 'hr': {
-                    'regex': 'Active Warnings.+?(\\d+)'
+                    'regex': 'Active warnings.+?(\\d+)'
                 }
             }
         })
