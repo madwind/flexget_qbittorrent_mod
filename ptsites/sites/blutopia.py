@@ -49,7 +49,7 @@ class MainClass(Unit3D):
                     'regex': 'title="Download".*?</i>.+?([\d.]+.*?[ZEPTGMK]?iB)',
                 },
                 'points': {
-                    'regex': 'title="Bonus Points".*?</i>.+?(\\d[\\d,. ]*)',
+                    'regex': 'title="Bonus points".*?</i>.+?(\\d[\\d,. ]*)',
                 },
                 'share_ratio': {
                     'regex': 'title="Ratio".*?</i>.+?(\\d[\\d,. ]*)',
