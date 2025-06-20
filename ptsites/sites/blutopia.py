@@ -59,7 +59,7 @@ class MainClass(Unit3D):
                     'handle': handle_join_date
                 },
                 'hr': {
-                    'regex': 'Active Warnings.+?(\\d+)'
+                    'regex': 'Active warnings.+?(\\d+)'
                 }
             }
         })
