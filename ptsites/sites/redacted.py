@@ -7,7 +7,7 @@ from ..utils import net_utils
 
 
 class MainClass(Gazelle):
-    URL: Final = 'https://redacted.ch/'
+    URL: Final = 'https://redacted.sh/'
     USER_CLASSES: Final = {
         'uploaded': [536870912000],
         'share_ratio': [0.65],
