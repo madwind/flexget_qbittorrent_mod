@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 from typing import Final
+from urllib.parse import urljoin
 
+from ..base.entry import SignInEntry
 from ..base.reseed import ReseedCookie
-from ..schema.nexusphp import AttendanceHR
+from ..base.work import Work
+from ..schema.nexusphp import VisitHR
 from ..utils import net_utils
 
 
-class MainClass(AttendanceHR, ReseedCookie):
+class MainClass(VisitHR, ReseedCookie):
     URL: Final = 'https://audiences.me/'
     USER_CLASSES: Final = {
         'downloaded': [2199023255552, 8796093022208],
@@ -15,6 +18,10 @@ class MainClass(AttendanceHR, ReseedCookie):
         'points': [1200000, 1800000],
         'days': [560, 784]
     }
+
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
+        entry['extra_msg'] = f' 未签到: {urljoin(self.URL, "/attendance_new.php")}'
+        return super().sign_in_build_workflow(entry, config)
 
     @property
     def details_selector(self) -> dict:

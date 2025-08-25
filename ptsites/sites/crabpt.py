@@ -14,15 +14,3 @@ class MainClass(Attendance, ReseedPasskey):
         'points': [400000, 1000000],
         'days': [280, 700]
     }
-
-    @property
-    def details_selector(self) -> dict:
-        selector = super().details_selector
-        net_utils.dict_merge(selector, {
-            'details': {
-                'points': {
-                    'regex': '蟹币值.*?([\\d,.]+)'
-                }
-            }
-        })
-        return selector
