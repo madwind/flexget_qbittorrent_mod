@@ -13,6 +13,9 @@ class MainClass(VisitHR, ReseedPasskey):
         'share_ratio': [3.05, 4.55],
         'days': [280, 700]
     }
+    @property
+    def SUCCEED_REGEX(self) -> str:
+        return 'HHCLUB :: 首页'
 
     @property
     def details_selector(self) -> dict:
