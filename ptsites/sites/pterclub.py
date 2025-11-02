@@ -9,7 +9,7 @@ from ..utils import net_utils
 
 
 class MainClass(NexusPHP, ReseedPasskey):
-    URL: Final = 'https://pterclub.com/'
+    URL: Final = 'https://pterclub.net/'
     IGNORE_TITLE = '认领种子获得猫粮60000克'
     USER_CLASSES: Final = {
         'downloaded': [805306368000, 3298534883328],
