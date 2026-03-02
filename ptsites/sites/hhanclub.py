@@ -6,7 +6,7 @@ from ..utils.value_handler import size, handle_infinite
 
 
 class MainClass(VisitHR, ReseedPasskey):
-    URL: Final = 'https://hhanclub.top/'
+    URL: Final = 'https://hhanclub.net/'
     USER_CLASSES: Final = {
         'downloaded': [size(750, 'GiB'), size(3, 'TiB')],
         'points': [900000, 1500000],
