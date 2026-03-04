@@ -63,18 +63,21 @@ class MainClass(PrivateTorrent):
         if not (login := entry['site_config'].get('login')):
             entry.fail_with_prefix('Login data not found!')
             return None
-        print(last_content)
+
         t = re.search(work.t_regex, last_content).group(1)
-        j = len(t)
+        j = str(len(t))
         a = re.search(work.a_regex, last_content).group(1)
+
+        # 修改：使用普通字典而不是元组格式
         data = {
-            't': (None, t),
-            'j': (None, j),
-            'a': (None, a),
-            'email': (None, login['username']),
-            'password': (None, login['password']),
-            'rememberMe': (None, 'yes')
+            't': t,
+            'j': j,
+            'a': a,
+            'email': login['username'],
+            'password': login['password'],
+            'rememberMe': 'yes'
         }
+
         response = self.request(entry, 'post', work.url, data=data)
         return response
 
@@ -93,24 +96,28 @@ class MainClass(PrivateTorrent):
             },
             'details': {
                 'uploaded': {
-                    'regex': r'Uploaded\s+?([\d.]+ [ZEPTGMK]i?B)'
+                    'regex': r'Uploaded\s+([\d.,]+ [ZEPTGMK]i?B)'
                 },
                 'downloaded': {
-                    'regex': r'Downloaded\s+?([\d.]+ [ZEPTGMK]i?B)'
+                    'regex': r'Downloaded\s+([\d.,]+ [ZEPTGMK]i?B)'
                 },
                 'share_ratio': {
-                    'regex': r'Share Ratio.*?(∞|[\d,.]+)',
+                    'regex': r'Share\s*ratio\s*?(∞|[\d,.]+)',
                     'handle': handle_infinite
                 },
                 'points': {
                     'regex': r'Bonus:\s+([\d,.]+)'
                 },
                 'join_date': {
-                    'regex': r'Join date\s*?(\d{4}-\d{2}-\d{2})',
+                    'regex': r'Join\s+date\s+(\d{4}-\d{2}-\d{2})',
                     'handle': handle_join_date
                 },
-                'seeding': None,
-                'leeching': None,
+                'seeding': {
+                    'regex': r'(\d+)\s+seeding\s+unsatisfied\s+torrents'
+                },
+                'leeching': {
+                    'regex': r'(\d+)\s+leeching\s+torrents'
+                },
                 'hr': None
             }
         }
