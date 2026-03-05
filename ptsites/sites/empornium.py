@@ -25,7 +25,7 @@ class MainClass(Gazelle):
             Work(
                 url='/',
                 method=self.sign_in_by_get,
-                succeed_regex=['<h1 class="hidden">Empornium</h1>'],
+                succeed_regex=['<h1 class="hidden">Emp</h1>'],
                 assert_state=(check_final_state, SignState.SUCCEED),
                 is_base_content=True
             )
