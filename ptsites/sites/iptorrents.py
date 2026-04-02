@@ -59,12 +59,8 @@ class MainClass(PrivateTorrent):
                     'regex': 'Join Date.+?(\\d{4}-\\d{2}-\\d{2})',
                     'handle': handle_join_date
                 },
-                'seeding': {
-                    'regex': r'Seeding[\S\s]+?([\d,]+)<'
-                },
-                'leeching': {
-                    'regex': r'Leeching[\S\s]+?([\d,]+)<'
-                },
+                'seeding': None,
+                'leeching': None,
                 'hr': None
             }
         }
