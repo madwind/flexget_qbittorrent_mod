@@ -55,7 +55,7 @@ class MainClass(PrivateTorrent):
                     'regex': r'Bonus Points\s+([\d,.]+)'
                 },
                 'join_date': {
-                    'regex': 'Join date.+?(\\d{4}-\\d{2}-\\d{2})',
+                    'regex': 'Join Date.+?(\\d{4}-\\d{2}-\\d{2})',
                     'handle': handle_join_date
                 },
                 'seeding': {
