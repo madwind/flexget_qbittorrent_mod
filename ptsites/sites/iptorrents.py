@@ -55,14 +55,14 @@ class MainClass(PrivateTorrent):
                     'regex': r'Bonus Points\s+([\d,.]+)'
                 },
                 'join_date': {
-                    'regex': 'Join date\\s*?(\\d{4}-\\d{2}-\\d{2})',
+                    'regex': 'Join date.+?(\\d{4}-\\d{2}-\\d{2})',
                     'handle': handle_join_date
                 },
                 'seeding': {
-                    'regex': 'Seeding([\\d,]+)'
+                    'regex': 'Seeding.+?([\\d,]+)'
                 },
                 'leeching': {
-                    'regex': 'Leeching([\\d,]+)'
+                    'regex': 'Leeching.+?([\\d,]+)'
                 },
                 'hr': None
             }
