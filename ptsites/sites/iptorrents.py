@@ -36,7 +36,8 @@ class MainClass(PrivateTorrent):
                     'link': '/user.php?u={}',
                     'elements': {
                         'bar': 'div.stats',
-                        'table': 'div.up-section'
+                        'table': 'table#body div.up-wrap > div:nth-child(5)',
+                        'table2': 'table#body div.up-wrap > div:nth-child(6)',
                     }
                 }
             },
@@ -59,10 +60,10 @@ class MainClass(PrivateTorrent):
                     'handle': handle_join_date
                 },
                 'seeding': {
-                    'regex': 'Seeding([\\d,]+)'
+                    'regex': 'Seeding([\\d,]+)<'
                 },
                 'leeching': {
-                    'regex': 'Leeching([\\d,]+)'
+                    'regex': 'Leeching([\\d,]+)<'
                 },
                 'hr': None
             }
