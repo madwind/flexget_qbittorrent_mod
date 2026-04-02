@@ -36,8 +36,8 @@ class MainClass(PrivateTorrent):
                     'link': '/user.php?u={}',
                     'elements': {
                         'bar': 'div.stats',
-                        'table': 'table#body div.up-wrap > div:nth-child(5)',
-                        'table2': 'table#body div.up-wrap > div:nth-child(6)',
+                        #'table': 'table#body div.up-wrap > div:nth-child(5)',
+                        'table2': 'table#body div.up-wrap > div:nth-child(6)'
                     }
                 }
             },
