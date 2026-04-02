@@ -60,10 +60,10 @@ class MainClass(PrivateTorrent):
                     'handle': handle_join_date
                 },
                 'seeding': {
-                    'regex': 'Seeding[\S\s]+?([\\d,]+)<'
+                    'regex': 'Seeding[\S\s]+?([\d,]+)<'
                 },
                 'leeching': {
-                    'regex': 'Leeching[\S\s]+?([\\d,]+)<'
+                    'regex': 'Leeching[\S\s]+?([\d,]+)<'
                 },
                 'hr': None
             }
