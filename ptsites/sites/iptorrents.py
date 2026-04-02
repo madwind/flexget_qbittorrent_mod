@@ -37,7 +37,7 @@ class MainClass(PrivateTorrent):
                     'elements': {
                         'bar': 'div.stats',
                         #'table': 'table#body div.up-wrap > div:nth-child(5)',
-                        'table2': 'table#body div.up-wrap > div:nth-child(6)'
+                        'table': 'table#body div.up-wrap > div:nth-child(6)'
                     }
                 }
             },
@@ -55,10 +55,7 @@ class MainClass(PrivateTorrent):
                 'points': {
                     'regex': r'Bonus Points\s+([\d,.]+)'
                 },
-                'join_date': {
-                    'regex': 'Join Date.+?(\\d{4}-\\d{2}-\\d{2})',
-                    'handle': handle_join_date
-                },
+                'join_date': None,
                 'seeding': {
                     'regex': 'Seeding.+?([\\d,]+)<'
                 },
