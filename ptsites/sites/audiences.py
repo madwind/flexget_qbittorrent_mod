@@ -34,13 +34,22 @@ class MainClass(VisitHR, ReseedCookie):
             'detail_sources': {
                 'default': {
                     'elements': {
-                        'bar': '#info_block > tbody > tr > td > table > tbody > tr > td:nth-child(1)',
+                        'bar': '#info_block > tbody > tr > td > table > tbody > tr > td:nth-child(1)'
                     }
                 }
             },
             'details': {
                 'points': {
-                    'regex': '做种积分([\\d.,]+)',
+                    'regex': '做种积分([\\d.,]+)'
+                },
+                'seeding': {
+                    'regex': r'↑.*?([\d,.]+)'
+                },
+                'leeching': {
+                    'regex': r'↓.*?([\d,.]+)'
+                },
+                'hr': {
+                    'regex': (r'↓.*?([\d,.]+).*?(\d+)', 2)
                 }
             }
         })
