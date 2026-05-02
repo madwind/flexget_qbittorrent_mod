@@ -19,9 +19,13 @@ class MainClass(VisitHR, ReseedCookie):
         'days': [560, 784]
     }
 
-    # def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
-    #     entry['extra_msg'] = f' 未签到: {urljoin(self.URL, "/attendance.php")}'
-    #     return super().sign_in_build_workflow(entry, config)
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
+        entry['extra_msg'] = f' 未签到: {urljoin(self.URL, "/attendance.php")}'
+        return super().sign_in_build_workflow(entry, config)
+
+    @property
+    def SUCCEED_REGEX(self) -> str:
+        return 'Audiences :: 首页'
 
     @property
     def details_selector(self) -> dict:
