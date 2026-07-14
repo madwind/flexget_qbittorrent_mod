@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import importlib
 import json
-import pathlib
 import pkgutil
 import threading
 from datetime import datetime
+from pathlib import Path
 
 from flexget import plugin
 from flexget.entry import Entry
@@ -18,13 +18,14 @@ from .base.reseed import Reseed
 from .base.sign_in import SignIn
 
 lock = threading.Semaphore(1)
+TRACKERS_PATH = Path(__file__).resolve().parent / 'trackers'
 
 
 def build_sign_in_schema() -> dict:
     module = None
     sites_schema: dict = {}
     try:
-        for module in pkgutil.iter_modules(path=[f'{pathlib.PurePath(__file__).parent}/sites']):
+        for module in pkgutil.iter_modules(path=[str(TRACKERS_PATH)]):
             site_class = get_site_class(module.name)
             if issubclass(site_class, SignIn):
                 sites_schema.update(site_class.sign_in_build_schema())
@@ -49,7 +50,7 @@ def save_cookie(entry):
     if not session_cookie:
         return
     with lock:
-        cookies_backup_file = pathlib.Path.cwd().joinpath(file_name)
+        cookies_backup_file = Path.cwd().joinpath(file_name)
         if cookies_backup_file.is_file():
             cookies_backup_json = json.loads(cookies_backup_file.read_text(encoding='utf-8'))
         else:
@@ -107,7 +108,7 @@ def build_reseed_schema() -> dict:
     module = None
     sites_schema: dict = {}
     try:
-        for module in pkgutil.iter_modules(path=[f'{pathlib.PurePath(__file__).parent}/sites']):
+        for module in pkgutil.iter_modules(path=[str(TRACKERS_PATH)]):
             site_class = get_site_class(module.name)
             if issubclass(site_class, Reseed):
                 sites_schema.update(site_class.reseed_build_schema())
@@ -127,5 +128,5 @@ def build_reseed_entry(entry: Entry, config: dict, site: dict, passkey: str | di
 
 
 def get_site_class(class_name: str) -> type:
-    site_module = importlib.import_module(f'flexget.plugins.ptsites.sites.{class_name.lower()}')
+    site_module = importlib.import_module(f'.trackers.{class_name.lower()}', package=__package__)
     return getattr(site_module, 'MainClass')

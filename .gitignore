@@ -127,6 +127,16 @@ venv.bak/
 .dmypy.json
 dmypy.json
 
+# Project-local IDE, runtime, and secret-bearing files
+/.idea/
+/.env
+/.env.*
+!/.env.example
+/cookies_backup.json
+/details_report.png
+/docker-compose.local.yml
+/test_sign_in.local.py
+
 # Pyre type checker
 .pyre/
 

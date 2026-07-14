@@ -47,3 +47,30 @@
 - 了解FlexGet订阅的基础用法
 - 清楚自己需要什么功能
 - 已经完整阅读 [Wiki](https://github.com/IvonWei/flexget_qbittorrent_mod/wiki)
+
+## 开发与测试
+
+站点实现位于 `ptsites/trackers/`，公共站点框架位于 `ptsites/schema/` 和 `ptsites/base/`。
+
+安装开发依赖并运行离线测试：
+
+```powershell
+python -m pip install -e ".[dev]"
+python -m pytest
+```
+
+真实站点签到测试默认不会运行。需要显式提供本地环境变量，并添加集成测试参数：
+
+```powershell
+$env:PT_TEST_SITE = "tracker-name"
+$env:PT_TEST_COOKIE = "your-local-cookie"
+python -m pytest --run-integration tests/integration/test_sign_in.py
+```
+
+需要登录配置而不是单一 Cookie 时，可使用 `PT_TEST_SITE_CONFIG` 提供 JSON 对象。凭据不要写入测试源码。
+
+构建可复制到 FlexGet 插件目录的发布文件：
+
+```powershell
+.\scripts\build_dist.ps1
+```

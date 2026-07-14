@@ -43,10 +43,10 @@ class MainClass(Unit3D):
             },
             'details': {
                 'uploaded': {
-                    'regex': 'title="Upload".*?</i>.+?([\d.]+.*?[ZEPTGMK]?iB)',
+                    'regex': r'title="Upload".*?</i>.+?([\d.]+.*?[ZEPTGMK]?iB)',
                 },
                 'downloaded': {
-                    'regex': 'title="Download".*?</i>.+?([\d.]+.*?[ZEPTGMK]?iB)',
+                    'regex': r'title="Download".*?</i>.+?([\d.]+.*?[ZEPTGMK]?iB)',
                 },
                 'points': {
                     'regex': 'title="Bonus points".*?</i>.+?(\\d[\\d,. ]*)',
@@ -55,7 +55,7 @@ class MainClass(Unit3D):
                     'regex': 'title="Ratio".*?</i>.+?(\\d[\\d,. ]*)',
                 },
                 'join_date': {
-                    'regex': 'Registration date:.*?(\d{4}-\d{2}-\d{2})',
+                    'regex': r'Registration date:.*?(\d{4}-\d{2}-\d{2})',
                     'handle': handle_join_date
                 },
                 'hr': {

@@ -87,7 +87,7 @@ class MainClass(Unit3D):
                     'regex': (r'(\d+)\s*?(吸血|Active Downloads)', 1)
                 },
                 'hr': {
-                    'regex': ('(警告|Warnings).+?(\d+)', 2)
+                    'regex': (r'(警告|Warnings).+?(\d+)', 2)
                 }
             }
         }

@@ -2,29 +2,13 @@ from __future__ import annotations
 
 import re
 from PIL import Image, ImageDraw, ImageFont
-from PIL.ImageFont import FreeTypeFont
 from datetime import datetime
 from dateutil.parser import parse
 from flexget import db_schema
 from flexget.manager import Session
 from flexget.task import Task
 from loguru import logger
-from matplotlib.font_manager import findfont, FontProperties
-from pandas import DataFrame
 from sqlalchemy import Column, String, Integer, Float, Date
-
-try:
-    import matplotlib.pyplot as plt
-    import matplotlib
-
-    matplotlib.use('agg')
-except ImportError:
-    plt = None
-
-try:
-    import pandas as pd
-except ImportError:
-    pd = None
 
 UserDetailsBase = db_schema.versioned_base('user_details', 0)
 
@@ -69,10 +53,33 @@ class UserDetailsEntry(UserDetailsBase):
 
 
 class DetailsReport:
+    report_width = 2400
+    margin = 32
+    title_height = 96
+    header_height = 84
+    row_height = 132
+    column_widths = (0.15, 0.16, 0.16, 0.13, 0.14, 0.10, 0.10, 0.06)
+
+    colors = {
+        'canvas': '#F4F7F9',
+        'header': '#263238',
+        'header_text': '#FFFFFF',
+        'grid': '#B0BEC5',
+        'outer_grid': '#78909C',
+        'text': '#263238',
+        'muted_text': '#607D8B',
+        'positive_text': '#00796B',
+        'negative_text': '#C62828',
+        'normal': '#FFFFFF',
+        'alternate': '#FAFBFC',
+        'positive': '#D7F2EC',
+        'negative': '#FFD9DC',
+        'warning': '#FFF7B2',
+        'total': '#E3EDF3',
+        'site_badge': (255, 255, 255, 224),
+    }
+
     def build(self, task: Task) -> None:
-        if not (plt and pd):
-            logger.warning('Dependency does not exist: [matplotlib, pandas]')
-            return
         if not task.accepted and not task.failed:
             return
 
@@ -184,35 +191,13 @@ class DetailsReport:
                                               self.build_data_text(column, total_changed[column], append=True)))
         data['sort_column'].append(float('inf'))
         data['default_order'].append(float('inf'))
-        df = pd.DataFrame(data)
-        df.sort_values(by=['sort_column', 'default_order'], ascending=False, inplace=True)
-        df.drop(columns=['sort_column', 'default_order'], inplace=True)
-        line_count = len(data['site'])
-        fig = plt.figure(figsize=(8, line_count / 1.8))
-        plt.axis('off')
-        colors = []
-        for x in df.values:
-            cc = []
-            for y in x:
-                if '\n-' in y:
-                    cc.append('#f38181')
-                elif '+' in y:
-                    cc.append('#95e1d3')
-                elif '*' in y:
-                    cc.append('#eff48e')
-                else:
-                    cc.append('white')
-            colors.append(cc)
-        col_widths = [0.15, 0.16, 0.16, 0.13, 0.14, 0.1, 0.1, 0.06]
-        table = plt.table(cellText=df.values, cellColours=colors, bbox=[0, 0, 1, 1], colLabels=df.columns,
-                          colWidths=col_widths,
-                          loc='best')
-        table.auto_set_font_size(False)
-        table.set_fontsize(10)
-        fig.tight_layout()
-        plt.title(datetime.now().replace(microsecond=0))
-        plt.savefig('details_report.png', bbox_inches='tight', dpi=300)
-        self.draw_user_classes(user_classes_dict, session, df)
+        order = sorted(
+            range(len(data['site'])),
+            key=lambda index: (data['sort_column'][index], data['default_order'][index]),
+            reverse=True
+        )
+        rows = [[data[column][index] for column in columns] for index in order]
+        self.draw_report(columns, rows, user_classes_dict, session)
 
     def _get_user_details(self, session: Session, site):
         user_details = session.query(UserDetailsEntry).filter(
@@ -274,34 +259,192 @@ class DetailsReport:
         if key not in ['share_ratio', 'points']:
             count_dict[key] = count_dict[key] + value
 
-    def draw_user_classes(self, user_classes_dict: dict, session: Session, df: DataFrame) -> None:
-        img = Image.open('details_report.png').convert("RGBA")
-        tmp = Image.new('RGBA', img.size, (0, 0, 0, 0))
-        draw = ImageDraw.Draw(tmp)
-        start_x = 32
-        start_y, cell_height = self.find_start_y(img, start_x)
-        cell_width = 342
-        start_y = start_y + cell_height
-        colors = [(0, 104, 250, 127), (111, 11, 217, 127), (217, 96, 11, 127)]
-        font_path = findfont(FontProperties(family=['sans-serif']))
-        for i in range(len(df.values)):
-            site_name = re.sub('\\*|', '', df.values[i][0].replace('\n', ''))
-            mid_y = start_y + i * cell_height
-            y, cell_content_height = self.get_cell_position(img, start_x, mid_y)
+    def draw_report(self, columns: list[str], rows: list[list[str]], user_classes_dict: dict,
+                    session: Session) -> None:
+        report_height = self.title_height + self.header_height + self.row_height * len(rows) + self.margin
+        image = Image.new('RGB', (self.report_width, report_height), self.colors['canvas'])
+        draw = ImageDraw.Draw(image, 'RGBA')
+
+        title = f'PT Sign-in Report  |  {datetime.now().replace(microsecond=0)}'
+        title_font = self._load_font(38, bold=True)
+        self._draw_centered(draw, (self.margin, 0, self.report_width - self.margin, self.title_height), title,
+                            title_font, self.colors['text'])
+
+        table_width = self.report_width - self.margin * 2
+        widths = [round(table_width * width) for width in self.column_widths]
+        widths[-1] += table_width - sum(widths)
+        positions = [self.margin]
+        for width in widths:
+            positions.append(positions[-1] + width)
+
+        header_top = self.title_height
+        header_bottom = header_top + self.header_height
+        header_font = self._load_font(29, bold=True)
+        for index, column in enumerate(columns):
+            box = (positions[index], header_top, positions[index + 1], header_bottom)
+            draw.rectangle(box, fill=self.colors['header'])
+            self._draw_centered(draw, box, column.replace('_', ' '), header_font, self.colors['header_text'])
+
+        class_colors = [(38, 132, 255, 105), (126, 72, 214, 105), (239, 127, 26, 105)]
+        for row_index, row in enumerate(rows):
+            top = header_bottom + row_index * self.row_height
+            bottom = top + self.row_height
+            site_name = row[0].replace('\n', '').replace('*', '')
+            is_total = site_name == 'total'
+            user_class_data = None
             if user_classes := user_classes_dict.get(site_name):
                 site_details = self._get_user_details(session, site_name)
-                if data := self.build_user_classes_data(user_classes, site_details, colors):
-                    bar_height = cell_content_height / len(data)
-                    j = 0
-                    font, height = self.get_perfect_font(bar_height, cell_width, font_path, data.keys())
-                    for name, value in data.items():
-                        draw.rectangle(((start_x, y + bar_height * j), (
-                            start_x + (cell_width * value[0]),
-                            y + bar_height * (j + 1) - 2)), fill=value[1])
-                        draw.text((start_x, y + bar_height * j + (bar_height - height) / 2), name, font=font,
-                                  fill=(158, 158, 158, 127))
-                        j += 1
-        Image.alpha_composite(img, tmp).convert("RGB").quantize(colors=256).save('details_report.png')
+                user_class_data = self.build_user_classes_data(user_classes, site_details, class_colors)
+
+            for column_index, value in enumerate(row):
+                box = (positions[column_index], top, positions[column_index + 1], bottom)
+                fill = self._cell_color(value, row_index, is_total)
+                draw.rectangle(box, fill=fill)
+                if column_index == 0 and user_class_data:
+                    self._draw_user_class_cell(draw, box, value, user_class_data)
+                else:
+                    self._draw_cell_text(draw, box, value, is_site=column_index == 0,
+                                         bold=is_total or column_index == 0)
+
+            draw.line((self.margin, bottom, self.report_width - self.margin, bottom),
+                      fill=self.colors['grid'], width=2)
+
+        table_bottom = header_bottom + len(rows) * self.row_height
+        for position in positions:
+            draw.line((position, header_top, position, table_bottom), fill=self.colors['grid'], width=2)
+        draw.rectangle((self.margin, header_top, self.report_width - self.margin, table_bottom),
+                       outline=self.colors['outer_grid'], width=3)
+        draw.line((self.margin, header_bottom, self.report_width - self.margin, header_bottom),
+                  fill=self.colors['outer_grid'], width=3)
+
+        image.save('details_report.png', optimize=True)
+
+    def _cell_color(self, value: str, row_index: int, is_total: bool) -> str:
+        if '\n-' in value:
+            return self.colors['negative']
+        if '+' in value:
+            return self.colors['positive']
+        if '*' in value:
+            return self.colors['warning']
+        if is_total:
+            return self.colors['total']
+        return self.colors['alternate'] if row_index % 2 else self.colors['normal']
+
+    def _draw_cell_text(self, draw: ImageDraw.ImageDraw, box: tuple[int, int, int, int], value: str,
+                        is_site: bool = False, bold: bool = False) -> None:
+        value = str(value)
+        if is_site or '\n' not in value:
+            font = self._fit_font(draw, value, box[2] - box[0] - 20, box[3] - box[1] - 16, 31, bold)
+            color = '#8A6D00' if '*' in value else self.colors['text']
+            self._draw_centered(draw, box, value, font, color)
+            return
+
+        main, delta = value.split('\n', 1)
+        main_font = self._fit_font(draw, main, box[2] - box[0] - 18, 48, 31, bold)
+        delta_font = self._fit_font(draw, delta, box[2] - box[0] - 18, 42, 27, True)
+        main_size = self._text_size(draw, main, main_font)
+        delta_size = self._text_size(draw, delta, delta_font)
+        gap = 5
+        content_height = main_size[1] + delta_size[1] + gap
+        y = box[1] + (box[3] - box[1] - content_height) / 2
+        self._draw_centered(draw, (box[0], int(y), box[2], int(y + main_size[1])), main, main_font,
+                            self.colors['text'])
+        delta_color = self.colors['negative_text'] if delta.startswith('-') else self.colors['positive_text']
+        self._draw_centered(draw, (box[0], int(y + main_size[1] + gap), box[2], box[3]), delta, delta_font,
+                            delta_color)
+
+    def _draw_user_class_cell(self, draw: ImageDraw.ImageDraw, box: tuple[int, int, int, int], value: str,
+                              user_class_data: dict) -> None:
+        band_height = (box[3] - box[1]) / len(user_class_data)
+        label_font = self._load_font(20, bold=True)
+        for index, (name, (percent, color)) in enumerate(user_class_data.items()):
+            top = box[1] + band_height * index
+            bottom = box[1] + band_height * (index + 1)
+            progress_right = box[0] + (box[2] - box[0]) * percent
+            if progress_right > box[0]:
+                draw.rectangle((box[0], top, progress_right, bottom - 1), fill=color)
+            label = name.replace('_', ' ')
+            label_box = (box[0] + 8, int(top), box[2] - 8, int(bottom))
+            self._draw_left_centered(draw, label_box, label, label_font, (69, 90, 100, 175))
+
+        site_text = value.replace('\n', '')
+        site_font = self._fit_font(draw, site_text, box[2] - box[0] - 24, box[3] - box[1] - 24, 30, True)
+        text_width, text_height = self._text_size(draw, site_text, site_font)
+        badge_left = max(box[0] + 8, box[2] - text_width - 28)
+        badge_top = box[1] + (box[3] - box[1] - text_height - 16) / 2
+        badge_box = (int(badge_left), int(badge_top), box[2] - 8, int(badge_top + text_height + 16))
+        draw.rounded_rectangle(badge_box, radius=10, fill=self.colors['site_badge'],
+                               outline=(96, 125, 139, 110), width=2)
+        self._draw_centered(draw, badge_box, site_text, site_font, self.colors['text'])
+
+    def _draw_centered(self, draw: ImageDraw.ImageDraw, box: tuple[int, int, int, int], text: str,
+                       font, fill) -> None:
+        width, height = self._text_size(draw, text, font)
+        x = box[0] + (box[2] - box[0] - width) / 2
+        y = box[1] + (box[3] - box[1] - height) / 2
+        bbox = draw.multiline_textbbox((0, 0), text, font=font, spacing=4, align='center')
+        draw.multiline_text((x - bbox[0], y - bbox[1]), text, font=font, fill=fill, spacing=4, align='center')
+
+    def _draw_left_centered(self, draw: ImageDraw.ImageDraw, box: tuple[int, int, int, int], text: str,
+                            font, fill) -> None:
+        _, height = self._text_size(draw, text, font)
+        bbox = draw.textbbox((0, 0), text, font=font)
+        y = box[1] + (box[3] - box[1] - height) / 2
+        draw.text((box[0] - bbox[0], y - bbox[1]), text, font=font, fill=fill)
+
+    def _fit_font(self, draw: ImageDraw.ImageDraw, text: str, max_width: int, max_height: int,
+                  start_size: int, bold: bool = False):
+        for size in range(start_size, 15, -1):
+            font = self._load_font(size, bold)
+            width, height = self._text_size(draw, text, font)
+            if width <= max_width and height <= max_height:
+                return font
+        return self._load_font(16, bold)
+
+    def _load_font(self, size: int, bold: bool = False):
+        cache = getattr(self, '_font_cache', {})
+        key = (size, bold)
+        if key in cache:
+            return cache[key]
+
+        regular_fonts = (
+            'DejaVuSans.ttf',
+            'Arial.ttf',
+            r'C:\Windows\Fonts\segoeui.ttf',
+            r'C:\Windows\Fonts\arial.ttf',
+            '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+            '/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf',
+            '/usr/share/fonts/TTF/DejaVuSans.ttf',
+        )
+        bold_fonts = (
+            'DejaVuSans-Bold.ttf',
+            'Arial Bold.ttf',
+            r'C:\Windows\Fonts\segoeuib.ttf',
+            r'C:\Windows\Fonts\arialbd.ttf',
+            '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
+            '/usr/share/fonts/truetype/liberation2/LiberationSans-Bold.ttf',
+            '/usr/share/fonts/TTF/DejaVuSans-Bold.ttf',
+        )
+        for font_name in bold_fonts if bold else regular_fonts:
+            try:
+                font = ImageFont.truetype(font_name, size)
+                cache[key] = font
+                self._font_cache = cache
+                return font
+            except OSError:
+                continue
+        try:
+            font = ImageFont.load_default(size=size)
+        except TypeError:
+            font = ImageFont.load_default()
+        cache[key] = font
+        self._font_cache = cache
+        return font
+
+    @staticmethod
+    def _text_size(draw: ImageDraw.ImageDraw, text: str, font) -> tuple[int, int]:
+        bbox = draw.multiline_textbbox((0, 0), text, font=font, spacing=4, align='center')
+        return bbox[2] - bbox[0], bbox[3] - bbox[1]
 
     def build_user_classes_data(self, user_classes: dict, site_details,
                                 colors: list[tuple[int, int, int, int]]) -> None:
@@ -325,15 +468,6 @@ class DetailsReport:
             data[name] = self.build_single_data(value, db_value, colors)
         return data
 
-    def set_default_data(self, data, length):
-        if not data:
-            default_data = []
-            for i in range(length):
-                default_data.append(0)
-            return default_data
-        else:
-            return data
-
     def build_single_data(self, value_tuple, value, colors: list[tuple[int, int, int, int]]) -> tuple[
         float, tuple[int, int, int, int]]:
         percent = 1 if (max_value := value_tuple[-1]) == 0 else value / max_value
@@ -346,71 +480,3 @@ class DetailsReport:
         if len(value_tuple) == 1:
             i = -i
         return percent, colors[i]
-
-    def find_start_y(self, img: Image.Image, start_x: int) -> tuple[float, int]:
-        start_y = 0
-        pass_black = True
-        cell_height = 0
-        for i in range(img.size[1]):
-            pixel = img.getpixel((start_x, i))
-            if not start_y:
-                if pixel[0] == 0 and pixel[1] == 0 and pixel[2] == 0:
-                    start_y = i
-            elif pass_black:
-                if pixel[0] != 0 or pixel[1] != 0 or pixel[2] != 0:
-                    pass_black = False
-            elif pixel[0] == 0 and pixel[1] == 0 and pixel[2] == 0:
-                cell_height = i - start_y
-                break
-        return start_y + (cell_height / 2), cell_height
-
-    def get_cell_position(self, img: Image.Image, start_x, start_y) -> tuple[int, int]:
-        y = 0
-        to_top = 0
-        to_bottom = 0
-        for i in range(img.size[1]):
-            if start_y - i > 0:
-                pixel = img.getpixel((start_x, start_y - i))
-                if pixel[0] == 0 and pixel[1] == 0 and pixel[2] == 0:
-                    y = start_y - i + 1
-                    to_top = i
-                    break
-
-        for i in range(img.size[1]):
-            if start_y + i < img.size[1]:
-                pixel = img.getpixel((start_x, start_y + i))
-                if pixel[0] == 0 and pixel[1] == 0 and pixel[2] == 0:
-                    to_bottom = i
-                    break
-        return y, to_top + to_bottom
-
-    def get_perfect_font(self, bar_height: float, cell_width: int, font_path: str, keys) -> tuple[
-        FreeTypeFont, int]:
-        font_size = float('inf')
-        font_height = 0
-        for key in keys:
-            calc_font_size, calc_height = self.calc_font(bar_height, cell_width, font_path, key, font_size)
-            if font_size > calc_font_size:
-                font_size = calc_font_size
-                font_height = calc_height
-        return ImageFont.truetype(font_path, font_size), font_height
-
-    def calc_font(self, bar_height: float, cell_width: int, font_path: str, test_str, font_size_start) -> tuple:
-        if font_size_start == float('inf'):
-            font_size_start = 1
-        perfect_height = bar_height - 4
-        font_size = font_size_start
-        font_tmp = ImageFont.truetype(font_path, font_size)
-        _, _, width, height = font_tmp.getbbox(test_str)
-        if height > perfect_height or width > cell_width - 20:
-            while height > perfect_height or width > cell_width - 20:
-                font_size += -1
-                font_tmp = ImageFont.truetype(font_path, font_size)
-                _, _, width, height = font_tmp.getbbox(test_str)
-        else:
-            while height < perfect_height and width < cell_width - 20:
-                font_size += 1
-                font_tmp = ImageFont.truetype(font_path, font_size)
-                _, _, width, height = font_tmp.getbbox(test_str)
-        font_size = font_size if font_size > 0 else 1
-        return font_size, height
