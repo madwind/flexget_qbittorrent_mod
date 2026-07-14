@@ -24,19 +24,32 @@ class MainClass(VisitHR, ReseedCookie):
         return super().sign_in_build_workflow(entry, config)
 
     @property
+    def SUCCEED_REGEX(self) -> str:
+        return 'Audiences :: 首页'
+
+    @property
     def details_selector(self) -> dict:
         selector = super().details_selector
         net_utils.dict_merge(selector, {
             'detail_sources': {
                 'default': {
                     'elements': {
-                        'bar': '#info_block > tbody > tr > td > table > tbody > tr > td:nth-child(1)',
+                        'bar': '#info_block > tbody > tr > td > table > tbody > tr > td:nth-child(1)'
                     }
                 }
             },
             'details': {
                 'points': {
-                    'regex': '做种积分([\\d.,]+)',
+                    'regex': '做种积分([\\d.,]+)'
+                },
+                'seeding': {
+                    'regex': r'↑.*?([\d,.]+)'
+                },
+                'leeching': {
+                    'regex': r'↓.*?([\d,.]+)'
+                },
+                'hr': {
+                    'regex': (r'↓.*?([\d,.]+).*?(\d+)', 2)
                 }
             }
         })
