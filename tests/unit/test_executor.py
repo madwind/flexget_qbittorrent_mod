@@ -40,7 +40,7 @@ def test_tracker_module_exposes_main_class(module_name: str) -> None:
     try:
         tracker_class = executor.get_site_class(module_name)
     except ModuleNotFoundError as error:
-        if error.name in {'numpy', 'PIL'}:
+        if error.name == 'PIL':
             pytest.skip(f'{module_name} requires the image dependency {error.name}')
         raise
     assert isinstance(tracker_class, type)
