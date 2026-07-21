@@ -8,7 +8,7 @@ from ..utils import net_utils
 
 
 class MainClass(NexusPHP, ReseedPasskey):
-    URL: Final = 'https://www.haidan.video/'
+    URL: Final = 'https://www.haidan.cc/'
     USER_CLASSES: Final = {
         'downloaded': [2199023255552, 8796093022208],
         'share_ratio': [4, 5.5],

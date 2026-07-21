@@ -1,3 +1,4 @@
+import re
 from typing import Final
 
 from ..base.entry import SignInEntry
@@ -44,15 +45,19 @@ class MainClass(Unit3D):
             'details': {
                 'uploaded': {
                     'regex': r'title="Upload".*?</i>.+?([\d.]+.*?[ZEPTGMK]?iB)',
+                    'handle': self.handle_whitespace
                 },
                 'downloaded': {
                     'regex': r'title="Download".*?</i>.+?([\d.]+.*?[ZEPTGMK]?iB)',
+                    'handle': self.handle_whitespace
                 },
                 'points': {
-                    'regex': 'title="Bonus points".*?</i>.+?(\\d[\\d,. ]*)',
+                    'regex': 'title="Bonus points".*?</i>.+?(\\d[\\d,.\u202f\u00a0 ]*)',
+                    'handle': self.handle_number
                 },
                 'share_ratio': {
-                    'regex': 'title="Ratio".*?</i>.+?(\\d[\\d,. ]*)',
+                    'regex': 'title="Ratio".*?</i>.+?(\\d[\\d,.\u202f\u00a0 ]*)',
+                    'handle': self.handle_number
                 },
                 'join_date': {
                     'regex': r'Registration date:.*?(\d{4}-\d{2}-\d{2})',
@@ -64,3 +69,12 @@ class MainClass(Unit3D):
             }
         })
         return selector
+
+    def handle_number(self, value: str) -> str:
+        # 站点用 U+202F（窄不换行空格）或 U+00A0（不换行空格）当千位分隔符，
+        # 普通空格类字符集匹配不到，这里统一清掉，逗号会在框架里自动再处理一遍
+        return re.sub(r'[\u202f\u00a0\s]', '', value)
+
+    def handle_whitespace(self, value: str) -> str:
+        # 数字和单位之间可能是 \xa0(&nbsp;) 之类的特殊空白符，统一换成普通空格
+        return re.sub(r'\s+', ' ', value)

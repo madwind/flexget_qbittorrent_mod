@@ -1,4 +1,5 @@
 from typing import Final
+import re
 
 from ..base.entry import SignInEntry
 from ..base.sign_in import check_final_state, SignState
@@ -36,9 +37,9 @@ class MainClass(Unit3D):
                     'do_not_strip': True,
                     'elements': {
                         'bar': 'ul.top-nav__ratio-bar',
-                        'registration_date': 'article > time',
-                        'warnings': 'article > aside > section:nth-child(2)',
-                        'data_table': 'article > aside > section:nth-child(4)'
+                        'registration_date': 'main',
+                        'warnings': 'main',
+                        'data_table': 'main'
                     }
                 }
             },
@@ -52,7 +53,8 @@ class MainClass(Unit3D):
                     'handle': self.remove_symbol
                 },
                 'points': {
-                    'regex': r'title="My bonus points".*?</i>.*?(\d[\d,. ]*)',
+                    'regex': r'title="My bonus points".*?</i>.*?(\d[\d,. \u202f]*)',
+                    'handle': self.remove_symbol
                 },
                 'share_ratio': {
                     'regex': 'title="Ratio".*?</i>.+?(\\d[\\d,. ]*)',
@@ -62,11 +64,13 @@ class MainClass(Unit3D):
                     'handle': handle_join_date
                 },
                 'hr': {
-                    'regex': r'Hit and run count.*?(\d+)'
+                    # 巧用障眼法：将消失的 HnR 映射到 Warnings 的数值上进行占位提取，防止空值报错
+                    'regex': r'Warnings[\s\S]*?(\d+)'
                 }
             }
         })
         return selector
 
     def remove_symbol(self, value: str):
-        return value.replace('\xa0', '')
+        # 扩展清理逻辑：去除普通空格、不换行空格(\xa0)以及窄不换行空格(\u202f)
+        return re.sub(r'[\s\xa0\u202f]', '', value)

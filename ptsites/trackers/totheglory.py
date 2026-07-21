@@ -22,9 +22,9 @@ class MainClass(NexusPHP, ReseedPasskey):
         'signed_token': '(?<=signed_token: ").*(?=")'
     }
 
-    def sign_in(self, entry: SignInEntry, config: dict) -> None:
-        entry.fail_with_prefix("公告禁止使用脚本，请移除")
-        return
+    #def sign_in(self, entry: SignInEntry, config: dict) -> None:
+        #entry.fail_with_prefix("公告禁止使用脚本，请移除")
+        #return
 
     def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [
