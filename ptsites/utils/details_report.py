@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
+from numbers import Real
 from dateutil.parser import parse
 from flexget import db_schema
 from flexget.manager import Session
@@ -204,7 +205,9 @@ class DetailsReport:
             UserDetailsEntry.site == site).one_or_none()
         return user_details
 
-    def convert_suffix(self, details_value: str, suffix: dict) -> float | None:
+    def convert_suffix(self, details_value: str | Real, suffix: dict) -> float | None:
+        if isinstance(details_value, Real):
+            return float(details_value)
         keys = list(suffix.keys())
         keys.reverse()
         for key in keys:
@@ -248,6 +251,8 @@ class DetailsReport:
     def transfer_data(self, key: str, value) -> float:
         if value == '*' or key in ['join_date']:
             return value
+        if isinstance(value, Real):
+            return float(value)
         elif key in ['uploaded', 'downloaded']:
             return float(self.convert_suffix(value, suffix))
         elif key in ['points']:

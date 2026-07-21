@@ -6,7 +6,6 @@ from time import sleep
 from typing import Final
 from urllib.parse import urljoin
 
-import numpy as np
 import requests
 from PIL import Image
 from flexget.utils.soup import get_soup
@@ -185,21 +184,10 @@ class MainClass(NexusPHP, ReseedPasskey):
 
 
 def toHash(img, shape=(10, 10)):
-    img = img.resize(shape)
-    gray = np.asarray(img.convert('L'))
-    s = 0
-    hash_str = ''
-    for i in range(shape[0]):
-        for j in range(shape[1]):
-            s = s + gray[i, j]
-    avg = s / 100
-    for i in range(shape[0]):
-        for j in range(shape[1]):
-            if gray[i, j] > avg:
-                hash_str = hash_str + '1'
-            else:
-                hash_str = hash_str + '0'
-    return hash_str
+    gray = img.resize(shape).convert('L')
+    pixels = list(gray.getdata())
+    avg = sum(pixels) / len(pixels)
+    return ''.join('1' if pixel > avg else '0' for pixel in pixels)
 
 
 def compareHash(hash1, hash2, shape=(10, 10)):
