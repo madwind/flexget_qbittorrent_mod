@@ -178,10 +178,11 @@ class DetailsReport:
 
             # update db
             for key, value in details_now.items():
+                if value == '*':
+                    continue
                 if key == 'join_date':
                     value = parse(value)
-                if value != '*':
-                    setattr(user_details_db, key, value)
+                setattr(user_details_db, key, value)
             session.commit()
 
         data['site'].append('total')
