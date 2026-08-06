@@ -1,4 +1,5 @@
 from typing import Final
+import re
 
 from ..base.entry import SignInEntry
 from ..base.sign_in import check_final_state, SignState
@@ -36,9 +37,9 @@ class MainClass(Unit3D):
                     'do_not_strip': True,
                     'elements': {
                         'bar': 'ul.top-nav__ratio-bar',
-                        'registration_date': 'article > time',
-                        'warnings': 'article > aside > section:nth-child(2)',
-                        'data_table': 'article > aside > section:nth-child(4)'
+                        'registration_date': 'main',
+                        'warnings': 'main',
+                        'data_table': 'main'
                     }
                 }
             },
@@ -52,7 +53,8 @@ class MainClass(Unit3D):
                     'handle': self.remove_symbol
                 },
                 'points': {
-                    'regex': r'title="My bonus points".*?</i>.*?(\d[\d,. ]*)',
+                    'regex': r'title="My bonus points".*?</i>.*?(\d[\d,. \u202f]*)',
+                    'handle': self.remove_symbol
                 },
                 'share_ratio': {
                     'regex': 'title="Ratio".*?</i>.+?(\\d[\\d,. ]*)',
@@ -61,12 +63,11 @@ class MainClass(Unit3D):
                     'regex': r'Registration date.*?(\d{4}-\d{2}-\d{2})',
                     'handle': handle_join_date
                 },
-                'hr': {
-                    'regex': r'Hit and run count.*?(\d+)'
-                }
+                'hr': None
             }
         })
         return selector
 
     def remove_symbol(self, value: str):
-        return value.replace('\xa0', '')
+        # Strip regular spaces, no-break space (\xa0) and narrow no-break space (\u202f)
+        return re.sub(r'[\s\xa0\u202f]', '', value)

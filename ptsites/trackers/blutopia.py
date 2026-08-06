@@ -1,3 +1,4 @@
+import re
 from typing import Final
 
 from ..base.entry import SignInEntry
@@ -44,15 +45,19 @@ class MainClass(Unit3D):
             'details': {
                 'uploaded': {
                     'regex': r'title="Upload".*?</i>.+?([\d.]+.*?[ZEPTGMK]?iB)',
+                    'handle': self.handle_whitespace
                 },
                 'downloaded': {
                     'regex': r'title="Download".*?</i>.+?([\d.]+.*?[ZEPTGMK]?iB)',
+                    'handle': self.handle_whitespace
                 },
                 'points': {
-                    'regex': 'title="Bonus points".*?</i>.+?(\\d[\\d,. ]*)',
+                    'regex': 'title="Bonus points".*?</i>.+?(\\d[\\d,.\u202f\u00a0 ]*)',
+                    'handle': self.handle_number
                 },
                 'share_ratio': {
-                    'regex': 'title="Ratio".*?</i>.+?(\\d[\\d,. ]*)',
+                    'regex': 'title="Ratio".*?</i>.+?(\\d[\\d,.\u202f\u00a0 ]*)',
+                    'handle': self.handle_number
                 },
                 'join_date': {
                     'regex': r'Registration date:.*?(\d{4}-\d{2}-\d{2})',
@@ -64,3 +69,12 @@ class MainClass(Unit3D):
             }
         })
         return selector
+
+    def handle_number(self, value: str) -> str:
+        # The site uses U+202F or U+00A0 as the thousands separator, which the
+        # plain space class does not match. Strip them; commas are handled downstream.
+        return re.sub(r'[\u202f\u00a0\s]', '', value)
+
+    def handle_whitespace(self, value: str) -> str:
+        # The gap between value and unit may be \xa0 (&nbsp;); normalise to a plain space
+        return re.sub(r'\s+', ' ', value)
