@@ -17,9 +17,9 @@ class MainClass(NexusPHP, ReseedPage):
     DOWNLOAD_BASE_URL: Final = 'https://assets.hdcity.work/'
     DOWNLOAD_URL_REGEX: Final = '/dl\\.php.*?(?=")'
     USER_CLASSES: Final = {
-        'downloaded': [5497558138880, 43980465111040],
+        'downloaded': [2199023255552, 10995116277760],
         'share_ratio': [2.5, 4],
-        'days': [168, 700]
+        'days': [280, 700]
     }
 
     @classmethod

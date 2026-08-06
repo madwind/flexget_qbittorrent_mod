@@ -50,9 +50,9 @@ def parse_relative_date(text: str) -> str:
 class MainClass(Gazelle):
     URL: Final = 'https://orpheus.network/'
     USER_CLASSES: Final = {
-        'uploaded': [536870912000],
-        'share_ratio': [0.65],
-        'days': [56]
+        'uploaded': [26843545600, 2199023255552],
+        'share_ratio': [1.05, 1.05],
+        'days': [14, 56]
     }
 
     @classmethod

@@ -28,7 +28,9 @@ class MainClass(NexusPHP, ReseedPasskey):
     IMAGE_URL_TEMPLATE: Final = '/image.php?action=regimage&imagehash={}'
 
     USER_CLASSES: Final = {
-        # TODO: 按 oshen 实际的等级要求填写，这里先占位
+        'downloaded': [805306368000, 3298534883328],
+        'share_ratio': [3.05, 4.55],
+        'days': [280, 700]
     }
 
     def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:

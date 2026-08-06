@@ -16,7 +16,7 @@ from ..utils.value_handler import handle_infinite
 class MainClass(Gazelle, ReseedCookie):
     URL: Final = 'https://animebytes.tv/'
     USER_CLASSES: Final = {
-        'downloaded': [214748364800, 10995116277760],
+        'downloaded': [214748364800, 1099511627776],
         'share_ratio': [1.2, 1.2],
         'days': [14, 140]
     }

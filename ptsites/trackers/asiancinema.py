@@ -10,6 +10,10 @@ from ..utils import net_utils
 
 class MainClass(Unit3D):
     URL: Final = 'https://eiga.moi/'
+    USER_CLASSES: Final = {
+        'downloaded': [109951162777600, 439804651110400],
+        'days': [365, 730]
+    }
 
     def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
         return [

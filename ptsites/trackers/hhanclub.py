@@ -1,6 +1,9 @@
 from typing import Final
 
+from ..base.entry import SignInEntry
 from ..base.reseed import ReseedPasskey
+from ..base.sign_in import SignState, check_final_state
+from ..base.work import Work
 from ..schema.nexusphp import VisitHR
 from ..utils.value_handler import size, handle_infinite
 
@@ -16,6 +19,23 @@ class MainClass(VisitHR, ReseedPasskey):
     @property
     def SUCCEED_REGEX(self) -> str:
         return 'HHCLUB :: 首页'
+
+    def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
+        # 主动签到领憨豆（原版此段被注释；这里启用并补上「今日已签到」兜底，
+        # 以免一天内跑第二次因匹配不到成功文案而被判失败）。
+        return [
+            Work(
+                url='/attendance.php',
+                method=self.sign_in_by_get,
+                succeed_regex=[
+                    r'这是您的第[\d,]+次[签簽]到，已[连連][续續][签簽]到[\d,]+天，本次[签簽]到[获獲]得[\d,]+个憨豆',
+                    r'[签簽]到已得\d+',
+                    r'今天已.*?[签簽]到|您今天已[经經][签簽]到过了|请勿重复',
+                ],
+                assert_state=(check_final_state, SignState.SUCCEED),
+                is_base_content=True
+            )
+        ]
 
     @property
     def details_selector(self) -> dict:
@@ -58,14 +78,3 @@ class MainClass(VisitHR, ReseedPasskey):
                 }
             }
         }
-
-    # def sign_in_build_workflow(self, entry: SignInEntry, config: dict) -> list[Work]:
-    #     return [
-    #         Work(
-    #             url='/attendance.php',
-    #             method=self.sign_in_by_get,
-    #             succeed_regex=[r'这是您的第\d+次签到，已连续签到\d+天，本次签到获得\d+个憨豆。'],
-    #             assert_state=(check_final_state, SignState.SUCCEED),
-    #             is_base_content=True
-    #         )
-    #     ]

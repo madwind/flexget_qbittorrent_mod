@@ -21,6 +21,11 @@ from ..utils.value_handler import handle_join_date
 
 class MainClass(Unit3D):
     URL: Final = 'https://beyond-hd.me/'
+    USER_CLASSES: Final = {
+        'downloaded': [1374389534720, 105553116266496],
+        'share_ratio': [0.7, 4.0],
+        'days': [180, 1825]
+    }
 
     @classmethod
     def sign_in_build_schema(cls) -> dict:

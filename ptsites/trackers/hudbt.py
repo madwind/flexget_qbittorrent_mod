@@ -4,6 +4,11 @@ from ..utils import net_utils
 
 class MainClass(Visit):
     URL: Final = 'https://zeus.hamsters.space/'
+    USER_CLASSES: Final = {
+        'downloaded': [805306368000, 3298534883328],
+        'share_ratio': [3.05, 4.55],
+        'days': [252, 567]
+    }
 
     @property
     def details_selector(self) -> dict:
