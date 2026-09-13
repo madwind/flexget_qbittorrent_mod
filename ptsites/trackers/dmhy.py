@@ -13,9 +13,9 @@ from requests import Response
 from ..base.entry import SignInEntry
 from ..base.request import NetworkState, check_network_state
 from ..base.reseed import ReseedPasskey
-from ..base.sign_in import SignState, check_sign_in_state, check_final_state
+from ..base.sign_in import SignState, check_final_state, check_sign_in_state
 from ..base.work import Work
-from ..utils import net_utils, baidu_ocr, dmhy_image
+from ..utils import baidu_ocr, dmhy_image, net_utils
 from ..utils.net_utils import get_module_name
 
 try:
@@ -36,6 +36,10 @@ except ImportError:
 _RETRY = 20
 _CHAR_COUNT = 4
 _SCORE = 40
+_CSRF_REGEXES = (
+    r'<input type="hidden" name="_csrf" value="(.*?)"\s*/?>',
+    r'<meta name="csrf-token" content="(.*?)"\s*/?>',
+)
 
 
 class MainClass(NexusPHP, ReseedPasskey):
@@ -88,7 +92,7 @@ class MainClass(NexusPHP, ReseedPasskey):
                          '<a href="showup.php">已[签簽]到</a>']
         return [
             Work(
-                url='/showup.php?action=show',
+                url='/showup.php',
                 method=self.sign_in_by_get,
                 succeed_regex=succeed_regex,
                 assert_state=(check_sign_in_state, SignState.NO_SIGN_IN),
@@ -99,11 +103,11 @@ class MainClass(NexusPHP, ReseedPasskey):
                 method=self.sign_in_by_anime,
                 data=self.DATA,
                 assert_state=(check_network_state, NetworkState.SUCCEED),
-                img_regex='image\\.php\\?action=adbc2&req=.+?(?=&imagehash)',
+                img_regex='image\\.php\\?action=adbc2&req=.+?&imagehash=[0-9a-f]+',
                 reload_regex='image\\.php\\?action=reload_adbc2&div=showup&rand=\\d+'
             ),
             Work(
-                url='/showup.php?action=show',
+                url='/showup.php',
                 method=self.sign_in_by_get,
                 succeed_regex=succeed_regex,
                 fail_regex='这是一个杯具。<br />验证码已过期。',
@@ -125,13 +129,35 @@ class MainClass(NexusPHP, ReseedPasskey):
             entry.fail_with_prefix('Maximum number of retries reached' if self.times == ocr_config.get('retry')
                                    else 'Can not build_data')
             return None
-        logger.info(data)
-        return self.request(entry, 'post', work.url, data=data)
+        logger.debug('DMHY sign-in data fields: {}', list(data))
+        # Match the navigation metadata sent when a browser submits the form.
+        headers = {
+            'origin': entry['url'].rstrip('/'),
+            'referer': urljoin(entry['url'], '/showup.php'),
+            'sec-fetch-dest': 'document',
+            'sec-fetch-mode': 'navigate',
+            'sec-fetch-site': 'same-origin',
+            'sec-fetch-user': '?1',
+            'upgrade-insecure-requests': '1',
+        }
+        response = self.request(entry, 'post', work.url, data=data, headers=headers)
+        if response is not None and response.status_code == 403:
+            response_text = re.sub(r'\s+', ' ', net_utils.decode(response) or '').strip()
+            logger.error('DMHY showup rejected the submission: {}', response_text[:500])
+        return response
 
     def build_data(self, entry: SignInEntry, config: dict, work: Work, base_content: str,
-                   ocr_config: dict) -> dict | None:
+                   ocr_config: dict, csrf_token: str | None = None) -> dict | None:
         if entry.failed:
             return None
+        if csrf_token is None:
+            for csrf_regex in _CSRF_REGEXES:
+                if csrf_match := re.search(csrf_regex, base_content, re.DOTALL):
+                    csrf_token = csrf_match.group(1)
+                    break
+            if csrf_token is None:
+                entry.fail_with_prefix('Cannot find key: _csrf, url: {}'.format(work.url))
+                return None
         if not (img_url_match := re.search(work.img_regex, base_content)):
             entry.fail_with_prefix('Can not found img_url')
             return None
@@ -139,7 +165,8 @@ class MainClass(NexusPHP, ReseedPasskey):
         logger.debug('attempts: {} / {}, url: {}', self.times, ocr_config.get('retry'), urljoin(entry['url'], img_url))
         data = {}
         found = False
-        if images := self.get_image(entry, config, img_url, ocr_config.get('char_count')):
+        analysis_img_url = re.sub(r'&imagehash=[0-9a-f]+$', '', img_url)
+        if images := self.get_image(entry, config, analysis_img_url, ocr_config.get('char_count')):
             image1, image2 = images
             self.save_iamge(image1, 'step3_a_diff.png')
             self.save_iamge(image2, 'step3_b_diff.png')
@@ -192,10 +219,23 @@ class MainClass(NexusPHP, ReseedPasskey):
             if reload__net_state != NetworkState.SUCCEED:
                 return None
             reload_content = net_utils.decode(reload_response)
-            return self.build_data(entry, config, work, reload_content, ocr_config)
+            return self.build_data(entry, config, work, reload_content, ocr_config, csrf_token)
+        if not self.register_captcha_image(entry, work, img_url):
+            return None
         site_config = entry['site_config']
+        data['_csrf'] = csrf_token
         data['message'] = site_config.get('comment')
         return data
+
+    def register_captcha_image(self, entry: SignInEntry, work: Work, img_url: str) -> bool:
+        real_img_url = urljoin(entry['url'], img_url)
+        response = self.request(entry, 'get', real_img_url, headers={
+            'referer': urljoin(entry['url'], '/showup.php'),
+            'sec-fetch-dest': 'image',
+            'sec-fetch-mode': 'no-cors',
+            'sec-fetch-site': 'same-origin',
+        })
+        return check_network_state(entry, real_img_url, response) == NetworkState.SUCCEED
 
     def get_image(self, entry: SignInEntry, config: dict, img_url: str, char_count: int) -> tuple | None:
         image_list = []
@@ -265,7 +305,12 @@ class MainClass(NexusPHP, ReseedPasskey):
         time.sleep(3)
         logger.debug('request image...')
         real_img_url = urljoin(entry['url'], img_url)
-        base_img_response = self.request(entry, 'get', real_img_url)
+        base_img_response = self.request(entry, 'get', real_img_url, headers={
+            'referer': urljoin(entry['url'], '/showup.php'),
+            'sec-fetch-dest': 'image',
+            'sec-fetch-mode': 'no-cors',
+            'sec-fetch-site': 'same-origin',
+        })
         if base_img_response is None or base_img_response.status_code != 200 or base_img_response.url == urljoin(
                 entry['url'], '/pic/trans.gif?debug=NIM'):
             return None
