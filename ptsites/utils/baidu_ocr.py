@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 import threading
+from functools import lru_cache
 from io import BytesIO
 
 from loguru import logger
@@ -22,6 +23,11 @@ qps = 1
 lock = threading.Semaphore(qps)
 
 
+@lru_cache(maxsize=4)
+def _get_cached_client(app_id: str, api_key: str, secret_key: str) -> AipOcr:
+    return AipOcr(app_id, api_key, secret_key)
+
+
 def get_client(entry: SignInEntry, config: dict) -> AipOcr | None:
     if 'aipocr' not in config:
         entry.fail_with_prefix('aipocr not set in config')
@@ -37,7 +43,7 @@ def get_client(entry: SignInEntry, config: dict) -> AipOcr | None:
     if not (app_id and api_key and secret_key):
         entry.fail_with_prefix('AipOcr not set')
         return None
-    return AipOcr(app_id, api_key, secret_key)
+    return _get_cached_client(app_id, api_key, secret_key)
 
 
 def get_jap_ocr(img: Image.Image, entry: SignInEntry, config: dict) -> str | None:
@@ -52,8 +58,11 @@ def get_jap_ocr(img: Image.Image, entry: SignInEntry, config: dict) -> str | Non
     try:
         with lock:
             result = client.basicAccurate(img_byte_arr.getvalue(), {'language_type': 'JAP'})
-    except Exception as e:
-        entry.fail_with_prefix(f'baidu ocr error: {e}')
+    except Exception as error:
+        # Request exceptions may contain the OAuth URL, including client
+        # credentials. DMHY can retry an unreadable image, so log only the
+        # exception type and keep this failure recoverable.
+        logger.warning('baidu ocr request failed: {}', type(error).__name__)
         return None
     logger.info(result)
     if result.get('error_msg'):
@@ -77,14 +86,14 @@ def get_ocr_code(img: Image.Image, entry: SignInEntry, config: dict) -> tuple:
     height = img.size[1]
     for i in range(0, width):
         for j in range(0, height):
-            if noise := _detect_noise(img, i, j, width, height):
+            if _detect_noise(img, i, j, width, height):
                 img.putpixel((i, j), (255, 255, 255))
     img_byte_arr = BytesIO()
     img.save(img_byte_arr, format='png')
     try:
         with lock:
             result = client.basicAccurate(img_byte_arr.getvalue(), {"language_type": "ENG"})
-    except Exception as e:
+    except Exception:
         entry.fail_with_prefix('baidu ocr error.')
         return None, None
     logger.info(result)

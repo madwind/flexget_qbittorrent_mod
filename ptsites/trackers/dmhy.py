@@ -170,8 +170,8 @@ class MainClass(NexusPHP, ReseedPasskey):
             image1, image2 = images
             self.save_iamge(image1, 'step3_a_diff.png')
             self.save_iamge(image2, 'step3_b_diff.png')
-            ocr_text1 = baidu_ocr.get_jap_ocr(image1, entry, config)
-            ocr_text2 = baidu_ocr.get_jap_ocr(image2, entry, config)
+            ocr_text1 = baidu_ocr.get_jap_ocr(image1, entry, config) or ''
+            ocr_text2 = baidu_ocr.get_jap_ocr(image2, entry, config) or ''
             if entry.failed:
                 return None
             oct_text = ocr_text1 if len(ocr_text1) > len(ocr_text2) else ocr_text2
