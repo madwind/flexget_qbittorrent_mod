@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Final
 
 from ..base.entry import SignInEntry
-from ..base.sign_in import check_final_state, SignState
+from ..base.sign_in import SignState, check_final_state
 from ..base.work import Work
 from ..schema.private_torrent import PrivateTorrent
 from ..utils.net_utils import get_module_name
@@ -68,10 +68,10 @@ class MainClass(PrivateTorrent):
                     'regex': r'"seedbonus":\s*([\d.]+)'
                 },
                 'seeding': {
-                    'regex': r'"seedUnsat":\s*\{\s*"count":\s*(\d+)'
+                    'regex': r'"seedUnsat":\s*\{[^{}]*?"count":\s*(\d+)'
                 },
                 'leeching': {
-                    'regex': r'"leeching":\s*\{\s*"count":\s*(\d+)'
+                    'regex': r'"leeching":\s*\{[^{}]*?"count":\s*(\d+)'
                 },
                 'join_date': None,
                 'hr': None,
