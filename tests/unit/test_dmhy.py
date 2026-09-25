@@ -61,12 +61,7 @@ def test_build_data_uses_dynamic_images_then_registers_image_hash(monkeypatch) -
         lambda entry_arg, config, url, char_count: analyzed_urls.append(url) or (image, image),
     )
     monkeypatch.setattr(dmhy.baidu_ocr, 'get_jap_ocr', lambda *args: '上班族金太郎')
-    monkeypatch.setattr(
-        dmhy,
-        'process',
-        SimpleNamespace(extractOne=lambda *args, **kwargs: ('上班族金太郎', 100)),
-    )
-    monkeypatch.setattr(dmhy, 'fuzz', SimpleNamespace(partial_ratio=object()))
+    monkeypatch.setattr(dmhy, 'fuzz', SimpleNamespace(partial_ratio=lambda *args: 100))
 
     def fake_request(entry_arg, method, url, **kwargs):
         requested.append((method, url, kwargs))
@@ -124,12 +119,7 @@ def test_build_data_preserves_csrf_across_captcha_reload(monkeypatch) -> None:
 
     monkeypatch.setattr(tracker, 'get_image', lambda *args: next(image_results))
     monkeypatch.setattr(dmhy.baidu_ocr, 'get_jap_ocr', lambda *args: 'エコエコアザラク')
-    monkeypatch.setattr(
-        dmhy,
-        'process',
-        SimpleNamespace(extractOne=lambda *args, **kwargs: ('エコエコアザラク', 100)),
-    )
-    monkeypatch.setattr(dmhy, 'fuzz', SimpleNamespace(partial_ratio=object()))
+    monkeypatch.setattr(dmhy, 'fuzz', SimpleNamespace(partial_ratio=lambda *args: 100))
 
     def fake_request(entry_arg, method, url, **kwargs):
         response = Response()
@@ -170,7 +160,6 @@ def test_anime_answer_is_submitted_from_showup_page(monkeypatch) -> None:
     response.status_code = 200
 
     monkeypatch.setattr(dmhy, 'fuzz', object())
-    monkeypatch.setattr(dmhy, 'process', object())
     monkeypatch.setattr(tracker, 'build_data', lambda *args: answer)
 
     def fake_request(entry_arg, method, url, **kwargs):
@@ -194,3 +183,34 @@ def test_anime_answer_is_submitted_from_showup_page(monkeypatch) -> None:
             'upgrade-insecure-requests': '1',
         },
     }
+
+
+def test_title_normalization_keeps_latin_digits_and_cjk() -> None:
+    assert dmhy._normalize_title('Time Bokan / タイムボカン 2!') == 'timebokanタイムボカン2'
+
+
+def test_captcha_image_busy_response_is_retried(monkeypatch) -> None:
+    tracker = dmhy.MainClass()
+    entry = SignInEntry()
+    entry['url'] = tracker.URL
+    work = Work(url='/showup.php?action=show', method=tracker.sign_in_by_anime)
+    responses = []
+
+    for url in [tracker.URL + 'pic/busy.png'] * 2 + [tracker.URL + 'image.php?action=adbc2']:
+        response = Response()
+        response.status_code = 200
+        response.url = url
+        responses.append(response)
+
+    requests = []
+    monkeypatch.setattr(
+        tracker,
+        'request',
+        lambda *args, **kwargs: requests.append((args, kwargs)) or responses.pop(0),
+    )
+    sleeps = []
+    monkeypatch.setattr(dmhy.time, 'sleep', sleeps.append)
+
+    assert tracker.register_captcha_image(entry, work, 'image.php?action=adbc2')
+    assert len(requests) == 3
+    assert sleeps == [dmhy._BUSY_DELAY, dmhy._BUSY_DELAY]

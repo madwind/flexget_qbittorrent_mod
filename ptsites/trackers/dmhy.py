@@ -19,10 +19,9 @@ from ..utils import baidu_ocr, dmhy_image, net_utils
 from ..utils.net_utils import get_module_name
 
 try:
-    from fuzzywuzzy import fuzz, process
+    from fuzzywuzzy import fuzz
 except ImportError:
     fuzz = None
-    process = None
 
 from loguru import logger
 
@@ -36,10 +35,16 @@ except ImportError:
 _RETRY = 20
 _CHAR_COUNT = 4
 _SCORE = 40
+_BUSY_RETRY = 3
+_BUSY_DELAY = 5
 _CSRF_REGEXES = (
     r'<input type="hidden" name="_csrf" value="(.*?)"\s*/?>',
     r'<meta name="csrf-token" content="(.*?)"\s*/?>',
 )
+
+
+def _normalize_title(value: str) -> str:
+    return ''.join(re.findall(r'[0-9A-Za-z\u2E80-\u9FFF]', value)).casefold()
 
 
 class MainClass(NexusPHP, ReseedPasskey):
@@ -116,7 +121,7 @@ class MainClass(NexusPHP, ReseedPasskey):
         ]
 
     def sign_in_by_anime(self, entry: SignInEntry, config: dict, work: Work, last_content: str) -> Response | None:
-        if not fuzz or not process:
+        if not fuzz:
             entry.fail_with_prefix('Dependency does not exist: [fuzzywuzzy]')
             return None
 
@@ -163,6 +168,8 @@ class MainClass(NexusPHP, ReseedPasskey):
             return None
         img_url = img_url_match.group()
         logger.debug('attempts: {} / {}, url: {}', self.times, ocr_config.get('retry'), urljoin(entry['url'], img_url))
+        if not self.register_captcha_image(entry, work, img_url):
+            return None
         data = {}
         found = False
         analysis_img_url = re.sub(r'&imagehash=[0-9a-f]+$', '', img_url)
@@ -174,9 +181,9 @@ class MainClass(NexusPHP, ReseedPasskey):
             ocr_text2 = baidu_ocr.get_jap_ocr(image2, entry, config)
             if entry.failed:
                 return None
-            oct_text = ocr_text1 if len(ocr_text1) > len(ocr_text2) else ocr_text2
-            logger.debug('jap_ocr: {}', oct_text)
-            if oct_text and len(oct_text) > ocr_config['char_count']:
+            ocr_texts = [_normalize_title(text) for text in (ocr_text1, ocr_text2) if text]
+            logger.debug('jap_ocr: {}', ocr_texts)
+            if any(len(text) > ocr_config['char_count'] for text in ocr_texts):
                 for key, regex in work.data.items():
                     if key == 'regex_keys':
                         for regex_key in regex:
@@ -187,13 +194,11 @@ class MainClass(NexusPHP, ReseedPasskey):
                                     'Cannot find regex_key: {}, url: {}'.format(regex_key, work.url))
                                 return None
                             for captcha, value in regex_key_search:
-                                if answer_list := list(filter(lambda x2: len(x2) > 0,
-                                                              map(lambda x: ''.join(re.findall(r'[\u2E80-\u9FFF]', x)
-                                                                                    ), value.split('\n')))):
-                                    split_value, partial_ratio = process.extractOne(oct_text, answer_list,
-                                                                                    scorer=fuzz.partial_ratio)
-                                else:
-                                    partial_ratio = 0
+                                answer_text = _normalize_title(value)
+                                partial_ratio = max(
+                                    (fuzz.partial_ratio(text, answer_text) for text in ocr_texts if answer_text),
+                                    default=0,
+                                )
                                 if partial_ratio > ratio_score:
                                     select = (captcha, value)
                                     ratio_score = partial_ratio
@@ -220,8 +225,6 @@ class MainClass(NexusPHP, ReseedPasskey):
                 return None
             reload_content = net_utils.decode(reload_response)
             return self.build_data(entry, config, work, reload_content, ocr_config, csrf_token)
-        if not self.register_captcha_image(entry, work, img_url):
-            return None
         site_config = entry['site_config']
         data['_csrf'] = csrf_token
         data['message'] = site_config.get('comment')
@@ -229,13 +232,22 @@ class MainClass(NexusPHP, ReseedPasskey):
 
     def register_captcha_image(self, entry: SignInEntry, work: Work, img_url: str) -> bool:
         real_img_url = urljoin(entry['url'], img_url)
-        response = self.request(entry, 'get', real_img_url, headers={
+        busy_url = urljoin(entry['url'], '/pic/busy.png')
+        headers = {
             'referer': urljoin(entry['url'], '/showup.php'),
             'sec-fetch-dest': 'image',
             'sec-fetch-mode': 'no-cors',
             'sec-fetch-site': 'same-origin',
-        })
-        return check_network_state(entry, real_img_url, response) == NetworkState.SUCCEED
+        }
+        for attempt in range(_BUSY_RETRY):
+            response = self.request(entry, 'get', real_img_url, headers=headers)
+            if response is not None and response.url == busy_url:
+                logger.debug('DMHY captcha image busy, retry: {} / {}', attempt + 1, _BUSY_RETRY)
+                if attempt + 1 < _BUSY_RETRY:
+                    time.sleep(_BUSY_DELAY)
+                continue
+            return check_network_state(entry, real_img_url, response) == NetworkState.SUCCEED
+        return False
 
     def get_image(self, entry: SignInEntry, config: dict, img_url: str, char_count: int) -> tuple | None:
         image_list = []
@@ -246,9 +258,9 @@ class MainClass(NexusPHP, ReseedPasskey):
             self.save_iamge(new_image, 'z_failed.png')
             logger.debug('can not analyzed!')
             return None
-        original_text = baidu_ocr.get_jap_ocr(new_image, entry, config)
+        original_text = baidu_ocr.get_jap_ocr(new_image, entry, config) or ''
         logger.debug('original_ocr: {}', original_text)
-        if original_text is None or len(original_text) < char_count:
+        if len(_normalize_title(original_text)) < char_count:
             return None
         image_list.append(new_image)
         while not images_sort_match and len(image_list) < 8:

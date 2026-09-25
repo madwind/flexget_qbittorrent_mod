@@ -59,10 +59,11 @@ def get_jap_ocr(img: Image.Image, entry: SignInEntry, config: dict) -> str | Non
     if result.get('error_msg'):
         entry.fail_with_prefix(result.get('error_msg'))
         return None
-    text = ''
-    for words_list in result.get('words_result'):
-        text += words_list.get('words')
-    return ''.join(re.findall(r'[\u2E80-\u9FFF]', text))
+    return ' '.join(
+        words_list.get('words', '')
+        for words_list in result.get('words_result', [])
+        if words_list.get('words')
+    )
 
 
 def get_ocr_code(img: Image.Image, entry: SignInEntry, config: dict) -> tuple:
@@ -77,14 +78,14 @@ def get_ocr_code(img: Image.Image, entry: SignInEntry, config: dict) -> tuple:
     height = img.size[1]
     for i in range(0, width):
         for j in range(0, height):
-            if noise := _detect_noise(img, i, j, width, height):
+            if _detect_noise(img, i, j, width, height):
                 img.putpixel((i, j), (255, 255, 255))
     img_byte_arr = BytesIO()
     img.save(img_byte_arr, format='png')
     try:
         with lock:
             result = client.basicAccurate(img_byte_arr.getvalue(), {"language_type": "ENG"})
-    except Exception as e:
+    except Exception:
         entry.fail_with_prefix('baidu ocr error.')
         return None, None
     logger.info(result)
