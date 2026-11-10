@@ -31,7 +31,7 @@ def test_real_tracker_sign_in() -> None:
     site_config = _site_config_from_environment()
     config = {
         'cookie_backup': False,
-        'get_details': False,
+        'get_details': True,
         'get_messages': False,
         'sites': {site_name: site_config},
     }
@@ -46,5 +46,11 @@ def test_real_tracker_sign_in() -> None:
     executor.build_sign_in_entry(entry, config)
     executor.sign_in(entry, config)
 
-    assert not entry.failed, entry.get('reason')
+    print(f"\n站点: {site_name}")
+    print(f"签到结果: {entry.get('result', '')}")
+    print(f"站点详情: {json.dumps(entry.get('details', ''), ensure_ascii=False, indent=2)}")
 
+    print(f"是否失败: {entry.failed}")
+    print(f"失败原因: {entry.get('reason', '')}")
+
+    assert not entry.failed, entry.get('reason')
