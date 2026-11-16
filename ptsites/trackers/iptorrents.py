@@ -29,16 +29,14 @@ class MainClass(PrivateTorrent):
 
     @property
     def details_selector(self) -> dict:
+        active_torrents = r'Active Torrents\s*</div>\s*(?:<[^>]+>\s*</[^>]+>\s*)?([\d,]+)[^\d,]+([\d,]+)'
         return {
             'user_id': '"/u/(\\d+)"',
+            'log_details_content': False,
             'detail_sources': {
                 'default': {
                     'link': '/user.php?u={}',
-                    'elements': {
-                        'bar': 'div.stats',
-                        'table': 'table#body div.up-wrap > div:nth-child(5)',
-                        'table2': 'table#body div.up-wrap > div:nth-child(6)'
-                    }
+                    'elements': None
                 }
             },
             'details': {
@@ -49,21 +47,21 @@ class MainClass(PrivateTorrent):
                     'regex': 'Downloaded.+?([\\d.]+ [ZEPTGMK]?B)'
                 },
                 'share_ratio': {
-                    'regex': r'Ratio (-|[\d,.]+)',
+                    'regex': r'Ratio\s*</div>\s*(?:<[^>]+>\s*</[^>]+>\s*)?(-|[\d,.]+)',
                     'handle': handle_infinite
                 },
                 'points': {
-                    'regex': r'Bonus Points\s+([\d,.]+)'
+                    'regex': r'Bonus Points\s*</div>\s*(?:<[^>]+>\s*</[^>]+>\s*)?([\d,.]+)'
                 },
                 'join_date': {
-                    'regex': 'Join Date.+?(\\d{4}-\\d{2}-\\d{2})',
+                    'regex': r'Joined.*?<time[^>]+datetime=["\'](\d{4}-\d{2}-\d{2})',
                     'handle': handle_join_date
                 },
                 'seeding': {
-                    'regex': r'Seeding[\S\s]+?([\d,]+)'
+                    'regex': (active_torrents, 1)
                 },
                 'leeching': {
-                    'regex': r'Leeching[\S\s]+?([\d,]+)'
+                    'regex': (active_torrents, 2)
                 },
                 'hr': None
             }

@@ -158,13 +158,14 @@ class PrivateTorrent(Request, SignIn, Detail, Message, ABC):
         if not details_text:
             entry.fail_with_prefix('details_text is None.')
             return
-        logger.debug(details_text)
+        logged_details = details_text if selector.get('log_details_content', True) else '[omitted]'
+        logger.debug(logged_details)
         details = {}
         for detail_name, detail_config in selector['details'].items():
             if not (detail_value := self.get_detail_value(details_text, detail_config)):
                 entry.fail_with_prefix(f'detail: {detail_name} not found.')
                 logger.error(
-                    f"Details=> site: {entry['site_name']}, regex: {detail_config['regex']}，details_text: {details_text}")
+                    f"Details=> site: {entry['site_name']}, regex: {detail_config['regex']}，details_text: {logged_details}")
                 return
             details[detail_name] = detail_value
         if isinstance(entry['site_config'], dict):
